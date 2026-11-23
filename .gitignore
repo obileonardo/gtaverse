@@ -16,3 +16,6 @@ dist/
 .cache/
 public/map/
 tools/map-harness/screenshots/
+
+# Private research (never committed)
+private/
