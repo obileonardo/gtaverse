@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>The Vice Files PRD</title>
+<meta name="description" content="Product requirements for The Vice Files, a fan-made field guide to GTA VI and the Rockstar universe.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#F5F5F8; --surface-2:#ECEBF2; --line:#DEDCE8;
+  --text:#0D0C1A; --muted:#4A4866; --faint:#6E6B8C;
+  --accent:#F976B0; --accent-ink:#A3195B; --link:#2F2E52;
+  --ok:#1F7A4D; --ok-bg:#E3F4EA; --warn:#8A5A00; --warn-bg:#FCF1D9; --bad:#A3195B; --bad-bg:#FBE4EF; --info:#2C3868; --info-bg:#E6E9F7;
+  --sunset:linear-gradient(100deg,#4C5FCA 0%,#813DBB 22%,#CC46A0 44%,#F76685 62%,#FF885F 80%,#FFA948 100%);
+  --header-h:64px; --max:1120px; --gutter:24px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D0C1A; --surface:#1A1930; --surface-2:#252644; --line:#2F2E52;
+    --text:#ECEAF6; --muted:#B9B6D3; --faint:#9A97BA;
+    --accent:#F976B0; --accent-ink:#F976B0; --link:#C9C3FF;
+    --ok:#7FD8A6; --ok-bg:#16301F; --warn:#F4C46B; --warn-bg:#33270F; --bad:#F976B0; --bad-bg:#3E1A37; --info:#AFC0FF; --info-bg:#1F2547;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D0C1A; --surface:#1A1930; --surface-2:#252644; --line:#2F2E52;
+  --text:#ECEAF6; --muted:#B9B6D3; --faint:#9A97BA;
+  --accent:#F976B0; --accent-ink:#F976B0; --link:#C9C3FF;
+  --ok:#7FD8A6; --ok-bg:#16301F; --warn:#F4C46B; --warn-bg:#33270F; --bad:#F976B0; --bad-bg:#3E1A37; --info:#AFC0FF; --info-bg:#1F2547;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 16px)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.6 Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--link);text-decoration-color:var(--accent);text-underline-offset:3px;text-decoration-thickness:2px}
+a:hover{text-decoration-color:currentColor}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+/* header */
+header.site{position:fixed;inset:0 0 auto 0;height:var(--header-h);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);border-bottom:1px solid var(--line)}
+header.site .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;color:var(--text)}
+.brand-mark{width:28px;height:28px;border-radius:50%;background:var(--sunset);flex:none}
+.brand-name{font:800 22px/1 "Big Shoulders Display",sans-serif;letter-spacing:.01em;text-transform:uppercase}
+.brand-tag{font-size:13px;color:var(--faint);font-weight:500}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:600 14px/1 Inter,sans-serif;text-decoration:none;cursor:pointer}
+.pill:hover{background:var(--surface-2)}
+.pill:focus-visible,.toc a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#tocBtn{display:none}
+/* layout */
+main{padding-top:var(--header-h)}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;align-items:start}
+.toc{position:sticky;top:calc(var(--header-h) + 32px);padding:0;margin:0;list-style:none;font-size:14px}
+.toc li{margin:0}
+.toc a{display:block;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:500}
+.toc a:hover{color:var(--text);background:var(--surface)}
+.toc a.on{color:var(--text);background:var(--surface-2)}
+/* hero */
+.hero{padding:72px 0 56px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font:600 13px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kicker i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+h1{font:900 clamp(48px,8vw,96px)/.92 "Big Shoulders Display",sans-serif;letter-spacing:-.01em;text-transform:uppercase;margin:20px 0 20px}
+h1 span{background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:20px;line-height:1.55;color:var(--muted);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:28px;font-size:14px;color:var(--faint)}
+.meta b{color:var(--text);font-weight:600}
+.band{height:6px;border-radius:999px;background:var(--sunset);margin-top:40px}
+/* sections */
+section.s{padding:56px 0;border-top:1px solid var(--line)}
+section.s:first-of-type{border-top:0}
+h2{font:800 clamp(32px,4.4vw,48px)/1 "Big Shoulders Display",sans-serif;text-transform:uppercase;letter-spacing:0;margin:0 0 8px}
+.num{font:600 13px/1 Inter,sans-serif;color:var(--accent-ink);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:12px}
+h3{font:700 19px/1.3 Inter,sans-serif;margin:32px 0 8px}
+h3.h4{font:600 15px/1.3 Inter,sans-serif;margin:0 0 6px}
+p{margin:0 0 14px;max-width:66ch}
+.sub{color:var(--muted);font-size:17px;max-width:66ch;margin-bottom:28px}
+ul.clean{margin:0 0 14px;padding-left:20px;max-width:72ch}
+ul.clean li{margin:6px 0}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:8px 0 8px}
+.stat{background:var(--surface);border-radius:20px;padding:20px}
+.stat b{display:block;font:800 40px/1 "Big Shoulders Display",sans-serif}
+.stat span{display:block;margin-top:8px;font-size:14px;color:var(--muted);line-height:1.4}
+/* cards */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.card{background:var(--surface);border-radius:20px;padding:24px;display:flex;flex-direction:column}
+.card p{font-size:15px;color:var(--muted);margin:0}
+.card .tagrow{margin-top:auto;padding-top:16px}
+/* tags */
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font:600 12px/1 Inter,sans-serif;white-space:nowrap}
+.t-ok{background:var(--ok-bg);color:var(--ok)}.t-warn{background:var(--warn-bg);color:var(--warn)}.t-bad{background:var(--bad-bg);color:var(--bad)}.t-info{background:var(--info-bg);color:var(--info)}
+/* tables */
+.tbl{width:100%;overflow-x:auto;margin:8px 0 8px;border:1px solid var(--line);border-radius:20px}
+table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:14px 16px;border-bottom:1px solid var(--line)}
+th{font:600 13px/1.3 Inter,sans-serif;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;background:var(--surface)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600}
+/* mock find card */
+.mock{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:8px}
+.mapbox{position:relative;border-radius:20px;overflow:hidden;min-height:340px;background:radial-gradient(62.79% 100% at 50% 0%,#99CCFF 0%,#9B89F5 50%,#D263E9 100%)}
+.mapbox svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:#0D0C1A;border:2px solid #fff;display:grid;place-items:center;color:#fff;font:700 12px/1 Inter,sans-serif}
+.pin.hot{background:#F976B0;color:#0D0C1A;box-shadow:0 0 0 6px rgba(249,118,176,.35)}
+.maplabel{position:absolute;font:800 13px/1 "Big Shoulders Display",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0D0C1A;opacity:.75}
+.drawer{background:var(--surface);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.thumb{aspect-ratio:16/9;border-radius:14px;background:#0D0C1A center/cover no-repeat;position:relative}
+.thumb::after{content:"";position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.92) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z' fill='%230D0C1A'/%3E%3C/svg%3E") center/26px no-repeat}
+.credit{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font:700 13px/1 Inter,sans-serif;color:var(--text);flex:none}
+.drawer h3.h4{font-size:19px}
+.drawer p{font-size:14px;color:var(--muted);margin:0}
+.src{font-size:13px;color:var(--faint)}
+/* timeline */
+.tl{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:12px}
+.tl li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;background:var(--surface);border-radius:20px;padding:20px 24px}
+.tl .d{font:800 22px/1 "Big Shoulders Display",sans-serif;text-transform:uppercase}
+.tl .d small{display:block;font:500 13px/1.3 Inter,sans-serif;color:var(--faint);text-transform:none;margin-top:6px}
+.tl h3.h4{font-size:15px}
+.tl p{font-size:15px;color:var(--muted);margin:0}
+/* callout */
+.callout{border-radius:20px;padding:20px 24px;background:var(--info-bg);color:var(--text);margin:16px 0}
+.callout b{color:var(--info)}
+footer.site{border-top:1px solid var(--line);padding:40px 0 56px;color:var(--faint);font-size:14px}
+footer.site p{max-width:80ch}
+/* responsive */
+@media (max-width:980px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .toc-wrap{display:none}
+  #tocBtn{display:inline-flex}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mock{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  :root{--gutter:16px;--header-h:60px}
+  .brand-tag{display:none}
+  .hero{padding:48px 0 40px}
+  .lede{font-size:18px}
+  .grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+  .tl li{grid-template-columns:minmax(0,1fr);gap:8px}
+  section.s{padding:44px 0}
+  .stat b{font-size:34px}
+}
+/* mobile sheet */
+.sheet{position:fixed;inset:var(--header-h) 0 0 0;z-index:19;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);opacity:0;pointer-events:none;transition:opacity .2s cubic-bezier(.4,0,.2,1)}
+.sheet.open{opacity:1;pointer-events:auto}
+.sheet ul{list-style:none;margin:0;padding:16px var(--gutter);display:grid;gap:4px;background:var(--bg);border-bottom:1px solid var(--line);max-height:calc(100dvh - var(--header-h));overflow:auto}
+.sheet a{display:block;padding:12px 16px;border-radius:999px;color:var(--text);text-decoration:none;font-weight:500}
+.sheet a:hover{background:var(--surface)}
+</style>
+</head>
+<body>
+<header class="site" role="banner">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="The Vice Files PRD, back to top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">The Vice Files</span>
+      <span class="brand-tag">PRD v0.1</span>
+    </a>
+    <div class="hdr-right">
+      <a class="pill" href="https://github.com/obileonardo/gtaverse">Repo</a>
+      <button class="pill" id="tocBtn" aria-expanded="false" aria-controls="sheet">Sections</button>
+    </div>
+  </div>
+</header>
+<div class="sheet" id="sheet" aria-hidden="true"><ul id="sheetList"></ul></div>
+
+<main id="top">
+<div class="wrap">
+  <div class="hero">
+    <span class="kicker"><i></i>Product requirements, draft for review</span>
+    <h1>The <span>Vice Files</span></h1>
+    <p class="lede">A fan-made field guide to GTA VI. Every secret in Leonida pinned on the map, shown in the clip of the fan who found it, labelled by how sure we are, and linked back through 25 years of Rockstar games.</p>
+    <div class="meta">
+      <span><b>Owner</b> Elvis Obi</span>
+      <span><b>Collaborator</b> Chime (ChimeXXD)</span>
+      <span><b>Updated</b> 23 Nov 2026</span>
+      <span><b>Target</b> GTA VI slice live by 27 to 28 Nov 2026</span>
+      <span><b>Home</b> thevicefiles.com</span>
+    </div>
+    <div class="band" aria-hidden="true"></div>
+  </div>
+
+  <div class="layout">
+    <nav class="toc-wrap" aria-label="Sections">
+      <ul class="toc" id="toc">
+        <li><a href="#summary">Summary</a></li>
+        <li><a href="#decisions">Decisions</a></li>
+        <li><a href="#people">Who it is for</a></li>
+        <li><a href="#landscape">Landscape</a></li>
+        <li><a href="#product">The product</a></li>
+        <li><a href="#map">The map</a></li>
+        <li><a href="#content">Content model</a></li>
+        <li><a href="#trust">Trust and credit</a></li>
+        <li><a href="#design">Design direction</a></li>
+        <li><a href="#tech">Architecture</a></li>
+        <li><a href="#legal">Legal</a></li>
+        <li><a href="#plan">Five-day plan</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li><a href="#metrics">Success</a></li>
+        <li><a href="#risks">Risks and questions</a></li>
+        <li><a href="#research">Research</a></li>
+      </ul>
+    </nav>
+
+    <div>
+      <section class="s" id="summary">
+        <span class="num">01</span>
+        <h2>Summary</h2>
+        <p class="sub">GTA VI launched on 19 November 2026 (PS5 and Xbox Series X|S). Four days in, discoveries are scattered across YouTube, X, Reddit, TikTok and dozens of hastily built sites. Players open ten tabs to learn one thing.</p>
+        <p><b>The outcome:</b> one place where a fan can open the map, tap a spot, watch the original clip of what is there, see who found it and how sure we are, and follow the thread to where the same idea appeared in Vice City, San Andreas, GTA V or Red Dead. It stays current as fans find more.</p>
+        <p><b>Why we win:</b> other maps already compete on marker counts (GTABase lists 4,336 locations). None of them pairs each discovery with the finder's clip, credit and a verification label, and none connects GTA VI to the wider Rockstar universe. We compete on the story behind every pin, not the number of pins.</p>
+        <div class="stats" role="list">
+          <div class="stat" role="listitem"><b>85</b><span>GTA VI finds sourced so far, 45 confirmed by several sources</span></div>
+          <div class="stat" role="listitem"><b>23</b><span>finds with an embeddable clip, checked against YouTube oEmbed</span></div>
+          <div class="stat" role="listitem"><b>85</b><span>cross-game Rockstar connections, 51 canon, 4 debunked</span></div>
+          <div class="stat" role="listitem"><b>13</b><span>competing GTA VI map sites reviewed</span></div>
+        </div>
+      </section>
+
+      <section class="s" id="decisions">
+        <span class="num">02</span>
+        <h2>Decisions so far</h2>
+        <p class="sub">Settled on 23 Nov 2026. Each is logged in the repo at docs/DECISIONS.md.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Decision</th><th>What we chose</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Name</td><td>The Vice Files</td><td>Ties to Vice City, works for the lore archive, and keeps GTA and Rockstar trademarks out of the brand. thevicefiles.com registered 23 Nov (Namecheap, DNS on Cloudflare).</td></tr>
+            <tr><td>Money</td><td>Non-commercial. No ads, no paid tiers.</td><td>Rockstar's written policy tolerates fan sites that are non-commercial and avoid spoilers. Staying inside it is what lets us use official media.</td></tr>
+            <tr><td>Official media</td><td>Use the official Leonida map, key art and screenshots inside content, with a credit line</td><td>Rockstar publishes the map and art as downloads. MapGenie, Leonida Verse and others already do this.</td></tr>
+            <tr><td>Brand assets</td><td>No GTA VI logo, Rockstar logo or GTAArtDeco font. Near-identical original lookalikes for display type and icons</td><td>These are not licensed for others. Lookalikes keep the feel without copying files.</td></tr>
+            <tr><td>Clips</td><td>Official platform embeds only. Never re-host</td><td>YouTube, X, TikTok and Reddit terms allow embedding. The embed carries the creator's name.</td></tr>
+            <tr><td>Repo</td><td>Public, github.com/obileonardo/gtaverse, Chime has write access</td><td>Open contributions from the community later.</td></tr>
+            <tr><td>Scope</td><td>GTA VI first. Other games as lore connections, not maps, until after launch</td><td>The four to five day window only fits one map.</td></tr>
+            <tr><td>Theme</td><td>Dark first, light available</td><td>Matches GTA VI's night-and-neon world; the map glows on dark.</td></tr>
+            <tr><td>Icons</td><td>GTA-native style, near-identical original lookalikes</td><td>Your pick for this project. Drawn by us, never copied files.</td></tr>
+            <tr><td>Roles</td><td>Chime owns content and pins</td><td>Works through the research conflicts queue in docs/NOW.md and adds finds by pull request.</td></tr>
+            <tr><td>Branching</td><td>staging is ground truth; main moves only on your go</td><td>Matches the organisation's engineering rules.</td></tr>
+            <tr><td>Chatbot</td><td>Later</td><td>Needs a trusted, sourced content base first. That base is what we are building now.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="s" id="people">
+        <span class="num">03</span>
+        <h2>Who it is for</h2>
+        <p class="sub">Five kinds of visitor, each arriving with a different job.</p>
+        <div class="grid3">
+          <div class="card"><h3 class="h4">The new player</h3><p>Bought the game this week. Wants to know what is worth seeing, what they can miss, and how the new heat system works.</p><div class="tagrow"><span class="tag t-info">Explainers, missables</span></div></div>
+          <div class="card"><h3 class="h4">The hunter</h3><p>Saw a clip of the alien rescue or the Satan boss fight on X. Wants the exact spot and the steps, fast, on a phone next to the TV.</p><div class="tagrow"><span class="tag t-info">Map, find pages</span></div></div>
+          <div class="card"><h3 class="h4">The lore fan</h3><p>Has played since Vice City. Wants the connections: Tommy Vercetti nods, Bigfoot to the Skunk Ape, the UFO thread from Area 69.</p><div class="tagrow"><span class="tag t-info">Connections</span></div></div>
+          <div class="card"><h3 class="h4">The finder</h3><p>A YouTuber or Redditor who found something first. Wants credit and traffic back to their clip, not a stolen re-upload.</p><div class="tagrow"><span class="tag t-info">Credit, submissions</span></div></div>
+          <div class="card"><h3 class="h4">The skeptic</h3><p>Has been burned by fake "leaks" and AI-written sites. Wants to know what is real, what is a rumour and what is debunked.</p><div class="tagrow"><span class="tag t-info">Verification labels</span></div></div>
+          <div class="card"><h3 class="h4">The visitor from a link</h3><p>Lands on one find page from a share. Needs it to make sense alone and to pull them into the map.</p><div class="tagrow"><span class="tag t-info">Shareable pages</span></div></div>
+        </div>
+      </section>
+
+      <section class="s" id="landscape">
+        <span class="num">04</span>
+        <h2>The landscape</h2>
+        <p class="sub">Everyone has a map. Almost nobody has the story behind a pin. Reviewed 23 Nov 2026 from each site's live pages.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Site</th><th>Strength</th><th>Gap we can own</th></tr></thead>
+          <tbody>
+            <tr><td>GTABase</td><td>4,336 locations in 102 categories, member submissions, progress tracking</td><td>Credits its own members, not original finders. Paid memberships.</td></tr>
+            <tr><td>MapGenie (IGN)</td><td>Official map base, very granular categories, launch-week depth</td><td>Template used for hundreds of games. No lore, no finder credit visible.</td></tr>
+            <tr><td>Game8</td><td>Editorial pins, updated hourly, progress sync</td><td>Wiki-farm format. Premium articles. No cross-game story.</td></tr>
+            <tr><td>GTADB</td><td>1,075 in-game markers plus 2,808 community markers</td><td>Carries a "Leaks" layer, which we will never do.</td></tr>
+            <tr><td>Grand Leonida, The Leonida Map</td><td>Verification labels, clear disclaimers</td><td>Lore limited to GTA VI. One animates official art with AI, which Rockstar's terms ban.</td></tr>
+            <tr><td>Leonida Verse</td><td>Official map, a Codex, a Lore page</td><td>Lore is 9 characters and 6 places, GTA VI only.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout"><b>Positioning.</b> Clip-first, finder-credited, honestly labelled, and connected across every Rockstar game. We do not try to beat GTABase or MapGenie on volume.</div>
+      </section>
+
+      <section class="s" id="product">
+        <span class="num">05</span>
+        <h2>The product</h2>
+        <p class="sub">Six pillars. The first four ship in the GTA VI slice; the last two follow.</p>
+        <div class="grid2">
+          <div class="card"><h3 class="h4">1. The Leonida map</h3><p>The official map, tiled for deep zoom. Pins by category, filters, search, a spoiler switch and a mature-content switch. Tap a pin to open the find drawer.</p><div class="tagrow"><span class="tag t-ok">Launch</span></div></div>
+          <div class="card"><h3 class="h4">2. Find pages</h3><p>One shareable page per find: clip, steps, region, finder credit, sources, verification label, related finds and the Rockstar connection behind it.</p><div class="tagrow"><span class="tag t-ok">Launch</span></div></div>
+          <div class="card"><h3 class="h4">3. Explainers</h3><p>How heat and the six-state wanted system work, the Criminal Profile, Focus, the relationship system, Lucia and Jason, and a danger and wealth atlas built from factions, wildlife and police.</p><div class="tagrow"><span class="tag t-ok">Launch</span></div></div>
+          <div class="card"><h3 class="h4">4. Rockstar connections</h3><p>The lore graph. Timelines such as Bigfoot (San Andreas myth, GTA V hunt, GTA VI Skunk Ape) and UFOs (Area 69 to Kelly County). Each item is labelled canon, strong, speculative or debunked.</p><div class="tagrow"><span class="tag t-ok">Launch, 8 lead stories</span></div></div>
+          <div class="card"><h3 class="h4">5. Myths tracker</h3><p>Every mystery with an honest status: solved, unsolved or debunked. The place that tells you a viral claim is fake.</p><div class="tagrow"><span class="tag t-warn">Week 2</span></div></div>
+          <div class="card"><h3 class="h4">6. Submit a find</h3><p>Fans submit a clip link and location. It lands in a review queue as a GitHub issue, and goes live once checked, credited to the submitter.</p><div class="tagrow"><span class="tag t-warn">Week 2</span></div></div>
+        </div>
+        <h3>Explainer list for launch</h3>
+        <ul class="clean">
+          <li><b>Heat and wanted levels.</b> Six states (Cops Responding, Suspect Unknown, In Pursuit, Visual Lost, Heat, Heat with Suspect Unknown), what police know, how to clear heat, and what changed from GTA V.</li>
+          <li><b>Lucia and Jason.</b> Who they are, the switching, the relationship system and what you miss by neglecting it.</li>
+          <li><b>Leonida, region by region.</b> Vice City, Leonida Keys, Grassrivers, Port Gellhorn, Ambrosia, Mount Kalaga, and the five counties, with real-world analogues.</li>
+          <li><b>Where it is dangerous, where it is rich.</b> The game has no official rating, so we show evidence: factions (Final Chapter MC, PTT Youngin$, San4San, M7, Kingfishers), predators, police jurisdictions, villas and supercar garages.</li>
+          <li><b>Missables.</b> What to do before the mission Tourist Trap, spoiler-gated.</li>
+        </ul>
+      </section>
+
+      <section class="s" id="map">
+        <span class="num">06</span>
+        <h2>The map experience</h2>
+        <p class="sub">The heart of the product. A sketch of the moment that matters most: tapping a pin. Illustrative only; the real design comes after your picks.</p>
+        <div class="mock" aria-label="Sketch of the map and find drawer">
+          <div class="mapbox" role="img" aria-label="Sketch of the Leonida map with pins">
+            <svg viewBox="0 0 400 340" preserveAspectRatio="none" aria-hidden="true"><path d="M150 18 C230 6 300 40 310 96 C322 160 300 214 276 252 C250 292 214 322 182 330 C150 336 132 300 120 262 C100 208 76 170 86 118 C96 64 110 26 150 18 Z" fill="rgba(255,255,255,.55)"/><path d="M180 330 C200 334 236 326 262 316" stroke="rgba(255,255,255,.55)" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
+            <span class="maplabel" style="left:40%;top:10%">Mount Kalaga</span>
+            <span class="pin" style="left:50%;top:22%">2</span>
+            <span class="maplabel" style="left:22%;top:31%">Port Gellhorn</span>
+            <span class="pin" style="left:28%;top:44%">3</span>
+            <span class="pin hot" style="left:40%;top:46%" aria-label="Selected pin">&#9733;</span>
+            <span class="maplabel" style="left:56%;top:55%">Vice City</span>
+            <span class="pin" style="left:64%;top:66%">7</span>
+            <span class="maplabel" style="left:30%;top:69%">Grassrivers</span>
+            <span class="pin" style="left:40%;top:81%">4</span>
+          </div>
+          <div class="drawer">
+            <div class="thumb" style="background-image:url('https://i.ytimg.com/vi/z7BAbUlQXgE/hqdefault.jpg')" role="img" aria-label="Clip thumbnail, plays the creator's YouTube video"></div>
+            <div><span class="tag t-ok">Multi-source</span> <span class="tag t-bad">Spoiler</span></div>
+            <h3 class="h4">The Satan boss fight</h3>
+            <p>A secret questline in Port Gellhorn ends in a fight with Satan and rewards the Hellspawn shotgun.</p>
+            <div class="credit"><span class="avatar" aria-hidden="true">PS</span><span>Clip by <b>Perfect Score</b> on YouTube</span></div>
+            <span class="src">Also covered by GameRant and 4 more YouTube creators</span>
+          </div>
+        </div>
+        <h3>Requirements</h3>
+        <ul class="clean">
+          <li>Opens fast on a phone held next to the TV: the first view is usable before any clip loads.</li>
+          <li>Clips load only when tapped (a thumbnail stands in until then), which keeps the map fast and avoids third-party tracking on load.</li>
+          <li>Every pin has a deep link, so a shared URL opens the map at that pin with its drawer open.</li>
+          <li>Filters by category, region, verification level and "has clip". Spoilers and mature content are hidden by default and remembered per visitor.</li>
+          <li>Pins are placed by us on the official map, from clips, and cross-checked against community maps such as Game Checklists. We never copy another site's pins wholesale.</li>
+          <li>The wheel zooms and drag pans, as on every map people know. Keyboard and screen-reader users can reach every pin through a list view.</li>
+        </ul>
+      </section>
+
+      <section class="s" id="content">
+        <span class="num">07</span>
+        <h2>Content model</h2>
+        <p class="sub">Content lives in the repo as validated JSON and Markdown, so Chime and future contributors can add finds through pull requests.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Type</th><th>Key fields</th><th>Seed count</th></tr></thead>
+          <tbody>
+            <tr><td>Find</td><td>title, category, region, location steps, pin (x, y on the official map), summary, clip, first finder, sources, verification, spoiler, mature, chapter gate, related connections</td><td>85</td></tr>
+            <tr><td>Connection</td><td>title, type (character, brand, place, theory, mystery, memorial, real world, prediction), games, summary, sources, confidence</td><td>85</td></tr>
+            <tr><td>Region</td><td>name, type (county, region, district), parent, character, real-world analogue, sources</td><td>about 40</td></tr>
+            <tr><td>Category</td><td>label, description, icon, colour token</td><td>about 25</td></tr>
+            <tr><td>Source</td><td>creator, platform, link, notes</td><td>from the sources list</td></tr>
+            <tr><td>Explainer</td><td>title, body, sources, spoiler flag, updated date</td><td>5 at launch</td></tr>
+          </tbody>
+        </table></div>
+        <p>A validation script checks every entry before it can ship: each find has at least one source, every link between items resolves, no duplicate pages, no em dashes.</p>
+      </section>
+
+      <section class="s" id="trust">
+        <span class="num">08</span>
+        <h2>Trust and credit</h2>
+        <p class="sub">The trust layer is the product. Four labels, used everywhere a claim appears.</p>
+        <div class="grid2">
+          <div class="card"><h3 class="h4"><span class="tag t-ok">Multi-source</span></h3><p>Two or more independent sources show it, ideally with a clip. The default for anything we pin.</p></div>
+          <div class="card"><h3 class="h4"><span class="tag t-info">Single source</span></h3><p>One credible report. Shown, labelled, and queued for a second source.</p></div>
+          <div class="card"><h3 class="h4"><span class="tag t-warn">Rumour</span></h3><p>Unconfirmed. Shown only in the myths tracker, never as a pin.</p></div>
+          <div class="card"><h3 class="h4"><span class="tag t-bad">Debunked</span></h3><p>Proven fake. Kept, because "is this real?" is a question people search for.</p></div>
+        </div>
+        <h3>Credit rules</h3>
+        <ul class="clean">
+          <li>The first finder gets the credit line when known; press coverage is listed as corroboration, not as the finder.</li>
+          <li>Clips are embedded from the original post so views and engagement go to the creator.</li>
+          <li>Never source from AI-written content farms, never link leaked builds or piracy, and never repost a clip.</li>
+          <li>A creator can ask to be removed or re-credited at takedown@thevicefiles.com or through the repo's takedown form, answered within 48 hours.</li>
+        </ul>
+      </section>
+
+      <section class="s" id="design">
+        <span class="num">09</span>
+        <h2>Design direction</h2>
+        <p class="sub">What the research measured from Rockstar's own GTA VI site. This is direction, not the design: the look is decided from your picks on a taste board before any screen is built.</p>
+        <div class="grid2">
+          <div class="card"><h3 class="h4">Colour</h3><p>A night base of navy-violet (around #0D0C1A to #1F1F38) with aubergine frames, one loud pink accent (#F976B0), and the sunset ramp from blue-violet through magenta and coral to amber for hero moments. Six pastel gradients could each colour one region.</p><div class="tagrow"><span class="band" style="margin:0;height:10px"></span></div></div>
+          <div class="card"><h3 class="h4">Type</h3><p>Rockstar uses its own GTAArtDeco (condensed, heavy art deco caps) and Helvetica Now for body. We pick close, licensable equivalents. This page uses Big Shoulders Display as a stand-in only.</p></div>
+          <div class="card"><h3 class="h4">Shape and material</h3><p>Pills and circles everywhere, frosted glass, soft fades of imagery into the dark page. Hand-painted loading-screen art in pastel skies.</p></div>
+          <div class="card"><h3 class="h4">Motion</h3><p>Slow, scroll-owned cinematic reveals for stories; quick, quiet transitions for map controls. No bounce. GTA VI's site uses scroll-scrubbed video with smooth scrolling.</p></div>
+          <div class="card"><h3 class="h4">Icons</h3><p>Near-identical original lookalikes of the HUD and blip style: pink route, star states, category blips. Drawn by us, never copied files.</p></div>
+          <div class="card"><h3 class="h4">Moments of play</h3><p>Wanted-star states as verification badges, a WASTED-style screen for debunked claims, a phone UI for the social feed of new finds. Each one is optional and comes from the taste board.</p></div>
+        </div>
+      </section>
+
+      <section class="s" id="tech">
+        <span class="num">10</span>
+        <h2>Architecture</h2>
+        <p class="sub">Recommended. Static first, so it is fast, cheap and hard to break.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Site</td><td>Astro with React islands, built to static pages</td><td>Every find and explainer becomes its own fast page that search engines can read. Interactive parts load only where needed.</td></tr>
+            <tr><td>Map</td><td>Leaflet or MapLibre on the official map, cut into zoom tiles</td><td>Smooth deep zoom on phones without loading one huge image.</td></tr>
+            <tr><td>Content</td><td>JSON and Markdown in the repo, schema-validated</td><td>Pull requests are the review queue. No database until submissions outgrow it.</td></tr>
+            <tr><td>Search</td><td>Pagefind, built at deploy</td><td>Full-text search with no server.</td></tr>
+            <tr><td>Hosting</td><td>Cloudflare static assets on thevicefiles.com (rockstarworld.elvisobi.com also works)</td><td>DNS for both domains is on Cloudflare. Static requests are free.</td></tr>
+            <tr><td>Updates</td><td>Merge a pull request, the site rebuilds and is live in minutes</td><td>"Real time" enough for discoveries, with a review step that keeps fakes out.</td></tr>
+            <tr><td>Analytics</td><td>Cloudflare Web Analytics, cookieless</td><td>Free, no consent banner needed.</td></tr>
+          </tbody>
+        </table></div>
+        <p><b>Expected cost:</b> zero on Cloudflare's free tiers. The only spend is the thevicefiles.com registration on Namecheap.</p>
+      </section>
+
+      <section class="s" id="legal">
+        <span class="num">11</span>
+        <h2>Legal position</h2>
+        <p class="sub">Research, not legal advice. Full notes with exact quotes are in research/legal-fan-site.md.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Asset</th><th>Verdict</th><th>How we use it</th></tr></thead>
+          <tbody>
+            <tr><td>Official Leonida map</td><td><span class="tag t-ok">With conditions</span></td><td>Base layer, credited, non-commercial</td></tr>
+            <tr><td>Key art, screenshots</td><td><span class="tag t-ok">With conditions</span></td><td>Inside content, credited, never AI-processed, nothing from leaks</td></tr>
+            <tr><td>Player clips</td><td><span class="tag t-ok">Embed only</span></td><td>Official platform players. No spoiler cutscenes isolated</td></tr>
+            <tr><td>Blip and HUD icons</td><td><span class="tag t-warn">Risky if copied</span></td><td>Original lookalikes</td></tr>
+            <tr><td>GTA VI logo, Rockstar logo</td><td><span class="tag t-bad">Not as branding</span></td><td>Not used</td></tr>
+            <tr><td>GTAArtDeco font</td><td><span class="tag t-bad">Not allowed</span></td><td>Licensable equivalent</td></tr>
+            <tr><td>"GTA" in text</td><td><span class="tag t-ok">Descriptive use</span></td><td>In titles and copy, not as our brand</td></tr>
+          </tbody>
+        </table></div>
+        <p>Footer on every page: an unofficial fan site, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive; game content and materials are trademarks and copyrights of their respective owners. The site lives as its own Cloudflare project, so a takedown cannot touch your other sites.</p>
+      </section>
+
+      <section class="s" id="plan">
+        <span class="num">12</span>
+        <h2>Five-day plan</h2>
+        <p class="sub">From today to the GTA VI slice going live. Each day ends with something you can see.</p>
+        <ol class="tl">
+          <li><div class="d">Mon 23<small>Today</small></div><div><h3 class="h4">Research, PRD, content foundations</h3><p>Research complete. This PRD. The builder agent turns the research into validated content in the repo, through a pull request.</p></div></li>
+          <li><div class="d">Tue 24</div><div><h3 class="h4">Design picks and the map base</h3><p>A taste board of GTA VI-feel references for you to pick from. The official map tiled for zoom. First 30 pins placed and checked.</p></div></li>
+          <li><div class="d">Wed 25</div><div><h3 class="h4">Map and find pages</h3><p>Map with filters, the find drawer with clip and credit, and a page for every find. Design built to your picks.</p></div></li>
+          <li><div class="d">Thu 26</div><div><h3 class="h4">Explainers and connections</h3><p>Five explainers and the eight lead connection stories. Design audit at desktop and phone widths, zero fails.</p></div></li>
+          <li><div class="d">Fri 27<small>Launch</small></div><div><h3 class="h4">Verify and go live</h3><p>Every pin and claim checked against its source, screenshots reviewed with you, then live at thevicefiles.com.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="s" id="roadmap">
+        <span class="num">13</span>
+        <h2>Roadmap</h2>
+        <div class="grid3">
+          <div class="card"><h3 class="h4">Week 2</h3><p>Submit a find, the myths tracker, a "new this week" feed, outreach to Game Checklists and top finders for data and credit partnerships.</p></div>
+          <div class="card"><h3 class="h4">Weeks 3 to 6</h3><p>Progress tracking saved on the device, collectible checklists, more explainers, lore timelines as scroll stories.</p></div>
+          <div class="card"><h3 class="h4">Later</h3><p>The chatbot, answering only from our sourced content and citing it. Maps and lore hubs for GTA V, San Andreas, Vice City, Red Dead, Bully and L.A. Noire.</p></div>
+        </div>
+      </section>
+
+      <section class="s" id="metrics">
+        <span class="num">14</span>
+        <h2>What success looks like</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Measure</th><th>Target by end of week 2</th></tr></thead>
+          <tbody>
+            <tr><td>Finds with a clip and a named finder</td><td>80% of published finds</td></tr>
+            <tr><td>Time from a find going viral to being on the map</td><td>Under 24 hours</td></tr>
+            <tr><td>Published finds labelled multi-source</td><td>70% or more</td></tr>
+            <tr><td>Wrong pins reported and fixed</td><td>Every report answered within 48 hours</td></tr>
+            <tr><td>Visitors who open a second find</td><td>Tracked from launch; the sign the map pulls people in</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="s" id="risks">
+        <span class="num">15</span>
+        <h2>Risks and open questions</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td>No source publishes exact coordinates under an open licence</td><td>We place pins ourselves from clips and cross-check against community maps. Slower, but ours.</td></tr>
+            <tr><td>Original finders are often unknown</td><td>Credit the earliest clip we can find, show "first reported", and let creators claim credit.</td></tr>
+            <tr><td>Fakes and AI-written guides contradict each other</td><td>Verification labels, no AI content farms as sources, debunked entries kept visible.</td></tr>
+            <tr><td>Rockstar withdraws its tolerance or sends a takedown</td><td>Non-commercial, no leaks, spoiler-gated, credited media, a fast takedown process, and a separate project.</td></tr>
+            <tr><td>Big sites outpace us on volume</td><td>We do not compete on volume. Curation, credit and connections.</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Open questions for you</h3>
+        <ul class="clean">
+          <li>Display typeface: which licensable condensed art deco face, picked from the taste board.</li>
+          <li>Should rumours appear anywhere on the site, or only in the myths tracker?</li>
+          <li>Reach out to Game Checklists about a pin data partnership?</li>
+        </ul>
+      </section>
+
+      <section class="s" id="research">
+        <span class="num">16</span>
+        <h2>Research behind this</h2>
+        <p class="sub">Every file is in the repo under research/. Every GTA VI claim in them carries a source link.</p>
+        <div class="grid2">
+          <div class="card"><h3 class="h4">GTA VI</h3><p>gta6-finds.json (85 finds), gta6-world.md, gta6-mechanics.md, gta6-design-language.md, gta6-sources.md</p></div>
+          <div class="card"><h3 class="h4">Rockstar and the field</h3><p>legal-fan-site.md, rockstar-universe.md, rockstar-connections.json (85 items), landscape.md</p></div>
+          <div class="card"><h3 class="h4">Your X bookmarks</h3><p>x-bookmarks-gta-vi-build.md: 22 posts, including 12 Game Checklists collectible maps and 20 leads.</p></div>
+          <div class="card"><h3 class="h4">Method</h3><p>Two research agents, sources fetched and checked, four YouTube clips verified independently. Model knowledge predates launch, so nothing about the game comes from memory.</p></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>The Vice Files is an unofficial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names are trademarks of their respective owners. This page is a working draft and is not indexed by search engines.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  try{var th=new URLSearchParams(location.search).get('theme');if(th==='light'||th==='dark')document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  var toc=document.getElementById('toc'), list=document.getElementById('sheetList');
+  list.innerHTML=toc.innerHTML;
+  var btn=document.getElementById('tocBtn'), sheet=document.getElementById('sheet');
+  function setOpen(o){sheet.classList.toggle('open',o);btn.setAttribute('aria-expanded',o);sheet.setAttribute('aria-hidden',!o);}
+  btn.addEventListener('click',function(){setOpen(!sheet.classList.contains('open'))});
+  sheet.addEventListener('click',function(e){if(e.target.tagName==='A'||e.target===sheet)setOpen(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false)});
+  var links=[].slice.call(toc.querySelectorAll('a'));
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id)})}})},{rootMargin:'-30% 0px -65% 0px'});
+  links.forEach(function(a){var s=document.querySelector(a.getAttribute('href'));if(s)obs.observe(s)});
+})();
+</script>
+</body>
+</html>
