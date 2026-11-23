@@ -1,0 +1,54 @@
+---
+// The filter chip (GetYourGuide and Rodeo chip rows). Fully rounded, icon + label.
+// selected: the white pill with a dark label (Apple TV, Hulu active state), set aria-pressed for toggles.
+// glass: over the map or art. touch: 40 high instead of 34 (phone rows).
+// Pass href for a link chip; otherwise a toggle <button>.
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+interface Props { href?: string; icon?: IconName; selected?: boolean; glass?: boolean; touch?: boolean; count?: number; class?: string; [key: string]: unknown }
+const { href, icon, selected = false, glass = false, touch = false, count, class: className, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+const attrs = href ? { href, 'aria-current': selected ? 'page' : undefined } : { type: 'button', 'aria-pressed': selected ? 'true' : 'false' };
+---
+<Tag class:list={['chip', { 'chip--glass': glass, 'chip--touch': touch, 'is-selected': selected }, className]} {...attrs} {...rest}>
+  {icon && <Icon name={icon} size={touch ? 20 : 16} />}
+  <span><slot /></span>
+  {count !== undefined && <span class="chip__count tabular">{count}</span>}
+</Tag>
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--chip-h);
+    padding-inline: 14px;
+    border-radius: var(--radius-full);
+    border: var(--border-w) solid var(--border-1);
+    background: var(--surface-2);
+    color: var(--text-1);
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      transform var(--dur-press) var(--ease-out),
+      background-color var(--dur-colour) var(--ease-colour),
+      color var(--dur-colour) var(--ease-colour),
+      border-color var(--dur-colour) var(--ease-colour);
+  }
+  .chip:active { transform: scale(0.97); }
+  .chip--touch { height: var(--chip-h-touch); padding-inline: 16px; font-weight: 600; }
+  .chip--glass {
+    background: var(--glass-fill);
+    border-color: var(--glass-border);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+  .chip.is-selected { background: var(--inverse-fill); color: var(--inverse-text); border-color: var(--inverse-fill); }
+  .chip__count { color: var(--text-3); font-size: 12px; }
+  .chip.is-selected .chip__count { color: inherit; opacity: 0.7; }
+  @media (hover: hover) and (pointer: fine) {
+    .chip:not(.is-selected):hover { background: var(--surface-3); }
+  }
+</style>

@@ -59,3 +59,16 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | M3 | Grid cells are written row letter then column number (`F5`). Letters are rows, numbers are columns, as measured. | Matches how the poster prints them. |
 | M4 | `pin_accuracy` has a third level, `exact`, beside `landmark` and `area`. | Chime places pins from clips and in game, which is more precise than a labelled place. Remove it if the owner wants two levels only. |
 | M5 | The map agent did not view the map image, so labels and first-pass pins wait for a person. | LEGAL.md and CONTENT-GUIDE rule 5 forbid feeding the map into AI tools; the brief asked otherwise, so the conflict goes to the owner. |
+
+## 2026-11-23: slice decisions (design foundation, open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| D1 | The desktop header is the NEON compact island (336 wide, centred) as picked. The design audit's "shared edges" check fails on desktop because a centred island cannot share the 40px page edge; every other check passes. | The owner chose the NEON island (answers, question 3). Widening it or adding corner controls would change the pick. Options if the check must pass: accept it as a deliberate exception, or move to a full width bar. |
+| D2 | Display face is loaded as Google Fonts' "Big Shoulders" with its optical size fixed at 72, which is the Display cut. | Google merged Big Shoulders Display into one family with an `opsz` axis; the old family name no longer resolves. |
+| D3 | Home art is the YouTube thumbnail of each find's own clip, loaded from YouTube. Shorts, spoiler and mature finds never show art on the home page. | Decision 8 (embed, never re-host); the only art we may show without AI processing of Rockstar files. The agent never looked at these images; the owner should eyeball the real stills. |
+| D4 | The A24 stack shows the first five safe finds whose titles fit one line (47 characters or fewer), at about 58px on a 1440 screen instead of A24's 72px. Its superscript is the find's category, not a date. | Find titles are sentences, not film titles; at 72px they cannot sit on one line. Every find carries the same `updated_at`, so a date would say nothing. |
+| D5 | The home hero stays dark in the light theme (`data-scheme="dark"`). | Art led: the white type sits on the still in both themes, as the A24 and Apple TV picks show. |
+| D6 | Glass blur is 20px (the GTA site uses 25px). | Animated glass over 20px drops frames in Safari. |
+| D7 | Theme: no saved choice follows the system setting; the toggle in the header saves a choice on the device; `?theme=light|dark` forces one for checks. | Dark first (decision 17) without overriding a visitor who runs a light system. |
+| D8 | The header stays a centred NEON island on desktop. The design audit's "shared edges" check fails on it by design; treat those two desktop fails as a known exception, and any other fail as real. | Owner decision, 23 Nov 2026: keep the centred island as picked. |

@@ -1,6 +1,15 @@
 ---
+// Verification tag for a find. The four levels come from content (decision 11); the look comes from Badge.
+import Badge from './ui/Badge.astro';
+import type { IconName } from './ui/icons';
 interface Props { level: string }
-const labels: Record<string, string> = { 'multi-source': 'Multi-source', 'single-source': 'Single source', rumor: 'Rumour', debunked: 'Debunked' };
+const map: Record<string, { label: string; variant: 'verified' | 'outline' | 'muted' | 'debunked'; icon: IconName }> = {
+  'multi-source': { label: 'Multi-source', variant: 'verified', icon: 'check' },
+  'single-source': { label: 'Single source', variant: 'outline', icon: 'dot' },
+  rumor: { label: 'Rumour', variant: 'muted', icon: 'question' },
+  debunked: { label: 'Debunked', variant: 'debunked', icon: 'cross' },
+};
 const { level } = Astro.props;
+const v = map[level] ?? { label: level, variant: 'outline' as const, icon: 'dot' as IconName };
 ---
-<span class="verification" data-level={level}>{labels[level] ?? level}</span>
+<Badge variant={v.variant} icon={v.icon} class="verification" title={`Verification: ${v.label}`}>{v.label}</Badge>

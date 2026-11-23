@@ -1,32 +1,50 @@
 ---
-// Unstyled skeleton. The look comes from the taste board picks.
-interface Props { title: string; description?: string }
-const { title, description = 'A fan-made field guide to GTA VI and the Rockstar universe.' } = Astro.props;
-const nav = [
-  { href: '/map', label: 'Map' },
-  { href: '/finds', label: 'Finds' },
-  { href: '/explainers', label: 'Explainers' },
-  { href: '/lore', label: 'Lore' },
-];
+// The page shell: fonts, theme, header, footer. Every page uses it.
+// layout: 'page' (default) puts the slot in the shared container below the floating header;
+//         'bare' hands the full width to the page (heroes, the map).
+// sub: the NEON sub bar under the island (pages with a hero only).
+import { Font } from 'astro:assets';
+import '../styles/base.css';
+import Header, { type SubBar } from '../components/site/Header.astro';
+import Footer from '../components/site/Footer.astro';
+interface Props { title: string; description?: string; layout?: 'page' | 'bare'; sub?: SubBar }
+const { title, description = 'A fan-made field guide to GTA VI and the Rockstar universe.', layout = 'page', sub } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0d0c1a" />
     <title>{title === 'The Vice Files' ? title : `${title} | The Vice Files`}</title>
     <meta name="description" content={description} />
+    <script is:inline>
+      // Theme before first paint: ?theme= (for checks), then the visitor's choice, then the system setting. Dark first.
+      (function () {
+        var t = 'dark';
+        try {
+          var q = new URLSearchParams(location.search).get('theme');
+          var s = q || localStorage.getItem('vf-theme');
+          t = s === 'light' || s === 'dark' ? s : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        } catch (e) {}
+        document.documentElement.dataset.theme = t;
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', t === 'light' ? '#f9f5f0' : '#0d0c1a');
+      })();
+    </script>
+    <Font cssVariable="--font-display-src" preload />
+    <Font cssVariable="--font-body-src" preload />
+    <Font cssVariable="--font-mono-src" />
+    <Font cssVariable="--font-serif-src" />
   </head>
   <body>
-    <header role="banner">
-      <a href="/">The Vice Files</a>
-      <nav aria-label="Main"><ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul></nav>
-    </header>
-    <main><slot /></main>
-    <footer>
-      <p>The Vice Files is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names, images and materials are trademarks and copyrights of their respective owners. Clips play from their creators' own posts.</p>
-      <p>Takedowns and credit corrections: <a href="mailto:takedown@thevicefiles.com">takedown@thevicefiles.com</a></p>
-    </footer>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header sub={sub} />
+    <main id="main">
+      {layout === 'page' ? <div class="container page"><slot /></div> : <slot />}
+    </main>
+    <Footer />
   </body>
 </html>

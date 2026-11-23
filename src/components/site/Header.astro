@@ -1,0 +1,369 @@
+---
+// The site header: the NEON island, fixed and centred, always visible.
+//   Desktop: hamburger + wordmark on the left, Map and theme on the right. The hamburger opens the Apple Sports
+//   style glass popover anchored to the island; the page dims behind it, the header stays in focus.
+//   Phone: the same island across the width; the hamburger opens the Peacock style full screen blurred menu with
+//   icon rows and a round close button at the bottom. No tab bar.
+// Optional sub bar (NEON "GET TICKETS" row): pass `sub` from a page with a hero; desktop only.
+import Icon from '../ui/Icon.astro';
+import { nav, isCurrent } from '../../lib/nav';
+export interface SubBar { href: string; label: string; image?: string | null }
+interface Props { sub?: SubBar }
+const { sub } = Astro.props;
+const path = Astro.url.pathname;
+---
+<header class="site-header" data-header>
+  <div class="island-wrap">
+    <nav class="island" aria-label="Main">
+      <button class="island__btn island__menu" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Menu" data-menu-open>
+        <Icon name="menu" size={24} />
+      </button>
+      <a class="island__mark" href="/" aria-label="The Vice Files, home">The Vice Files</a>
+      <div class="island__actions">
+        <a class="island__btn" href="/map" aria-label="Map" aria-current={isCurrent(path, '/map') ? 'page' : undefined}>
+          <Icon name="map" size={20} solid={isCurrent(path, '/map')} />
+        </a>
+        <button class="island__btn" type="button" data-theme-toggle aria-label="Switch to light theme">
+          <span class="theme-icon theme-icon--sun"><Icon name="sun" size={20} /></span>
+          <span class="theme-icon theme-icon--moon"><Icon name="moon" size={20} /></span>
+        </button>
+      </div>
+
+      <div class="menu" id="site-menu" data-menu hidden>
+        <ul class="menu__list" role="list">
+          {nav.map((item) => {
+            const current = isCurrent(path, item.href);
+            return (
+              <li>
+                <a class:list={['menu__link', { 'is-current': current }]} href={item.href} aria-current={current ? 'page' : undefined}>
+                  <Icon name={item.icon} size={24} solid={current} class="menu__icon" />
+                  <span class="menu__label">{item.label}{item.count !== undefined && <sup class="menu__count tabular">({item.count})</sup>}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+        <button class="menu__close" type="button" aria-label="Close menu" data-menu-close>
+          <Icon name="close" size={22} />
+        </button>
+      </div>
+    </nav>
+
+    {sub && (
+      <a class="subbar" href={sub.href} data-subbar>
+        <span class="subbar__thumb" aria-hidden="true">{sub.image && <img src={sub.image} alt="" width="96" height="54" loading="eager" decoding="async" data-subbar-img />}</span>
+        <span class="subbar__label" data-subbar-label>{sub.label}</span>
+        <Icon name="arrow-right" size={16} class="subbar__arrow" />
+      </a>
+    )}
+  </div>
+  <div class="menu-scrim" data-menu-scrim hidden></div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  if (header) {
+    const openBtn = header.querySelector<HTMLButtonElement>('[data-menu-open]')!;
+    const menu = header.querySelector<HTMLElement>('[data-menu]')!;
+    const closeBtn = header.querySelector<HTMLButtonElement>('[data-menu-close]')!;
+    const scrim = header.querySelector<HTMLElement>('[data-menu-scrim]')!;
+    const phone = matchMedia('(max-width: 767px)');
+    let closeTimer = 0;
+
+    const open = () => {
+      window.clearTimeout(closeTimer);
+      menu.hidden = false;
+      scrim.hidden = false;
+      openBtn.setAttribute('aria-expanded', 'true');
+      if (phone.matches) document.documentElement.classList.add('is-locked');
+      requestAnimationFrame(() => {
+        header.dataset.menu = 'open';
+        if (phone.matches) (menu.querySelector<HTMLElement>('[aria-current="page"]') ?? menu.querySelector<HTMLElement>('a'))?.focus({ preventScroll: true });
+      });
+    };
+    const close = (instant = false, restoreFocus = true) => {
+      header.dataset.menu = instant ? 'instant' : 'closing';
+      openBtn.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('is-locked');
+      const done = () => { menu.hidden = true; scrim.hidden = true; delete header.dataset.menu; };
+      if (instant) done(); else closeTimer = window.setTimeout(done, 180);
+      if (restoreFocus) openBtn.focus({ preventScroll: true });
+    };
+    const isOpen = () => openBtn.getAttribute('aria-expanded') === 'true';
+
+    openBtn.addEventListener('click', () => (isOpen() ? close() : open()));
+    closeBtn.addEventListener('click', () => close());
+    scrim.addEventListener('click', () => close(false, false));
+    document.addEventListener('click', (e) => {
+      if (isOpen() && !phone.matches && !header.querySelector('.island')!.contains(e.target as Node)) close(false, false);
+    });
+    // Keyboard closes instantly (keyboard actions do not animate).
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) close(true);
+      if (e.key === 'Tab' && isOpen() && phone.matches) {
+        const items = [...menu.querySelectorAll<HTMLElement>('a, button')];
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    phone.addEventListener('change', () => { if (isOpen()) close(true, false); });
+
+    // Theme toggle: the choice is remembered on this device; without one, the system setting decides.
+    const toggle = header.querySelector<HTMLButtonElement>('[data-theme-toggle]')!;
+    const label = () => {
+      const t = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      toggle.setAttribute('aria-label', t === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+    };
+    label();
+    toggle.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem('vf-theme', next); } catch { /* private mode: the choice lasts for this page only */ }
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f9f5f0' : '#0d0c1a');
+      label();
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: var(--z-header);
+    pointer-events: none;
+    padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px));
+  }
+  .island-wrap {
+    width: var(--island-w);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--island-gap);
+    pointer-events: auto;
+  }
+
+  /* The island. Its blur lives on ::before so the phone menu (position: fixed) is not trapped by backdrop-filter. */
+  .island {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: var(--island-h);
+    padding-inline: 12px;
+    color: var(--text-1);
+    background: var(--glass-fill);
+    border: var(--border-w) solid var(--glass-border);
+    border-radius: var(--radius-xs);
+    isolation: isolate;
+  }
+  .island::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--radius-xs);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    z-index: -1;
+  }
+  .island__btn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    color: var(--text-1);
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .island__btn:active { transform: scale(0.94); }
+  .island__menu { width: 40px; }
+  .island__mark {
+    margin-left: 10px;
+    font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: 19px;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-block: 12px;
+  }
+  .island__actions { margin-left: auto; display: flex; align-items: center; }
+  @media (hover: hover) and (pointer: fine) {
+    .island__btn:hover { background: var(--glass-hover); }
+  }
+
+  .theme-icon { display: grid; place-items: center; grid-area: 1 / 1; }
+  .theme-icon--moon { display: none; }
+  :global([data-theme='light']) .theme-icon--sun { display: none; }
+  :global([data-theme='light']) .theme-icon--moon { display: grid; }
+
+  /* Sub bar (desktop only) */
+  .subbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: var(--island-sub-h);
+    padding-inline: 8px 16px;
+    border-radius: var(--radius-xs);
+    background: var(--bg);
+    border: var(--border-w) solid var(--border-1);
+    color: var(--accent-text);
+    transition: opacity var(--dur-colour) var(--ease-colour), transform var(--dur-colour) var(--ease-out);
+  }
+  .subbar__thumb {
+    width: 48px;
+    height: 28px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--glow-hero), var(--surface-2);
+    flex: none;
+  }
+  .subbar__thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .subbar__label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; flex: 1; }
+  :global(.subbar__arrow) { color: var(--accent-text); transition: transform var(--dur-colour) var(--ease-out); }
+  :global([data-theme='light']) .subbar { background: #2f2f2f; border-color: #2f2f2f; color: #ffffff; }
+  :global([data-theme='light']) .subbar :global(.subbar__arrow) { color: #ffffff; }
+  @media (hover: hover) and (pointer: fine) {
+    .subbar:hover :global(.subbar__arrow) { transform: translateX(3px); }
+  }
+  :global([data-subbar='hidden']) .subbar { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+  /* Desktop menu: glass popover from the hamburger (Apple Sports) */
+  .menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-xl);
+    background: var(--glass-fill-strong);
+    border: var(--border-w) solid var(--glass-border);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    transform-origin: 20px 0;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
+    z-index: 2;
+  }
+  :global([data-menu='open']) .menu {
+    opacity: 1;
+    transform: none;
+    transition: opacity var(--dur-popover-in) var(--ease-out), transform var(--dur-popover-in) var(--ease-out);
+  }
+  :global([data-menu='instant']) .menu { transition: none; }
+  .menu__list { display: flex; flex-direction: column; gap: 4px; }
+  .menu__link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 48px;
+    padding-inline: 14px;
+    border-radius: var(--radius-full);
+    color: var(--text-1);
+    font-size: 18px;
+    font-weight: 400;
+    transition: background-color var(--dur-colour) var(--ease-colour);
+  }
+  .menu__link.is-current { background: var(--glass-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__link:not(.is-current):hover { background: var(--glass-hover-soft); }
+  }
+  .menu__count {
+    margin-left: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
+    vertical-align: super;
+    line-height: 0;
+  }
+  .menu[hidden] { display: none; }
+  .menu__close { display: none; }
+  .menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--scrim);
+    opacity: 0;
+    transition: opacity var(--dur-popover-out) var(--ease-standard);
+    pointer-events: auto;
+  }
+  :global([data-menu='open']) .menu-scrim { opacity: 1; transition-duration: var(--dur-popover-in); }
+
+  /* Phone: island across the width, menu becomes the Peacock overlay */
+  @media (max-width: 767px) {
+    .island-wrap { width: calc(100% - 2 * var(--page-pad)); }
+    .island { padding-inline: 4px 4px; }
+    .island__btn { width: 44px; height: 44px; }
+    .island__menu { width: 44px; }
+    .island__mark { margin-left: 4px; font-size: 18px; padding-block: 13px; }
+    .subbar { display: none; }
+
+    .menu {
+      position: fixed;
+      inset: 0;
+      width: auto;
+      padding: calc(env(safe-area-inset-top, 0px) + 120px) 0 calc(env(safe-area-inset-bottom, 0px) + 54px);
+      border: 0;
+      border-radius: 0;
+      background: var(--overlay-fill);
+      -webkit-backdrop-filter: blur(20px) saturate(120%);
+      backdrop-filter: blur(20px) saturate(120%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: none;
+      transition: opacity var(--dur-overlay-out) var(--ease-standard);
+      overscroll-behavior: contain;
+      z-index: 3;
+    }
+    .menu::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 22%;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      pointer-events: none;
+    }
+    :global([data-menu='open']) .menu { transform: none; transition: opacity var(--dur-overlay-in) var(--ease-out); }
+    .menu__list { gap: 0; width: 100%; padding-left: 32%; }
+    .menu__link {
+      height: 80px;
+      gap: 22px;
+      padding: 0;
+      border-radius: 0;
+      font-size: var(--text-menu);
+      font-weight: 600;
+      color: var(--text-2);
+      background: none;
+    }
+    .menu__link.is-current { background: none; color: var(--text-1); }
+    .menu :global(.menu__icon) { width: 31px; height: 31px; }
+    .menu__count { font-size: 13px; }
+    .menu__close {
+      display: grid;
+      place-items: center;
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      width: var(--ctrl-size-xl);
+      height: var(--ctrl-size-xl);
+      border-radius: var(--radius-full);
+      background: var(--surface-1);
+      border: var(--border-w) solid var(--border-1);
+      color: var(--text-1);
+      transition: transform var(--dur-press) var(--ease-out);
+    }
+    .menu__close:active { transform: scale(0.94); }
+    .menu-scrim { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu, :global([data-menu='open']) .menu { transform: none; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .island, .menu { background: var(--surface-1); }
+    .island::before, .menu { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+</style>
