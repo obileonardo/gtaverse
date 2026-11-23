@@ -1,0 +1,20 @@
+---
+// One connection in the GTAverse: the lore timeline with this moment selected. Moving along the line swaps the
+// moment in place and the address follows it, so every moment keeps its own page (and its own title).
+import Base from '../../layouts/Base.astro';
+import Timeline from '../../components/lore/Timeline.astro';
+import { moments, type Moment } from '../../lib/lore';
+export function getStaticPaths() {
+  return moments.map((m) => ({ params: { slug: m.slug }, props: { m } }));
+}
+const { m } = Astro.props as { m: Moment };
+---
+<Base title={m.title} description={m.summary} layout="bare">
+  <Timeline
+    selected={m.index}
+    syncUrl
+    titleAsH1
+    headline="The GTAverse"
+    intro="Each connection sits at the release year of the earliest game it appears in. Move along the line to read the others."
+  />
+</Base>

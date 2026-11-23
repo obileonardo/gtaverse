@@ -6,13 +6,14 @@
 //   glass     translucent pill over art or map (Apple Games)
 //   secondary pink tint fill, pink label (Apple Maps secondary actions)
 //   quiet     surface fill, normal label (Cancel and other low-weight actions)
+//   outline   no fill, 1px edge (V7 timeline arrows)
 // size: s 32, m 40 (default), l 48, xl 56. iconOnly makes it a circle of the same height.
 // Pass href to render a link; otherwise a <button>. Extra attributes pass through.
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 interface Props {
   href?: string;
-  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet';
+  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'outline';
   size?: 's' | 'm' | 'l' | 'xl';
   icon?: IconName;
   iconEnd?: IconName;
@@ -79,6 +80,7 @@ const attrs = href ? { href } : { type: (rest.type as string) ?? 'button' };
   }
   .btn--secondary { background: var(--accent-tint); color: var(--accent-text); }
   .btn--quiet { background: var(--surface-2); color: var(--text-1); border-color: var(--border-1); }
+  .btn--outline { background: transparent; color: var(--text-1); border-color: var(--border-2); }
 
   @media (hover: hover) and (pointer: fine) {
     .btn--primary:hover { background: #fb8fbf; }
@@ -87,6 +89,7 @@ const attrs = href ? { href } : { type: (rest.type as string) ?? 'button' };
     .btn--glass:hover { background: var(--glass-fill-strong); }
     .btn--secondary:hover { background: rgb(249 118 176 / 0.24); }
     .btn--quiet:hover { background: var(--surface-3); }
+    .btn--outline:hover { border-color: var(--text-2); }
   }
 
   @media (prefers-reduced-transparency: reduce) {

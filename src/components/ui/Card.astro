@@ -30,6 +30,7 @@ const Tag = href ? 'a' : 'div';
   .card--framed { padding: var(--space-4); background: var(--surface-1); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); }
   .card__media {
     position: relative;
+    container-type: inline-size;
     overflow: hidden;
     border-radius: var(--radius-m);
     border: var(--border-w) solid var(--border-1);
@@ -47,7 +48,7 @@ const Tag = href ? 'a' : 'div';
   .card__glow span {
     font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
     font-weight: 900;
-    font-size: 28px;
+    font-size: min(28px, 13cqi); /* shrinks in narrow cards (two columns at 320) so a long kicker is never clipped */
     line-height: 0.92;
     text-transform: uppercase;
     color: var(--text-1);

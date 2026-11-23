@@ -1,8 +1,57 @@
 ---
+// The explainers. Same head as the finds index, then the site's one card style on the sunrise glow (explainers
+// carry no art): kicker, title, and a meta line with the review state and the reading time.
 import Base from '../../layouts/Base.astro';
+import Card from '../../components/ui/Card.astro';
 import { explainers } from '../../lib/content';
+import { explainerParts } from '../../lib/explainers';
+
+const items = await Promise.all(explainers.map(async (e) => ({ e, parts: await explainerParts(e) })));
 ---
-<Base title="Explainers">
-  <h1>Explainers</h1>
-  <ul>{explainers.map((e) => <li><a href={`/explainers/${e.frontmatter.slug}`}>{e.frontmatter.title}</a>{e.frontmatter.status === 'draft' ? ' (draft)' : ''}</li>)}</ul>
+<Base title="Explainers" description="How GTA VI's systems work, from wanted levels to relationships, written from sources and labelled when unreviewed.">
+  <header class="head">
+    <h1 class="head__title">Explainers<sup class="head__count mono">{explainers.length}</sup></h1>
+    <p class="head__lede">How the game's systems work, written from cited sources. Pages marked draft are still under review.</p>
+  </header>
+  <ul class="grid">
+    {items.map(({ e, parts }) => (
+      <li>
+        <Card
+          href={`/explainers/${e.frontmatter.slug}`}
+          kicker="Explainer"
+          title={e.frontmatter.title}
+          meta={`${e.frontmatter.status === 'draft' ? 'Draft' : 'Reviewed'} · ${parts.minutes} min read · ${e.frontmatter.sources.length} sources`}
+        >
+          {parts.standfirst && <p class="lede" set:html={parts.standfirst.replace(/<sup[\s\S]*?<\/sup>/g, '')} />}
+        </Card>
+      </li>
+    ))}
+  </ul>
 </Base>
+
+<style>
+  .head { display: flex; flex-direction: column; gap: var(--space-4); max-width: 820px; }
+  .head__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+  }
+  .head__count { margin-left: 6px; vertical-align: top; position: relative; top: 0.3em; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); }
+  .head__lede { max-width: var(--measure-short); color: var(--text-2); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-10) var(--space-5); margin-top: var(--space-12); }
+  .lede {
+    margin-top: var(--space-2);
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media (max-width: 1023px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 767px) { .grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); margin-top: var(--space-8); } }
+</style>

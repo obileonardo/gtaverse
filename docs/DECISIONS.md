@@ -72,3 +72,21 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | D6 | Glass blur is 20px (the GTA site uses 25px). | Animated glass over 20px drops frames in Safari. |
 | D7 | Theme: no saved choice follows the system setting; the toggle in the header saves a choice on the device; `?theme=light|dark` forces one for checks. | Dark first (decision 17) without overriding a visitor who runs a light system. |
 | D8 | The header stays a centred NEON island on desktop. The design audit's "shared edges" check fails on it by design; treat those two desktop fails as a known exception, and any other fail as real. | Owner decision, 23 Nov 2026: keep the centred island as picked. |
+
+## 2026-11-23: the lore section is the GTAverse (owner decision)
+
+| # | Decision | Why |
+|---|---|---|
+| G1 | The lore section is named "The GTAverse": the shared universe across GTA I to VI, Red Dead, Bully and L.A. Noire. The menu reads "GTAverse" (count kept), routes are `/gtaverse` and `/gtaverse/[slug]`, the index title is "The GTAverse", and each connection page keeps its own title. `/lore` and `/lore/*` redirect with a 301 (`public/_redirects`). | Owner decision, 23 Nov 2026. |
+
+## 2026-11-23: slice decisions (find, explainer and lore pages, open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| P1 | Find page: the Disney+ circle and the Google TV second pill open the map only when a find has a pin (`/map?find=<slug>`). No find has a pin yet, so the circle shares the page and the pill opens "How to find it". | The direction file read the circle as "open on the map" (inference); a map link without a pin would land nowhere. |
+| P2 | Find page tabs are Related, Clips and Details on both sizes (the direction proposed Shots on the phone). Clips holds the clip and the other YouTube sources as the Xbox grid. | One tab set for one component; Clips covers both the clip and the shots. |
+| P3 | Credit: "About the finder" only when `first_finder` exists; otherwise "About the clip" with "Clip by <creator>". Spoiler and mature clips load no thumbnail until revealed. | Owner content rules. |
+| P4 | The wanted states table keeps the content's own orientation (one row per state, as Fiverr shows six rows), with the level badge and colour on each state. The direction proposed one column per level, but the content has six named states with sentences, not five numbered levels with short values. | Change the presentation, never the content. |
+| P5 | Lore moments sit at the release year of the earliest game each connection lists (release years in `src/lib/lore.ts`). Every moment is in the page, so moving along the line is instant; on a connection page the address follows the selected moment. | One selected moment at a time (owner answer 5), with a real page per connection. |
+| P6 | Grok's selected title is set in Newsreader (V7's serif captions) and its description at 64% white instead of 50%. | Answer 6 keeps the serif on lore pages; the summaries run to 60 words, so legibility first. |
+| P7 | Queue's quote mark is kept on the phone headline as decoration (hidden from screen readers), though moment titles are not quotes. | The owner named "quote" in the brief; flag if it reads as a quotation. |

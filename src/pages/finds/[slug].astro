@@ -1,31 +1,521 @@
 ---
+// A find. Desktop is the Disney+ web title page as drawn: the find's still fills the page behind everything under a
+// left and bottom scrim, the title, badges, meta and synopsis sit in a left column, then a white pill and a circle,
+// then underline tabs over a 16:9 grid. Phone is the Disney+ iOS page at its own size: art on the top half with the
+// Google TV Trailer chip, centred caps title and badges, Google TV stacked pills, Disney icon actions, caps tabs.
+// Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
+// Mindtrip tips ("How to find it") and the Mindtrip author card, retitled for the finder or the clip's creator.
+// Spoiler and mature finds never show art outside their reveal.
 import Base from '../../layouts/Base.astro';
 import Clip from '../../components/Clip.astro';
 import Verification from '../../components/Verification.astro';
-import { finds, connectionById, regionById, categoryById, type Find } from '../../lib/content';
+import Badge from '../../components/ui/Badge.astro';
+import Button from '../../components/ui/Button.astro';
+import Card from '../../components/ui/Card.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Tabs from '../../components/ui/Tabs.astro';
+import { finds, type Find } from '../../lib/content';
+import { findStill, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
+
 export function getStaticPaths() {
   return finds.map((f) => ({ params: { slug: f.slug }, props: { find: f } }));
 }
 const { find } = Astro.props as { find: Find };
-const related = (find.related_connections ?? []).map(connectionById).filter(Boolean);
-const regionNames = find.region_ids.map((id) => regionById(id)?.name ?? id);
+const gated = find.spoiler || find.mature;
+const still = showcaseable(find) ? findStill(find) : null;
+const who = credit(find);
+const line = creditLine(find);
+const updated = formatDate(find.updated_at);
+const others = moreClips(find);
+const lore = relatedLore(find);
+const related = relatedFinds(find, 10 - Math.min(lore.length, 4));
+const howTo = tips(find.location_description);
+const mapHref = find.pin ? `/map?find=${find.slug}` : null;
+const hasClips = Boolean(find.clip) || others.length > 0;
+const tabs = [
+  { id: 'related', label: 'Related' },
+  ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
+  { id: 'details', label: 'Details' },
+];
+const sub = mapHref
+  ? { href: mapHref, label: 'Open on the map', image: still?.thumb }
+  : find.clip
+    ? { href: '#tabs', label: gated ? 'Reveal the clip' : 'Watch the clip', image: still?.thumb }
+    : undefined;
+const loreConfidence: Record<string, string> = { canon: 'Canon', strong: 'Strong', speculative: 'Speculative', debunked: 'Debunked' };
+const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 ---
-<Base title={find.title} description={find.summary}>
-  <article>
-    <p>{categoryById(find.category)?.label ?? find.category} <Verification level={find.verification} />{find.spoiler && ' Spoiler'}{find.mature && ' Mature'}</p>
-    <h1>{find.title}</h1>
-    <p>{find.summary}</p>
-    {find.clip && <Clip clip={find.clip} title={find.title} spoiler={find.spoiler} />}
-    {find.first_finder && <p>First found by <a href={find.first_finder.url} rel="noopener">{find.first_finder.handle}</a> on {find.first_finder.platform}</p>}
-    <h2>Where</h2>
-    <p>{regionNames.join(', ')}</p>
-    {find.location_description && <p>{find.location_description}</p>}
-    {find.chapter_gate && <p>Unlocks after: {find.chapter_gate}</p>}
-    {related.length > 0 && (<>
-      <h2>Rockstar connections</h2>
-      <ul>{related.map((c) => <li><a href={`/lore/${c!.slug}`}>{c!.title}</a></li>)}</ul>
-    </>)}
-    <h2>Sources</h2>
-    <ul>{find.sources.map((s) => <li><a href={s.url} rel="noopener">{s.creator ?? s.url}</a> ({s.type})</li>)}</ul>
+<Base title={find.title} description={find.summary} layout="bare" sub={sub}>
+  <article class="find" data-find>
+    <div class:list={['find__art', { 'find__art--glow': !still }]} aria-hidden="true">
+      {still && <img src={still.src} srcset={still.srcset} sizes="100vw" alt="" width="1280" height="720" fetchpriority="high" decoding="async" />}
+      <div class="find__scrim"></div>
+    </div>
+
+    <div class="container find__inner">
+      <header class="find__hero">
+        {find.clip && (
+          <a class:list={['find__trailer', { 'find__trailer--solid': !still }]} href="#tabs" data-open-tab="clips">
+            <Icon name="play" size={20} />
+            <span>{gated ? 'Spoiler clip' : 'Play clip'}</span>
+          </a>
+        )}
+        <h1 class="find__title">{find.title}</h1>
+        <div class="find__badges">
+          <Badge variant="meta">{categoryLabel(find)}</Badge>
+          <Badge variant="meta">{regionLabel(find)}</Badge>
+          <Verification level={find.verification} />
+          {find.spoiler && <Badge variant="outline">Spoiler</Badge>}
+          {find.mature && <Badge variant="outline">Mature</Badge>}
+        </div>
+        <p class="find__meta">
+          {line && <span>{line}</span>}
+          {line && updated && <span aria-hidden="true"> · </span>}
+          {updated && <span>Updated <time datetime={find.updated_at}>{updated}</time></span>}
+        </p>
+        <p class="find__synopsis">{find.summary}</p>
+
+        <!-- Desktop: Disney white pill and circle -->
+        <div class="find__actions find__actions--web">
+          {find.clip ? (
+            <Button href="#tabs" variant="inverse" size="l" icon="play" data-open-tab="clips">{gated ? 'Reveal clip' : 'Play clip'}</Button>
+          ) : (
+            <Button href="#tabs" variant="inverse" size="l" icon="pin" data-open-tab="details">How to find it</Button>
+          )}
+          {mapHref ? (
+            <Button href={mapHref} variant="glass" size="l" icon="map" iconOnly label="Open on the map" />
+          ) : (
+            <Button variant="glass" size="l" icon="share" iconOnly label="Share this find" data-share />
+          )}
+        </div>
+
+        <!-- Phone: Google TV stacked pills -->
+        <div class="find__actions find__actions--phone">
+          {find.clip ? (
+            <a class="pill pill--primary" href="#tabs" data-open-tab="clips">
+              <span class="pill__icon" aria-hidden="true"><Icon name="play" size={20} /></span>
+              <span class="pill__text">
+                <span class="pill__title">{gated ? 'Reveal clip' : 'Play clip'}</span>
+                {find.clip?.creator && <span class="pill__sub">Clip by {find.clip.creator}</span>}
+              </span>
+            </a>
+          ) : (
+            <a class="pill pill--primary" href="#tabs" data-open-tab="details">
+              <span class="pill__icon" aria-hidden="true"><Icon name="pin" size={20} /></span>
+              <span class="pill__text">
+                <span class="pill__title">How to find it</span>
+                <span class="pill__sub">{regionLabel(find)}</span>
+              </span>
+            </a>
+          )}
+          {mapHref ? (
+            <a class="pill pill--secondary" href={mapHref}><Icon name="map" size={24} /><span>Open on the map</span></a>
+          ) : (
+            <a class="pill pill--secondary" href="#tabs" data-open-tab={find.clip ? 'details' : 'related'}>
+              <Icon name={find.clip ? 'pin' : 'finds'} size={24} /><span>{find.clip ? 'How to find it' : 'Related finds'}</span>
+            </a>
+          )}
+        </div>
+
+        <!-- Phone: Disney icon actions -->
+        <ul class="find__icons">
+          <li><a href="#tabs" data-open-tab="related"><Icon name="finds" size={24} /><span>Related</span></a></li>
+          <li><a href="#tabs" data-open-tab="details"><Icon name="link" size={24} /><span>Sources</span></a></li>
+          <li><button type="button" data-share><Icon name="share" size={24} /><span data-share-label>Share</span></button></li>
+        </ul>
+      </header>
+
+      <div class="find__tabs" id="tabs">
+        <Tabs id="find" tabs={tabs} label="About this find">
+          <div slot="related">
+            <h2 class="sr-only">Related finds and lore</h2>
+            <ul class="grid">
+              {lore.slice(0, 4).map((c) => (
+                <li><Card href={`/gtaverse/${c.slug}`} kicker="GTAverse" title={c.title} meta={`${loreConfidence[c.confidence] ?? c.confidence} · ${c.games.slice(-1)[0] ?? ''}`} /></li>
+              ))}
+              {related.map((f) => {
+                const img = cardImage(f);
+                return (
+                  <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={f.title} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}`} /></li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {hasClips && (
+            <div slot="clips" class="clips">
+              <h2 class="sr-only">Clips</h2>
+              {find.clip && <Clip clip={find.clip} title={find.title} spoiler={find.spoiler} mature={find.mature} class="clips__main" />}
+              {others.length > 0 && (
+                <section class="shots" aria-labelledby="shots-title">
+                  <h2 id="shots-title" class="find__h2">More videos of this find</h2>
+                  <ul class="shots__grid">
+                    {others.map((o) => (
+                      <li>
+                        <a class="shot" href={o.url} rel="noopener" target="_blank">
+                          <span class:list={['shot__media', { 'shot__media--glow': gated }]}>
+                            {!gated && <img src={`https://i.ytimg.com/vi/${o.id}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" />}
+                            {gated && <span class="mono-caps">Spoiler</span>}
+                          </span>
+                          <span class="shot__label">{o.creator} <Icon name="arrow-up-right" size={14} /></span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          )}
+
+          <div slot="details" class="details">
+            <h2 class="sr-only">Details</h2>
+            <div class="details__main">
+              {howTo.length > 0 && (
+                <section class="tips" aria-labelledby="tips-title">
+                  <h2 id="tips-title" class="tips__title">How to find it <span title="From the creators' clips and write ups"><Icon name="info" size={16} /></span></h2>
+                  <ul class="tips__list">{howTo.map((t) => <li>{t}</li>)}</ul>
+                </section>
+              )}
+              <dl class="facts">
+                <div><dt>Category</dt><dd>{categoryLabel(find)}</dd></div>
+                <div><dt>Where</dt><dd>{regionNames(find).join(', ')}{find.area && <span class="facts__sub">{find.area}</span>}</dd></div>
+                <div><dt>Verification</dt><dd><Verification level={find.verification} /><span class="facts__sub">{verificationNote[find.verification] ?? ''}</span></dd></div>
+                {find.chapter_gate && <div><dt>Unlocks after</dt><dd>{find.chapter_gate}</dd></div>}
+                {(find.crossover_games?.length ?? 0) > 0 && <div><dt>Crossover</dt><dd>{find.crossover_games!.join(', ')}</dd></div>}
+                {gated && <div><dt>Content</dt><dd>{[find.spoiler && 'Spoiler', find.mature && 'Mature'].filter(Boolean).join(', ')}</dd></div>}
+                {updated && <div><dt>Updated</dt><dd>{updated}</dd></div>}
+              </dl>
+            </div>
+
+            <aside class="details__side">
+              {who && (
+                <section class="about" aria-labelledby="about-title">
+                  <h2 id="about-title" class="about__title">{who.kind === 'finder' ? 'About the finder' : 'About the clip'}</h2>
+                  <div class="about__who">
+                    <span class="about__avatar" aria-hidden="true">{who.name.replace(/^u\//, '').charAt(0).toUpperCase()}</span>
+                    <span class="about__name">
+                      <span>{who.name}</span>
+                      <span class="about__role">{who.kind === 'finder' ? `First found it, on ${who.platform}` : `Made the clip, on ${who.platform}`}</span>
+                    </span>
+                  </div>
+                  {who.url && (
+                    <div class="about__actions">
+                      <Button href={who.url} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener">{who.kind === 'finder' ? 'View post' : `Watch on ${who.platform}`}</Button>
+                    </div>
+                  )}
+                </section>
+              )}
+              <section class="sources" aria-labelledby="sources-title">
+                <h2 id="sources-title" class="find__h2">Sources</h2>
+                <ul class="sources__list">
+                  {find.sources.map((s) => (
+                    <li>
+                      <a class="source" href={s.url} rel="noopener" target="_blank">
+                        <span class="source__thumb" aria-hidden="true"><Icon name="link" size={20} /></span>
+                        <span class="source__text">
+                          <span class="source__kind"><Icon name="link" size={12} /> {platformName(s.type)}</span>
+                          <span class="source__title">{s.creator ?? host(s.url)}</span>
+                          <span class="source__url">{host(s.url)}</span>
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </Tabs>
+      </div>
+    </div>
   </article>
 </Base>
+
+<script>
+  // Links and pills that open a tab: select the tab, then bring the tab row into view.
+  document.querySelectorAll<HTMLElement>('[data-open-tab]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      const tab = document.getElementById(`find-tab-${el.dataset.openTab}`);
+      if (!tab) return;
+      e.preventDefault();
+      tab.click();
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.getElementById('tabs')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      tab.focus({ preventScroll: true });
+    });
+  });
+  // Share: the system sheet where there is one, otherwise copy the link.
+  document.querySelectorAll<HTMLElement>('[data-share]').forEach((el) => {
+    el.addEventListener('click', async () => {
+      const data = { title: document.title, url: location.href.split('#')[0] };
+      try {
+        if (navigator.share) { await navigator.share(data); return; }
+        await navigator.clipboard.writeText(data.url);
+        const label = el.querySelector<HTMLElement>('[data-share-label]');
+        if (label) { label.textContent = 'Copied'; setTimeout(() => { label.textContent = 'Share'; }, 1600); }
+        else el.setAttribute('aria-label', 'Link copied');
+      } catch { /* the visitor closed the share sheet */ }
+    });
+  });
+</script>
+
+<style>
+  .find { position: relative; isolation: isolate; }
+
+  /* ---------- Art ---------- */
+  .find__art { position: absolute; inset: 0 0 auto; z-index: -1; overflow: hidden; background: var(--bg); }
+  .find__art img { width: 100%; height: 100%; object-fit: cover; }
+  .find__art--glow { background: var(--glow-hero), var(--bg); }
+  .find__scrim { position: absolute; inset: 0; }
+
+  .find__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .find__badges { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .find__meta { color: var(--text-2); font-size: var(--text-body-s); }
+  .find__synopsis { color: var(--text-1); }
+  .find__h2 { font-size: var(--text-h2); font-weight: 700; line-height: 1.2; }
+
+  /* ---------- Grid (Disney related row) ---------- */
+  .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 21px var(--space-5); }
+
+  /* ---------- Clips ---------- */
+  .clips { display: flex; flex-direction: column; gap: var(--space-12); }
+  .clips :global(.clips__main) { max-width: 960px; }
+  .shots { display: flex; flex-direction: column; gap: var(--space-4); }
+  .shots__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3) 10px; }
+  .shot { display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-2); }
+  .shot__media { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius-xs); background: var(--surface-2); color: var(--accent-text); }
+  .shot__media--glow { background: var(--glow-hero), var(--surface-1); }
+  .shot__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .shot__label { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-caption); }
+  .shot { transition: transform var(--dur-press) var(--ease-out); }
+  .shot:active { transform: scale(0.98); }
+
+  /* ---------- Details ---------- */
+  .details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: var(--space-16); align-items: start; }
+  .details__main, .details__side { display: flex; flex-direction: column; gap: var(--space-10); min-width: 0; }
+  .tips { display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--measure); }
+  .tips__title { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-title); font-weight: 600; }
+  .tips__title span { display: inline-flex; color: var(--text-3); }
+  .tips__list { display: flex; flex-direction: column; gap: var(--space-1); color: var(--text-2); }
+  .tips__list li { position: relative; padding-left: 1.1em; }
+  .tips__list li::before { content: '-'; position: absolute; left: 0; }
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-8); margin: 0; }
+  .facts > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .facts dt { color: var(--text-3); font-size: var(--text-body-s); }
+  .facts dd { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+  .facts__sub { color: var(--text-2); font-size: var(--text-body-s); }
+
+  .about {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+  }
+  .about__title { font-size: var(--text-title-l); font-weight: 600; }
+  .about__who { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+  .about__avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-full);
+    background: var(--accent-tint);
+    color: var(--accent-text);
+    font-size: 28px;
+    font-weight: 500;
+  }
+  .about__name { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+  .about__role { color: var(--text-2); font-size: var(--text-body-s); }
+  .about__actions { display: flex; gap: var(--space-2); }
+
+  .sources { display: flex; flex-direction: column; gap: var(--space-4); }
+  .sources__list { display: flex; flex-direction: column; gap: var(--space-2); }
+  .source {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-m);
+    border: var(--border-w) solid var(--border-1);
+    transition: background-color var(--dur-colour) var(--ease-colour), transform var(--dur-press) var(--ease-out);
+  }
+  .source:active { transform: scale(0.98); }
+  .source__thumb { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--radius-s); background: var(--surface-2); color: var(--text-3); }
+  .source__text { display: flex; flex-direction: column; min-width: 0; }
+  .source__kind { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--text-2); font-size: var(--text-caption); }
+  .source__title, .source__url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .source__title { font-weight: 600; }
+  .source__url { color: var(--text-2); font-size: var(--text-body-s); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .source:hover { background: var(--surface-1); }
+    .shot:hover .shot__label { color: var(--text-1); }
+  }
+
+  /* ---------- Desktop (Disney+ web) ---------- */
+  @media (min-width: 768px) {
+    .find__art { height: max(100svh, 760px); }
+    .find__scrim {
+      background:
+        linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 0%, transparent) 46%),
+        linear-gradient(to right, color-mix(in srgb, var(--bg) 88%, transparent) 0%, color-mix(in srgb, var(--bg) 62%, transparent) 34%, color-mix(in srgb, var(--bg) 0%, transparent) 70%),
+        color-mix(in srgb, var(--bg) 30%, transparent);
+    }
+    .find__art--glow .find__scrim { background: linear-gradient(to top, var(--bg) 0%, transparent 60%); }
+    .find__inner { padding-top: calc(var(--island-top) + var(--island-h) + var(--island-gap) + var(--island-sub-h) + var(--space-12)); padding-bottom: var(--space-section); }
+    .find__hero { display: flex; flex-direction: column; align-items: flex-start; max-width: 820px; }
+    .find__title { font-size: var(--text-display-l); max-width: 820px; }
+    .find__badges { margin-top: var(--space-6); }
+    .find__meta { margin-top: var(--space-2); }
+    .find__synopsis {
+      margin-top: var(--space-6);
+      max-width: var(--measure-short);
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .find__actions--web { display: flex; align-items: center; gap: var(--space-5); margin-top: var(--space-6); }
+    .find__actions--phone, .find__icons, .find__trailer { display: none; }
+    .find__tabs { margin-top: var(--space-12); scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-6)); }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .details { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* ---------- Phone (Disney+ iOS, Google TV pills, Xbox shots) ---------- */
+  @media (max-width: 767px) {
+    .find__art { height: 49svh; min-height: 320px; max-height: 460px; }
+    .find__scrim { background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 0%, transparent) 50%, var(--bg) 100%); }
+    .find__inner { position: relative; padding-bottom: var(--space-section); }
+    .find__hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-top: calc(clamp(320px, 49svh, 460px) - 96px);
+    }
+    .find__trailer {
+      position: absolute;
+      top: calc(clamp(320px, 49svh, 460px) * 0.45);
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      height: var(--ctrl-size);
+      padding: 0 var(--space-5) 0 var(--space-4);
+      border-radius: var(--radius-full);
+      background: rgb(13 12 26 / 0.56);
+      border: var(--border-w) solid rgb(255 255 255 / 0.16);
+      -webkit-backdrop-filter: var(--glass-blur);
+      backdrop-filter: var(--glass-blur);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: transform var(--dur-press) var(--ease-out);
+    }
+    .find__trailer:active { transform: translateX(-50%) scale(0.97); }
+    /* No art behind it (spoilers, finds without a still): a solid pill keeps the label readable on the glow. */
+    .find__trailer--solid { background: var(--inverse-fill); color: var(--inverse-text); border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .find__title { font-size: var(--text-display-m); max-width: 100%; }
+    .find__badges { justify-content: center; margin-top: var(--space-5); }
+    .find__meta { margin-top: var(--space-2); }
+    .find__actions--web { display: none; }
+    .find__actions--phone { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; margin-top: var(--space-6); }
+    .find__synopsis { order: 3; margin-top: var(--space-6); text-align: left; font-size: var(--text-body-l); line-height: 1.3; align-self: stretch; }
+    .find__icons { order: 2; display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; margin-top: var(--space-6); }
+    .find__icons a, .find__icons button {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: 64px;
+      justify-content: center;
+      color: var(--text-1);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: transform var(--dur-press) var(--ease-out);
+    }
+    .find__icons a:active, .find__icons button:active { transform: scale(0.95); }
+    .find__icons :global(svg) { color: var(--text-2); }
+    .find__tabs { margin-top: var(--space-10); scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-4)); }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-3); }
+    .shots__grid {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(2, auto);
+      grid-auto-columns: 72%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      margin-inline: calc(var(--page-pad) * -1);
+      padding-inline: var(--page-pad);
+      scroll-padding-inline: var(--page-pad);
+    }
+    .shots__grid li { scroll-snap-align: start; }
+    .details { grid-template-columns: minmax(0, 1fr); gap: var(--space-10); }
+    .facts { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+    .about { padding: var(--space-5); border-radius: var(--radius-l); }
+  }
+
+  /* Google TV stacked pills */
+  .pill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: var(--btn-h-xl);
+    padding: var(--space-2) var(--space-16);
+    border-radius: var(--radius-full);
+    font-size: var(--text-body-l);
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .pill:active { transform: scale(0.98); }
+  .pill--primary { background: var(--inverse-fill); color: var(--inverse-text); }
+  .pill--secondary { padding-inline: var(--space-6); white-space: nowrap; background: var(--surface-2); color: var(--text-1); border: var(--border-w) solid var(--border-1); }
+  .pill__icon {
+    position: absolute;
+    left: var(--space-2);
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+    border-radius: var(--radius-full);
+    background: var(--inverse-text);
+    color: var(--inverse-fill);
+  }
+  .pill__text { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+  .pill__title { font-weight: 500; }
+  .pill__sub { font-size: var(--text-body-s); opacity: 0.72; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pill, .shot, .source, .find__trailer, .find__icons a, .find__icons button { transition: none; }
+  }
+</style>
