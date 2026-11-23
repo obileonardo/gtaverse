@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map harness</title>
+<!-- Verification harness for the map pipeline. Deliberately unstyled: not the product. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  body { margin: 8px; font: 14px system-ui, sans-serif; background: #fff; color: #000; }
+  #map { height: 80vh; background: #ccc; }
+  .cell-id { font: 12px monospace; color: #000; background: rgba(255, 255, 255, 0.7); padding: 0 2px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<p>Map harness. Click the map to read a pixel position; click a pin for its title. View in the address hash: <code>#zoom/x/y</code> (image pixels at the centre).</p>
+<div id="map"></div>
+<p>Picked: <code id="pick">click the map</code></p>
+<pre id="status">loading</pre>
+<script>
+(async () => {
+  const status = { ready: false, errors: [], tilesLoaded: 0, tileErrors: 0, labels: 0, pins: 0, findsWithoutPin: 0, tileOffsetMaxPx: 0, zoom: null };
+  const show = () => { document.getElementById('status').textContent = JSON.stringify(status, null, 2); };
+  window.addEventListener('error', (e) => { status.errors.push(String(e.message)); show(); });
+  try {
+    const get = async (p) => { const r = await fetch(p); if (!r.ok) throw new Error(`${p}: HTTP ${r.status}`); return r.json(); };
+    const [meta, mapDoc, finds] = await Promise.all([get('../../public/map/meta.json'), get('../../content/map.json'), get('../../content/finds.json')]);
+    const NATIVE = meta.maxZoom;
+    const map = L.map('map', { crs: L.CRS.Simple, minZoom: 0, maxZoom: NATIVE + 2, zoomSnap: 1, attributionControl: true });
+    map.attributionControl.setPrefix('Leaflet');
+    const px = (x, y) => map.unproject([x, y], NATIVE);
+    const toPx = (latlng) => map.project(latlng, NATIVE);
+    const imageBounds = L.latLngBounds(px(0, meta.height), px(meta.width, 0));
+    map.setMaxBounds(imageBounds.pad(0.1));
+
+    const tiles = L.tileLayer('../../public/map/' + meta.tileUrl, {
+      tileSize: meta.tileSize, minZoom: 0, maxNativeZoom: NATIVE, maxZoom: NATIVE + 2,
+      bounds: imageBounds, noWrap: true, attribution: mapDoc.source.attribution,
+    }).addTo(map);
+
+    // Self-check: every loaded tile must sit where its image pixels say it should.
+    tiles.on('tileload', (e) => {
+      status.tilesLoaded++;
+      const z = e.coords.z;
+      if (z <= NATIVE) {
+        const f = meta.tileSize * 2 ** (NATIVE - z);
+        const want = map.latLngToContainerPoint(px(e.coords.x * f, e.coords.y * f));
+        const box = e.tile.getBoundingClientRect();
+        const origin = map.getContainer().getBoundingClientRect();
+        const off = Math.max(Math.abs(box.left - origin.left - want.x), Math.abs(box.top - origin.top - want.y));
+        status.tileOffsetMaxPx = Math.max(status.tileOffsetMaxPx, Math.round(off * 100) / 100);
+      }
+      show();
+    });
+    tiles.on('tileerror', () => { status.tileErrors++; show(); });
+
+    // Grid from content/map.json.
+    const grid = L.layerGroup();
+    const g = mapDoc.grid;
+    const xs = [g.frame.x0, ...g.columns.map((c) => c.x1)];
+    const ys = [g.frame.y0, ...g.rows.map((r) => r.y1)];
+    for (const x of xs) L.polyline([px(x, g.frame.y0), px(x, g.frame.y1)], { color: '#f0f', weight: 1 }).addTo(grid);
+    for (const y of ys) L.polyline([px(g.frame.x0, y), px(g.frame.x1, y)], { color: '#f0f', weight: 1 }).addTo(grid);
+    for (const r of g.rows) for (const c of g.columns) {
+      L.marker(px(c.x0 + 8, r.y0 + 8), { interactive: false, icon: L.divIcon({ className: 'cell-id', html: r.id + c.id, iconSize: null, iconAnchor: [0, 0] }) }).addTo(grid);
+    }
+    grid.addTo(map);
+
+    // Printed place labels from content/map.json.
+    const labels = L.layerGroup();
+    for (const l of mapDoc.labels) {
+      L.circleMarker(px(l.x, l.y), { radius: 4, color: '#00f' }).bindTooltip(`${l.label} (${l.kind}${l.region_id ? ', ' + l.region_id : ''})`).addTo(labels);
+      status.labels++;
+    }
+    labels.addTo(map);
+
+    // Find pins from content/finds.json.
+    const pins = L.layerGroup();
+    for (const f of finds) {
+      if (!f.pin) { status.findsWithoutPin++; continue; }
+      L.circleMarker(px(f.pin.x, f.pin.y), { radius: 6, color: '#d00', weight: 2 })
+        .bindPopup(`<b>${f.title.replace(/</g, '&lt;')}</b><br>${f.pin_accuracy}: ${String(f.pin_basis).replace(/</g, '&lt;')}<br><code>${f.id}</code> (${f.status})`)
+        .addTo(pins);
+      status.pins++;
+    }
+    pins.addTo(map);
+    L.control.layers(null, { Grid: grid, Labels: labels, Pins: pins }, { collapsed: false }).addTo(map);
+
+    // Pixel picker for recording labels and pins by hand.
+    const cellOf = (x, y) => {
+      const r = g.rows.find((r) => y >= r.y0 && y < r.y1);
+      const c = g.columns.find((c) => x >= c.x0 && x < c.x1);
+      return r && c ? r.id + c.id : 'outside grid';
+    };
+    map.on('click', (e) => {
+      const p = toPx(e.latlng);
+      const x = Math.round(p.x);
+      const y = Math.round(p.y);
+      document.getElementById('pick').textContent = `"pin": { "x": ${x}, "y": ${y} }   cell ${cellOf(x, y)}`;
+    });
+
+    // View from the hash (#zoom/x/y in image pixels) or fit the whole image.
+    const fromHash = () => {
+      const m = location.hash.match(/^#(\d+)\/(\d+)\/(\d+)$/);
+      if (m) map.setView(px(Number(m[2]), Number(m[3])), Number(m[1]));
+      else map.fitBounds(imageBounds);
+      status.zoom = map.getZoom();
+    };
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+    map.on('zoomend', () => { status.zoom = map.getZoom(); show(); });
+    status.ready = true;
+  } catch (e) {
+    status.errors.push(String(e.message || e));
+  }
+  show();
+})();
+</script>
+</body>
+</html>

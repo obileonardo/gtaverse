@@ -11,7 +11,7 @@
     "find": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "slug", "title", "status", "category", "verification", "spoiler", "mature", "chapter_gate", "area", "region_ids", "location_description", "pin", "summary", "crossover_games", "related_connections", "first_finder", "clip", "sources", "notes", "updated_at"],
+      "required": ["id", "slug", "title", "status", "category", "verification", "spoiler", "mature", "chapter_gate", "area", "region_ids", "location_description", "pin", "pin_accuracy", "pin_basis", "summary", "crossover_games", "related_connections", "first_finder", "clip", "sources", "notes", "updated_at"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "slug": { "$ref": "#/$defs/id", "description": "URL slug. Unique across finds and explainers." },
@@ -26,7 +26,7 @@
         "region_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" }, "description": "Ids from content/regions.json named by the area or location text. Empty when no named region applies." },
         "location_description": { "type": "string" },
         "pin": {
-          "description": "Null until placed. Pixel position on the official Rockstar Leonida map image (origin top-left).",
+          "description": "Null until placed. Pixel position on the official Rockstar Leonida map image (origin top-left), in the space defined by content/map.json. See docs/MAP.md.",
           "oneOf": [
             { "type": "null" },
             {
@@ -36,6 +36,14 @@
               "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } }
             }
           ]
+        },
+        "pin_accuracy": {
+          "enum": [null, "exact", "landmark", "area"],
+          "description": "How precise the pin is. exact: placed from a clip or first-hand at the spot itself. landmark: on a specific labelled place on the map. area: centroid of a district or region. Required when pin is set, null when pin is null."
+        },
+        "pin_basis": {
+          "type": ["string", "null"],
+          "description": "What the pin was placed from: the map label id or the location text used, or the clip and timestamp for exact pins. Required when pin is set, null when pin is null."
         },
         "summary": { "type": "string", "minLength": 10 },
         "crossover_games": { "type": "array", "items": { "type": "string" } },

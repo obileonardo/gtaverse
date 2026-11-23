@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/map.schema.json",
+  "title": "Map",
+  "description": "content/map.json: the coordinate system of the official Rockstar Leonida map. Every pin and label is a pixel position in the original image, origin top-left. See docs/MAP.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image", "source", "tiles", "grid", "labels", "labels_note"],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "px": { "type": "integer", "minimum": 0 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "x", "y", "kind", "region_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string", "minLength": 1, "description": "Text exactly as printed on the map." },
+        "x": { "$ref": "#/$defs/px", "description": "Centre of the printed text." },
+        "y": { "$ref": "#/$defs/px", "description": "Centre of the printed text." },
+        "kind": { "enum": ["county", "region", "city", "town", "district", "island", "water", "landmark", "road", "other"] },
+        "region_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }], "description": "Id from content/regions.json when the label names that region. Null otherwise." }
+      }
+    }
+  },
+  "properties": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "dpi", "color_space", "origin", "units"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "dpi": { "type": "integer", "minimum": 1 },
+        "color_space": { "type": "string" },
+        "origin": { "const": "top-left" },
+        "units": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "url", "page", "zip_name", "zip_bytes", "zip_sha256", "image_name", "image_bytes", "image_sha256", "server_last_modified", "retrieved", "attribution"],
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "page": { "type": "string", "format": "uri" },
+        "zip_name": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+\\.zip$" },
+        "zip_bytes": { "type": "integer", "minimum": 1 },
+        "zip_sha256": { "$ref": "#/$defs/sha256" },
+        "image_name": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+\\.jpg$" },
+        "image_bytes": { "type": "integer", "minimum": 1 },
+        "image_sha256": { "$ref": "#/$defs/sha256" },
+        "server_last_modified": { "type": "string", "format": "date" },
+        "retrieved": { "type": "string", "format": "date" },
+        "attribution": { "type": "string", "minLength": 10 }
+      }
+    },
+    "tiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tile_size", "format", "output", "note"],
+      "properties": {
+        "tile_size": { "const": 256 },
+        "format": { "enum": ["webp", "jpeg", "png"] },
+        "output": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured_by", "frame", "cell_size", "cell_id", "rows", "columns", "notes"],
+      "properties": {
+        "measured_by": { "type": "string" },
+        "frame": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x0", "y0", "x1", "y1"],
+          "properties": { "x0": { "$ref": "#/$defs/px" }, "y0": { "$ref": "#/$defs/px" }, "x1": { "$ref": "#/$defs/px" }, "y1": { "$ref": "#/$defs/px" } }
+        },
+        "cell_size": { "type": "integer", "minimum": 1 },
+        "cell_id": { "type": "string" },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "y0", "y1"],
+            "properties": { "id": { "type": "string", "pattern": "^[A-Z]$" }, "y0": { "$ref": "#/$defs/px" }, "y1": { "$ref": "#/$defs/px" } }
+          }
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "x0", "x1"],
+            "properties": { "id": { "type": "string", "pattern": "^[0-9]+$" }, "x0": { "$ref": "#/$defs/px" }, "x1": { "$ref": "#/$defs/px" } }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "labels": { "type": "array", "items": { "$ref": "#/$defs/label" } },
+    "labels_note": { "type": ["string", "null"] }
+  }
+}
