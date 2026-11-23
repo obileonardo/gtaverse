@@ -52,6 +52,8 @@ How to add or fix content in The Vice Files. Written for contributors. Chime (Ch
   "region_ids": ["key-lento"],
   "location_description": "How to get there, in your own words.",
   "pin": null,
+  "pin_accuracy": null,
+  "pin_basis": null,
   "summary": "What happens and why it matters, in your own words.",
   "crossover_games": [],
   "related_connections": [],
@@ -78,7 +80,7 @@ Field notes:
 - `status`: start at `draft`. Switch to `published` once the find meets the rules below.
 - `category`: an id from `content/categories.json` with `kind: "find"`.
 - `area`: free text. If guides disagree, say so here ("Disputed: Bobcat Key or Watson Bay").
-- `pin`: leave `null`. Pins are placed on the official Rockstar map in pixel coordinates in a later step, from clips, never copied from another map.
+- `pin`, `pin_accuracy`, `pin_basis`: leave all three `null` unless you are placing a pin. Pins are pixel positions on the official Rockstar map, placed from clips or in game, never copied from another map. How to place one, and what `exact`, `landmark` and `area` mean: [MAP.md](MAP.md).
 - `first_finder`: `{ "handle": "u/name", "platform": "reddit", "url": "https://..." }`, or `null` when no source names them. `url` may be `null` if the person has no public link.
 - `clip`: must be one of the find's own sources with `embeddable: true` on YouTube, X, TikTok or Reddit. Shape: `{ "platform", "url", "creator", "source_id" }`.
 - `fetched`: `true` only if you actually opened and read the page.

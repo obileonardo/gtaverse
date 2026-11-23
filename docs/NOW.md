@@ -4,6 +4,8 @@ Status as of 2026-11-23. Update this file whenever something moves between state
 
 ## Waiting on owner
 - Review the content-foundations pull request (#4 into `staging`, closes issue #1): content base, schemas, validator, docs, GitHub templates.
+- Review the map-base pull request (into `staging`, closes issue #6): tile pipeline, coordinate system, pin fields, harness. See [MAP.md](MAP.md).
+- **Map labels and first-pass pins are blocked on a rule conflict.** The map agent was asked to read place labels by opening the map image, but LEGAL.md and CONTENT-GUIDE rule 5 forbid feeding the map into AI tools. It did not view the image, so `content/map.json` `labels` is empty and no find has a pin. Choose: a person (Chime) records labels with the harness picker, or the owner explicitly allows the agent to read the map.
 - Confirm or change the slice decisions S1 to S13 in [DECISIONS.md](DECISIONS.md).
 - Finish forwarding for takedown@thevicefiles.com.
 - Answer the open questions below.
@@ -44,7 +46,8 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 
 ## Asked, not built
 - Visual design and site build (dark theme first, light available).
-- Map pins on the official Leonida map in pixel coordinates, from clips, cross-checked against Game Checklists (Chime).
+- Map labels in `content/map.json` (blocked, see "Waiting on owner").
+- Map pins on the official Leonida map in pixel coordinates, from clips, cross-checked against Game Checklists (Chime). The fields, validator rules and workflow exist ([MAP.md](MAP.md)); 0 of 85 finds are pinned.
 - Collectible layer data for the 12 map layers: only categories and reference totals exist so far.
 - "Missables before Tourist Trap" spoiler-gated checklist guide.
 - Daily update pipeline from research/gta6-sources.md section 9.
@@ -56,6 +59,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 
 ## Pushed, not live
 - Branch `content-foundations`, PR #4 into `staging`. Nothing is deployed; there is no site yet.
+- Branch `map-base` into `staging`: official map tiles build locally (970 WebP tiles, zoom 0 to 5, 5.66 MiB, inside Cloudflare limits). Tiles are git-ignored and built from Rockstar's download, never committed.
 
 ## Resolved
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).
@@ -67,5 +71,5 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 1. **Display font.** Which licensed display face replaces GTAArtDeco?
 2. **Rumors on the site.** Rumors are draft-only today (slice decision S2). Should the site show them in a clearly labelled "unconfirmed" section instead?
 3. **Game Checklists.** Contact them about a data partnership or credit arrangement? Their original URL was not recorded, only a repost.
-4. **Official map file.** Download the official "Leonida Map & Cover Art Poster" and confirm its pixel size (reported 5,775 x 7,900) before any pins, since pins use that pixel space.
+4. **Map labels.** Who records the place labels printed on the map: Chime by hand with the harness, or an agent with the owner's explicit permission to view the map? (The official map file is confirmed: 5,775 x 7,900 px, 300 dpi, CMYK; grid letters A to M are rows, numbers 1 to 9 are columns.)
 5. **Paul Walker Eclipse credit.** HotCars names two early finders (BattleFieldBosh and Jokemen FC). Credit both, or leave first_finder empty until the earliest post is traced?

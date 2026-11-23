@@ -1,0 +1,65 @@
+{
+  "image": {
+    "width": 5775,
+    "height": 7900,
+    "dpi": 300,
+    "color_space": "CMYK with the GRACoL2013_CRPC6 ICC profile; tiles are converted to sRGB",
+    "origin": "top-left",
+    "units": "pixels of the original image; x grows to the right, y grows downward"
+  },
+  "source": {
+    "title": "The Great State of Leonida (Leonida Map & Cover Art Poster, printable)",
+    "url": "https://media-rockstargames-com.akamaized.net/VI/downloads/artwork_wallpapers/Leonida_Map_Poster_Printable.zip",
+    "page": "https://www.rockstargames.com/VI/downloads",
+    "zip_name": "Leonida_Map_Poster_Printable.zip",
+    "zip_bytes": 45419826,
+    "zip_sha256": "6871bed752b2ee2b8c7be024f31c641a0bd22c3c70c737a6763a6d7117d9134b",
+    "image_name": "Leonida_Map_Poster_Printable.jpg",
+    "image_bytes": 46690654,
+    "image_sha256": "7ef9038e6e5ba00d7186dd96bf94d725e139d01d2f3469635ec2c2d8954ceaa2",
+    "server_last_modified": "2026-11-19",
+    "retrieved": "2026-11-23",
+    "attribution": "Map © Rockstar Games. Official Leonida map, used for non-commercial fan reference."
+  },
+  "tiles": {
+    "tile_size": 256,
+    "format": "webp",
+    "output": "public/map/tiles/{z}/{x}/{y}.webp",
+    "note": "Built by scripts/map/build-tiles.mjs. Max zoom is full resolution: image pixel (x, y) is Leaflet point (x, y) at max zoom."
+  },
+  "grid": {
+    "measured_by": "scripts/map/measure-grid.mjs (pixel analysis of grid lines and margin label glyphs), 2026-11-23",
+    "frame": { "x0": 187, "y0": 186, "x1": 5582, "y1": 7706 },
+    "cell_size": 600,
+    "cell_id": "Row letter then column number, for example F5. Our notation; the poster prints letters down both sides and numbers across top and bottom.",
+    "rows": [
+      { "id": "A", "y0": 186, "y1": 647 },
+      { "id": "B", "y0": 647, "y1": 1247 },
+      { "id": "C", "y0": 1247, "y1": 1846 },
+      { "id": "D", "y0": 1846, "y1": 2446 },
+      { "id": "E", "y0": 2446, "y1": 3047 },
+      { "id": "F", "y0": 3047, "y1": 3646 },
+      { "id": "G", "y0": 3646, "y1": 4246 },
+      { "id": "H", "y0": 4246, "y1": 4846 },
+      { "id": "I", "y0": 4846, "y1": 5447 },
+      { "id": "J", "y0": 5447, "y1": 6047 },
+      { "id": "K", "y0": 6047, "y1": 6646 },
+      { "id": "L", "y0": 6646, "y1": 7247 },
+      { "id": "M", "y0": 7247, "y1": 7706 }
+    ],
+    "columns": [
+      { "id": "1", "x0": 187, "x1": 787 },
+      { "id": "2", "x0": 787, "x1": 1387 },
+      { "id": "3", "x0": 1387, "x1": 1987 },
+      { "id": "4", "x0": 1987, "x1": 2587 },
+      { "id": "5", "x0": 2587, "x1": 3187 },
+      { "id": "6", "x0": 3187, "x1": 3787 },
+      { "id": "7", "x0": 3787, "x1": 4387 },
+      { "id": "8", "x0": 4387, "x1": 4987 },
+      { "id": "9", "x0": 4987, "x1": 5582 }
+    ],
+    "notes": "Letters A to M label the 13 horizontal bands (rows, top to bottom); numbers 1 to 9 label the 9 vertical bands (columns, left to right). Interior cells are 600 px square; rows A and M are cut short by the frame (461 and 459 px), column 9 is 595 px. Letter order is inferred from glyph metrics (the ninth letter is a 6 px wide stroke, an I), not read by eye."
+  },
+  "labels": [],
+  "labels_note": "Empty on purpose. Place labels must be read by a person from the image (docs/MAP.md, Recording labels): docs/LEGAL.md and docs/CONTENT-GUIDE.md rule 5 forbid feeding the map into AI tools, so the map agent did not view the image."
+}

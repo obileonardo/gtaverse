@@ -13,13 +13,19 @@
     "dev": "astro dev",
     "build": "node scripts/validate.mjs && astro build",
     "preview": "astro preview",
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "map:fetch": "node scripts/map/fetch-map.mjs",
+    "map:tiles": "node scripts/map/build-tiles.mjs",
+    "map:grid": "node scripts/map/measure-grid.mjs",
+    "map:harness": "node tools/map-harness/serve.mjs",
+    "map:shots": "node tools/map-harness/screenshots.mjs"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "ajv": "^8.20.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "sharp": "~0.34.5"
   },
   "dependencies": {
     "@astrojs/react": "7.1.9",
