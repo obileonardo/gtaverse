@@ -1,0 +1,126 @@
+---
+// Underline tabs (Disney+ tabs, the one tab style on the site). Caps labels, the active label at full white with a
+// 3px pink underline the width of its label, a hairline across the row. The underline moves to the new tab (layout
+// animation); panel content swaps without sliding.
+// Usage:
+//   <Tabs id="find" tabs={[{ id: 'related', label: 'Related' }, { id: 'details', label: 'Details' }]}>
+//     <div slot="related">...</div>
+//     <div slot="details">...</div>
+//   </Tabs>
+// Keyboard: Left and Right move between tabs, Home and End jump to the ends (WAI-ARIA tabs pattern).
+interface Tab { id: string; label: string }
+interface Props { id: string; tabs: Tab[]; selected?: string; label?: string }
+const { id, tabs, selected = tabs[0]?.id, label = 'Sections' } = Astro.props;
+const slots = await Promise.all(tabs.map((t) => (Astro.slots.has(t.id) ? Astro.slots.render(t.id) : Promise.resolve(''))));
+---
+<div class="tabs" data-tabs>
+  <div class="tabs__list" role="tablist" aria-label={label}>
+    {tabs.map((t) => (
+      <button
+        type="button"
+        role="tab"
+        class="tabs__tab"
+        id={`${id}-tab-${t.id}`}
+        aria-controls={`${id}-panel-${t.id}`}
+        aria-selected={t.id === selected ? 'true' : 'false'}
+        tabindex={t.id === selected ? 0 : -1}
+      >{t.label}</button>
+    ))}
+    <span class="tabs__indicator" aria-hidden="true"></span>
+  </div>
+  {tabs.map((t, i) => (
+    <div class="tabs__panel" role="tabpanel" id={`${id}-panel-${t.id}`} aria-labelledby={`${id}-tab-${t.id}`} hidden={t.id !== selected} tabindex="0" set:html={slots[i]} />
+  ))}
+</div>
+
+<script>
+  function setup(root: HTMLElement) {
+    const list = root.querySelector<HTMLElement>('[role="tablist"]')!;
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const bar = list.querySelector<HTMLElement>('.tabs__indicator')!;
+    const place = (tab: HTMLElement) => {
+      bar.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`;
+    };
+    const select = (tab: HTMLButtonElement, focus = false) => {
+      for (const t of tabs) {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute('aria-controls')!);
+        if (panel) panel.hidden = !on;
+      }
+      place(tab);
+      if (focus) tab.focus();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t));
+      t.addEventListener('keydown', (e) => {
+        const k = e.key;
+        let next = -1;
+        if (k === 'ArrowRight') next = (i + 1) % tabs.length;
+        else if (k === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+        else if (k === 'Home') next = 0;
+        else if (k === 'End') next = tabs.length - 1;
+        if (next < 0) return;
+        e.preventDefault();
+        // Keyboard moves do not animate the underline.
+        bar.classList.add('is-instant');
+        select(tabs[next], true);
+        requestAnimationFrame(() => bar.classList.remove('is-instant'));
+      });
+    });
+    const current = tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0];
+    bar.classList.add('is-instant');
+    place(current);
+    requestAnimationFrame(() => bar.classList.remove('is-instant'));
+    new ResizeObserver(() => place(tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0])).observe(list);
+  }
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach(setup);
+</script>
+
+<style>
+  .tabs__list {
+    position: relative;
+    display: flex;
+    gap: var(--space-8);
+    border-bottom: var(--border-w) solid var(--border-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs__tab {
+    position: relative;
+    padding-block: var(--space-3) var(--space-4);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    white-space: nowrap;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .tabs__tab[aria-selected='true'] { color: var(--text-1); }
+  @media (hover: hover) and (pointer: fine) {
+    .tabs__tab:hover { color: var(--text-1); }
+  }
+  .tabs__indicator {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 1px;
+    height: var(--tab-underline);
+    border-radius: var(--radius-full);
+    background: var(--accent);
+    transform-origin: left center;
+    transition: transform var(--dur-colour) var(--ease-in-out);
+  }
+  .tabs__indicator.is-instant { transition: none; }
+  .tabs__panel { padding-top: var(--space-8); }
+  .tabs__panel:focus-visible { outline-offset: 4px; }
+  @media (max-width: 767px) {
+    .tabs__list { gap: var(--space-6); }
+    .tabs__tab { font-size: 15px; letter-spacing: 0.12em; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tabs__indicator { transition: none; }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+// The card. One style for every card on the site (Apple TV row cards): 16:9 media with a 12px radius and a 1px edge,
+// then a kicker, a title and a meta line set under the media, on the page ground.
+// framed: puts the whole card on --surface-1 with a 1px border and padding (panels, Going cards, About cards).
+// No image: the card shows the dispersed sunrise glow with the kicker in display caps (finds without art).
+// The whole card is one link when href is set.
+interface Props { href?: string; image?: string | null; srcset?: string; sizes?: string; imageAlt?: string; kicker?: string; title: string; meta?: string; framed?: boolean; ratio?: string; class?: string; loading?: 'lazy' | 'eager' }
+const { href, image, srcset, sizes, imageAlt = '', kicker, title, meta, framed = false, ratio = '16 / 9', class: className, loading = 'lazy' } = Astro.props;
+const Tag = href ? 'a' : 'div';
+---
+<Tag class:list={['card', { 'card--framed': framed }, className]} href={href}>
+  <div class="card__media" style={`aspect-ratio: ${ratio}`}>
+    {image ? (
+      <img src={image} srcset={srcset} sizes={sizes} alt={imageAlt} loading={loading} decoding="async" width="1280" height="720" />
+    ) : (
+      <div class="card__glow" aria-hidden="true"><span>{kicker}</span></div>
+    )}
+    <slot name="media" />
+  </div>
+  <div class="card__body">
+    {kicker && <p class="card__kicker label-caps">{kicker}</p>}
+    <h3 class="card__title">{title}</h3>
+    {meta && <p class="card__meta">{meta}</p>}
+    <slot />
+  </div>
+</Tag>
+
+<style>
+  .card { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; color: var(--text-1); }
+  .card--framed { padding: var(--space-4); background: var(--surface-1); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); }
+  .card__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-m);
+    border: var(--border-w) solid var(--border-1);
+    background: var(--surface-2);
+  }
+  .card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
+  .card__glow {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: end start;
+    padding: var(--space-4);
+    background: var(--glow-hero), var(--surface-1);
+  }
+  .card__glow span {
+    font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 0.92;
+    text-transform: uppercase;
+    color: var(--text-1);
+  }
+  .card__body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .card__kicker { color: var(--accent-text); }
+  .card__title {
+    font-size: var(--text-title);
+    font-weight: 600;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card__meta { font-size: var(--text-body-s); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  a.card { transition: transform var(--dur-press) var(--ease-out); }
+  a.card:active { transform: scale(0.98); }
+  @media (hover: hover) and (pointer: fine) {
+    a.card:hover .card__media img { transform: scale(1.03); }
+    a.card:hover .card__title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card__media img { transition: none; }
+  }
+</style>

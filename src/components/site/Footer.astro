@@ -1,0 +1,47 @@
+---
+// The site footer. The disclaimer and takedown lines are legal copy: keep them word for word.
+import { nav } from '../../lib/nav';
+---
+<footer class="site-footer">
+  <div class="container footer__inner">
+    <div class="footer__top">
+      <a class="footer__mark" href="/">The Vice Files</a>
+      <ul class="footer__nav" role="list">
+        {nav.filter((n) => n.href !== '/').map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+      </ul>
+    </div>
+    <div class="footer__legal">
+      <p>The Vice Files is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names, images and materials are trademarks and copyrights of their respective owners. Clips play from their creators' own posts.</p>
+      <p>Takedowns and credit corrections: <a class="link" href="mailto:takedown@thevicefiles.com">takedown@thevicefiles.com</a></p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top: var(--border-w) solid var(--border-1); }
+  .footer__inner { display: flex; flex-direction: column; gap: var(--space-8); padding-block: var(--space-12) calc(var(--space-12) + env(safe-area-inset-bottom, 0px)); }
+  .footer__top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
+  .footer__mark { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 24px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; padding-block: 10px; }
+  .footer__nav { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .footer__nav a {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding-inline: var(--space-3);
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    font-weight: 500;
+    border-radius: var(--radius-full);
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .footer__nav li:last-child a { padding-right: 0; }
+  @media (hover: hover) and (pointer: fine) {
+    .footer__nav a:hover { color: var(--text-1); }
+  }
+  .footer__legal { display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--measure); color: var(--text-2); font-size: var(--text-body-s); line-height: 1.55; }
+  @media (max-width: 767px) {
+    .footer__top { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+    .footer__nav li:first-child a { padding-left: 0; }
+    .footer__nav li:last-child a { padding-right: var(--space-3); }
+  }
+</style>

@@ -1,0 +1,261 @@
+/*
+  The Vice Files design tokens. One set for every page.
+  Source of every value: the taste board analysis (tokens.md, direction-*.md) and the owner's answers of 23 Nov 2026.
+  Dark is the default theme. Light is applied by [data-theme="light"] on <html>, which the inline script in
+  Base.astro sets from the visitor's choice, then from prefers-color-scheme. Documented in docs/DESIGN-SYSTEM.md.
+*/
+
+/* ---------- Colour: dark (default) ----------
+   [data-scheme='dark'] keeps a region dark in both themes (art led heroes: the type sits on the art). */
+:root,
+[data-scheme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0d0c1a;            /* GTA night navy, page ground */
+  --surface-1: #1f1f38;     /* drawers, sheets, panels, cards */
+  --surface-2: #252644;     /* chips, wells, inactive buttons, media tiles */
+  --surface-3: #2f2e52;     /* hover, current row */
+  --border-1: #38365d;      /* 1px separators and card edges (replaces every shadow) */
+  --border-2: #433f6a;      /* strong outlines */
+  --frame: #1d002e;         /* letterbox behind clips */
+  --icon-cut: #0d0c1a;      /* the cut inside solid icons; set it to the ground the icon sits on */
+
+  --text-1: rgb(255 255 255 / 0.92);
+  --text-2: rgb(255 255 255 / 0.64);
+  --text-3: rgb(255 255 255 / 0.5);
+
+  --accent: #f976b0;        /* GTA pink */
+  --accent-text: #f976b0;   /* pink used as text (links, active labels) */
+  --on-accent: #0d0c1a;
+  --accent-tint: rgb(249 118 176 / 0.16);
+
+  --badge-verify-fill: #fbc7e4;
+  --badge-verify-border: #f976b0;
+  --badge-verify-text: #0d0c1a;
+  --badge-meta-fill: #2f2e52;
+  --badge-meta-text: rgb(255 255 255 / 0.8);
+
+  --inverse-fill: #f2f2f2;  /* Apple TV white pill */
+  --inverse-text: #0d0c1a;
+
+  --glass-fill: rgb(31 31 56 / 0.72);
+  --glass-fill-strong: rgb(31 31 56 / 0.86);
+  --glass-border: rgb(255 255 255 / 0.12);
+  --glass-hover: rgb(255 255 255 / 0.1);       /* current item pill (Apple Sports) */
+  --glass-hover-soft: rgb(255 255 255 / 0.05); /* hover, lighter than current */
+  --glass-blur: blur(20px) saturate(140%); /* GTA site uses 25px; 20px keeps animated glass (menu) smooth in Safari */
+
+  --scrim: rgb(13 12 26 / 0.6);
+  --overlay-fill: rgb(13 12 26 / 0.72);
+  --art-scrim: linear-gradient(to top, rgb(13 12 26 / 0.78) 0%, rgb(13 12 26 / 0.32) 38%, rgb(13 12 26 / 0) 62%);
+  --art-fade: linear-gradient(to bottom, rgb(13 12 26 / 0) 55%, var(--bg) 100%);
+  --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.35) 0%, rgb(244 113 124 / 0.35) 50%, rgb(233 99 199 / 0.35) 100%);
+
+  /* Level colours (explainer: wanted level), on dark surfaces */
+  --level-1: #89f5e3;
+  --level-2: #9b89f5;
+  --level-3: #f976b0;
+  --level-4: #f59289;
+  --level-5: #ffa948;
+
+  /* Map (dark) */
+  --map-land: #1f1f38;
+  --map-road: #38365d;
+  --map-road-major: #433f6a;
+  --map-water: #0d0c1a;
+  --map-park: #243830;
+  --map-label: rgb(255 255 255 / 0.64);
+  --map-halo: rgb(13 12 26 / 0.8);
+}
+
+[data-scheme='dark'] { color: var(--text-1); }
+
+:root {
+  /* ---------- Type ---------- */
+  /* The *-src variables are written by Astro's font loader (astro.config.mjs); the fonts are self hosted at build. */
+  --font-display: var(--font-display-src, 'Big Shoulders Display'), 'Arial Narrow', sans-serif;
+  --font-body: var(--font-body-src, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-mono-src, 'Geist Mono'), ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif: var(--font-serif-src, 'Newsreader'), Georgia, serif; /* lore pages only */
+  --font-display-axes: 'opsz' 72; /* Big Shoulders at its Display cut, at every size */
+
+  --text-display-xl: clamp(96px, 10vw, 144px);
+  --text-display-l: 72px;
+  --text-display-m: 48px;
+  --text-display-s: 28px;
+  --text-h1: 28px;
+  --text-h2: 22px;
+  --text-title-l: 20px;
+  --text-title: 17px;
+  --text-body-l: 18px;
+  --text-body: 16px;
+  --text-body-s: 14px;
+  --text-label: 14px;
+  --text-label-caps: 12px;
+  --text-caption: 13px;
+  --text-mono: 13px;
+  --text-mono-caps: 12px;
+  --text-stat: 20px;
+  --text-menu: 25px;
+
+  --leading-display: 0.92;
+  --leading-tight: 1.15;
+  --leading-body: 1.45;
+  --tracking-display: -0.015em;
+  --tracking-tight: -0.02em;
+  --tracking-caps: 0.12em;
+
+  /* ---------- Spacing (4pt base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-section: 96px;
+
+  --page-pad: 40px;          /* A24 left inset, the edge every page shares */
+  --container-max: 1360px;   /* 1440 minus the page pad on both sides */
+  --measure-short: 500px;
+  --measure: 680px;
+
+  /* Component sizes */
+  --chip-h: 34px;
+  --chip-h-touch: 40px;
+  --btn-h-s: 32px;
+  --btn-h-m: 40px;
+  --btn-h-l: 48px;
+  --btn-h-xl: 56px;
+  --ctrl-size-s: 32px;
+  --ctrl-size: 44px;
+  --ctrl-size-l: 48px;
+  --ctrl-size-xl: 52px;
+  --island-w: 336px;
+  --island-h: 48px;
+  --island-sub-h: 44px;
+  --island-top: 32px;
+  --island-gap: 2px;
+  --tab-underline: 3px;
+  --icon-s: 16px;
+  --icon-m: 20px;
+  --icon-l: 24px;
+  --icon-stroke: 1.5;
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 4px;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 20px;
+  --radius-sheet: 32px;
+  --radius-full: 9999px;
+
+  /* ---------- Borders (no box shadows anywhere) ---------- */
+  --border-w: 1px;
+  --border-w-strong: 1.5px;
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-colour: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --dur-press: 140ms;
+  --dur-colour: 200ms;
+  --dur-popover-in: 180ms;
+  --dur-popover-out: 140ms;
+  --dur-overlay-in: 220ms;
+  --dur-overlay-out: 160ms;
+  --dur-peek-in: 260ms;
+  --dur-peek-out: 200ms;
+  --dur-drawer-in: 420ms;
+  --dur-drawer-out: 300ms;
+  --dur-fly: 600ms;
+  --dur-crossfade: 500ms;
+  --dur-card-lift: 500ms;
+  --stagger: 40ms;
+
+  /* ---------- Z layers ---------- */
+  --z-map: 0;
+  --z-pins: 10;
+  --z-map-ui: 20;
+  --z-panel: 30;
+  --z-drawer: 40;
+  --z-scrim: 45;
+  --z-header: 50;
+  --z-popover: 60;
+  --z-overlay: 70;
+  --z-toast: 80;
+}
+
+/* Phone sizes: only where the Loves differ */
+@media (max-width: 767px) {
+  :root {
+    --text-display-xl: 64px;
+    --text-display-l: 56px;
+    --text-display-m: 40px;
+    --text-display-s: 24px;
+    --text-body-l: 20px;
+    --text-body: 17px;
+    --text-body-s: 15px;
+    --text-label: 15px;
+    --text-mono: 17px;
+    --page-pad: 16px;
+    --space-section: 64px;
+    --island-top: 8px;
+    --radius-xl: 28px;
+  }
+}
+
+/* ---------- Colour: light ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f9f5f0;
+  --surface-1: #ffffff;
+  --surface-2: #f2f1f6;
+  --surface-3: #eceae7;
+  --border-1: #d8d8d6;
+  --border-2: #c5c5c8;
+  --frame: #2f2f2f;
+  --icon-cut: #f9f5f0;
+
+  --text-1: #2f2f2f;
+  --text-2: #5f5f5f;
+  --text-3: #666666;
+
+  --accent: #f976b0;          /* fill only in light: 2.6:1 on white, never text */
+  --accent-text: #8d4053;
+  --on-accent: #0d0c1a;
+  --accent-tint: rgb(141 64 83 / 0.1);
+
+  --badge-meta-fill: #eceae7;
+  --badge-meta-text: #2f2f2f;
+
+  --inverse-fill: #2f2f2f;
+  --inverse-text: #ffffff;
+
+  --glass-fill: rgb(255 255 255 / 0.72);
+  --glass-fill-strong: rgb(255 255 255 / 0.86);
+  --glass-border: rgb(47 47 47 / 0.12);
+  --glass-hover: rgb(47 47 47 / 0.08);
+  --glass-hover-soft: rgb(47 47 47 / 0.04);
+
+  --scrim: rgb(47 47 47 / 0.32);
+  --overlay-fill: rgb(249 245 240 / 0.78);
+  --art-fade: linear-gradient(to bottom, rgb(249 245 240 / 0) 55%, var(--bg) 100%);
+  --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.28) 0%, rgb(244 113 124 / 0.2) 50%, rgb(233 99 199 / 0.16) 100%);
+
+  --map-land: #f9f5f0;
+  --map-road: #d8d8d6;
+  --map-road-major: #c5c5c8;
+  --map-water: #afe2f0;
+  --map-park: #dcebd9;
+  --map-label: #6b6b6b;
+  --map-halo: rgb(249 245 240 / 0.85);
+}

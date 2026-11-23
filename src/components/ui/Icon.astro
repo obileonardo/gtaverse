@@ -1,0 +1,30 @@
+---
+// The icon wrapper. Every icon on the site goes through this component so size, stroke and tint stay consistent.
+// size: 's' 16, 'm' 20 (default), 'l' 24, or a number in px. solid: the filled form for the current item.
+// label: give one only when the icon is the only content of a control; otherwise the icon is hidden from readers.
+import { icons, type IconName } from './icons';
+interface Props { name: IconName; size?: 's' | 'm' | 'l' | number; solid?: boolean; label?: string; class?: string; stroke?: number }
+const { name, size = 'm', solid = false, label, class: className, stroke } = Astro.props;
+const px = typeof size === 'number' ? size : { s: 16, m: 20, l: 24 }[size];
+const def = icons[name] as { line: string; solid?: string };
+const markup = solid && def.solid ? def.solid : def.line;
+---
+<svg
+  class:list={['icon', className]}
+  width={px}
+  height={px}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width={stroke ?? 1.5}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+  set:html={markup}
+/>
+<style>
+  .icon { flex: none; }
+</style>
