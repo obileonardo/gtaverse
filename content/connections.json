@@ -1,0 +1,2229 @@
+{
+  "generated": "2026-11-23",
+  "updated_at": "2026-11-23",
+  "confidence_notes": {
+    "canon": "The in-game element exists and is documented by the game wikis or Rockstar itself. For theories it would mean Rockstar confirmed it.",
+    "strong": "Reported by several independent sources or press, not yet checked first-hand or confirmed by Rockstar.",
+    "speculative": "Fan reading, single source, or unverified report.",
+    "debunked": "Shown to be false, a hoax, or satire."
+  },
+  "items": [
+    {
+      "id": "three-universes",
+      "slug": "three-universes",
+      "title": "The 2D, 3D and HD universes",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA",
+        "GTA 2",
+        "GTA III",
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Rockstar splits GTA into separate continuities by graphical era: 2D (GTA 1, London, GTA 2), 3D (GTA III to Vice City Stories) and HD (GTA IV onward, including GTA VI). Rockstar said the universes are the worlds 'interpreted at different definitions'. Brands, radio and background characters may recur across universes; main characters do not.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Universes",
+          "title": "Universes (GTA Wiki), quoting Rockstar's GTA III Q&A"
+        },
+        {
+          "url": "https://warpzoned.com/2011/12/rockstar-answers-your-questions-is-gta3s-claude-a-mute",
+          "title": "Rockstar answers your questions (Warp Zoned, Dec 2011)"
+        },
+        {
+          "url": "https://ggrecon.com/articles/grand-theft-auto-multiverse",
+          "title": "Rockstar Confirms Grand Theft Auto Multiverse (GGRecon)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "vice-city-three-times",
+      "slug": "vice-city-three-times",
+      "title": "Vice City exists three times",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "GTA",
+        "GTA Vice City",
+        "GTA Vice City Stories",
+        "GTA VI"
+      ],
+      "summary": "Vice City appears as a 2D city in GTA 1, the 1980s 3D city of Vice City and Vice City Stories, and the modern HD city in the state of Leonida in GTA VI. Same name and Miami inspiration, different continuities.",
+      "related_finds": [
+        "ocean-view-hotel-vintage-pack",
+        "vice-city-style-opening-credits"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Vice_City",
+          "title": "Vice City (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Vice_City_%28HD_Universe%29",
+          "title": "Vice City (HD Universe) (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "liberty-city-three-times",
+      "slug": "liberty-city-three-times",
+      "title": "Liberty City across three universes",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "GTA",
+        "GTA III",
+        "GTA Liberty City Stories",
+        "GTA IV",
+        "GTA Chinatown Wars",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Rockstar's New York stand-in exists in all three universes. In the HD universe it is the GTA IV city, referenced constantly in GTA V (Broker clothing, Liberty City licence plates, marathon chatter) and again in GTA VI (Liberty City Swingers card, a Liberty City memoir).",
+      "related_finds": [
+        "liberty-city-mob-memoir",
+        "old-gta-city-sports-cards"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Universes",
+          "title": "Universes (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Liberty_City_%28HD_Universe%29",
+          "title": "Liberty City (HD Universe) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lazlow",
+      "slug": "lazlow",
+      "title": "Lazlow Jones, the radio voice of every era",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA Liberty City Stories",
+        "GTA Vice City Stories",
+        "GTA IV",
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "Real-life writer and radio host Lazlow Jones voiced a fictional version of himself on GTA radio from GTA III to GTA V and appears in person in GTA V and GTA Online After Hours. The universe rule's best-known exception: a radio personality who carries across universes.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Lazlow_Jones",
+          "title": "Lazlow Jones (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ken-rosenberg",
+      "slug": "ken-rosenberg",
+      "title": "Ken Rosenberg",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA Vice City Stories"
+      ],
+      "summary": "Tommy Vercetti's lawyer in Vice City returns in San Andreas working for the Las Venturas mob, and once calls CJ 'Tommy' in The Meat Business.",
+      "related_finds": [
+        "tony-the-parrot"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Ken_Rosenberg",
+          "title": "Ken Rosenberg (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_San_Andreas",
+          "title": "Secrets and Easter Eggs in GTA San Andreas (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "phil-cassidy",
+      "slug": "phil-cassidy",
+      "title": "Phil Cassidy",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Vice City",
+        "GTA Liberty City Stories",
+        "GTA Vice City Stories"
+      ],
+      "summary": "Arms dealer who loses an arm in Vice City and still sells guns in Liberty City in GTA III. One of the most recurring 3D-universe characters. GTA VI has a separate character named Phil.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Phil_Cassidy",
+          "title": "Phil Cassidy (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Phil_%28GTA_VI%29",
+          "title": "Phil (GTA VI) (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lance-vance",
+      "slug": "lance-vance",
+      "title": "Lance Vance",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA Vice City Stories"
+      ],
+      "summary": "Tommy's partner turned traitor in Vice City and Vic Vance's brother in Vice City Stories.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Lance_Vance",
+          "title": "Lance Vance (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Victor_Vance",
+          "title": "Victor Vance (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "leone-family",
+      "slug": "leone-family",
+      "title": "Salvatore Leone and Toni Cipriani",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA San Andreas",
+        "GTA Liberty City Stories"
+      ],
+      "summary": "The Leone crime family links GTA III, San Andreas (Caligula's casino) and Liberty City Stories, where Toni Cipriani is the protagonist.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Salvatore_Leone",
+          "title": "Salvatore Leone (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Toni_Cipriani",
+          "title": "Toni Cipriani (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "donald-love",
+      "slug": "donald-love",
+      "title": "Donald Love",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Liberty City Stories"
+      ],
+      "summary": "Media mogul who employs Claude in GTA III and appears earlier in his career in Liberty City Stories.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Donald_Love",
+          "title": "Donald Love (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "kent-paul-maccer",
+      "slug": "kent-paul-maccer",
+      "title": "Kent Paul and Maccer",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA San Andreas"
+      ],
+      "summary": "The British music hanger-on Kent Paul and the singer Maccer show up in both Vice City and San Andreas, tying the Love Fist and Las Venturas storylines together.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Kent_Paul",
+          "title": "Kent Paul (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Maccer",
+          "title": "Maccer (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "catalina-claude",
+      "slug": "catalina-claude",
+      "title": "Catalina and Claude",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA San Andreas"
+      ],
+      "summary": "Catalina betrays Claude at the start of GTA III; San Andreas shows them meeting years earlier. Graves near her cabin hint at earlier partners.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Catalina",
+          "title": "Catalina (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Claude",
+          "title": "Claude (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_San_Andreas",
+          "title": "Secrets and Easter Eggs in GTA San Andreas (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "fernando-martinez",
+      "slug": "fernando-martinez",
+      "title": "Fernando Martinez",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA Vice City Stories"
+      ],
+      "summary": "Radio host and relationship guru across three 3D-era games.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Fernando_Martinez",
+          "title": "Fernando Martinez (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "packie-mcreary",
+      "slug": "packie-mcreary",
+      "title": "Packie McReary",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "Irish gangster from GTA IV becomes a heist crew member in GTA V.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Patrick_McReary",
+          "title": "Patrick McReary (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lost-mc-trevor",
+      "slug": "lost-mc-trevor",
+      "title": "Johnny Klebitz and The Lost MC meet Trevor",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA IV: The Lost and Damned",
+        "GTA V"
+      ],
+      "summary": "Johnny Klebitz, Ashley Butler, Terry and Clay of The Lost MC return in GTA V, where Trevor kills Johnny in the first Trevor mission. Newspapers with Johnny's face are scattered around Los Santos.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Johnny_Klebitz",
+          "title": "Johnny Klebitz (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Ashley_Butler",
+          "title": "Ashley Butler (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Terry_Thorpe",
+          "title": "Terry Thorpe (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "gay-tony-after-hours",
+      "slug": "gay-tony-after-hours",
+      "title": "Tony Prince ('Gay Tony') in GTA Online",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA IV: The Ballad of Gay Tony",
+        "GTA Online"
+      ],
+      "summary": "The Liberty City nightclub owner from The Ballad of Gay Tony runs the player's nightclub with Lazlow in GTA Online's After Hours update.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Tony_Prince",
+          "title": "Tony Prince (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "niko-in-gta-v",
+      "slug": "niko-in-gta-v",
+      "title": "Niko Bellic traces in GTA V",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "A framed photo of Niko in the Yellow Jack Inn, wanted posters, Jimmy browsing Niko's Lifeinvader page, and cars with NIKOB and ROMANB plates.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Niko_Bellic",
+          "title": "Niko Bellic (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "niko-gta-vi-hitman",
+      "slug": "niko-gta-vi-hitman",
+      "title": "Niko's actor credited in GTA VI",
+      "type": "character",
+      "confidence": "speculative",
+      "games": [
+        "GTA IV",
+        "GTA VI"
+      ],
+      "summary": "GTA VI's credits reportedly list Michael Hollick, Niko Bellic's actor, as 'The Hitman'. KeenGamer reports a Niko cameo in the mission 'Taking Liberties'. Rockstar has not confirmed the character is Niko.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://grandleonida.com/news/gta-6-credits-niko-bellic-actor-michael-hollick-the-hitman/",
+          "title": "GTA 6 Credits List Niko Bellic's Actor Michael Hollick as 'The Hitman' (Grand Leonida, 22 Nov 2026)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Michael_Hollick",
+          "title": "Michael Hollick (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "eddie-low",
+      "slug": "eddie-low",
+      "title": "Eddie Low, the serial killer who keeps coming back",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Alderney serial killer from GTA IV is heard on Trevor's CB radio in GTA V, and a GTA VI true-crime podcast reportedly devotes an episode to him.",
+      "related_finds": [
+        "eddie-low-podcast"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Eddie_Low",
+          "title": "Eddie Low (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "gta6-gta5-aftermath-podcast",
+      "slug": "gta6-gta5-aftermath-podcast",
+      "title": "GTA VI podcasts revisit GTA V (Wade Hebert)",
+      "type": "character",
+      "confidence": "strong",
+      "games": [
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "A GTA VI true-crime podcast, 'Final Act', reportedly reveals what became of Wade Hebert, Trevor's sidekick, and Wade and Floyd come up in free-roam radio. Contains a GTA V spoiler.",
+      "related_finds": [
+        "wade-true-crime-podcast"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Wade_Hebert",
+          "title": "Wade Hebert (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "liberty-city-memoir",
+      "slug": "liberty-city-memoir",
+      "title": "'Lethal by Design: A Liberty City Memoir' in Jason's house",
+      "type": "character",
+      "confidence": "strong",
+      "games": [
+        "GTA IV",
+        "GTA VI"
+      ],
+      "summary": "A readable memoir in Jason's Key Lento house recalls GTA IV's Liberty City underworld (reports mention the Ancelotti family and 2008 events). A bodybuilding magazine on the balcony profiles Fabien LaRouche, Amanda's yoga teacher from GTA V.",
+      "related_finds": [
+        "fabien-larouche-body-copy",
+        "liberty-city-mob-memoir"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Fabien_LaRouche",
+          "title": "Fabien LaRouche (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "sasquatch-hunter",
+      "slug": "sasquatch-hunter",
+      "title": "The Sasquatch Hunter bloodline",
+      "type": "character",
+      "confidence": "strong",
+      "games": [
+        "Red Dead Redemption: Undead Nightmare",
+        "GTA V"
+      ],
+      "summary": "GTA V's final strangers mission, The Last One, features a hunter with the same look, voice and personality as the Undead Nightmare Sasquatch hunter, who says he is 'Gonna make my great grand-daddy proud'. The closest thing to an in-game family link between Red Dead and GTA.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/The_Last_One",
+          "title": "The Last One (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Tanner_%28Sasquatch_Hunter%29",
+          "title": "Tanner (Sasquatch Hunter) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "marston-in-gta",
+      "slug": "marston-in-gta",
+      "title": "John Marston in GTA V and GTA Online",
+      "type": "character",
+      "confidence": "canon",
+      "games": [
+        "Red Dead Redemption",
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "NPCs wear a John Marston T-shirt, a book called 'Red Dead' by J. Marston sits in Franklin's Vinewood Hills house (fans link it to Jack Marston, who wanted to write), and Marston was a selectable 'Dad' in GTA Online's character creator as a Social Club bonus.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/John_Marston",
+          "title": "John Marston (GTA Wiki)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Jack_Marston",
+          "title": "Jack Marston (Red Dead Wiki)"
+        },
+        {
+          "url": "https://gamerant.com/red-dead-redemption-easter-eggs-gta-5/",
+          "title": "All the Red Dead Redemption Easter Eggs in GTA 5 (Game Rant, 2021)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "de-santa-name",
+      "slug": "de-santa-name",
+      "title": "The De Santa surname",
+      "type": "character",
+      "confidence": "strong",
+      "games": [
+        "Red Dead Redemption",
+        "GTA V"
+      ],
+      "summary": "Michael Townley's witness-protection surname 'De Santa' is read as a nod to Captain Vincente de Santa, an antagonist in Red Dead Redemption.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Vincente_de_Santa",
+          "title": "Vincente de Santa (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "little-sam",
+      "slug": "little-sam",
+      "title": "'Little Sam': a Sam Houser cameo?",
+      "type": "real-world",
+      "confidence": "speculative",
+      "games": [
+        "GTA III",
+        "GTA VI"
+      ],
+      "summary": "A silent older man in a Rockstar Games T-shirt named Little Sam appears in a GTA VI story mission. Fans read it as Rockstar co-founder Sam Houser, who had a voice cameo in GTA III. Rockstar North's Rob Nelson reportedly said 'I wouldn't be surprised if that's him.'",
+      "related_finds": [
+        "little-sam-houser-cameo"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Sam_Houser",
+          "title": "Sam Houser (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ammu-nation",
+      "slug": "ammu-nation",
+      "title": "Ammu-Nation",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "The gun-store chain runs through every 3D and HD game and returns in GTA VI (e.g. 'Standard Ammu-Nation' stores in Hamlet on community maps).",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Ammu-Nation",
+          "title": "Ammu-Nation (GTA Wiki)"
+        },
+        {
+          "url": "https://leonidaguide.gg/en/map/",
+          "title": "GTA 6 interactive map (Leonidaguide)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "cluckin-bell",
+      "slug": "cluckin-bell",
+      "title": "Cluckin' Bell",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "Fast-food chicken chain parodying Taco Bell and KFC, recurring since San Andreas.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Cluckin%27_Bell",
+          "title": "Cluckin' Bell (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "burger-shot",
+      "slug": "burger-shot",
+      "title": "Burger Shot",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "Burger chain parody recurring across 3D and HD games.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Burger_Shot",
+          "title": "Burger Shot (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "sprunk",
+      "slug": "sprunk",
+      "title": "Sprunk, the drink that crossed into Manhunt",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Vice City",
+        "Manhunt",
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "The Sprite parody soda appears across GTA and in Manhunt, whose redesigned Sprunk logo carried forward into later GTA games.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Sprunk",
+          "title": "Sprunk (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Manhunt",
+          "title": "Manhunt (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "epsilon-program",
+      "slug": "epsilon-program",
+      "title": "The Epsilon Program",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "Rockstar's Scientology-style cult led by Cris Formage ('Kifflom!'). It runs from San Andreas radio into GTA V's Epsilon missions, and fans tie it to Red Dead time-travel theories.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Epsilon_Program_%28HD_Universe%29",
+          "title": "Epsilon Program (HD Universe) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Cris_Formage",
+          "title": "Cris Formage (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "weazel",
+      "slug": "weazel",
+      "title": "Weazel media",
+      "type": "brand",
+      "confidence": "strong",
+      "games": [
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Fox-style news and media brand across the HD universe; GTA VI reportedly has a Weazel TV network airing the Macca & Friends cartoon teaser.",
+      "related_finds": [
+        "macca-and-friends-cartoon"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Weazel",
+          "title": "Weazel (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Weazel_News",
+          "title": "Weazel News (GTA Wiki)"
+        },
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "love-fist",
+      "slug": "love-fist",
+      "title": "Love Fist",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA Liberty City Stories",
+        "GTA IV"
+      ],
+      "summary": "Scottish glam-metal band from Vice City, referenced in later 3D games, with a sign in GTA IV's Star Junction.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Love_Fist",
+          "title": "Love Fist (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_IV",
+          "title": "Secrets and Easter Eggs in GTA IV (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "vercetti-revolvers",
+      "slug": "vercetti-revolvers",
+      "title": "Rockstar's own Vercetti nods in GTA VI",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Official GTA VI marketing: the Ultimate Edition's Hawk & Little Morgan revolvers are described as 'sourced exclusively from the Vercetti Estate', and the Vintage Vice City Pack weapon pattern is inspired by Tommy Vercetti's palm-tree shirt. Hawk & Little is GTA V's gunmaker.",
+      "related_finds": [
+        "ocean-view-hotel-vintage-pack"
+      ],
+      "sources": [
+        {
+          "url": "https://www.rockstargames.com/VI/media",
+          "title": "Grand Theft Auto VI media page (Rockstar Games)"
+        },
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Vercetti_Estate",
+          "title": "Vercetti Estate (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Hawk_%26_Little",
+          "title": "Hawk & Little (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "trading-card-sets",
+      "slug": "trading-card-sets",
+      "title": "GTA VI trading cards from Liberty City and Los Santos",
+      "type": "brand",
+      "confidence": "strong",
+      "games": [
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "GTA VI collectible card sets include the Liberty City Swingers (GTA IV's baseball team) and Los Santos Panic (GTA V's sports team).",
+      "related_finds": [
+        "old-gta-city-sports-cards"
+      ],
+      "sources": [
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://gtadb.net/gta-6-map/interactive/",
+          "title": "GTA 6 Interactive Map (GTADB)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Liberty_City_Swingers",
+          "title": "Liberty City Swingers (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Los_Santos_Panic",
+          "title": "Los Santos Panic (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "scooter-brothers",
+      "slug": "scooter-brothers",
+      "title": "Scooter Brothers returns",
+      "type": "brand",
+      "confidence": "strong",
+      "games": [
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "GTA V's Scooter Brothers returns as a phone app in GTA VI, which Eurogamer called a 'delightful reference' (via GTA Culture).",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Scooter_Brothers",
+          "title": "Scooter Brothers (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "infernus-cheetah",
+      "slug": "infernus-cheetah",
+      "title": "The Infernus and the Cheetah",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA",
+        "GTA Vice City",
+        "GTA San Andreas",
+        "GTA IV",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Two supercars that have survived every era; GTA VI has the Pegassi '96 Infernus and Grotti '95 Cheetah (the Cheetah is an official Ultimate Edition image).",
+      "related_finds": [
+        "pegassi-infernus-96",
+        "grotti-cheetah-95"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Infernus",
+          "title": "Infernus (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Cheetah",
+          "title": "Cheetah (GTA Wiki)"
+        },
+        {
+          "url": "https://mapgenie.io/grand-theft-auto-6/maps/leonida",
+          "title": "Grand Theft Auto 6 map (MapGenie)"
+        },
+        {
+          "url": "https://www.rockstargames.com/VI/media",
+          "title": "Grand Theft Auto VI media page (Rockstar Games)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "bullworth-in-gta",
+      "slug": "bullworth-in-gta",
+      "title": "Bullworth Academy in GTA",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "Bully",
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "A 'Canis Canem Edit' painting (Bully's European title and Bullworth's motto) hangs in GTA Online's Diamond Casino; the Bullworth crest is on the 'Conveyor' livery; a strip-club NPC in GTA V can wear a 'Hopkins' jersey after Bully's Jimmy Hopkins.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Bully",
+          "title": "Bully (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "la-noire-in-gta-v",
+      "slug": "la-noire-in-gta-v",
+      "title": "L.A. Noire inside GTA V",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "L.A. Noire",
+        "GTA V"
+      ],
+      "summary": "GTA V's Up-n-Atom TV ad reuses L.A. Noire footage of 1950s Los Angeles, Franklin's neck tattoo matches a clue from an L.A. Noire case, and the Elysian Fields Freeway shares a name with L.A. Noire's company.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/L.A._Noire",
+          "title": "L.A. Noire (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "max-payne-in-gta",
+      "slug": "max-payne-in-gta",
+      "title": "Max Payne and GTA",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "GTA 2",
+        "Max Payne 3",
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "GTA 2 has a 'Max Paynt' garage; Max Payne 3 uses GTA IV Liberty City screenshots to stand in for New York; GTA V's yacht Dignity is near-identical to Max Payne 3's boat and Michael can buy Max's Hawaiian shirt.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Max_Payne",
+          "title": "Max Payne (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Dignity",
+          "title": "Dignity (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "the-warriors-in-gta",
+      "slug": "the-warriors-in-gta",
+      "title": "The Warriors in GTA",
+      "type": "brand",
+      "confidence": "canon",
+      "games": [
+        "The Warriors",
+        "GTA Online",
+        "GTA III - The Definitive Edition"
+      ],
+      "summary": "GTA Online's 'Come Out to Play' adversary mode and a Definitive Edition achievement reference the film and Rockstar's game adaptation.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/The_Warriors",
+          "title": "The Warriors (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "carcer-city",
+      "slug": "carcer-city",
+      "title": "Carcer City, home of Manhunt",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "Manhunt",
+        "GTA San Andreas",
+        "GTA V"
+      ],
+      "summary": "Mentioned on GTA III radio, the setting of Manhunt, referenced in San Andreas (Carcer Gas, Manhunt mugshots and toys), and in GTA V Michael says his first score was in Carcer City in 1988. Manhunt shares the 3D universe's continuity.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Carcer_City",
+          "title": "Carcer City (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Manhunt",
+          "title": "Manhunt (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_San_Andreas",
+          "title": "Secrets and Easter Eggs in GTA San Andreas (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ocean-view-hotel",
+      "slug": "ocean-view-hotel",
+      "title": "Ocean View Hotel",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA IV",
+        "GTA VI"
+      ],
+      "summary": "Tommy Vercetti's first base in Vice City. A miniature of it sits in GTA IV's mini-golf course, and a modern version stands on Ocean Beach in GTA VI.",
+      "related_finds": [
+        "ocean-view-hotel-vintage-pack",
+        "vice-city-style-opening-credits"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Ocean_View_Hotel",
+          "title": "Ocean View Hotel (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_IV",
+          "title": "Secrets and Easter Eggs in GTA IV (GTA Wiki)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "red-dead-street-names",
+      "slug": "red-dead-street-names",
+      "title": "Red Dead place names in Blaine County",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "Red Dead Redemption",
+        "GTA V"
+      ],
+      "summary": "Sandy Shores has Cholla Springs Avenue and Armadillo Avenue (Red Dead towns), there is an Escalera rent-a-car, and Cafe Redemption coffee shops dot Los Santos. The cinema film Capolavoro uses Red Dead Redemption footage including Blackwater.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gamerant.com/red-dead-redemption-easter-eggs-gta-5/",
+          "title": "All the Red Dead Redemption Easter Eggs in GTA 5 (Game Rant, 2021)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Blackwater",
+          "title": "Blackwater (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "marquis-boat",
+      "slug": "marquis-boat",
+      "title": "Michael's Marquis in Key Lento",
+      "type": "location",
+      "confidence": "strong",
+      "games": [
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "A boat in the yard outside Jason's Key Lento house looks like the Marquis yacht stolen from Michael in GTA V. Seen in official trailer footage.",
+      "related_finds": [
+        "michaels-boat-los-santos-gps"
+      ],
+      "sources": [
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Marquis",
+          "title": "Marquis (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "mount-shann-ufo",
+      "slug": "mount-shann-ufo",
+      "title": "Mount Shann: RDR2's nod to Mount Chiliad",
+      "type": "location",
+      "confidence": "canon",
+      "games": [
+        "GTA V",
+        "Red Dead Redemption 2"
+      ],
+      "summary": "Visit Mount Shann around 2 AM and a UFO appears; the Red Dead Wiki notes the landmarks and UFO are a nod to Mount Chiliad. RDR2 also has a UFO cult event at Hani's Bethel.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Mount_Shann",
+          "title": "Mount Shann (Red Dead Wiki)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Hani%27s_Bethel",
+          "title": "Hani's Bethel (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "rdr-gta-shared-universe",
+      "slug": "rdr-gta-shared-universe",
+      "title": "Red Dead and GTA share one universe",
+      "type": "theory",
+      "confidence": "speculative",
+      "games": [
+        "Red Dead Redemption",
+        "Red Dead Redemption 2",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Fans cite Marston references, the Sasquatch hunter, De Santa, Red Dead place names and GTA VI's Waxman banknote. Rockstar has never confirmed it, and its own universe explanation is about GTA's graphical eras. Treat as an Easter-egg web, not canon.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://inverse.com/gaming/gta-6-release-date-red-dead-redemption-shared-universe",
+          "title": "GTA 6 and Red Dead shared universe (Inverse)"
+        },
+        {
+          "url": "https://www.ggrecon.com/articles/sorry-gta-and-red-dead-arent-in-the-same-universe/",
+          "title": "Sorry, GTA and Red Dead aren't in the same universe (GGRecon)"
+        },
+        {
+          "url": "https://www.gamepressure.com/newsroom/hidden-connections-between-red-dead-redemption-and-gta/z21ce9",
+          "title": "Hidden connections between Red Dead Redemption and GTA (Gamepressure)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "waxman-banknote",
+      "slug": "waxman-banknote",
+      "title": "President Waxman on GTA VI money",
+      "type": "theory",
+      "confidence": "speculative",
+      "games": [
+        "Red Dead Redemption 2",
+        "GTA VI"
+      ],
+      "summary": "Fans spotted a banknote in GTA VI's second trailer bearing a face matched to President Thaddeus Waxman, the US president named in RDR2 (set 1899).",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://www.gtaboom.com/GTA_6_Currency_Detail_Reveals_Secret_Red_Dead_Redemption_2_Connection",
+          "title": "GTA 6 Currency Detail Reveals Secret RDR2 Connection (GTA BOOM, 12 May 2025)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Thaddeus_Waxman",
+          "title": "Thaddeus Waxman (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "arthur-morgan-hat",
+      "slug": "arthur-morgan-hat",
+      "title": "Arthur Morgan's hat at a Port Gellhorn yard sale",
+      "type": "theory",
+      "confidence": "strong",
+      "games": [
+        "Red Dead Redemption 2",
+        "GTA VI"
+      ],
+      "summary": "A cowboy hat on a sofa at a Port Gellhorn yard sale looks like Arthur Morgan's; it costs $35 and stays in your wardrobe.",
+      "related_finds": [
+        "arthur-morgan-hat"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "rdr2-landscape-tv-ad",
+      "slug": "rdr2-landscape-tv-ad",
+      "title": "RDR2 landscape in a GTA VI TV ad",
+      "type": "theory",
+      "confidence": "speculative",
+      "games": [
+        "Red Dead Redemption 2",
+        "GTA VI"
+      ],
+      "summary": "A TV commercial in GTA VI's Extended Look (7:47) resembles an RDR2 location, spotted by a Reddit user. Rockstar has reused its own footage before (GTA IV reused San Andreas, GTA V reused Red Dead).",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://www.notebookcheck.net/GTA-6-This-tiny-Easter-egg-may-only-have-been-spotted-by-true-RDR2-fans.1381499.0.html",
+          "title": "GTA 6: This tiny Easter egg may only have been spotted by true RDR2 fans (Notebookcheck, Aug 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "epsilon-time-travel",
+      "slug": "epsilon-time-travel",
+      "title": "Epsilon, Francis Sinclair and time travel",
+      "type": "theory",
+      "confidence": "speculative",
+      "games": [
+        "Red Dead Redemption 2",
+        "GTA V"
+      ],
+      "summary": "Theory that RDR2's Francis Sinclair (who vanishes after the rock-carving quest and leaves paintings of the future) connects to the Epsilon Program and a time-travelling thread between the series.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Francis_Sinclair",
+          "title": "Francis Sinclair (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "strange-man",
+      "slug": "strange-man",
+      "title": "The Strange Man",
+      "type": "theory",
+      "confidence": "speculative",
+      "games": [
+        "Red Dead Redemption",
+        "Red Dead Redemption 2"
+      ],
+      "summary": "An enigmatic figure who knows John Marston's past; widely read as the Devil or Death. His RDR2 shack in Bayall Edge is full of mysterious writings. Unsolved by design.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Strange_Man",
+          "title": "Strange Man (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "mount-chiliad-mystery",
+      "slug": "mount-chiliad-mystery",
+      "title": "The Mount Chiliad mystery",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "A mural in the Chiliad tramway shows a UFO, an egg and a jetpack. UFOs appear after 100% completion; the jetpack was an unimplemented idea in story mode, and a jetpack (the Thruster) arrived in GTA Online in 2017. Partly solved; the egg was never explained.",
+      "related_finds": [
+        "mount-chiliad-bar-chatter",
+        "stefan-haggard-chiliad-notice",
+        "leonidan-supremacy-monument"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Mount_Chiliad_%28HD_Universe%29",
+          "title": "Mount Chiliad (HD Universe) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Jetpack",
+          "title": "Jetpack (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "chiliad-gta6-callback",
+      "slug": "chiliad-gta6-callback",
+      "title": "GTA VI NPCs talk about Mount Chiliad",
+      "type": "mystery",
+      "confidence": "speculative",
+      "games": [
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Players report two NPCs outside a bar discussing the Mount Chiliad mystery during an early mission. Leonida Verse lists it as not yet verified.",
+      "related_finds": [
+        "mount-chiliad-bar-chatter"
+      ],
+      "sources": [
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-gta-5-mount-chiliad-mystery-easter-egg-802897-20261120",
+          "title": "GTA 6 players discover hidden GTA 5 Easter egg (GAMINGbible, 20 Nov 2026)"
+        },
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "bigfoot-san-andreas",
+      "slug": "bigfoot-san-andreas",
+      "title": "Bigfoot in San Andreas",
+      "type": "mystery",
+      "confidence": "debunked",
+      "games": [
+        "GTA San Andreas"
+      ],
+      "summary": "The most famous GTA myth: players hunted Bigfoot in San Andreas' forests for years. It was never in the game; the GTA Wiki notes Rockstar confirmed it fake.",
+      "related_finds": [
+        "skunk-ape-bigfoot"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Sasquatch",
+          "title": "Sasquatch (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "bigfoot-gta-v",
+      "slug": "bigfoot-gta-v",
+      "title": "Bigfoot made real in GTA V",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "GTA V answered the myth: The Last One hunts a Sasquatch (a man in a suit), a thermal-scope Bigfoot flickers in Predator, and golden peyote lets you play as Bigfoot.",
+      "related_finds": [
+        "skunk-ape-bigfoot"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Sasquatch",
+          "title": "Sasquatch (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/The_Last_One",
+          "title": "The Last One (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "sasquatch-undead-nightmare",
+      "slug": "sasquatch-undead-nightmare",
+      "title": "The last Sasquatch",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "Red Dead Redemption: Undead Nightmare"
+      ],
+      "summary": "Undead Nightmare features real Sasquatches; the last one tells John Marston his kind is gone, the series' most melancholy cryptid moment.",
+      "related_finds": [
+        "skunk-ape-bigfoot"
+      ],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Sasquatch",
+          "title": "Sasquatch (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "skunk-ape",
+      "slug": "skunk-ape",
+      "title": "The Skunk Ape, GTA VI's Bigfoot",
+      "type": "mystery",
+      "confidence": "strong",
+      "games": [
+        "GTA San Andreas",
+        "GTA V",
+        "GTA VI"
+      ],
+      "summary": "Florida's folklore Bigfoot appears near Cottonmouth Lake in Grassrivers; following it leads to an effigy, and a questline with the hunter Kirk follows. Rockstar North's Rob Nelson reportedly: 'we love that stuff'.",
+      "related_finds": [
+        "skunk-ape-bigfoot"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        },
+        {
+          "url": "https://www.keengamer.com/articles/guides/11-biggest-gta-series-easter-eggs-in-gta-6-from-michaels-boat-to-vice-city/",
+          "title": "11 Biggest GTA Series Easter Eggs in GTA 6 (KeenGamer, 21 Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ufo-gta-v",
+      "slug": "ufo-gta-v",
+      "title": "UFOs over Los Santos and Blaine County",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "GTA V has UFOs over Mount Chiliad, Fort Zancudo and Sandy Shores (after completion or in special conditions), a submerged UFO crash site, and alien hallucinations.",
+      "related_finds": [
+        "ufo-abduction-port-gellhorn"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Aliens",
+          "title": "Aliens (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Submerged_UFO_Crash_Site",
+          "title": "Submerged UFO Crash Site (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ufo-san-andreas",
+      "slug": "ufo-san-andreas",
+      "title": "San Andreas UFO and Area 69 myths",
+      "type": "mystery",
+      "confidence": "debunked",
+      "games": [
+        "GTA San Andreas"
+      ],
+      "summary": "Area 69 is real in San Andreas (you break in to steal the jetpack), but the UFO sightings players chased were never in the game.",
+      "related_finds": [
+        "ufo-abduction-port-gellhorn"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Area_69",
+          "title": "Area 69 (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Jetpack",
+          "title": "Jetpack (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ufo-gta-vi",
+      "slug": "ufo-gta-vi",
+      "title": "The Kelly County abduction",
+      "type": "mystery",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "After 2 a.m., an abandoned car north-west of the Starlet Motel leads into woods where a UFO beams up a woman; help her and you are taken next, waking three days later with the hidden trophy 'The Truth Is Out There'. Does not trigger every time.",
+      "related_finds": [
+        "ufo-abduction-port-gellhorn",
+        "alien-rescue-south-point-airfield"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ufo-rdr2",
+      "slug": "ufo-rdr2",
+      "title": "UFOs in Red Dead Redemption 2",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "Red Dead Redemption 2"
+      ],
+      "summary": "RDR2 has a UFO over Mount Shann at about 2 AM and a cult awaiting a UFO at Hani's Bethel.",
+      "related_finds": [
+        "ufo-abduction-port-gellhorn"
+      ],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Mount_Shann",
+          "title": "Mount Shann (Red Dead Wiki)"
+        },
+        {
+          "url": "https://reddead.fandom.com/wiki/Hani%27s_Bethel",
+          "title": "Hani's Bethel (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ghost-mount-gordo",
+      "slug": "ghost-mount-gordo",
+      "title": "The Ghost of Mount Gordo",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA V",
+        "GTA Online"
+      ],
+      "summary": "At night on Mount Gordo the ghost of Jolene Cranley-Evans appears, with 'Jock' written in blood; she was murdered by stuntman Jock Cranley, a GTA V side character.",
+      "related_finds": [
+        "roadside-ghost-woman"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Jolene_Cranley-Evans",
+          "title": "Jolene Cranley-Evans (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Ghosts_%28characters%29",
+          "title": "Ghosts (characters) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Jock_Cranley_%28HD_Universe%29",
+          "title": "Jock Cranley (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "ghosts-gta-vi",
+      "slug": "ghosts-gta-vi",
+      "title": "Ghost sightings in GTA VI",
+      "type": "mystery",
+      "confidence": "speculative",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "Players post footage of a ghost girl on country roads and a 'haunted hotel'; unverified. The GTA Wiki lists ghosts as appearing in GTA VI, and a ghost police car is catalogued.",
+      "related_finds": [
+        "marbelle-hotel-silent-hill",
+        "roadside-ghost-woman"
+      ],
+      "sources": [
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Ghosts_%28characters%29",
+          "title": "Ghosts (characters) (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Unnamed_GTA_VI_Vapid_ghost_police_car",
+          "title": "Unnamed GTA VI Vapid ghost police car (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "infinity-killer",
+      "slug": "infinity-killer",
+      "title": "The Infinity Killer",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "Clues across Blaine County lead to the victims of Merle Abrahams, a serial killer obsessed with the number 8 and infinity; a Senora Beacon story says he died in prison awaiting trial. Solved in-game by following the clues.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Merle_Abrahams",
+          "title": "Merle Abrahams (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "leatherface-myth",
+      "slug": "leatherface-myth",
+      "title": "Leatherface in San Andreas",
+      "type": "mystery",
+      "confidence": "debunked",
+      "games": [
+        "GTA San Andreas"
+      ],
+      "summary": "Rumoured chainsaw killer in the woods around The Panopticon. Every screenshot was a mod or fake; never in the game.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://www.grandtheftwiki.com/Leatherface",
+          "title": "Leatherface (Grand Theft Wiki)"
+        },
+        {
+          "url": "https://www.sportskeeda.com/gta/5-gta-san-andreas-urban-legends-simply-hoax",
+          "title": "5 GTA San Andreas urban legends that were simply a hoax (Sportskeeda)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "heart-of-liberty-city",
+      "slug": "heart-of-liberty-city",
+      "title": "The Heart of Liberty City",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA IV",
+        "GTA V"
+      ],
+      "summary": "Inside the Statue of Happiness, behind a door marked 'No Hidden Content This Way', a giant beating heart is chained up. GTA V's film Capolavoro shows it again.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_IV",
+          "title": "Secrets and Easter Eggs in GTA IV (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Statue_of_Happiness",
+          "title": "Statue of Happiness (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "vice-city-easter-egg",
+      "slug": "vice-city-easter-egg",
+      "title": "The literal Easter egg, then and now",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "GTA Vice City",
+        "GTA VI"
+      ],
+      "summary": "Vice City hid a chocolate Easter egg reading 'Happy Easter' in a downtown building. GTA VI answers with painted eggs in a nest atop Vice City's tallest radio tower; throw one for a cutscene.",
+      "related_finds": [
+        "tallest-tower-easter-egg"
+      ],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Easter_Egg_Building",
+          "title": "Easter Egg Building (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_Vice_City",
+          "title": "Secrets and Easter Eggs in GTA Vice City (GTA Wiki)"
+        },
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "rdr2-vampire",
+      "slug": "rdr2-vampire",
+      "title": "The Saint Denis vampire",
+      "type": "mystery",
+      "confidence": "canon",
+      "games": [
+        "Red Dead Redemption 2"
+      ],
+      "summary": "Five mysterious writings around Saint Denis lead to a vampire feeding in an alley at midnight.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://reddead.fandom.com/wiki/Vampire",
+          "title": "Vampire (Red Dead Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "firewatch-qr-mysteries",
+      "slug": "firewatch-qr-mysteries",
+      "title": "GTA VI's open mysteries",
+      "type": "mystery",
+      "confidence": "speculative",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "As of 22 Nov 2026, a firewatch tower mystery, QR code puzzles and several hidden trophies (e.g. 'In The Beginning...', pointing at Ocean Beach) have no public solution.",
+      "related_finds": [
+        "qr-code-seized-pages",
+        "mount-kalaga-tower-shed"
+      ],
+      "sources": [
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "chris-edwards-memorial",
+      "slug": "chris-edwards-memorial",
+      "title": "Memorial bench for Chris Edwards",
+      "type": "memorial",
+      "confidence": "strong",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "A placard near a telescope bench, found by Chiliad hunters, honours Rockstar artist Chris Edwards (credited on Max Payne, GTA and L.A. Noire), who died in 2014. His widow said Rockstar had told her about the tribute.",
+      "related_finds": [
+        "deep-roots-memorial-wall"
+      ],
+      "sources": [
+        {
+          "url": "https://kotaku.com/gta-players-search-for-secret-jetpack-find-touching-me-1697070157",
+          "title": "GTA players search for secret jetpack, find touching memorial (Kotaku, 10 Apr 2015)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "opposition-memorial",
+      "slug": "opposition-memorial",
+      "title": "The 'RIP Opposition' graveyard",
+      "type": "memorial",
+      "confidence": "canon",
+      "games": [
+        "GTA San Andreas"
+      ],
+      "summary": "Tombstones in a San Fierro graveyard read 'RIP Opposition 1997-2004', Rockstar's jab at rival publishers.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_San_Andreas",
+          "title": "Secrets and Easter Eggs in GTA San Andreas (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lost-mc-memorial-wall",
+      "slug": "lost-mc-memorial-wall",
+      "title": "The Lost MC memorial wall",
+      "type": "memorial",
+      "confidence": "canon",
+      "games": [
+        "GTA IV: The Lost and Damned"
+      ],
+      "summary": "In-universe memorial in the clubhouse for fallen Lost MC members; fallen brothers from the story are added.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/The_Lost_MC_Memorial_Wall",
+          "title": "The Lost MC Memorial Wall (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "rdr2-dev-tombstones",
+      "slug": "rdr2-dev-tombstones",
+      "title": "'RDR2 tombstones name developers who died' (satire)",
+      "type": "memorial",
+      "confidence": "debunked",
+      "games": [
+        "Red Dead Redemption 2"
+      ],
+      "summary": "Often shared as fact, this story comes from Hard Drive, a satire site. Not a real tribute; do not repeat it as fact.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://thehardtimes.net/harddrive/every-red-dead-redemption-2-tombstone-to-feature-names-of-real-developers-who-died-during-production/",
+          "title": "Hard Drive satire article"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "dev-face-chiliad",
+      "slug": "dev-face-chiliad",
+      "title": "A developer's face on Mount Chiliad",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "On PS3 and Xbox 360, the face of Rockstar Leeds artist David Dixon (texture 'dd_signature') was on Mount Chiliad's side; later versions replaced it. A developer signature rather than a memorial.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_V",
+          "title": "Secrets and Easter Eggs in GTA V (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lohan-lacey-jonas",
+      "slug": "lohan-lacey-jonas",
+      "title": "Lindsay Lohan v. Take-Two",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "Lohan claimed GTA V's Lacey Jonas used her likeness; New York's Court of Appeals dismissed the suit in 2018 as satire and not recognisably her.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://www.hollywoodreporter.com/thr-esq/appeals-court-rules-lindsay-lohan-not-recognizable-grand-theft-auto-1098299",
+          "title": "Appeals court rules Lindsay Lohan not recognizable in GTA (Hollywood Reporter)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Lacey_Jonas",
+          "title": "Lacey Jonas (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "gravano-bottino",
+      "slug": "gravano-bottino",
+      "title": "Karen Gravano v. Take-Two",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "Mob Wives star Karen Gravano claimed Antonia Bottino was based on her; dismissed the same day as Lohan's case.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://www.engadget.com/2018/03/29/lindsay-lohans-grand-theft-auto-suit-is-on-the-road-to-nowher/",
+          "title": "Lindsay Lohan's Grand Theft Auto suit is on the road to nowhere (Engadget, 29 Mar 2018; covers both suits)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Antonia_Bottino",
+          "title": "Antonia Bottino (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "celebrity-voices-3d",
+      "slug": "celebrity-voices-3d",
+      "title": "Hollywood voices of the 3D era",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA III",
+        "GTA Vice City",
+        "GTA San Andreas"
+      ],
+      "summary": "Ray Liotta voiced Tommy Vercetti, Samuel L. Jackson voiced Officer Tenpenny, Burt Reynolds voiced Avery Carrington, Peter Fonda voiced The Truth, and Dennis Hopper appeared in Vice City.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Ray_Liotta",
+          "title": "Ray Liotta (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Samuel_L._Jackson",
+          "title": "Samuel L. Jackson (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Burt_Reynolds",
+          "title": "Burt Reynolds (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Peter_Fonda",
+          "title": "Peter Fonda (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Dennis_Hopper",
+          "title": "Dennis Hopper (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "hot-coffee-callbacks",
+      "slug": "hot-coffee-callbacks",
+      "title": "Hot Coffee callbacks",
+      "type": "real-world",
+      "confidence": "canon",
+      "games": [
+        "GTA San Andreas",
+        "GTA IV"
+      ],
+      "summary": "After San Andreas' 2005 'Hot Coffee' scandal, GTA IV added 'Hot Coffee Shop' signs, and the Statue of Happiness holds a coffee cup with a face resembling Hillary Clinton, a leading critic.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Secrets_and_Easter_Eggs_in_GTA_IV",
+          "title": "Secrets and Easter Eggs in GTA IV (GTA Wiki)"
+        },
+        {
+          "url": "https://gta.fandom.com/wiki/Statue_of_Happiness",
+          "title": "Statue of Happiness (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "florida-man-trailers",
+      "slug": "florida-man-trailers",
+      "title": "Florida Man, made playable",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "Trailer moments line up with viral Florida Man stories (an alligator walking into a store, a nude man running down a street). Rockstar's Miami research team reportedly met ex-criminals, police and promoters.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://mp1st.com/news/gta-6-mocks-real-life-by-simply-showcasing-real-life",
+          "title": "GTA 6 Mocks Real Life by Simply Showcasing Real Life (MP1st)"
+        },
+        {
+          "url": "https://lbc.co.uk/news/bonnie-clyde-real-life-criminals-inspired-gta-6-vice-city",
+          "title": "The real-life criminals that 'inspired' GTA 6 (LBC)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "miami-joker",
+      "slug": "miami-joker",
+      "title": "The 'Miami Joker' lookalike",
+      "type": "real-world",
+      "confidence": "speculative",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "A man with colourful hair and face tattoos in the first trailer resembles a real Florida personality known as the 'Miami Joker'. Fan identification, not confirmed by Rockstar.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://lbc.co.uk/news/bonnie-clyde-real-life-criminals-inspired-gta-6-vice-city",
+          "title": "The real-life criminals that 'inspired' GTA 6 (LBC)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "dexter-apartment",
+      "slug": "dexter-apartment",
+      "title": "Dexter Morgan's apartment",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "A Washington Island building recreates Dexter's apartment, renamed Trinity Apartments, with a kill kit on the roof and a lookalike of his boat Slice of Life. GameSpot reportedly found nothing Dexter-related, so details vary by source.",
+      "related_finds": [
+        "dexter-trinity-apartments"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "paul-walker-eclipse",
+      "slug": "paul-walker-eclipse",
+      "title": "Paul Walker's Fast and the Furious Eclipse",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "A Vespucci Island villa garage hides a green 1995 Eclipse-style car with neon underglow, a tribute to Paul Walker's car in The Fast and the Furious (2001).",
+      "related_finds": [
+        "paul-walker-eclipse"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "jet-ski-dog",
+      "slug": "jet-ski-dog",
+      "title": "Cool Dog, the jet-ski rescue dog",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "Strand yourself at sea and a dog in a life jacket rides up on a jet ski; reportedly inspired by a real golden retriever filmed jet-skiing in Florida in 2025.",
+      "related_finds": [
+        "cool-dog-jet-ski"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://www.gamingbible.com/news/gta-6-easter-eggs-778903-20261120",
+          "title": "9 GTA 6 easter eggs we've spotted (GAMINGbible, 20 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "miami-vice-city-promo",
+      "slug": "miami-vice-city-promo",
+      "title": "Miami becomes Vice City",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "For launch, Rockstar put 'Welcome to Vice City' on the Kaseya Center roof and the Miami Heat played a night as Vice City; some county officials pushed back.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://theleonidamap.com/en/news/gta-6-miami-vice-city/",
+          "title": "Miami becomes Vice City (The Leonida Map)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "lifeinvader-satire",
+      "slug": "lifeinvader-satire",
+      "title": "Lifeinvader, the Facebook satire that aged well",
+      "type": "prediction",
+      "confidence": "speculative",
+      "games": [
+        "GTA V"
+      ],
+      "summary": "GTA V's Lifeinvader mocked Facebook's appetite for personal data in 2013, years before the 2018 Cambridge Analytica scandal. Read as satire that anticipated the debate, not a literal prediction.",
+      "related_finds": [],
+      "sources": [
+        {
+          "url": "https://gta.fandom.com/wiki/Lifeinvader",
+          "title": "Lifeinvader (GTA Wiki)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    },
+    {
+      "id": "tenebrae-lux",
+      "slug": "tenebrae-lux",
+      "title": "Tenebrae Lux and the in-game game studio",
+      "type": "real-world",
+      "confidence": "strong",
+      "games": [
+        "GTA VI"
+      ],
+      "summary": "GTA VI's playable in-game games (a zombie shooter, a top-down sci-fi game, a bar hunting game and Tenebrae Lux, partly a send-up of arty indie games like The Witness) were made by 'an internal dev team within the dev team', per Rockstar North's Rob Nelson as reported.",
+      "related_finds": [
+        "tenebrae-lux-puzzle-game"
+      ],
+      "sources": [
+        {
+          "url": "https://leonidaverse.com/en/codex/gta-6-easter-eggs",
+          "title": "GTA 6 Easter Eggs & Secrets: full list (Leonida Verse, Nov 2026)"
+        },
+        {
+          "url": "https://gtaculture.com/guides/gta-6-secrets-and-mysteries",
+          "title": "GTA 6 Secrets, Easter Eggs and Mysteries: What's Solved So Far (GTA Culture, 22 Nov 2026)"
+        }
+      ],
+      "updated_at": "2026-11-23"
+    }
+  ]
+}
