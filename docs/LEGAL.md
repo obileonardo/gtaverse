@@ -28,9 +28,11 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 
 ## Footer disclaimer (every page)
 
-> The Vice Files is an unofficial fan site. It is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA, Grand Theft Auto VI, Red Dead Redemption, Bully, L.A. Noire, Max Payne, Manhunt and related marks are trademarks of Take-Two Interactive Software, Inc. Game images, artwork and the Leonida map are (c) Rockstar Games and are used for non-commercial fan commentary and reference. Videos are embedded from their original platforms and remain the property of their rights holders. Copyright concerns: [contact address].
+> The Vice Files is an unofficial fan site. It is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA, Grand Theft Auto VI, Red Dead Redemption, Bully, L.A. Noire, Max Payne, Manhunt and related marks are trademarks of Take-Two Interactive Software, Inc. Game images, artwork and the Leonida map are (c) Rockstar Games and are used for non-commercial fan commentary and reference. Videos are embedded from their original platforms and remain the property of their rights holders. Copyright concerns and credit corrections: takedown@thevicefiles.com.
 
-On the site, "(c)" is rendered as the copyright symbol. The contact address is an open question in [NOW.md](NOW.md).
+On the site, "(c)" is rendered as the copyright symbol.
+
+Site: thevicefiles.com (rockstarworld.elvisobi.com stays as a second address for now). Contact: takedown@thevicefiles.com (forwarding being set up).
 
 Also required:
 - On each discovery card: "Found by [creator] · [platform link]" and "Image (c) Rockstar Games" where an official image is used.
@@ -38,7 +40,7 @@ Also required:
 
 ## Takedown response process
 
-1. **Publish a contact route** for copyright and trademark concerns (a dedicated page with an email). Respond within 24 hours.
+1. **Publish a contact route** for copyright and trademark concerns: a dedicated page with takedown@thevicefiles.com. Respond within 24 hours.
 2. **On any notice from Take-Two, Rockstar or their agents:** remove or disable the named item at once, without arguing first. Log it privately: date, sender, item, URL, action taken.
 3. **Do not file counter-notices against Take-Two** unless a lawyer advises it. A counter-notice invites a lawsuit in the US.
 4. **Check for a pattern.** If a notice targets a whole category (for example the official map tiles), switch that category to the original fallback site-wide.
@@ -47,4 +49,4 @@ Also required:
 7. **Cloudflare notices:** answer through Cloudflare's process. Keep the site on its own Cloudflare project, ideally its own zone, so action cannot touch the owner's other sites.
 8. **Hygiene:** no-leaks rule for contributors; a source on every pin; never accept submissions built from leak material.
 
-The repository has a "Takedown request" issue template for creators. Rights holders may prefer private contact; the contact address above is the primary route once it exists.
+The repository has a "Takedown request" issue template for creators. Rights holders may prefer private contact: takedown@thevicefiles.com is the primary route.

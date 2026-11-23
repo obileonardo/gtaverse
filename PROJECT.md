@@ -7,7 +7,7 @@ An unofficial, non-commercial fan field guide to Grand Theft Auto VI. Three part
 2. **Explainers.** Plain-language guides to how the game works: wanted level and heat, the two protagonists, NPC behaviour, danger and wealth by area, the relationship system.
 3. **Lore.** Pages connecting GTA VI to the wider Rockstar universe: GTA I to V, Vice City, San Andreas, Red Dead Redemption, Bully, L.A. Noire, Max Payne and Manhunt.
 
-Temporary home: rockstarworld.elvisobi.com (Cloudflare DNS). Repository: github.com/obileonardo/gtaverse (the repo name stays for now).
+Domain: thevicefiles.com (Namecheap, DNS on Cloudflare Free plan), with rockstarworld.elvisobi.com as a second address for now. Repository: github.com/obileonardo/gtaverse (the repo name stays for now).
 
 ## Who it is for
 - Players hunting secrets who want to know where something is, whether it is real, and who found it.
@@ -20,7 +20,7 @@ The most trustworthy GTA VI secrets guide: every fact sourced, every finder cred
 ## Stakes
 - **Legal survival.** The site lives on Rockstar's written tolerance for non-commercial fan use. Breaking it (ads, logos, leaks, spoiler clips) risks a takedown. See [docs/LEGAL.md](docs/LEGAL.md).
 - **Community trust.** Wrong locations or uncredited finds cost credibility with the people who supply the content.
-- **Owner exposure.** The site sits on the owner's personal domain and the owner's Rockstar account is bound by Rockstar's terms.
+- **Owner exposure.** The site still answers on a subdomain of the owner's personal domain, and the owner's Rockstar account is bound by Rockstar's terms.
 
 ## Limits
 - Non-commercial: no ads, no paid tiers, no sponsorships.

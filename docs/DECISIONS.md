@@ -7,12 +7,12 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | # | Decision | Why |
 |---|---|---|
 | 1 | The site is called **The Vice Files**. | A brand without "GTA" in it is easier to defend and does not read as an official product (research/legal-fan-site.md 3i). |
-| 2 | Temporary domain **rockstarworld.elvisobi.com**, DNS on Cloudflare. | A personal subdomain is not a UDRP target; it can move later. |
+| 2 | Temporary domain **rockstarworld.elvisobi.com**, DNS on Cloudflare. Superseded as the main domain by decision 15. | A personal subdomain is not a UDRP target; it can move later. |
 | 3 | The repository keeps the name **gtaverse** for now. | Renaming is cheap later; nothing depends on it yet. |
 | 4 | **Non-commercial**: no ads, no paid tiers. | Keeps the site inside Rockstar's written fan-site tolerance ("non-commercial uses", research/legal-fan-site.md 2.1). |
 | 5 | **Official Rockstar media allowed inside content with a credit line**: the official Leonida map download, key art, screenshots. | Matches what every tolerated fan map does, and Rockstar offers these as downloads. |
 | 6 | **Not allowed as our branding**: the GTA VI logo, the Rockstar logo, the GTAArtDeco font. | Trademark and font-copyright risk; suggests endorsement. |
-| 7 | **Icons and display type are original lookalikes**, near-identical in spirit, never copied files. | Copied blip sets read as copied UI and trade dress. |
+| 7 | **Icons and display type are original lookalikes**, near-identical in spirit, never copied files. Confirmed by decision 18. | Copied blip sets read as copied UI and trade dress. |
 | 8 | **Clips only through official platform embeds** (YouTube, X, TikTok, Reddit). Never re-hosted. | Platform embed licences are the legal footing; re-hosting is not covered. |
 | 9 | **Never link piracy or leaked-build content.** | Take-Two actively polices GTA VI leaks (research/legal-fan-site.md 4.1). |
 | 10 | **Every GTA VI fact needs a source URL.** | Trust is the product. |
@@ -20,6 +20,17 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | 12 | **Spoiler flag** on story-gated finds; **mature flag** for adult content. | Rockstar's policy names spoilers as a takedown trigger; adult content needs gating. |
 | 13 | **Game Checklists pin data is their work**: cross-reference only, never copy pins wholesale. | Their pins are original work; we credit or partner. |
 | 14 | **Data and documentation first, design later.** | The owner chose to settle the content base before any visual work. |
+
+## 2026-11-23: owner decisions (second batch)
+
+| # | Decision | Why |
+|---|---|---|
+| 15 | **Domain: thevicefiles.com**, bought by the owner on Namecheap, DNS on Cloudflare (Free plan). rockstarworld.elvisobi.com stays as a second address for now. | A dedicated domain matches the brand and keeps the site in its own Cloudflare zone, apart from the owner's other sites. |
+| 16 | **Branching: `staging` is ground truth.** Branch from `staging`; pull requests target `staging`. `main` moves only on the owner's go. Never branch from or merge `origin/main`. | One integration branch the owner controls; `main` stays the released state. |
+| 17 | **Theme: dark first, light available.** | Owner choice. |
+| 18 | **Icons: GTA-native-style, near-identical original lookalikes** for this project. This overrides the owner's Capsa icon default for this project only. Never copy Rockstar files. | The owner wants the game's visual language; original drawings keep it legal (research/legal-fan-site.md 3e). |
+| 19 | **Chime (ChimeXXD) owns content and pins.** | Clear ownership of the content base and the map. |
+| 20 | **Takedown and credit-correction contact: takedown@thevicefiles.com** (forwarding being set up). | The footer disclaimer and takedown process need a real address. |
 
 ## 2026-11-23: slice decisions (content foundations, open to owner review)
 

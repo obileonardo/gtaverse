@@ -1,6 +1,6 @@
 # Content guide
 
-How to add or fix content in The Vice Files. Written for contributors (hi Chime). If something here is unclear, open an issue rather than guessing.
+How to add or fix content in The Vice Files. Written for contributors. Chime (ChimeXXD) owns content and pins. If something here is unclear, open an issue rather than guessing.
 
 ## The five rules that never bend
 
@@ -163,8 +163,10 @@ sources:
 
 ## How to submit
 
+`staging` is the ground-truth branch. `main` moves only when the owner says so.
+
 1. Open an issue (use the "New find" or "Correction" template) or pick an existing one.
-2. Create a branch from the latest `main`.
+2. Fetch, then create your branch from the latest `staging`: `git fetch origin` and `git switch -c your-branch origin/staging`. Never branch from or merge `main`.
 3. Make your change and run `pnpm install` once, then `pnpm validate`.
-4. Open a pull request with `Closes #<issue>` and fill in the checklist.
+4. Open a pull request into `staging` with `Closes #<issue>` and fill in the checklist.
 5. Do not merge your own pull request; the owner reviews.

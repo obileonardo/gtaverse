@@ -1,6 +1,6 @@
 # The Vice Files
 
-An unofficial, non-commercial fan field guide to Grand Theft Auto VI and the wider Rockstar universe. Temporary home: rockstarworld.elvisobi.com (in progress, not live yet).
+An unofficial, non-commercial fan field guide to Grand Theft Auto VI and the wider Rockstar universe. Domain: thevicefiles.com, with rockstarworld.elvisobi.com as a second address for now (in progress, not live yet).
 
 - **Map:** every secret, Easter egg, rare vehicle, unique weapon, memorial and real-world reference in Leonida, with an embedded clip and credit to the fan who found it.
 - **Explainers:** how the wanted level, the protagonists, NPCs, the relationship system and the regions actually work, with every claim sourced.
@@ -33,4 +33,4 @@ Read [docs/CONTENT-GUIDE.md](docs/CONTENT-GUIDE.md) first. Every fact needs a so
 
 ## Disclaimer
 
-The Vice Files is an unofficial fan site. It is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA, Grand Theft Auto VI and related marks are trademarks of Take-Two Interactive Software, Inc. Game images, artwork and the Leonida map are (c) Rockstar Games and are used for non-commercial fan commentary and reference.
+The Vice Files is an unofficial fan site. It is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA, Grand Theft Auto VI and related marks are trademarks of Take-Two Interactive Software, Inc. Game images, artwork and the Leonida map are (c) Rockstar Games and are used for non-commercial fan commentary and reference. Copyright concerns and credit corrections: takedown@thevicefiles.com.

@@ -6,7 +6,7 @@ labels: takedown
 ---
 
 <!-- We act on creator requests within 24 hours, no questions asked. -->
-<!-- Rights holders: this issue is public. If you prefer private contact, use the copyright contact address in the site footer. -->
+<!-- Rights holders: this issue is public. If you prefer private contact, email takedown@thevicefiles.com. -->
 
 ## What should we remove or change?
 <!-- Link to the page on the site, or the find id, and the clip or image concerned. -->
