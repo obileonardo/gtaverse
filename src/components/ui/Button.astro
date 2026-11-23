@@ -7,13 +7,14 @@
 //   secondary pink tint fill, pink label (Apple Maps secondary actions)
 //   quiet     surface fill, normal label (Cancel and other low-weight actions)
 //   ghost     no fill until hover (bare icon actions: Felt inspector actions, panel close)
+//   outline   no fill, 1px edge (V7 timeline arrows)
 // size: s 32, m 40 (default), l 48, xl 56. iconOnly makes it a circle of the same height.
 // Pass href to render a link; otherwise a <button>. Extra attributes pass through.
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 interface Props {
   href?: string;
-  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'ghost';
+  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'ghost' | 'outline';
   size?: 's' | 'm' | 'l' | 'xl';
   icon?: IconName;
   iconEnd?: IconName;

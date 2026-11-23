@@ -87,3 +87,20 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | MP8 | Phone chips are drawn 40 high as Rodeo shows and tapped at 44 (an invisible hit area); the toggle and search pill are 50 high (Rodeo 47) so their buttons reach 44. The audit still warns on the chips' drawn height. | Keeps the pick's proportions and the 44px touch rule. |
 | MP9 | The map credit "Map © Rockstar Games" sits on the map at all times (bottom left on desktop, top left on phone). | docs/MAP.md: show the credit wherever the map shows. |
 | MP10 | The agent never viewed the map art: every screenshot and audit used flat placeholder tiles and stand-in stills. | Rockstar ToS 2.3 and CONTENT-GUIDE rule 5. The owner should look at the real map once on a preview build. |
+## 2026-11-23: the lore section is the GTAverse (owner decision)
+
+| # | Decision | Why |
+|---|---|---|
+| G1 | The lore section is named "The GTAverse": the shared universe across GTA I to VI, Red Dead, Bully and L.A. Noire. The menu reads "GTAverse" (count kept), routes are `/gtaverse` and `/gtaverse/[slug]`, the index title is "The GTAverse", and each connection page keeps its own title. `/lore` and `/lore/*` redirect with a 301 (`public/_redirects`). | Owner decision, 23 Nov 2026. |
+
+## 2026-11-23: slice decisions (find, explainer and lore pages, open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| P1 | Find page: the Disney+ circle and the Google TV second pill open the map only when a find has a pin (`/map?find=<slug>`). No find has a pin yet, so the circle shares the page and the pill opens "How to find it". | The direction file read the circle as "open on the map" (inference); a map link without a pin would land nowhere. |
+| P2 | Find page tabs are Related, Clips and Details on both sizes (the direction proposed Shots on the phone). Clips holds the clip and the other YouTube sources as the Xbox grid. | One tab set for one component; Clips covers both the clip and the shots. |
+| P3 | Credit: "About the finder" only when `first_finder` exists; otherwise "About the clip" with "Clip by <creator>". Spoiler and mature clips load no thumbnail until revealed. | Owner content rules. |
+| P4 | The wanted states table keeps the content's own orientation (one row per state, as Fiverr shows six rows), with the level badge and colour on each state. The direction proposed one column per level, but the content has six named states with sentences, not five numbered levels with short values. | Change the presentation, never the content. |
+| P5 | Lore moments sit at the release year of the earliest game each connection lists (release years in `src/lib/lore.ts`). Every moment is in the page, so moving along the line is instant; on a connection page the address follows the selected moment. | One selected moment at a time (owner answer 5), with a real page per connection. |
+| P6 | Grok's selected title is set in Newsreader (V7's serif captions) and its description at 64% white instead of 50%. | Answer 6 keeps the serif on lore pages; the summaries run to 60 words, so legibility first. |
+| P7 | Queue's quote mark is kept on the phone headline as decoration (hidden from screen readers), though moment titles are not quotes. | The owner named "quote" in the brief; flag if it reads as a quotation. |

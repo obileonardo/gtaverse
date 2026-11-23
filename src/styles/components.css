@@ -53,6 +53,7 @@
   .btn--secondary { background: var(--accent-tint); color: var(--accent-text); }
   .btn--quiet { background: var(--surface-2); color: var(--text-1); border-color: var(--border-1); }
   .btn--ghost { background: transparent; color: var(--text-1); }
+  .btn--outline { background: transparent; color: var(--text-1); border-color: var(--border-2); }
 
   @media (hover: hover) and (pointer: fine) {
     .btn--primary:hover { background: #fb8fbf; }
@@ -62,6 +63,7 @@
     .btn--secondary:hover { background: rgb(249 118 176 / 0.24); }
     .btn--quiet:hover { background: var(--surface-3); }
     .btn--ghost:not(:disabled):hover { background: var(--glass-hover); }
+    .btn--outline:hover { border-color: var(--text-2); }
   }
 
   @media (prefers-reduced-transparency: reduce) {

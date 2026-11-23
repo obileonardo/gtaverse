@@ -1,18 +1,195 @@
 ---
+// An explainer. The Obvious document (Like): title, standfirst and byline over a hairline, a reading column and a
+// quiet contents rail on the right. Tables are the Fiverr level system table (Love), the wanted states with level
+// badges. Notes are Productboard callouts (Like); sources close the page as chips with a "Last updated"
+// line (Like). Citations [n] link to their source chip.
 import Base from '../../layouts/Base.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Chip from '../../components/ui/Chip.astro';
+import Icon from '../../components/ui/Icon.astro';
+import LevelTable from '../../components/ui/LevelTable.astro';
 import { explainers } from '../../lib/content';
+import { explainerParts, sourceName, type Explainer } from '../../lib/explainers';
+import { formatDate } from '../../lib/finds';
+
 export function getStaticPaths() {
   return explainers.map((e) => ({ params: { slug: e.frontmatter.slug }, props: { e } }));
 }
-const { e } = Astro.props as { e: (typeof explainers)[number] };
-const Content = e.Content as any;
+const { e } = Astro.props as { e: Explainer };
+const fm = e.frontmatter;
+const { standfirst, segments, headings, minutes } = await explainerParts(e);
+const updatedRaw = String(fm.updated_at).slice(0, 10);
+const updated = formatDate(updatedRaw);
 ---
-<Base title={e.frontmatter.title}>
-  <article>
-    {e.frontmatter.status === 'draft' && <p>Draft: under review.</p>}
-    <Content />
-    <h2>Sources</h2>
-    <ul>{e.frontmatter.sources.map((s) => <li><a href={s.url} rel="noopener">{s.title ?? s.url}</a></li>)}</ul>
-    <p>Updated {e.frontmatter.updated_at}</p>
-  </article>
+<Base title={fm.title} description={standfirst.replace(/<[^>]+>/g, '').slice(0, 160)}>
+  <div class="doc">
+    <article class="doc__main">
+      <header class="doc__head">
+        <h1 class="doc__title">{fm.title}</h1>
+        {standfirst && <p class="doc__standfirst" set:html={standfirst} />}
+        <p class="doc__byline">
+          <span class="doc__mark" aria-hidden="true"><Icon name="explainers" size={16} /></span>
+          <span class="doc__by">The Vice Files</span>
+          <span class="doc__dot" aria-hidden="true">·</span>
+          <span>{updated ? <>Updated <time datetime={updatedRaw}>{updated}</time></> : 'Undated'}</span>
+          <span class="doc__dot" aria-hidden="true">·</span>
+          <span>{minutes} min read</span>
+          {fm.status === 'draft' && <Badge variant="muted" icon="question">Draft, under review</Badge>}
+          {fm.spoiler && <Badge variant="outline">Spoiler</Badge>}
+        </p>
+      </header>
+
+      <div class="prose doc__body">
+        {segments.map((s) => s.type === 'html'
+          ? <Fragment set:html={s.html} />
+          : <LevelTable head={s.head} rows={s.rows} footnote={s.footnote} caption={s.caption} class="doc__table" />)}
+      </div>
+
+      <footer class="doc__sources" aria-labelledby="sources-title">
+        <h2 id="sources-title" class="doc__sources-title">Sources</h2>
+        <ol class="doc__chips">
+          {fm.sources.map((s, i) => (
+            <li id={`source-${i + 1}`}>
+              <Chip href={s.url} touch rel="noopener" target="_blank" title={s.title ?? s.url}><span class="schip__n tabular">{i + 1}</span> {sourceName(s)}</Chip>
+            </li>
+          ))}
+        </ol>
+        <ol class="doc__source-list">
+          {fm.sources.map((s, i) => <li><span class="tabular">{i + 1}.</span> {s.title ?? s.url}</li>)}
+        </ol>
+        <p class="doc__updated">Last updated {updated ?? updatedRaw}</p>
+      </footer>
+    </article>
+
+    {headings.length > 1 && (
+      <nav class="rail" aria-label="Contents">
+        <p class="rail__title">Contents</p>
+        <ul class="rail__list" data-rail>
+          {headings.map((h) => <li><a href={`#${h.slug}`} data-rail-link={h.slug}>{h.text}</a></li>)}
+        </ul>
+      </nav>
+    )}
+  </div>
 </Base>
+
+<script>
+  // Contents rail: mark the section being read. Colour only, no motion.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-rail-link]')];
+  const targets = links.map((a) => document.getElementById(a.dataset.railLink!)).filter((t): t is HTMLElement => !!t);
+  if (targets.length) {
+    const visible = new Set<string>();
+    const mark = () => {
+      const current = targets.find((t) => visible.has(t.id)) ?? null;
+      if (!current) return;
+      links.forEach((a) => a.toggleAttribute('aria-current', a.dataset.railLink === current.id));
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => (en.isIntersecting ? visible.add(en.target.id) : visible.delete(en.target.id)));
+      mark();
+    }, { rootMargin: '-15% 0px -60% 0px' });
+    targets.forEach((t) => io.observe(t));
+  }
+</script>
+
+<style>
+  /* Obvious: a 712 reading column and a 200 rail, centred together. */
+  .doc { display: grid; grid-template-columns: minmax(0, 712px) 200px; justify-content: center; column-gap: var(--space-12); }
+  .doc__main { min-width: 0; }
+  .doc__head { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-8); border-bottom: var(--border-w) solid var(--border-1); }
+  .doc__title { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; }
+  .doc__standfirst { color: var(--text-2); font-size: 19px; line-height: 1.45; }
+  .doc__byline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-4); color: var(--text-3); font-size: var(--text-body-s); }
+  .doc__mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); }
+  .doc__by { color: var(--text-1); font-weight: 500; }
+
+  .doc__body { padding-top: var(--space-10); font-size: 18px; line-height: 1.65; }
+  .doc__body :global(h2) {
+    margin-top: var(--space-12);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-h2);
+    font-weight: 700;
+    line-height: 1.2;
+    scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-6));
+  }
+  .doc__body :global(p) { margin-bottom: var(--space-5); }
+  .doc__body :global(ul) { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .doc__body :global(ul > li) { position: relative; padding-left: var(--space-6); }
+  .doc__body :global(ul > li)::before { content: ''; position: absolute; left: 6px; top: 0.72em; width: 5px; height: 5px; border-radius: var(--radius-full); background: var(--text-3); }
+  .doc__body :global(strong) { font-weight: 600; }
+  .doc__body :global(.cite) { margin-left: 2px; font-size: 12px; line-height: 0; vertical-align: super; }
+  .doc__body :global(.cite a), .doc__standfirst :global(.cite a) {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 4px;
+    border-radius: var(--radius-full);
+    background: var(--accent-tint);
+    color: var(--accent-text);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .doc__standfirst :global(.cite) { font-size: 12px; vertical-align: super; line-height: 0; }
+
+  /* Productboard callout */
+  .doc__body :global(.callout) {
+    display: flex;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-m);
+    background: var(--accent-tint);
+    color: var(--text-1);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  .doc__body :global(.callout .icon) { flex: none; margin-top: 3px; color: var(--accent-text); }
+  .doc__body :global(.callout p) { margin: 0; }
+  .doc__body :global(.callout strong) { color: var(--accent-text); }
+
+  .doc__body :global(.doc__table) { margin-block: var(--space-6) var(--space-10); font-size: var(--text-body); line-height: 1.4; }
+
+  /* Lightyear sources */
+  .doc__sources { margin-top: var(--space-12); display: flex; flex-direction: column; gap: var(--space-4); }
+  .doc__sources-title { color: var(--text-3); font-size: var(--text-body-s); font-weight: 400; }
+  .doc__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .doc__chips li { scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-10)); }
+  .schip__n { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: -6px; margin-right: 2px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-family: var(--font-mono); font-size: 12px; }
+  .doc__chips li:target :global(.chip) { border-color: var(--accent); }
+  .doc__source-list { display: flex; flex-direction: column; gap: var(--space-1); color: var(--text-3); font-size: var(--text-caption); }
+  .doc__updated { padding-top: var(--space-5); border-top: var(--border-w) solid var(--border-1); color: var(--text-2); font-size: var(--text-body-s); }
+  @media (hover: hover) and (pointer: fine) {
+    .rail__list a:hover { color: var(--text-1); }
+  }
+
+  /* Obvious contents rail */
+  .rail { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); align-self: start; display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
+  .rail__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .rail__list { display: flex; flex-direction: column; border-left: var(--border-w) solid var(--border-1); }
+  .rail__list a {
+    position: relative;
+    display: block;
+    padding: 6px 0 6px var(--space-4);
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    line-height: 1.35;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .rail__list a[aria-current] { color: var(--text-1); }
+  .rail__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+
+  @media (max-width: 1023px) {
+    .doc { grid-template-columns: minmax(0, 712px); }
+    .rail { display: none; }
+  }
+  @media (max-width: 767px) {
+    .doc__title { font-size: 32px; }
+    .doc__standfirst { font-size: 18px; }
+    .doc__body { font-size: 17px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rail__list a { transition: none; }
+  }
+</style>

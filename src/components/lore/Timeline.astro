@@ -1,0 +1,546 @@
+---
+// The lore timeline, one selected moment at a time.
+// Desktop (Grok, Love): headline left, intro right at 61%; a hairline across the full width with mono caps year
+// labels above it, each on a 1px tick; event dots on the line and a square marker around the selected one; the
+// selected moment's date, title and description under the marker. V7 (Love) adds the tick ruler hanging from the
+// line, event ticks in the accent and two outline arrow pills. The moment's clip sits to the right of its text in
+// Queue's polaroid frame.
+// Phone (Queue, Love): a year ruler at the top of a sheet (ticks scroll under a fixed centre tick), the centred
+// year with its neighbours fading at the edges, then a quote led serif headline, the polaroid clip, a "Watch the
+// clip" link and the serif body. Scrub the ruler or swipe the moment to move.
+// Every moment is in the page, so switching is instant and works offline; the selected one is server rendered.
+// syncUrl: on a lore page, the address follows the selected moment.
+// titleAsH1: on a lore page, the page heading also names the selected moment (for readers; the eye sees it under
+// the marker).
+import Badge from '../ui/Badge.astro';
+import Button from '../ui/Button.astro';
+import Card from '../ui/Card.astro';
+import Chip from '../ui/Chip.astro';
+import Icon from '../ui/Icon.astro';
+import Clip from '../Clip.astro';
+import type { IconName } from '../ui/icons';
+import { moments, years, trackLayout, confidenceLabel, typeLabel } from '../../lib/lore';
+import { categoryLabel } from '../../lib/media';
+import { cardImage } from '../../lib/finds';
+import { sourceName } from '../../lib/explainers';
+
+interface Props { selected?: number; syncUrl?: boolean; headline: string; intro: string; titleAsH1?: boolean }
+const { selected = 0, syncUrl = false, headline, intro, titleAsH1 = false } = Astro.props;
+const { width, yearX, momentX } = trackLayout();
+const conf: Record<string, { variant: 'verified' | 'outline' | 'muted' | 'debunked'; icon: IconName }> = {
+  canon: { variant: 'verified', icon: 'check' },
+  strong: { variant: 'outline', icon: 'dot' },
+  speculative: { variant: 'muted', icon: 'question' },
+  debunked: { variant: 'debunked', icon: 'cross' },
+};
+const usedYears = [...new Set(moments.map((m) => m.year))];
+---
+<section class="lore" data-lore data-selected={selected} data-sync-url={syncUrl ? 'true' : undefined}>
+  <header class="lore__head container">
+    <h1 class="lore__headline">{headline}{titleAsH1 && <span class="sr-only" data-headline-title>: {moments[selected].title}</span>}</h1>
+    <p class="lore__intro">{intro}</p>
+  </header>
+
+  <!-- Desktop: Grok hairline + V7 ticks -->
+  <div class="band" data-band>
+    <div class="band__arrows">
+      <Button variant="outline" size="s" icon="arrow-left" iconOnly label="Previous moment" class="band__arrow" data-step="-1" />
+      <Button variant="outline" size="s" icon="arrow-right" iconOnly label="Next moment" class="band__arrow band__arrow--next" data-step="1" />
+    </div>
+    <div class="band__line" aria-hidden="true"></div>
+    <div class="band__viewport" role="group" aria-label="Timeline: use the arrow keys to move between moments" tabindex="0" data-band-viewport>
+      <div class="band__track" style={`width: ${width}px; --x: ${momentX[selected]}`} data-track>
+        <div class="band__ruler" aria-hidden="true"></div>
+        {years.map((y) => (
+          <span class:list={['band__year', { 'is-empty': !usedYears.includes(y) }]} style={`left: ${yearX[y]}px`} aria-hidden="true"><span class="mono-caps">{y}</span></span>
+        ))}
+        {moments.map((m) => (
+          <button
+            type="button"
+            class:list={['band__dot', { 'is-selected': m.index === selected }]}
+            style={`left: ${momentX[m.index]}px`}
+            data-go={m.index}
+            tabindex="-1"
+            aria-label={`${m.year}, ${m.title}`}
+            aria-pressed={m.index === selected ? 'true' : 'false'}
+          ><span></span></button>
+        ))}
+      </div>
+      <span class="band__marker" aria-hidden="true"><span></span></span>
+    </div>
+  </div>
+
+  <!-- Phone: Queue sheet with the year ruler -->
+  <div class="sheet">
+    <div class="ruler" data-ruler>
+      <div class="ruler__scroll" data-ruler-scroll aria-label="Scrub the timeline">
+        <div class="ruler__ticks">
+          {moments.map((m) => (
+            <button type="button" class="ruler__tick" data-go={m.index} data-year={m.year} tabindex="-1" aria-label={`${m.year}, ${m.title}`}><span></span></button>
+          ))}
+        </div>
+      </div>
+      <span class="ruler__centre" aria-hidden="true"></span>
+      <p class="ruler__years mono" aria-live="polite">
+        <span class="ruler__prev" data-year-prev aria-hidden="true">{usedYears[usedYears.indexOf(moments[selected].year) - 1] ?? ''}</span>
+        <span class="ruler__now" data-year-now>{moments[selected].year}</span>
+        <span class="ruler__next" data-year-next aria-hidden="true">{usedYears[usedYears.indexOf(moments[selected].year) + 1] ?? ''}</span>
+      </p>
+    </div>
+
+    <div class="panels" data-panels>
+      {moments.map((m) => {
+        const c = conf[m.confidence] ?? conf.strong;
+        const cf = m.clipFind;
+        return (
+          <article class="moment" data-panel={m.index} data-slug={m.slug} data-title={m.title} data-year={m.year} hidden={m.index !== selected} aria-labelledby={`moment-${m.slug}`}>
+            <p class="moment__date mono-caps">{m.year} · {m.firstGame}</p>
+            <h2 class="moment__title" id={`moment-${m.slug}`}>
+              {m.title}
+            </h2>
+            <p class="moment__desc">{m.summary}</p>
+            <div class="moment__badges">
+              <Badge variant={c.variant} icon={c.icon} title={`Confidence: ${confidenceLabel[m.confidence] ?? m.confidence}`}>{confidenceLabel[m.confidence] ?? m.confidence}</Badge>
+              <Badge variant="meta">{typeLabel[m.type] ?? m.type}</Badge>
+            </div>
+
+            <figure class="polaroid" aria-label={cf ? `Clip: ${cf.title}` : undefined}>
+              <span class="polaroid__back" aria-hidden="true"></span>
+              <div class="polaroid__frame">
+                {cf?.clip ? (
+                  <Clip clip={cf.clip} title={cf.title} spoiler={cf.spoiler} mature={cf.mature} caption={false} ratio="16 / 10" />
+                ) : (
+                  <div class="polaroid__glow" aria-hidden="true"><span>{m.firstGame}</span></div>
+                )}
+              </div>
+            </figure>
+            {cf?.clip && (
+              <div class="moment__watch">
+                <a class="watch" href={`/finds/${cf.slug}#tabs`} data-watch>
+                  <span class="watch__icon" aria-hidden="true"><Icon name="play" size={12} /></span>
+                  {cf.spoiler || cf.mature ? 'Reveal the clip' : 'Watch the clip'}
+                </a>
+                <p class="watch__credit">Clip by {cf.clip.creator ?? 'an unknown creator'}, from <a href={`/finds/${cf.slug}`}>{cf.title}</a></p>
+              </div>
+            )}
+
+            <div class="moment__more">
+              <section class="more">
+                <h3 class="more__title label-caps">Appears in</h3>
+                <ul class="more__games">{m.games.map((g) => <li><Badge variant="meta" caps={false}>{g}</Badge></li>)}</ul>
+              </section>
+              {m.finds.length > 0 && (
+                <section class="more">
+                  <h3 class="more__title label-caps">See it in GTA VI</h3>
+                  <ul class="more__finds">
+                    {m.finds.map((f) => {
+                      const img = cardImage(f);
+                      return <li><Card href={`/finds/${f.slug}`} image={img?.thumb} kicker={categoryLabel(f)} title={f.title} meta={f.spoiler ? 'Spoiler' : undefined} /></li>;
+                    })}
+                  </ul>
+                </section>
+              )}
+              <section class="more">
+                <h3 class="more__title label-caps">Sources</h3>
+                <ul class="more__sources">
+                  {m.sources.map((s) => <li><Chip href={s.url} touch target="_blank" rel="noopener" title={s.title ?? s.url}>{sourceName(s)}</Chip></li>)}
+                </ul>
+              </section>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<script>
+  const ease = { out: 'cubic-bezier(0.23, 1, 0.32, 1)', exit: 'cubic-bezier(0.4, 0, 0.2, 1)' };
+  document.querySelectorAll<HTMLElement>('[data-lore]').forEach((root) => {
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('.band__dot')];
+    const ticks = [...root.querySelectorAll<HTMLButtonElement>('.ruler__tick')];
+    const track = root.querySelector<HTMLElement>('[data-track]')!;
+    const viewport = root.querySelector<HTMLElement>('[data-band-viewport]')!;
+    const scroller = root.querySelector<HTMLElement>('[data-ruler-scroll]')!;
+    const panelsBox = root.querySelector<HTMLElement>('[data-panels]')!;
+    const yearPrev = root.querySelector<HTMLElement>('[data-year-prev]')!;
+    const yearNow = root.querySelector<HTMLElement>('[data-year-now]')!;
+    const yearNext = root.querySelector<HTMLElement>('[data-year-next]')!;
+    const years = [...new Set(panels.map((p) => Number(p.dataset.year)))];
+    const xs = dots.map((d) => parseFloat(d.style.left));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const phone = matchMedia('(max-width: 767px)');
+    let current = Number(root.dataset.selected) || 0;
+    let rulerLock = false;
+
+    const setYears = (i: number) => {
+      const y = Number(panels[i].dataset.year);
+      const k = years.indexOf(y);
+      yearNow.textContent = String(y);
+      yearPrev.textContent = years[k - 1] ? String(years[k - 1]) : '';
+      yearNext.textContent = years[k + 1] ? String(years[k + 1]) : '';
+    };
+
+    const centreRuler = (i: number, smooth: boolean) => {
+      const t = ticks[i];
+      if (!t) return;
+      rulerLock = true;
+      const left = t.offsetLeft + t.offsetWidth / 2 - scroller.clientWidth / 2;
+      scroller.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' });
+      window.setTimeout(() => { rulerLock = false; }, smooth ? 450 : 50);
+    };
+
+    // instant: keyboard and first paint never animate (design system rule).
+    const select = (i: number, { instant = false, fromRuler = false } = {}) => {
+      i = Math.max(0, Math.min(panels.length - 1, i));
+      if (i === current) return;
+      const dir = i > current ? 1 : -1;
+      const prev = panels[current];
+      const next = panels[i];
+      const still = instant || reduce.matches;
+      // Interrupt anything in flight; only the newest move plays.
+      panels.forEach((p) => p.getAnimations().forEach((a) => a.cancel()));
+      panels.forEach((p) => { if (p !== prev && p !== next) { p.hidden = true; p.classList.remove('is-leaving'); } });
+
+      track.classList.toggle('is-instant', instant || reduce.matches);
+      // Set on the track itself: a variable on the root would restyle every panel.
+      track.style.setProperty('--x', String(xs[i]));
+      dots.forEach((d, k) => { d.classList.toggle('is-selected', k === i); d.setAttribute('aria-pressed', String(k === i)); });
+      setYears(i);
+      if (!fromRuler) centreRuler(i, !still);
+
+      next.hidden = false;
+      if (still) {
+        prev.hidden = true;
+        if (!instant) next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: ease.out });
+      } else {
+        // The old moment leaves the layout at once (siblings do not wait) and fades the way it is going.
+        const shift = phone.matches ? 24 : 12;
+        prev.classList.add('is-leaving');
+        prev.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-shift * dir}px)` }], { duration: 160, easing: ease.exit, fill: 'forwards' })
+          .finished.then(() => { prev.hidden = true; prev.classList.remove('is-leaving'); prev.getAnimations().forEach((a) => a.cancel()); }, () => {});
+        next.animate([{ opacity: 0, transform: `translateX(${(shift + 4) * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 40, easing: ease.out, fill: 'backwards' });
+      }
+      current = i;
+      root.dataset.selected = String(i);
+      if (root.dataset.syncUrl) {
+        history.replaceState(null, '', `/gtaverse/${next.dataset.slug}`);
+        document.title = `${next.dataset.title} | The Vice Files`;
+        const h = root.querySelector('[data-headline-title]');
+        if (h) h.textContent = `: ${next.dataset.title}`;
+      }
+    };
+
+    // Clicks on dots, ticks and arrows.
+    root.addEventListener('click', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[data-go], [data-step]');
+      if (!el || !root.contains(el)) return;
+      if (el.dataset.go !== undefined) select(Number(el.dataset.go));
+      else select(current + Number(el.dataset.step));
+    });
+
+    // A clicked dot takes focus; never let that scroll the clipped band (it would shift the marker).
+    viewport.addEventListener('scroll', () => { viewport.scrollLeft = 0; });
+
+    // Keyboard on the band: arrows, Home and End. Instant, no animation.
+    viewport.addEventListener('keydown', (e) => {
+      const map: Record<string, number> = { ArrowRight: current + 1, ArrowLeft: current - 1, Home: 0, End: panels.length - 1 };
+      if (!(e.key in map)) return;
+      e.preventDefault();
+      select(map[e.key], { instant: true });
+    });
+
+    // "Watch the clip": play (or reveal) the clip in the polaroid instead of leaving the page.
+    panelsBox.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest<HTMLElement>('[data-watch]');
+      if (!a) return;
+      const fig = a.closest('.moment')?.querySelector<HTMLElement>('.clip');
+      const target = fig?.querySelector<HTMLElement>('.clip-reveal') ?? fig?.querySelector<HTMLElement>('.clip-play');
+      if (!target) return;
+      e.preventDefault();
+      target.click();
+    });
+
+    // Phone ruler: scrub with native scroll and snap; the centred tick becomes the moment when scrolling settles.
+    const centred = () => {
+      const mid = scroller.scrollLeft + scroller.clientWidth / 2;
+      let best = 0;
+      let dist = Infinity;
+      ticks.forEach((t, k) => { const d = Math.abs(t.offsetLeft + t.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = k; } });
+      return best;
+    };
+    let settle = 0;
+    scroller.addEventListener('scroll', () => {
+      if (rulerLock) return;
+      setYears(centred());
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => select(centred(), { fromRuler: true }), 140);
+    }, { passive: true });
+
+    // Phone: swipe the moment left or right.
+    let sx = 0, sy = 0, st = 0, tracking = false;
+    panelsBox.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' || !phone.matches) return;
+      if ((e.target as HTMLElement).closest('a, button, iframe')) return;
+      tracking = true; sx = e.clientX; sy = e.clientY; st = performance.now();
+    });
+    panelsBox.addEventListener('pointerup', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      const v = Math.abs(dx) / (performance.now() - st);
+      if (Math.abs(dx) > Math.abs(dy) * 1.4 && (Math.abs(dx) > 56 || v > 0.4)) select(current + (dx < 0 ? 1 : -1));
+    });
+    panelsBox.addEventListener('pointercancel', () => { tracking = false; });
+
+    // First paint: centre the ruler on the selected moment, no motion.
+    requestAnimationFrame(() => { track.classList.add('is-instant'); centreRuler(current, false); requestAnimationFrame(() => track.classList.remove('is-instant')); });
+  });
+</script>
+
+<style>
+  .lore { --anchor: max(36vw, 360px); --text-w: 340px; position: relative; }
+
+  /* ---------- Grok head ---------- */
+  .lore__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+    column-gap: var(--space-16);
+    align-items: start;
+    padding-top: calc(var(--island-top) + var(--island-h) + var(--space-16) + var(--space-12));
+  }
+  .lore__headline { font-size: var(--text-display-m); font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+  .lore__intro { color: var(--text-1); font-size: var(--text-body); line-height: 1.6; }
+
+  /* ---------- Band ---------- */
+  .band { position: relative; margin-top: 168px; }
+  .band__viewport {
+    position: relative;
+    height: 132px;
+    overflow: hidden;
+    overflow: clip;
+    outline-offset: -2px;
+    /* The track fades out under the arrow pills and at the right edge. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
+  }
+  .band__line { position: absolute; left: 22px; right: 22px; top: 76px; height: 1px; background: var(--border-1); }
+  .band__track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transform: translateX(calc(var(--anchor) - var(--x) * 1px));
+    transition: transform 500ms var(--ease-in-out);
+  }
+  .band__track.is-instant { transition: none; }
+  /* V7 ruler: one 1px tick every 20px, hanging from the line */
+  .band__ruler {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 77px;
+    height: 20px;
+    background: repeating-linear-gradient(to right, var(--border-1) 0 1px, transparent 1px 20px);
+    opacity: 0.8;
+  }
+  .band__year { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-3); }
+  .band__year::after { content: ''; width: 1px; height: 47px; background: var(--border-1); }
+  .band__year.is-empty { opacity: 0.45; }
+  .band__dot {
+    position: absolute;
+    top: 64px;
+    width: 24px;
+    height: 56px;
+    margin-left: -12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .band__dot span { width: 4px; height: 4px; margin-top: 10px; border-radius: var(--radius-full); background: var(--text-1); transition: transform var(--dur-press) var(--ease-out); }
+  /* V7 event tick in the accent, hanging under each dot */
+  .band__dot::after { content: ''; width: 1px; height: 20px; margin-top: 1px; background: var(--accent); opacity: 0.85; }
+  .band__dot.is-selected span { opacity: 0; }
+  .band__marker {
+    position: absolute;
+    top: 65px;
+    left: calc(var(--anchor) - 11px);
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border: var(--border-w) solid var(--accent);
+    pointer-events: none;
+  }
+  .band__marker span { width: 4px; height: 4px; border-radius: var(--radius-full); background: var(--accent); }
+  .band__arrows { position: absolute; z-index: 1; left: var(--page-pad); top: 8px; display: flex; gap: var(--space-2); }
+  .band__arrows :global(.band__arrow) { width: 52px; }
+  .band__arrows :global(.band__arrow--next) { border-right-color: var(--text-1); border-bottom-color: var(--text-1); }
+  @media (hover: hover) and (pointer: fine) {
+    .band__dot:hover span { transform: scale(1.75); }
+  }
+
+  /* ---------- Moment (desktop: Grok text under the marker, Queue polaroid to its right) ---------- */
+  .sheet { position: relative; }
+  .ruler { display: none; }
+  .panels { position: relative; padding-bottom: var(--space-section); }
+  .moment {
+    display: grid;
+    grid-template-columns: var(--text-w) minmax(0, min(360px, calc(100vw - var(--anchor) - var(--text-w) - 64px - var(--page-pad) * 2)));
+    grid-template-areas:
+      'date pol'
+      'title pol'
+      'desc pol'
+      'badges pol'
+      'watch pol'
+      'more more';
+    grid-template-rows: auto auto auto auto 1fr auto;
+    column-gap: 64px;
+    margin-left: calc(var(--anchor) - 11px);
+    margin-right: var(--page-pad);
+  }
+  .moment[hidden] { display: none; }
+  .moment.is-leaving { position: absolute; top: 0; left: 0; right: 0; pointer-events: none; }
+  .moment__date { grid-area: date; color: var(--text-3); }
+  .moment__title {
+    grid-area: title;
+    margin-top: 22px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .moment__desc { grid-area: desc; margin-top: var(--space-4); color: var(--text-2); font-size: 15px; line-height: 1.6; }
+  .moment__badges { grid-area: badges; display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-5); }
+  .moment__watch { grid-area: watch; }
+  .polaroid { grid-area: pol; position: relative; align-self: start; margin: 0; }
+  .moment__more { grid-area: more; display: flex; flex-direction: column; gap: var(--space-8); margin-top: var(--space-16); padding-top: var(--space-8); border-top: var(--border-w) solid var(--border-1); max-width: 760px; }
+
+  /* Queue polaroid: framed, a second frame stacked behind, a slight turn. Border only, no shadow. */
+  .polaroid__frame, .polaroid__back {
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+    border-radius: var(--radius-xs);
+  }
+  .polaroid__frame { position: relative; padding: 16px 16px 40px; transform: rotate(1.5deg); }
+  .polaroid__back { position: absolute; inset: 6px -4px -6px 4px; transform: rotate(-2deg); background: var(--surface-2); }
+  .polaroid__frame :global(.clip__frame) { border-radius: 2px; }
+  .polaroid__glow { aspect-ratio: 16 / 10; display: grid; place-items: end start; padding: var(--space-4); border-radius: 2px; background: var(--glow-hero), var(--surface-2); }
+  .polaroid__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 28px; line-height: 0.92; text-transform: uppercase; }
+
+  .moment__watch { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-6); }
+  .watch { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; color: var(--text-2); font-size: var(--text-body); transition: color var(--dur-colour) var(--ease-colour); }
+  .watch__icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--text-3); color: var(--bg); }
+  .watch__credit { color: var(--text-3); font-size: var(--text-caption); }
+  .watch__credit a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  @media (hover: hover) and (pointer: fine) { .watch:hover { color: var(--text-1); } }
+
+  .more { display: flex; flex-direction: column; gap: var(--space-3); }
+  .more__title { color: var(--text-3); }
+  .more__games, .more__sources { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .more__finds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+
+  @media (min-width: 768px) and (max-width: 1099px) {
+    .lore { --anchor: 260px; --text-w: 300px; }
+    .moment { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'date' 'title' 'desc' 'badges' 'pol' 'watch' 'more'; }
+    .polaroid { margin-top: var(--space-8); max-width: 360px; }
+  }
+
+  /* ---------- Phone (Queue) ---------- */
+  @media (max-width: 767px) {
+    .lore__head { padding-top: calc(var(--island-top) + var(--island-h) + var(--space-4)); }
+    .lore__headline, .lore__intro { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .band { display: none; }
+    .sheet {
+      isolation: isolate;
+      margin-top: var(--space-4);
+      border-top-left-radius: var(--radius-xl);
+      border-top-right-radius: var(--radius-xl);
+      border-top: var(--border-w) solid var(--border-1);
+      background: var(--bg);
+    }
+    /* Queue's second sheet edge peeking above */
+    .sheet::before {
+      content: '';
+      position: absolute;
+      left: var(--space-6);
+      right: var(--space-6);
+      top: -11px;
+      height: 24px;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      background: var(--surface-1);
+      border: var(--border-w) solid var(--border-1);
+      border-bottom: 0;
+      z-index: -1;
+    }
+    .ruler {
+      display: block;
+      position: sticky;
+      top: calc(var(--island-top) + var(--island-h) + var(--space-2));
+      z-index: 2;
+      padding-top: var(--space-6);
+      background: var(--bg);
+      border-top-left-radius: var(--radius-xl);
+      border-top-right-radius: var(--radius-xl);
+    }
+    .ruler__scroll {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%);
+    }
+    .ruler__scroll::-webkit-scrollbar { display: none; }
+    .ruler__ticks { display: flex; padding-inline: calc(50% - 7px); width: max-content; }
+    .ruler__tick { flex: none; width: 14px; height: 44px; display: grid; place-items: center; scroll-snap-align: center; }
+    .ruler__tick span { width: 2px; height: 14px; border-radius: var(--radius-full); background: var(--text-3); opacity: 0.6; }
+    .ruler__centre { position: absolute; left: 50%; top: calc(var(--space-6) + 7px); width: 2px; height: 30px; margin-left: -1px; border-radius: var(--radius-full); background: var(--text-2); pointer-events: none; }
+    .ruler__years {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: var(--space-3) 0 var(--space-4);
+      font-size: 17px;
+      overflow: hidden;
+    }
+    .ruler__now { color: var(--text-2); }
+    .ruler__prev { justify-self: start; margin-left: -18px; color: var(--text-3); opacity: 0.3; }
+    .ruler__next { justify-self: end; margin-right: -18px; color: var(--text-3); opacity: 0.3; }
+
+    .panels { touch-action: pan-y; padding-top: var(--space-12); }
+    .moment {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'title' 'pol' 'watch' 'desc' 'badges' 'more';
+      grid-template-rows: none;
+      margin: 0;
+      padding-inline: var(--page-pad);
+    }
+    .moment__date { display: none; }
+    .moment__title {
+      position: relative;
+      margin: 0 auto;
+      max-width: 13ch;
+      width: fit-content;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .polaroid { margin: var(--space-12) var(--space-4) 0; }
+    .moment__watch { align-items: center; margin-top: var(--space-6); text-align: center; }
+    .watch { font-size: 17px; }
+    .moment__desc { margin-top: var(--space-10); padding-inline: var(--space-5); font-family: var(--font-serif); font-size: 20px; line-height: 1.5; color: var(--text-1); }
+    .moment__badges { padding-inline: var(--space-5); }
+    .moment__more { margin-top: var(--space-10); }
+    .more__finds { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .band__track { transition: none; }
+    .band__dot span, .watch { transition: none; }
+  }
+</style>

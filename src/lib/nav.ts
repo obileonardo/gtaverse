@@ -10,7 +10,7 @@ export const nav: NavItem[] = [
   { href: '/map', label: 'Map', icon: 'map' },
   { href: '/finds', label: 'Finds', icon: 'finds', count: finds.length },
   { href: '/explainers', label: 'Explainers', icon: 'explainers', count: explainers.length },
-  { href: '/lore', label: 'Lore', icon: 'lore', count: connections.length },
+  { href: '/gtaverse', label: 'GTAverse', icon: 'lore', count: connections.length },
 ];
 
 export const isCurrent = (path: string, href: string) => {

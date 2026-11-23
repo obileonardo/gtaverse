@@ -1,30 +1,55 @@
 ---
 // Shows a thumbnail first; the creator's player loads only when tapped (fast, no tracking on load).
-// Spoiler clips stay hidden until the visitor chooses to reveal them.
+// Spoiler and mature clips stay hidden behind a gate until the visitor chooses to reveal them.
+// The media fills its box at 16:9 (pass a different ratio with `ratio`); `caption={false}` drops the credit line
+// when the page shows the credit elsewhere.
 import type { Clip } from '../lib/content';
 import { youtubeId, ytThumb, ytEmbed } from '../lib/clip';
-interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean }
-const { clip, title, spoiler = false } = Astro.props;
+import Icon from './ui/Icon.astro';
+interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean; mature?: boolean; caption?: boolean; ratio?: string; class?: string }
+const { clip, title, spoiler = false, mature = false, caption = true, ratio = '16 / 9', class: className } = Astro.props;
+const gated = spoiler || mature;
 const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
+const platform = ({ youtube: 'YouTube', x: 'X', reddit: 'Reddit', tiktok: 'TikTok' } as Record<string, string>)[clip.platform] ?? clip.platform;
+const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 'Mature';
 ---
-<figure class="clip" data-spoiler={spoiler ? 'true' : 'false'}>
-  {spoiler && <button type="button" class="clip-reveal">Reveal spoiler clip</button>}
-  <div class="clip-body" hidden={spoiler}>
-    {yt ? (
-      <button type="button" class="clip-play" data-yt={yt} data-embed={ytEmbed(yt)} aria-label={`Play clip: ${title}`}>
-        <img src={ytThumb(yt)} alt="" width="480" height="360" loading="lazy" />
-      </button>
-    ) : (
-      <a href={clip.url} rel="noopener">Watch on {clip.platform}</a>
+<figure class:list={['clip', className]} data-spoiler={spoiler ? 'true' : 'false'} style={`--clip-ratio: ${ratio}`}>
+  <div class="clip__frame">
+    {gated && (
+      <div class="clip__gate">
+        <span class="clip__gate-label mono-caps">{gateLabel}</span>
+        <p class="clip__gate-text">{spoiler ? 'This clip shows the secret before you find it yourself.' : 'This clip shows mature content.'}</p>
+        <button type="button" class="clip-reveal">{spoiler ? 'Reveal spoiler clip' : 'Show clip'}</button>
+      </div>
     )}
+    <div class="clip-body" hidden={gated}>
+      {yt ? (
+        <button type="button" class="clip-play" data-yt={yt} data-embed={ytEmbed(yt)} aria-label={`Play clip: ${title}`}>
+          {/* Gated clips load no thumbnail until revealed (data-src). */}
+          <img src={gated ? undefined : ytThumb(yt)} data-src={gated ? ytThumb(yt) : undefined} alt="" width="480" height="360" loading="lazy" decoding="async" />
+          <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
+        </button>
+      ) : (
+        <a class="clip__out" href={clip.url} rel="noopener" target="_blank">
+          <span class="clip__out-label">Watch on {platform}</span>
+          <Icon name="arrow-up-right" size={20} />
+        </a>
+      )}
+    </div>
   </div>
-  <figcaption>Clip by {clip.creator ?? 'unknown'} on {clip.platform}. <a href={clip.url} rel="noopener">Original post</a></figcaption>
+  {caption && (
+    <figcaption class="clip__caption">Clip by {clip.creator ?? 'an unknown creator'} on {platform}. <a href={clip.url} rel="noopener" target="_blank">Original post</a></figcaption>
+  )}
 </figure>
 <script>
   document.querySelectorAll<HTMLElement>('.clip').forEach((fig) => {
     fig.querySelector('.clip-reveal')?.addEventListener('click', (e) => {
-      (fig.querySelector('.clip-body') as HTMLElement).hidden = false;
-      (e.currentTarget as HTMLElement).remove();
+      const body = fig.querySelector('.clip-body') as HTMLElement;
+      body.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => { img.src = img.dataset.src!; });
+      body.hidden = false;
+      fig.querySelector('.clip__gate')?.remove();
+      (e.currentTarget as HTMLElement)?.remove?.();
+      fig.querySelector<HTMLElement>('.clip-play, .clip__out')?.focus();
     });
     const btn = fig.querySelector<HTMLButtonElement>('.clip-play');
     btn?.addEventListener('click', () => {
@@ -38,3 +63,81 @@ const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
     });
   });
 </script>
+
+<style>
+  .clip { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .clip__frame {
+    position: relative;
+    aspect-ratio: var(--clip-ratio);
+    overflow: hidden;
+    border-radius: var(--radius-m);
+    border: var(--border-w) solid var(--border-1);
+    background: var(--frame);
+  }
+  .clip-body, .clip-play, .clip__out { position: absolute; inset: 0; }
+  .clip-play { display: block; width: 100%; height: 100%; }
+  .clip-play img { width: 100%; height: 100%; object-fit: cover; }
+  .clip-body :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .clip__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: var(--ctrl-size-xl);
+    height: var(--ctrl-size-xl);
+    margin: calc(var(--ctrl-size-xl) / -2) 0 0 calc(var(--ctrl-size-xl) / -2);
+    border-radius: var(--radius-full);
+    background: rgb(13 12 26 / 0.56);
+    border: var(--border-w) solid rgb(255 255 255 / 0.16);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    color: #fff;
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .clip-play:active .clip__play { transform: scale(0.94); }
+  .clip__out {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    background: var(--glow-hero), var(--surface-1);
+    color: var(--text-1);
+    font-weight: 600;
+  }
+  .clip__gate {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    text-align: center;
+    background: var(--glow-hero), var(--surface-1);
+  }
+  .clip__gate-label { color: var(--accent-text); }
+  .clip__gate-text { max-width: 30ch; color: var(--text-2); font-size: var(--text-body-s); }
+  .clip-reveal {
+    display: inline-flex;
+    align-items: center;
+    height: var(--btn-h-m);
+    padding-inline: var(--space-5);
+    border-radius: var(--radius-full);
+    background: var(--inverse-fill);
+    color: var(--inverse-text);
+    font-size: var(--text-label);
+    font-weight: 600;
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .clip-reveal:active { transform: scale(0.97); }
+  .clip__caption { font-size: var(--text-caption); color: var(--text-2); }
+  .clip__caption a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  @media (hover: hover) and (pointer: fine) {
+    .clip-play:hover .clip__play { background: rgb(13 12 26 / 0.72); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .clip__play, .clip-reveal { transition: none; }
+  }
+</style>
