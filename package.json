@@ -10,9 +10,15 @@
   },
   "packageManager": "pnpm@10.32.0",
   "scripts": {
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "map:fetch": "node scripts/map/fetch-map.mjs",
+    "map:tiles": "node scripts/map/build-tiles.mjs",
+    "map:grid": "node scripts/map/measure-grid.mjs",
+    "map:harness": "node tools/map-harness/serve.mjs",
+    "map:shots": "node tools/map-harness/screenshots.mjs"
   },
   "devDependencies": {
-    "ajv": "^8.20.0"
+    "ajv": "^8.20.0",
+    "sharp": "~0.34.5"
   }
 }

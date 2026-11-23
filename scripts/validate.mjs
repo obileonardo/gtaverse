@@ -56,8 +56,10 @@ const connDoc = readJson('content/connections.json');
 const regions = readJson('content/regions.json');
 const categories = readJson('content/categories.json');
 const sources = readJson('content/sources.json');
+const map = readJson('content/map.json');
 
 check('finds.schema.json', finds, 'content/finds.json');
+check('map.schema.json', map, 'content/map.json');
 check('connections.schema.json', connDoc, 'content/connections.json');
 check('regions.schema.json', regions, 'content/regions.json');
 check('categories.schema.json', categories, 'content/categories.json');
@@ -167,6 +169,32 @@ const connById = new Map(connections.map((c) => [c.id, c]));
 const regionById = new Map((regions ?? []).map((r) => [r.id, r]));
 const blockedUrls = (sources ?? []).filter((s) => s.status === 'blocked' && s.url).map((s) => s.url);
 
+// ---------------------------------------------------------------- map (content/map.json)
+const frame = map?.grid?.frame;
+const insideFrame = (p) => !frame || (p.x >= frame.x0 && p.x <= frame.x1 && p.y >= frame.y0 && p.y <= frame.y1);
+if (map?.image && map?.grid) {
+  const { width: mw, height: mh } = map.image;
+  const g = map.grid;
+  if (!(g.frame.x0 < g.frame.x1 && g.frame.x1 < mw && g.frame.y0 < g.frame.y1 && g.frame.y1 < mh)) err('content/map.json', 'grid frame must lie inside the image with x0 < x1 and y0 < y1');
+  const chain = (bands, a, b, start, end, name) => {
+    bands.forEach((band, i) => {
+      if (band[a] >= band[b]) err('content/map.json', `grid ${name} ${band.id}: ${a} must be less than ${b}`);
+      if (i > 0 && band[a] !== bands[i - 1][b]) err('content/map.json', `grid ${name} ${band.id} does not start where ${bands[i - 1].id} ends`);
+    });
+    if (bands[0]?.[a] !== start || bands.at(-1)?.[b] !== end) err('content/map.json', `grid ${name} must span the frame`);
+  };
+  chain(g.rows, 'y0', 'y1', g.frame.y0, g.frame.y1, 'row');
+  chain(g.columns, 'x0', 'x1', g.frame.x0, g.frame.x1, 'column');
+  uniq(g.rows, 'id', 'content/map.json grid rows');
+  uniq(g.columns, 'id', 'content/map.json grid columns');
+  uniq(map.labels, 'id', 'content/map.json labels');
+  for (const l of map.labels ?? []) {
+    const w = `map label ${l.id}`;
+    if (l.x >= mw || l.y >= mh) err(w, `(${l.x}, ${l.y}) is outside the ${mw} x ${mh} map image`);
+    if (l.region_id !== null && !regionIds.has(l.region_id)) err(w, `region_id "${l.region_id}" not in regions.json`);
+  }
+}
+
 // ---------------------------------------------------------------- finds
 for (const f of finds ?? []) {
   const w = `find ${f.id}`;
@@ -197,6 +225,13 @@ for (const f of finds ?? []) {
   }
   if (f.status === 'published' && (f.verification === 'rumor')) err(w, 'rumors must stay draft until a second independent source confirms them');
   if (f.spoiler && f.status === 'published' && f.clip) warn(w, 'spoiler find with a clip: the site must keep the embed behind the spoiler reveal');
+  // pins: pixel space of content/map.json (docs/MAP.md)
+  if (f.pin) {
+    if (!f.pin_accuracy) err(w, 'pin is set but pin_accuracy is null');
+    if (!f.pin_basis) err(w, 'pin is set but pin_basis is null');
+    if (map?.image && (f.pin.x >= map.image.width || f.pin.y >= map.image.height)) err(w, `pin (${f.pin.x}, ${f.pin.y}) is outside the ${map.image.width} x ${map.image.height} map image`);
+    else if (map?.grid && !insideFrame(f.pin)) warn(w, `pin (${f.pin.x}, ${f.pin.y}) is in the poster margin, outside the map frame`);
+  } else if (f.pin_accuracy !== null || f.pin_basis !== null) err(w, 'pin_accuracy and pin_basis must be null while pin is null');
 }
 
 // ---------------------------------------------------------------- connections
@@ -257,9 +292,9 @@ const unusedCount = (sources ?? []).filter((s) => !usedSourceIds.has(s.id)).leng
 
 // ---------------------------------------------------------------- em dash scan (U+2014) across authored text
 const EM_DASH = String.fromCharCode(0x2014);
-const SCAN_DIRS = ['content', 'docs', 'schema', 'scripts', '.github', 'research'];
+const SCAN_DIRS = ['content', 'docs', 'schema', 'scripts', '.github', 'research', 'tools'];
 const SCAN_FILES = ['README.md', 'PROJECT.md', 'package.json'];
-const TEXT_EXT = new Set(['.md', '.json', '.mjs', '.js', '.yml', '.yaml', '.txt']);
+const TEXT_EXT = new Set(['.md', '.json', '.mjs', '.js', '.yml', '.yaml', '.txt', '.html']);
 function walk(dir, out) {
   const abs = join(root, dir);
   if (!existsSync(abs)) return;
@@ -288,6 +323,8 @@ console.log(`  regions      ${count(regions)}`);
 console.log(`  categories   ${count(categories)} (${(categories ?? []).filter((c) => c.kind === 'find').length} find, ${(categories ?? []).filter((c) => c.kind === 'map-layer').length} map-layer)`);
 console.log(`  sources      ${count(sources)} (${unusedCount} not yet cited by a find)`);
 console.log(`  explainers   ${explainers.length}`);
+const pinned = (finds ?? []).filter((f) => f.pin);
+console.log(`  map          ${map?.image ? `${map.image.width} x ${map.image.height} px` : 'missing'}; ${count(map?.labels)} labels; ${pinned.length} pinned finds (${pinned.filter((f) => f.pin_accuracy === 'exact').length} exact, ${pinned.filter((f) => f.pin_accuracy === 'landmark').length} landmark, ${pinned.filter((f) => f.pin_accuracy === 'area').length} area)`);
 console.log(`  files scanned for em dashes: ${scan.length}`);
 if (warnings.length) {
   console.log(`\n${warnings.length} warning(s):`);

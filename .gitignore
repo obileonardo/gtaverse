@@ -8,3 +8,8 @@ exports/
 dist/
 .wrangler/
 .vercel/
+
+# Official Leonida map: Rockstar copyright, never committed (docs/MAP.md)
+.cache/
+public/map/
+tools/map-harness/screenshots/
