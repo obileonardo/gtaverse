@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/sources.schema.json",
+  "$id": "https://thevicefiles.com/schema/sources.schema.json",
   "title": "Source registry",
   "description": "content/sources.json: every creator, outlet, wiki, map project and account we cite or credit. Articles are keyed by outlet; the author stays on the find's source entry.",
   "type": "array",

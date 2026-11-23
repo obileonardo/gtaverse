@@ -15,7 +15,6 @@ Nothing was re-hosted; files were read in a temporary folder and deleted.
 - **Structure:** a huge "VI" numeral with "grand theft auto" stacked on three lines across its centre in heavy white letters with a black outline. The wordmark is a mix of lowercase with a capital R ("gRand"), Pricedown's odd unicase forms. [measured visually from the share image; FontAlternatives, Mladen Ruzicic, 15 Nov 2026 [fetched] https://fontalternatives.com/blog/gta-6-font/]
 - **Numeral fill:** a sunset gradient. Rockstar publishes no values. A fan measurement (gtavi-designs.com by kerim0x1, 18 Nov 2026 [fetched] https://gtavi-designs.com/) samples six stops top to bottom:
   `#4C5FCA` (0%) > `#813DBB` (22%) > `#CC46A0` (44%) > `#F76685` (62%) > `#FF885F` (80%) > `#FFA948` (100%).
-  My own spot samples of the share image found pinks around `#E353CE`, oranges around `#FE7E4F` and blues around `#7399DA` in the numeral, consistent with that ramp but not a substitute for it (JPEG compression shifts values).
 - **Outline system:** white keyline `#FFFFFF` around the fill, then a deep violet outer line `#1E0031`; a violet band `#300355` to `#710682` (gtavi-designs [fetched]).
 
 ## 2. Colour palette
@@ -38,8 +37,10 @@ Dark surfaces (each 9 to 13 uses): `#0D0C1A`, `#1F1F38`, `#252644`, `#2F2E52`, `
 
 Rockstar's shared design system tokens ("foundry-global-color-*") are also present: a yellow ramp (for example `#FCAF17` at 500), a seafoam grey ramp, and white at many alphas. These are Rockstar-wide, not GTA VI specific.
 
-### From the official share image [measured]
-- Panel gutter / background between the art panels: **`#1D002E`** (deep aubergine; matches gtavi-designs' "Board" value).
+### From a fan measurement [fetched]
+- Panel gutter / background between the art panels: **`#1D002E`** (deep aubergine), gtavi-designs' "Board" value (https://gtavi-designs.com/).
+
+Colour values sampled from the official share image were removed on 2026-11-24: the project does not run AI analysis on Rockstar images (docs/LEGAL.md).
 
 ### Summary palette for a designer
 - Night base: `#0D0C1A` to `#1F1F38` (blue-black), with `#1D002E` aubergine for frames.

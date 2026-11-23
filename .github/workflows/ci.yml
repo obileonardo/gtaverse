@@ -1,0 +1,73 @@
+# Checks every pull request and every push to staging and main.
+# No secrets are used, the token is read-only, and actions are pinned to full commit SHAs.
+name: CI
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Validate and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Asset guard (no images, fonts, video, audio, archives or map files)
+        shell: bash
+        run: |
+          # Paths that may hold an approved original asset, one per line (exact path).
+          # Empty today: nothing binary is committed. Add a path only with a maintainer's approval.
+          ALLOWLIST=''
+
+          blocked_ext='\.(png|jpe?g|gif|webp|avif|bmp|tiff?|ico|svg|heic|heif|psd|ai|eps|woff2?|ttf|otf|eot|mp4|m4v|mov|webm|mkv|avi|mp3|wav|ogg|m4a|flac|aac|zip|tar|gz|tgz|bz2|xz|7z|rar|pdf)$'
+          blocked_dir='^(public/map/|\.cache/)'
+
+          by_name=$(git ls-files | grep -i -E "$blocked_ext|$blocked_dir" || true)
+          # Binary files of any extension, as git sees them in the index.
+          by_content=$(git ls-files --eol | awk -F '\t' '$1 ~ /^i\/-text/ { print $2 }')
+
+          found=$(printf '%s\n%s\n' "$by_name" "$by_content" | sed '/^$/d' | sort -u)
+          if [ -n "$ALLOWLIST" ]; then
+            found=$(printf '%s\n' "$found" | grep -v -x -F -f <(printf '%s\n' "$ALLOWLIST") || true)
+          fi
+
+          if [ -n "$found" ]; then
+            echo "::error::These files must not be committed (see CONTRIBUTING.md, 'Files that must never be committed'):"
+            printf '%s\n' "$found"
+            exit 1
+          fi
+          echo "Asset guard passed: no image, font, video, audio, archive or map file is tracked."
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate content
+        run: pnpm validate
+
+      # Runs the validator again, then astro build. Map tiles are not needed: they are
+      # git-ignored and the map screen simply has no base map without them.
+      - name: Build
+        run: pnpm build

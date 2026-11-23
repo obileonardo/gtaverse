@@ -10,7 +10,7 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 - **Trademarks are the line.** The GTA VI logo, the Rockstar logo, and anything that suggests the site is official carry the most risk. Rockstar's own Mod Guidelines forbid suggesting endorsement or affiliation.
 - **The GTAArtDeco font is proprietary.** Never extract or self-host it.
 - **Rockstar owns every capture.** Player screenshots and clips belong to Rockstar under its terms; crediting creators is courtesy, not a licence. That is why we embed, never re-host.
-- **No AI processing of Rockstar content.** Rockstar's terms explicitly prohibit using its content with generative AI tools.
+- **No AI processing of Rockstar content.** Rockstar's terms explicitly prohibit using its content with generative AI tools. The project applies this to analysis too: no AI reading of Rockstar images, including sampling colours from official art (decision OS7).
 
 ## What we use and how
 
@@ -32,7 +32,7 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 
 On the site, "(c)" is rendered as the copyright symbol.
 
-Site: thevicefiles.com (rockstarworld.elvisobi.com stays as a second address for now). Contact: takedown@thevicefiles.com (forwarding being set up).
+Site: thevicefiles.com. Contact: takedown@thevicefiles.com (forwarding being set up).
 
 Also required:
 - On each discovery card: "Found by [creator] · [platform link]" and "Image (c) Rockstar Games" where an official image is used.
@@ -40,11 +40,11 @@ Also required:
 
 ## Takedown response process
 
-1. **Publish a contact route** for copyright and trademark concerns: a dedicated page with takedown@thevicefiles.com. Respond within 24 hours.
+1. **Publish a contact route** for copyright and trademark concerns: a dedicated page with takedown@thevicefiles.com. Respond within 48 hours.
 2. **On any notice from Take-Two, Rockstar or their agents:** remove or disable the named item at once, without arguing first. Log it privately: date, sender, item, URL, action taken.
 3. **Do not file counter-notices against Take-Two** unless a lawyer advises it. A counter-notice invites a lawsuit in the US.
 4. **Check for a pattern.** If a notice targets a whole category (for example the official map tiles), switch that category to the original fallback site-wide.
-5. **Creator requests** (remove my clip, change my credit): honour within 24 hours, no questions.
+5. **Creator requests** (remove my clip, change my credit): honour within 48 hours, no questions.
 6. **Name or impersonation complaints:** keep the brand name in one config so a rename is quick.
 7. **Cloudflare notices:** answer through Cloudflare's process. Keep the site on its own Cloudflare project, ideally its own zone, so action cannot touch the owner's other sites.
 8. **Hygiene:** no-leaks rule for contributors; a source on every pin; never accept submissions built from leak material.

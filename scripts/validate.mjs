@@ -293,7 +293,7 @@ const unusedCount = (sources ?? []).filter((s) => !usedSourceIds.has(s.id)).leng
 // ---------------------------------------------------------------- em dash scan (U+2014) across authored text
 const EM_DASH = String.fromCharCode(0x2014);
 const SCAN_DIRS = ['content', 'docs', 'schema', 'scripts', '.github', 'research', 'tools'];
-const SCAN_FILES = ['README.md', 'PROJECT.md', 'package.json'];
+const SCAN_FILES = ['README.md', 'PROJECT.md', 'package.json', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md', 'SECURITY.md', 'LICENSE', 'LICENSE-CONTENT'];
 const TEXT_EXT = new Set(['.md', '.json', '.mjs', '.js', '.yml', '.yaml', '.txt', '.html']);
 function walk(dir, out) {
   const abs = join(root, dir);

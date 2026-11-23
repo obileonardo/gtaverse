@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/finds.schema.json",
+  "$id": "https://thevicefiles.com/schema/finds.schema.json",
   "title": "Finds",
   "description": "content/finds.json: every GTA VI find shown on the map. Unknown values are null, never guessed.",
   "type": "array",
