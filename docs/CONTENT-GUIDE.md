@@ -71,6 +71,7 @@ How to add or fix content in The Vice Files. Written for contributors. Chime (Ch
     }
   ],
   "notes": null,
+  "added_at": "2026-11-23",
   "updated_at": "2026-11-23"
 }
 ```
@@ -85,6 +86,7 @@ Field notes:
 - `clip`: must be one of the find's own sources with `embeddable: true` on YouTube, X, TikTok or Reddit. Shape: `{ "platform", "url", "creator", "source_id" }`.
 - `fetched`: `true` only if you actually opened and read the page.
 - `notes`: conflicts between sources, credit details, anything a reviewer should know.
+- `added_at`: the day the find enters the guide, `YYYY-MM-DD`. Set it once and never change it: it orders the new finds feed (`/rss.xml`) and the "New this week" row. The first 85 finds carry the research date, 2026-11-23 (how it was set: `scripts/one-off/backfill-added-at.mjs`).
 - `updated_at`: today's date, `YYYY-MM-DD`.
 
 ## Verification levels

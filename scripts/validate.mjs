@@ -223,6 +223,8 @@ for (const f of finds ?? []) {
     else if (!match.embeddable) err(w, 'clip source is not embeddable');
     if (!sourceIds.has(f.clip.source_id)) err(w, `clip source_id "${f.clip.source_id}" not in sources.json`);
   }
+  if (f.added_at && f.updated_at && f.added_at > f.updated_at) err(w, `added_at ${f.added_at} is after updated_at ${f.updated_at}`);
+  if (f.added_at && f.added_at > new Date().toISOString().slice(0, 10)) err(w, `added_at ${f.added_at} is in the future`);
   if (f.status === 'published' && (f.verification === 'rumor')) err(w, 'rumors must stay draft until a second independent source confirms them');
   if (f.spoiler && f.status === 'published' && f.clip) warn(w, 'spoiler find with a clip: the site must keep the embed behind the spoiler reveal');
   // pins: pixel space of content/map.json (docs/MAP.md)
