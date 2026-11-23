@@ -22,6 +22,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | --- | --- |
 | `src/styles/tokens.css` | Every token: colour (dark and light), type, spacing, sizes, radii, borders, motion, z layers |
 | `src/styles/base.css` | Reset, page ground, type role classes, `.container`, `.page`, `.sr-only`, skip link |
+| `src/styles/components.css` | The styles of every shared component (Icon, Button, Chip, Badge, Tabs), loaded on every page by `base.css`. The Astro components and the map's React island render the same classes, so each component has one look |
 | `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer. Props `title`, `description`, `layout` (`page` or `bare`), `sub` |
 | `src/components/site/Header.astro` | The NEON island, the desktop popover menu and the phone overlay menu, the theme toggle, the sub bar |
 | `src/components/site/Footer.astro` | Footer with the legal disclaimer and takedown address (legal copy: keep word for word) |
@@ -36,7 +37,9 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/components/lore/Timeline.astro` | The GTAverse timeline (Grok on desktop, Queue on the phone) |
 | `src/components/ui/Icon.astro`, `icons.ts` | Icon wrapper and the icon set |
 | `src/lib/nav.ts` | Main navigation items and counts, `isCurrent()` |
-| `src/lib/media.ts` | `findStill()` (YouTube thumbnail of the creator's post), `showcaseable()`, `categoryLabel()`, `regionLabel()` |
+| `src/lib/media.ts` | `findStill()` (YouTube thumbnail of the creator's post), `showcaseable()`, `categoryLabel()`, `regionLabel()`, `categoryIcon()`, `categoryChipLabel()` |
+| `src/lib/clip.ts` | `youtubeId()`, `ytThumb()`, `ytEmbed()`: the click-to-load clip helpers shared by `Clip.astro` and the map |
+| `src/components/map/` | The map screen and find drawer (React island on `/map`): `MapApp.tsx`, `MapCanvas.tsx` (Leaflet), `Sheet.tsx` (phone sheets), `FindDetail.tsx`, `Menus.tsx`, `ClipPlayer.tsx`, `ui.tsx` (the shared components for React), `map.css` |
 
 ## Theme
 
@@ -111,6 +114,7 @@ Press feedback is `scale(0.97)` on `:active`. Hover styles live inside `@media (
 ## Components
 
 ### Button (`ui/Button.astro`)
+Pill. `variant`: `primary` (pink, the one main action of a view), `inverse` (white pill over art, Apple TV Play), `glass` (over art or map), `secondary` (pink tint), `quiet` (surface, for Cancel), `ghost` (no fill until hover: bare icon actions such as the drawer's Felt actions and close). `.btn--stack` puts the icon above the label for equal-width actions (Apple Maps place actions), still fully rounded. Disabled buttons sit at 40% opacity. `size`: `s` 32, `m` 40, `l` 48, `xl` 56. `icon`, `iconEnd`, `iconOnly` + `label` (circle). `href` renders a link.
 Pill. `variant`: `primary` (pink, the one main action of a view), `inverse` (white pill over art, Apple TV Play), `glass` (over art or map), `secondary` (pink tint), `quiet` (surface, for Cancel), `outline` (no fill, 1px edge: V7 timeline arrows, Mindtrip "View profile"). `size`: `s` 32, `m` 40, `l` 48, `xl` 56. `icon`, `iconEnd`, `iconOnly` + `label` (circle). `href` renders a link.
 ```astro
 <Button href="/finds/x" variant="inverse" size="l" icon="play">Play clip</Button>
@@ -140,6 +144,7 @@ Underline tabs: caps labels with 0.1em tracking, active at full text colour with
 ```
 
 ### Icon (`ui/Icon.astro`, `ui/icons.ts`)
+24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-down`, `check`, `question`, `cross`, `dot`, `filter`, `layers`, `plus`, `minus`, `share`, `link`, `search`, `grid`, `hand`, `clip`, `article`, `chat`, and one per find category (`egg`, `person`, `keyhole`, `globe`, `car`, `candle`, `crosshair`, `star`, `gem`, `flag`, `bolt`, `ghost`, mapped in `categoryIcon()`). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
 24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
 
 ### LevelTable (`ui/LevelTable.astro`)
@@ -158,6 +163,15 @@ One selected moment at a time. Desktop: Grok hairline across the page, mono year
 - Desktop: island 336 x 48, centred, 32 from the top, glass, radius 4. Left: hamburger and wordmark. Right: Map and the theme toggle. The hamburger opens the glass popover (Apple Sports): icon + label rows 48 high, 4 apart, current item in a pill with a solid icon, counts as mono superscripts. The page behind dims; the header stays clear. Escape closes instantly.
 - Phone: the island spans the width less 16 each side. The hamburger opens the full screen overlay (Peacock): rows 80 apart, icon 31, label 25 semibold, the column at 32% of the width, current item white with a solid icon, a 52 close circle at the bottom. Focus stays inside; Escape closes.
 - Sub bar (NEON): pass `sub={{ href, label, image }}` to `Base` on pages with a hero. Desktop only. Add `data-subbar="hidden"` on the header to step it away (the home page does this once the hero scrolls off).
+
+### React twins (`map/ui.tsx`)
+The map is a React island, and Astro components cannot render inside it. `ui.tsx` renders `Icon`, `Button`, `Chip`, `Badge`, `Verification` and `Tabs` with exactly the classes and markup of the Astro components, reading the same `icons.ts`; their look lives once, in `components.css`. Change a component's look there, never in the twin.
+
+### Map (`/map`, `components/map/`)
+- Desktop (GetYourGuide): list column (26%, Felt "List | Legend" tabs, GetYourGuide chip row, 120px photo rows) beside a rounded map; Mindtrip filter menu and Felt basemap popover from two glass circles top right; GetYourGuide zoom stack bottom right; Airbnb popup at a pin; Felt inspector drawer (360 wide) with the clip on top.
+- Phone (Rodeo): full map, glass chips above a list/map toggle and a search pill; Tide Guide glass menus; Strava card for a tapped pin; Apple Maps sheet with the clip on top (MasterClass). Sheets drag 1:1, release into a critically damped spring seeded with the finger's speed, snap to the point the flick was heading for, and can be caught mid-flight.
+- Pins: GetYourGuide photo and value pins (desktop), Rodeo round pins with a name (phone), Lyft pink count pills for finds close together. Selected is the inverse fill.
+- Every find opens from the list, so the map works with no pins. Filters (type chips; verification, clip, spoilers, mature and region in the menu) are remembered on the device (`vf-map-filters`); spoilers and mature are hidden by default. `/map?find=<slug>` opens a find.
 
 ### Page layouts
 - `layout="page"` (default): content sits in `.container.page`, below the floating island.

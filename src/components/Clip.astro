@@ -3,7 +3,8 @@
 // Spoiler and mature clips stay hidden behind a gate until the visitor chooses to reveal them.
 // The media fills its box at 16:9 (pass a different ratio with `ratio`); `caption={false}` drops the credit line
 // when the page shows the credit elsewhere.
-import { youtubeId, type Clip } from '../lib/content';
+import type { Clip } from '../lib/content';
+import { youtubeId, ytThumb, ytEmbed } from '../lib/clip';
 import Icon from './ui/Icon.astro';
 interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean; mature?: boolean; caption?: boolean; ratio?: string; class?: string }
 const { clip, title, spoiler = false, mature = false, caption = true, ratio = '16 / 9', class: className } = Astro.props;
@@ -23,9 +24,9 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
     )}
     <div class="clip-body" hidden={gated}>
       {yt ? (
-        <button type="button" class="clip-play" data-yt={yt} aria-label={`Play clip: ${title}`}>
+        <button type="button" class="clip-play" data-yt={yt} data-embed={ytEmbed(yt)} aria-label={`Play clip: ${title}`}>
           {/* Gated clips load no thumbnail until revealed (data-src). */}
-          <img src={gated ? undefined : `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} data-src={gated ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : undefined} alt="" width="480" height="360" loading="lazy" decoding="async" />
+          <img src={gated ? undefined : ytThumb(yt)} data-src={gated ? ytThumb(yt) : undefined} alt="" width="480" height="360" loading="lazy" decoding="async" />
           <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
         </button>
       ) : (
@@ -53,7 +54,7 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
     const btn = fig.querySelector<HTMLButtonElement>('.clip-play');
     btn?.addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.yt}?autoplay=1`;
+      f.src = btn.dataset.embed!;
       f.title = btn.getAttribute('aria-label') ?? 'Clip';
       f.allow = 'autoplay; encrypted-media; picture-in-picture';
       f.allowFullscreen = true;

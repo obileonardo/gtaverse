@@ -108,6 +108,10 @@ Pins can be checked in the harness: click a red pin to see its title, accuracy a
 
 `pnpm map:fetch` stops with a hash or size mismatch. Then: download the new file into the cache by hand, run `pnpm map:grid`, and compare. If the pixel size and grid are unchanged, update the hashes in `content/map.json` and rebuild. If they changed, every label and pin needs a transform (the grid gives matching points) before the new tiles ship.
 
+## The map screen
+
+`/map` is a React island (`src/components/map/`, documented in `docs/DESIGN-SYSTEM.md`). It reads `public/map/tiles/` at `/map/tiles/{z}/{x}/{y}.webp` with Leaflet 1.9.4 (`L.CRS.Simple`, `maxNativeZoom` 5) and `content/map.json` for the frame and the grid. A deployment without built tiles still works: the map shows its ground colour and every find opens from the list. A pin appears as soon as a find has `pin` set, with no other change.
+
 ## Files
 
 | File | Role |

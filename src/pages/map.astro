@@ -1,11 +1,63 @@
 ---
+// The map: the official Leonida map with every find. A React island (src/components/map) on a static page.
+// The list holds every find, so the page works with no pins placed, and the list is in the HTML before JavaScript runs.
 import Base from '../layouts/Base.astro';
-import { finds } from '../lib/content';
-const pinned = finds.filter((f) => f.pin);
+import MapApp from '../components/map/MapApp';
+import { finds, regionById, categories as allCategories } from '../lib/content';
+import { findStill, regionLabel, categoryIcon, categoryChipLabel, categorySingular } from '../lib/media';
+import { youtubeId } from '../lib/clip';
+import mapJson from '../../content/map.json';
+import type { MapFind, MapCategory, MapRegion, MapMeta } from '../components/map/types';
+
+const ancestors = (id: string): string[] => {
+  const out: string[] = [];
+  for (let r = regionById(id); r; r = r.parent ? regionById(r.parent) : undefined) out.push(r.id);
+  return out;
+};
+
+const data: MapFind[] = finds.map((f) => {
+  const still = findStill(f);
+  return {
+    slug: f.slug,
+    title: f.title,
+    category: f.category,
+    categoryLabel: categorySingular(f.category),
+    icon: categoryIcon(f.category),
+    regionIds: [...new Set(f.region_ids.flatMap(ancestors))].filter((id) => id !== 'leonida'),
+    regionLabel: regionLabel(f),
+    verification: f.verification,
+    spoiler: f.spoiler,
+    mature: f.mature,
+    pin: f.pin,
+    pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null,
+    summary: f.summary,
+    where: f.location_description ?? null,
+    still: still ? still.thumb : null,
+    clip: f.clip ? { platform: f.clip.platform, url: f.clip.url, creator: f.clip.creator ?? null, yt: f.clip.platform === 'youtube' ? youtubeId(f.clip.url) : null } : null,
+    sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
+    finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
+    updated: f.updated_at ?? null,
+  };
+});
+
+const categories: MapCategory[] = allCategories
+  .map((c) => ({ id: c.id, label: categoryChipLabel(c.id), icon: categoryIcon(c.id), count: finds.filter((f) => f.category === c.id).length }))
+  .filter((c) => c.count > 0)
+  .sort((a, b) => b.count - a.count);
+
+const regions: MapRegion[] = [...new Set(data.flatMap((f) => f.regionIds))].map((id) => ({ id, name: regionById(id)?.name ?? id }));
+
+const meta: MapMeta = {
+  width: mapJson.image.width,
+  height: mapJson.image.height,
+  maxZoom: 5,
+  tileUrl: '/map/tiles/{z}/{x}/{y}.webp',
+  attribution: 'Map © Rockstar Games',
+  frame: mapJson.grid.frame,
+  rows: mapJson.grid.rows,
+  columns: mapJson.grid.columns,
+};
 ---
-<Base title="Map of Leonida">
-  <h1>Map of Leonida</h1>
-  <p>The interactive map mounts here once the official map tiles are built. {pinned.length} of {finds.length} finds have pins so far.</p>
-  <h2>All finds as a list</h2>
-  <ul>{finds.map((f) => <li><a href={`/finds/${f.slug}`}>{f.title}</a>{f.pin ? '' : ' (no pin yet)'}</li>)}</ul>
+<Base title="Map of Leonida" description="Every find in Leonida on the official map, with the clip, the credit and how sure we are." layout="bare">
+  <MapApp client:load finds={data} categories={categories} regions={regions} meta={meta} />
 </Base>
