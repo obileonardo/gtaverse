@@ -8,3 +8,6 @@ exports/
 dist/
 .wrangler/
 .vercel/
+
+# Astro
+.astro/

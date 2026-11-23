@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import { finds, connections, explainers } from '../lib/content';
+const withClip = finds.filter((f) => f.clip).length;
+const latest = [...finds].filter((f) => !f.spoiler && !f.mature).slice(0, 6);
+---
+<Base title="The Vice Files">
+  <h1>The Vice Files</h1>
+  <p>Every secret in Leonida, shown in the clip of the fan who found it, labelled by how sure we are, and linked back through the Rockstar universe.</p>
+  <p><a href="/map">Open the map</a></p>
+  <ul>
+    <li>{finds.length} finds, {withClip} with clips</li>
+    <li>{connections.length} Rockstar connections</li>
+    <li>{explainers.length} explainers</li>
+  </ul>
+  <h2>Finds</h2>
+  <ul>{latest.map((f) => <li><a href={`/finds/${f.slug}`}>{f.title}</a></li>)}</ul>
+</Base>

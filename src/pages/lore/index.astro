@@ -1,0 +1,8 @@
+---
+import Base from '../../layouts/Base.astro';
+import { connections } from '../../lib/content';
+---
+<Base title="Rockstar connections">
+  <h1>Rockstar connections</h1>
+  <ul>{connections.map((c) => <li><a href={`/lore/${c.slug}`}>{c.title}</a> ({c.confidence}) {c.games.join(', ')}</li>)}</ul>
+</Base>

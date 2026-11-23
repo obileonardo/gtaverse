@@ -1,0 +1,6 @@
+---
+interface Props { level: string }
+const labels: Record<string, string> = { 'multi-source': 'Multi-source', 'single-source': 'Single source', rumor: 'Rumour', debunked: 'Debunked' };
+const { level } = Astro.props;
+---
+<span class="verification" data-level={level}>{labels[level] ?? level}</span>

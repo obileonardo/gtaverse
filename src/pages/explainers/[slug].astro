@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import { explainers } from '../../lib/content';
+export function getStaticPaths() {
+  return explainers.map((e) => ({ params: { slug: e.frontmatter.slug }, props: { e } }));
+}
+const { e } = Astro.props as { e: (typeof explainers)[number] };
+const Content = e.Content as any;
+---
+<Base title={e.frontmatter.title}>
+  <article>
+    {e.frontmatter.status === 'draft' && <p>Draft: under review.</p>}
+    <Content />
+    <h2>Sources</h2>
+    <ul>{e.frontmatter.sources.map((s) => <li><a href={s.url} rel="noopener">{s.title ?? s.url}</a></li>)}</ul>
+    <p>Updated {e.frontmatter.updated_at}</p>
+  </article>
+</Base>

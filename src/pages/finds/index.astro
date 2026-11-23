@@ -1,0 +1,13 @@
+---
+import Base from '../../layouts/Base.astro';
+import Verification from '../../components/Verification.astro';
+import { finds, categoryById } from '../../lib/content';
+---
+<Base title="All finds">
+  <h1>All finds</h1>
+  <ul>
+    {finds.map((f) => (
+      <li><a href={`/finds/${f.slug}`}>{f.title}</a> <Verification level={f.verification} /> {categoryById(f.category)?.label ?? f.category}{f.spoiler ? ' (spoiler)' : ''}{f.mature ? ' (mature)' : ''}</li>
+    ))}
+  </ul>
+</Base>

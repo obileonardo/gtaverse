@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import Clip from '../../components/Clip.astro';
+import Verification from '../../components/Verification.astro';
+import { finds, connectionById, regionById, categoryById, type Find } from '../../lib/content';
+export function getStaticPaths() {
+  return finds.map((f) => ({ params: { slug: f.slug }, props: { find: f } }));
+}
+const { find } = Astro.props as { find: Find };
+const related = (find.related_connections ?? []).map(connectionById).filter(Boolean);
+const regionNames = find.region_ids.map((id) => regionById(id)?.name ?? id);
+---
+<Base title={find.title} description={find.summary}>
+  <article>
+    <p>{categoryById(find.category)?.label ?? find.category} <Verification level={find.verification} />{find.spoiler && ' Spoiler'}{find.mature && ' Mature'}</p>
+    <h1>{find.title}</h1>
+    <p>{find.summary}</p>
+    {find.clip && <Clip clip={find.clip} title={find.title} spoiler={find.spoiler} />}
+    {find.first_finder && <p>First found by <a href={find.first_finder.url} rel="noopener">{find.first_finder.handle}</a> on {find.first_finder.platform}</p>}
+    <h2>Where</h2>
+    <p>{regionNames.join(', ')}</p>
+    {find.location_description && <p>{find.location_description}</p>}
+    {find.chapter_gate && <p>Unlocks after: {find.chapter_gate}</p>}
+    {related.length > 0 && (<>
+      <h2>Rockstar connections</h2>
+      <ul>{related.map((c) => <li><a href={`/lore/${c!.slug}`}>{c!.title}</a></li>)}</ul>
+    </>)}
+    <h2>Sources</h2>
+    <ul>{find.sources.map((s) => <li><a href={s.url} rel="noopener">{s.creator ?? s.url}</a> ({s.type})</li>)}</ul>
+  </article>
+</Base>
