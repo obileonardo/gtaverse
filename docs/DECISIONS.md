@@ -72,3 +72,18 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | D6 | Glass blur is 20px (the GTA site uses 25px). | Animated glass over 20px drops frames in Safari. |
 | D7 | Theme: no saved choice follows the system setting; the toggle in the header saves a choice on the device; `?theme=light|dark` forces one for checks. | Dark first (decision 17) without overriding a visitor who runs a light system. |
 | D8 | The header stays a centred NEON island on desktop. The design audit's "shared edges" check fails on it by design; treat those two desktop fails as a known exception, and any other fail as real. | Owner decision, 23 Nov 2026: keep the centred island as picked. |
+
+## 2026-11-23: map screen and find drawer (open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| MP1 | Desktop list column opens on "List", with "Legend" second (Felt shows Legend first). | No pins are placed yet; the list is how every find is reached. |
+| MP2 | GetYourGuide's "Close map" pill, heart buttons, prices and ratings, and every locate button are left out. The row's bottom line shows the verification badge and "On the map" when a find is pinned. | The map is a page, a fan guide has no accounts or prices, and a game map has no "my location". |
+| MP3 | Groups of nearby finds use Lyft's pink count pill everywhere (GetYourGuide's white cluster circle is not used). | One group style; the owner's pin pick is Lyft. |
+| MP4 | The phone selected-pin card is Strava's (the brief); Zesty gives the source chips only. | The direction file named both; the brief settled it. |
+| MP5 | The filter menu has no icons per row and uses Mindtrip radios and checkboxes on desktop, Tide Guide's check column on phone. Felt's "Show labels" toggle becomes a checkbox row ("Show the grid"). | A check glyph beside an unticked row read as ticked on phone; one boolean control on the site. |
+| MP6 | MasterClass "Moments" rows and Frame.io's timecode chip are not built. | No find has clip timestamps yet. They slot into the drawer's tabs and the sheet when content has them. |
+| MP7 | Basemaps are "Official" and "Muted" (the official tiles desaturated, PamPam's idea); the printed A to M, 1 to 9 grid is an overlay. | There is one map file; the grid lets people say "F5". |
+| MP8 | Phone chips are drawn 40 high as Rodeo shows and tapped at 44 (an invisible hit area); the toggle and search pill are 50 high (Rodeo 47) so their buttons reach 44. The audit still warns on the chips' drawn height. | Keeps the pick's proportions and the 44px touch rule. |
+| MP9 | The map credit "Map © Rockstar Games" sits on the map at all times (bottom left on desktop, top left on phone). | docs/MAP.md: show the credit wherever the map shows. |
+| MP10 | The agent never viewed the map art: every screenshot and audit used flat placeholder tiles and stand-in stills. | Rockstar ToS 2.3 and CONTENT-GUIDE rule 5. The owner should look at the real map once on a preview build. |

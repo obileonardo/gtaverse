@@ -1,7 +1,8 @@
 ---
 // Shows a thumbnail first; the creator's player loads only when tapped (fast, no tracking on load).
 // Spoiler clips stay hidden until the visitor chooses to reveal them.
-import { youtubeId, type Clip } from '../lib/content';
+import type { Clip } from '../lib/content';
+import { youtubeId, ytThumb, ytEmbed } from '../lib/clip';
 interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean }
 const { clip, title, spoiler = false } = Astro.props;
 const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
@@ -10,8 +11,8 @@ const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
   {spoiler && <button type="button" class="clip-reveal">Reveal spoiler clip</button>}
   <div class="clip-body" hidden={spoiler}>
     {yt ? (
-      <button type="button" class="clip-play" data-yt={yt} aria-label={`Play clip: ${title}`}>
-        <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" width="480" height="360" loading="lazy" />
+      <button type="button" class="clip-play" data-yt={yt} data-embed={ytEmbed(yt)} aria-label={`Play clip: ${title}`}>
+        <img src={ytThumb(yt)} alt="" width="480" height="360" loading="lazy" />
       </button>
     ) : (
       <a href={clip.url} rel="noopener">Watch on {clip.platform}</a>
@@ -28,7 +29,7 @@ const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
     const btn = fig.querySelector<HTMLButtonElement>('.clip-play');
     btn?.addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.yt}?autoplay=1`;
+      f.src = btn.dataset.embed!;
       f.title = btn.getAttribute('aria-label') ?? 'Clip';
       f.allow = 'autoplay; encrypted-media; picture-in-picture';
       f.allowFullscreen = true;

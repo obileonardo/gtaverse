@@ -32,7 +32,4 @@ const explainerModules = import.meta.glob<ExplainerModule>('../../content/explai
 // Explainers are drafts until reviewed; the scaffold lists them all and labels drafts on the page.
 export const explainers = Object.values(explainerModules);
 
-export const youtubeId = (url: string) => {
-  const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/);
-  return m ? m[1] : null;
-};
+export { youtubeId } from './clip';
