@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/regions.schema.json",
+  "title": "Regions",
+  "description": "content/regions.json: Leonida's state, counties, headline regions, districts, towns, islands and water. A region needs at least one source URL or one evidence find (the validator enforces this).",
+  "type": "array",
+  "items": { "$ref": "#/$defs/region" },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "type", "parent", "vibe", "vibe_note", "real_world_analogue", "sources", "research_ref", "notes", "evidence_finds", "updated_at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 2 },
+        "type": { "enum": ["state", "county", "region", "district", "town", "island", "place", "water"] },
+        "parent": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }], "description": "Containing region id. Only the state has null. Unknown county means parent is the state, with the conflict in notes." },
+        "vibe": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["rich", "poor", "dangerous", "rural", "tourist", "urban", "coastal", "swamp", "wilderness", "industrial", "military", "run-down", "gang-territory"] },
+          "description": "Only tags a source supports. The game has no official danger or wealth rating."
+        },
+        "vibe_note": { "type": ["string", "null"], "description": "The sourced wording behind the vibe tags." },
+        "real_world_analogue": { "type": ["string", "null"], "description": "Only when a source states it. Research inferences go in notes." },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["url", "title"],
+            "properties": { "url": { "type": "string", "format": "uri" }, "title": { "type": "string" } }
+          }
+        },
+        "research_ref": { "type": "string", "description": "Where in research/ this region is described." },
+        "notes": { "type": ["string", "null"] },
+        "evidence_finds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" }, "description": "Finds whose region_ids include this region. Must match exactly." },
+        "updated_at": { "type": "string", "format": "date" }
+      }
+    }
+  }
+}

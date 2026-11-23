@@ -1,0 +1,218 @@
+[
+  {
+    "id": "easter-egg",
+    "label": "Easter eggs",
+    "kind": "find",
+    "description": "Jokes, hidden objects and nods planted by Rockstar for players to discover.",
+    "icon_key": "icon.find.easter-egg",
+    "color_token": "color.category.easter-egg",
+    "reference_totals": null
+  },
+  {
+    "id": "paranormal",
+    "label": "Paranormal",
+    "kind": "find",
+    "description": "UFOs, ghosts, cryptids, demons and other supernatural events.",
+    "icon_key": "icon.find.paranormal",
+    "color_token": "color.category.paranormal",
+    "reference_totals": null
+  },
+  {
+    "id": "npc",
+    "label": "Characters and encounters",
+    "kind": "find",
+    "description": "Memorable NPCs and random encounters out in the world.",
+    "icon_key": "icon.find.npc",
+    "color_token": "color.category.npc",
+    "reference_totals": null
+  },
+  {
+    "id": "secret-location",
+    "label": "Secret locations",
+    "kind": "find",
+    "description": "Hidden places, bunkers, set pieces and unsolved sites.",
+    "icon_key": "icon.find.secret-location",
+    "color_token": "color.category.secret-location",
+    "reference_totals": null
+  },
+  {
+    "id": "real-world-reference",
+    "label": "Real-world references",
+    "kind": "find",
+    "description": "Nods to films, TV, people and places outside the game.",
+    "icon_key": "icon.find.real-world-reference",
+    "color_token": "color.category.real-world-reference",
+    "reference_totals": null
+  },
+  {
+    "id": "vehicle",
+    "label": "Rare vehicles",
+    "kind": "find",
+    "description": "Unique and hard-to-find cars, boats and aircraft.",
+    "icon_key": "icon.find.vehicle",
+    "color_token": "color.category.vehicle",
+    "reference_totals": null
+  },
+  {
+    "id": "memorial",
+    "label": "Memorials",
+    "kind": "find",
+    "description": "In-game tributes to real people. Written with care: these are real bereavements.",
+    "icon_key": "icon.find.memorial",
+    "color_token": "color.category.memorial",
+    "reference_totals": null
+  },
+  {
+    "id": "weapon",
+    "label": "Unique weapons",
+    "kind": "find",
+    "description": "One-off and gold weapons with fixed locations.",
+    "icon_key": "icon.find.weapon",
+    "color_token": "color.category.weapon",
+    "reference_totals": null
+  },
+  {
+    "id": "rockstar-crossover",
+    "label": "Rockstar crossovers",
+    "kind": "find",
+    "description": "References to other Rockstar games: earlier GTA titles, Red Dead, Bully and more. Linked to the lore connections.",
+    "icon_key": "icon.find.rockstar-crossover",
+    "color_token": "color.category.rockstar-crossover",
+    "reference_totals": null
+  },
+  {
+    "id": "collectible",
+    "label": "Collectibles",
+    "kind": "find",
+    "description": "Individual collectible finds with a story. Full collectible sets live in the map layers below.",
+    "icon_key": "icon.find.collectible",
+    "color_token": "color.category.collectible",
+    "reference_totals": null
+  },
+  {
+    "id": "activity",
+    "label": "Hidden activities",
+    "kind": "find",
+    "description": "Side quests, hidden questlines and one-off activities.",
+    "icon_key": "icon.find.activity",
+    "color_token": "color.category.activity",
+    "reference_totals": null
+  },
+  {
+    "id": "glitch",
+    "label": "Glitches",
+    "kind": "find",
+    "description": "Notable bugs. Never money or exploit glitches: Rockstar's posting policy lists encouraging cheating as a takedown trigger.",
+    "icon_key": "icon.find.glitch",
+    "color_token": "color.category.glitch",
+    "reference_totals": null
+  },
+  {
+    "id": "card-sets",
+    "label": "Collectible card sets",
+    "kind": "map-layer",
+    "description": "Trading card sets hidden around Leonida, including Liberty City and Los Santos teams.",
+    "icon_key": "icon.layer.card-sets",
+    "color_token": "color.layer.card-sets",
+    "reference_totals": { "marked": 102, "total": 480, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "cocaine-flamingos",
+    "label": "Cocaine flamingos",
+    "kind": "map-layer",
+    "description": "Flamingo collectibles. Replies to the reference post report flamingos at unmarked spots.",
+    "icon_key": "icon.layer.cocaine-flamingos",
+    "color_token": "color.layer.cocaine-flamingos",
+    "reference_totals": { "marked": 8, "total": 22, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "drone-time-trials",
+    "label": "Drone time trials",
+    "kind": "map-layer",
+    "description": "Timed drone courses.",
+    "icon_key": "icon.layer.drone-time-trials",
+    "color_token": "color.layer.drone-time-trials",
+    "reference_totals": { "marked": 42, "total": 42, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "fishing",
+    "label": "Fish and fishing spots",
+    "kind": "map-layer",
+    "description": "Fishing spots and fish species. Fishing also raises Focus.",
+    "icon_key": "icon.layer.fishing",
+    "color_token": "color.layer.fishing",
+    "reference_totals": { "marked": 35, "total": 41, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "kitty-litter-labs",
+    "label": "Kitty litter labs",
+    "kind": "map-layer",
+    "description": "Kitty litter lab locations.",
+    "icon_key": "icon.layer.kitty-litter-labs",
+    "color_token": "color.layer.kitty-litter-labs",
+    "reference_totals": { "marked": 12, "total": 13, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "magazines-books-comics",
+    "label": "Magazines, books and comics",
+    "kind": "map-layer",
+    "description": "Readable print media, several with Rockstar crossover references.",
+    "icon_key": "icon.layer.magazines-books-comics",
+    "color_token": "color.layer.magazines-books-comics",
+    "reference_totals": { "marked": 25, "total": 36, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "meditation-spots",
+    "label": "Meditation spots",
+    "kind": "map-layer",
+    "description": "Meditation spots.",
+    "icon_key": "icon.layer.meditation-spots",
+    "color_token": "color.layer.meditation-spots",
+    "reference_totals": { "marked": 10, "total": 10, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "meteorites",
+    "label": "Meteorites",
+    "kind": "map-layer",
+    "description": "Fallen meteorites. Total is disputed: one player reports 16, not 11.",
+    "icon_key": "icon.layer.meteorites",
+    "color_token": "color.layer.meteorites",
+    "reference_totals": { "marked": 11, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. A reply reports 16 meteorites. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "payday-loan-jobs",
+    "label": "Payday loan jobs",
+    "kind": "map-layer",
+    "description": "Payday loan job locations.",
+    "icon_key": "icon.layer.payday-loan-jobs",
+    "color_token": "color.layer.payday-loan-jobs",
+    "reference_totals": { "marked": 7, "total": 7, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "shops",
+    "label": "Shops and stores",
+    "kind": "map-layer",
+    "description": "Shops and stores across Leonida.",
+    "icon_key": "icon.layer.shops",
+    "color_token": "color.layer.shops",
+    "reference_totals": { "marked": 234, "total": 261, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "stunts",
+    "label": "Stunts",
+    "kind": "map-layer",
+    "description": "Stunt jumps and stunt locations.",
+    "icon_key": "icon.layer.stunts",
+    "color_token": "color.layer.stunts",
+    "reference_totals": { "marked": 397, "total": 397, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  },
+  {
+    "id": "tattoo-studios",
+    "label": "Tattoo studios",
+    "kind": "map-layer",
+    "description": "Tattoo studios, such as Electric Fang Tattoo in Stockyard.",
+    "icon_key": "icon.layer.tattoo-studios",
+    "color_token": "color.layer.tattoo-studios",
+    "reference_totals": { "marked": 9, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+  }
+]

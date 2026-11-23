@@ -1,0 +1,1254 @@
+[
+  {
+    "id": "leonida",
+    "name": "Leonida",
+    "type": "state",
+    "parent": null,
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": "Florida",
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vice-dale-county",
+    "name": "Vice-Dale County",
+    "type": "county",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "One of the five counties shown on the in-game and official map. GTA6Info gives no region-to-county mapping.",
+    "evidence_finds": [
+      "tallest-tower-easter-egg"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "mariana-county",
+    "name": "Mariana County",
+    "type": "county",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "One of the five counties shown on the in-game and official map. GTA6Info gives no region-to-county mapping.",
+    "evidence_finds": [
+      "presidents-bunkers",
+      "crashed-glider-turnt-nipper",
+      "conspiracist-trailer-bunker"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "kelly-county",
+    "name": "Kelly County",
+    "type": "county",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "One of the five counties shown on the in-game and official map. GTA6Info gives no region-to-county mapping.",
+    "evidence_finds": [
+      "ufo-abduction-port-gellhorn"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "leonard-county",
+    "name": "Leonard County",
+    "type": "county",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "One of the five counties shown on the in-game and official map. GTA6Info gives no region-to-county mapping.",
+    "evidence_finds": [
+      "belville-simulation-house",
+      "tiny-arthur-chihuahua"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "lummox-county",
+    "name": "Lummox County",
+    "type": "county",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "One of the five counties shown on the in-game and official map. GTA6Info gives no region-to-county mapping.",
+    "evidence_finds": [
+      "backrooms-excavation-trip",
+      "super-mario-question-block",
+      "mount-kalaga-tower-shed",
+      "tallaloko-amphitheater-bell-tower",
+      "roadside-ghost-woman"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vice-city",
+    "name": "Vice City",
+    "type": "region",
+    "parent": "vice-dale-county",
+    "vibe": [
+      "urban",
+      "coastal",
+      "rich",
+      "poor"
+    ],
+    "vibe_note": "The big city: neon, beaches, wealth and poverty side by side.",
+    "real_world_analogue": "Miami",
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      },
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      },
+      {
+        "url": "https://www.gtabase.com/gta-6/gangs/",
+        "title": "GTA 6 gangs (GTABase)"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "County comes from GTABase listing Southside, Vice City in Vice-Dale County. GTA6Info names no county for Vice City.",
+    "evidence_finds": [
+      "valentina-cameo",
+      "lawsuit-burning-driver",
+      "grotti-cheetah-95"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "leonida-keys",
+    "name": "Leonida Keys",
+    "type": "region",
+    "parent": "leonida",
+    "vibe": [
+      "coastal"
+    ],
+    "vibe_note": "Island chain in the south, where Jason starts out working for local drug runners (official pre-launch bio).",
+    "real_world_analogue": "Florida Keys",
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "cool-dog-jet-ski",
+      "fabien-larouche-body-copy",
+      "mount-chiliad-bar-chatter",
+      "macca-and-friends-cartoon",
+      "tenebrae-lux-puzzle-game",
+      "keys-stilt-house-basketball"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "grassrivers",
+    "name": "Grassrivers",
+    "type": "region",
+    "parent": "leonida",
+    "vibe": [
+      "swamp",
+      "dangerous"
+    ],
+    "vibe_note": "Swamps and wetlands with alligators, dangerous wildlife and the Kingfishers gang; Skunk Ape sightings.",
+    "real_world_analogue": "Everglades",
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": null,
+    "evidence_finds": [
+      "skunk-ape-bigfoot",
+      "kingfishers-shack-w22"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "port-gellhorn",
+    "name": "Port Gellhorn",
+    "type": "region",
+    "parent": "kelly-county",
+    "vibe": [
+      "run-down"
+    ],
+    "vibe_note": "Run-down Gulf Coast town: shuttered motels, closed attractions, empty strip malls (fan guide wording). Horror events on the north side at night.",
+    "real_world_analogue": "Florida Gulf Coast town",
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": "County comes from the area text of find ufo-abduction-port-gellhorn (Kelly County). GTA6Info gives no county.",
+    "evidence_finds": [
+      "ufo-abduction-port-gellhorn",
+      "hellspawn-satan-boss",
+      "arthur-morgan-hat",
+      "leonidan-supremacy-monument",
+      "port-gellhorn-missing-persons"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "ambrosia",
+    "name": "Ambrosia",
+    "type": "region",
+    "parent": "leonida",
+    "vibe": [
+      "rural",
+      "industrial",
+      "gang-territory"
+    ],
+    "vibe_note": "Farmland and the sugar industry; an industrial sugar town and Final Chapter MC biker territory.",
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      },
+      {
+        "url": "https://www.gtabase.com/gta-6/gangs/",
+        "title": "GTA 6 gangs (GTABase)"
+      },
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": "Conflict: GTABase (fetched 2026-11-23) gives Final Chapter MC territory as \"Ambrosia County, Leonida\" and one fan site lists Ambrosia as a county, but Wikipedia, GTA6Info and the official map show only five counties without Ambrosia. A Lake Okeechobee sugar-country analogue is a research inference, not sourced, so real_world_analogue is null.",
+    "evidence_finds": [
+      "pegassi-infernus-96"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "mount-kalaga",
+    "name": "Mount Kalaga National Park",
+    "type": "region",
+    "parent": "lummox-county",
+    "vibe": [
+      "wilderness",
+      "dangerous"
+    ],
+    "vibe_note": "Forests, lakes and hills; hunting and legendary animals; \"you may end up the prey\".",
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Leonida",
+        "title": "Leonida (GTA6Info wiki)"
+      },
+      {
+        "url": "https://www.rockstargames.com/VI/only-in-leonida/vice-city",
+        "title": "Only in Leonida (Rockstar Games), names the six regions, fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": "Florida has no mountains, so this is invented terrain (research inference). Dawson Dam, Hillside Campsite and a fire tower are here.",
+    "evidence_finds": [
+      "mount-kalaga-meteorite",
+      "mount-kalaga-tower-shed"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "downtown",
+    "name": "Downtown",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Research calls the name Rockstar-confirmed from trailers, but the official Vice City page fetched 2026-11-23 names no districts.",
+    "evidence_finds": [
+      "presidents-bunkers"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vice-beach",
+    "name": "Vice Beach",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Its own label on the official map, with its own police department (Vice Beach PD per GTABase). Treated by research as part of Vice City.",
+    "evidence_finds": [
+      "dexter-trinity-apartments",
+      "collateral-hitman"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "ocean-beach",
+    "name": "Ocean Beach",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Pastel art deco hotels. Home of the Ocean View Hotel.",
+    "evidence_finds": [
+      "ocean-view-hotel-vintage-pack"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "little-cuba",
+    "name": "Little Cuba",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Research says it is modelled on Little Havana; that claim was not checked on the cited page, so real_world_analogue is null.",
+    "evidence_finds": [
+      "presidents-bunkers"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "stockyard",
+    "name": "Stockyard",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Home of Stock 305 and Electric Fang Tattoo.",
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "washington-beach",
+    "name": "Washington Beach",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vc-port",
+    "name": "VC Port",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://gta6info.com/wiki/Vice_City",
+        "title": "Vice City (GTA6Info wiki), fetched 2026-11-23"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Rockstar pre-launch copy calls it \"the cruise ship capital of the world\" (research quote, page not recorded).",
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vcia",
+    "name": "Vice City International Airport",
+    "type": "place",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/x-bookmarks-gta-vi-build.md",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "crosstown",
+    "name": "Crosstown",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": null,
+    "evidence_finds": [
+      "marbelle-hotel-silent-hill",
+      "pegassi-infernus-96"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "decor-district",
+    "name": "Decor District",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": null,
+    "evidence_finds": [
+      "sex-robot-warehouse"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "washington-island",
+    "name": "Washington Island",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": null,
+    "evidence_finds": [
+      "dexter-trinity-apartments"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "vespucci-island",
+    "name": "Vespucci Island",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": "Villa garages, Vespucci Mansion, Neptune Circle. Research reads it as wealthy from where rare cars spawn (inference, so no vibe tag).",
+    "evidence_finds": [
+      "paul-walker-eclipse",
+      "snake-in-the-boot"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "penmarch-isle",
+    "name": "Penmarch Isle",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 4",
+    "notes": null,
+    "evidence_finds": [
+      "dexter-trinity-apartments"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "southside",
+    "name": "Southside",
+    "type": "district",
+    "parent": "vice-city",
+    "vibe": [
+      "gang-territory"
+    ],
+    "vibe_note": "PTT Youngin$ street gang territory.",
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://www.gtabase.com/gta-6/gangs/",
+        "title": "GTA 6 gangs (GTABase)"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 4 and 5",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "key-lento",
+    "name": "Key Lento",
+    "type": "island",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Jason's house, Three Sheets Liquor and a radio tower.",
+    "evidence_finds": [
+      "immortal-sniper-npc",
+      "michaels-boat-los-santos-gps",
+      "liberty-city-mob-memoir",
+      "three-sheets-talking-parrots",
+      "jimmy-the-drunk-sailor",
+      "rx-men-comic"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "south-key-lento",
+    "name": "South Key Lento",
+    "type": "place",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "dexter-kill-room-key-lento"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "gambit-bay",
+    "name": "Gambit Bay",
+    "type": "water",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "cool-dog-jet-ski",
+      "merman"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "bobcat-key",
+    "name": "Bobcat Key",
+    "type": "island",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "golden-ak-palmer-fishing"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "catalan-key",
+    "name": "Catalan Key",
+    "type": "island",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "kraken-statue"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "gloriana-key",
+    "name": "Gloriana Key",
+    "type": "island",
+    "parent": "leonida-keys",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "kraken-statue"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "mile-zero-air-station",
+    "name": "Mile Zero Air Station",
+    "type": "place",
+    "parent": "leonida-keys",
+    "vibe": [
+      "military",
+      "dangerous"
+    ],
+    "vibe_note": "Military base west of Key Lento with tanks, jets and heavy helicopters; military response.",
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI",
+        "title": "Grand Theft Auto VI (Wikipedia)"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": "Detail comes from the Leonida Keys row of research/gta6-world.md, sourced to Wikipedia, rockstargames.com and GamingBible together; which of them carries the military detail was not recorded.",
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "cottonmouth-lake",
+    "name": "Cottonmouth Lake",
+    "type": "water",
+    "parent": "grassrivers",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "skunk-ape-bigfoot",
+      "merman"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "pelican-valley",
+    "name": "Pelican Valley",
+    "type": "place",
+    "parent": "grassrivers",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "ComicBook.com places Pelican Valley near the Mariana County border.",
+    "evidence_finds": [
+      "crabshack-vf5-giant-crab",
+      "pelican-valley-cabin-guns"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "gullet-marsh",
+    "name": "Gullet Marsh",
+    "type": "place",
+    "parent": "grassrivers",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "crabshack-vf5-giant-crab"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "watson-bay",
+    "name": "Watson Bay",
+    "type": "water",
+    "parent": "grassrivers",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Paradise Garage.",
+    "evidence_finds": [
+      "golden-ak-palmer-fishing"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "sunrise-rv-park",
+    "name": "Sunrise RV Park",
+    "type": "place",
+    "parent": "grassrivers",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "skunk-ape-bigfoot"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "manifest-canyon",
+    "name": "Manifest Canyon",
+    "type": "place",
+    "parent": "port-gellhorn",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "North of Port Gellhorn; research lists it with Port Gellhorn.",
+    "evidence_finds": [
+      "leonidan-supremacy-monument"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "bonanza",
+    "name": "Bonanza",
+    "type": "place",
+    "parent": "mount-kalaga",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Research lists Bonanza (a shed with a secret) under Mount Kalaga.",
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "lake-tallaloko",
+    "name": "Lake Tallaloko",
+    "type": "water",
+    "parent": "lummox-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "backrooms-excavation-trip",
+      "tallaloko-amphitheater-bell-tower"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "hamlet",
+    "name": "Hamlet",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [
+      "gang-territory"
+    ],
+    "vibe_note": "The M7 gang's town; the M7 junkyard is \"not the safest location\".",
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": "County unresolved: a fan wiki says Vice-Dale County, other guides say Mariana County. Boone Speedway, police impound, Skeeter's bar.",
+    "evidence_finds": [
+      "alien-rescue-south-point-airfield",
+      "deep-roots-memorial-wall",
+      "gauntlet-hellfire-hamlet",
+      "hamlet-impound-assman-plate",
+      "skeeters-bar-south-park"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "millport",
+    "name": "Millport",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Jacob's Tavern.",
+    "evidence_finds": [
+      "backrooms-excavation-trip",
+      "new-austin-western-novel"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "waning-sands",
+    "name": "Waning Sands",
+    "type": "town",
+    "parent": "leonard-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Frontier Adventure Golf.",
+    "evidence_finds": [
+      "presidents-bunkers",
+      "tiny-arthur-chihuahua"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "belville",
+    "name": "Belville",
+    "type": "town",
+    "parent": "leonard-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "belville-simulation-house"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "grayson",
+    "name": "Grayson",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "pet-cemetery-grayson"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "moreau",
+    "name": "Moreau",
+    "type": "town",
+    "parent": "lummox-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Lawton Co. Paper Mill ruins.",
+    "evidence_finds": [
+      "super-mario-question-block"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "capri",
+    "name": "Capri",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "capri-pentagram-ritual"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "emerald-springs",
+    "name": "Emerald Springs",
+    "type": "town",
+    "parent": "lummox-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": null,
+    "evidence_finds": [
+      "roadside-ghost-woman"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "bluegrass",
+    "name": "Bluegrass",
+    "type": "town",
+    "parent": "vice-dale-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "Research places it in South Vice-Dale County near the tallest radio tower; one video places the tower in Bluegrass.",
+    "evidence_finds": [
+      "tallest-tower-easter-egg",
+      "spongebob-pineapple-bus-stop"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "hilport",
+    "name": "Hilport",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/x-bookmarks-gta-vi-build.md",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "southwind",
+    "name": "Southwind",
+    "type": "town",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/x-bookmarks-gta-vi-build.md",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "draper-island",
+    "name": "Draper Island",
+    "type": "island",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/x-bookmarks-gta-vi-build.md",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "little-hardin-island",
+    "name": "Little Hardin Island",
+    "type": "island",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md section 3",
+    "notes": "St. Lucia Lighthouse.",
+    "evidence_finds": [
+      "ghost-ship-cursed-knife"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "hyde-island",
+    "name": "Hyde Island",
+    "type": "island",
+    "parent": "leonida",
+    "vibe": [
+      "dangerous"
+    ],
+    "vibe_note": "Hunter event (the Hyde Island manhunt).",
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-world.md sections 3 and 5",
+    "notes": null,
+    "evidence_finds": [
+      "hyde-island-hunt"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "south-point-airfield",
+    "name": "South Point Airfield",
+    "type": "place",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-finds.json",
+    "notes": "South of Hamlet per guides; ComicBook.com places the alien facility in Pelican Valley instead.",
+    "evidence_finds": [
+      "alien-rescue-south-point-airfield"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "bobcat-bight",
+    "name": "Bobcat Bight",
+    "type": "place",
+    "parent": "mariana-county",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-finds.json",
+    "notes": "Coast off North Mariana County.",
+    "evidence_finds": [
+      "crashed-glider-turnt-nipper"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "leonida-bay",
+    "name": "Leonida Bay",
+    "type": "water",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [],
+    "research_ref": "research/gta6-finds.json",
+    "notes": "Off Mariana County, west of Watson Bay. May be the same water as the Gulf of Leonida map label; not confirmed.",
+    "evidence_finds": [
+      "sos-castaway-island"
+    ],
+    "updated_at": "2026-11-23"
+  },
+  {
+    "id": "gulf-of-leonida",
+    "name": "Gulf of Leonida",
+    "type": "water",
+    "parent": "leonida",
+    "vibe": [],
+    "vibe_note": null,
+    "real_world_analogue": null,
+    "sources": [
+      {
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "title": "Official Leonida map labels, visible under the Game Checklists maps reposted by @Sksj002"
+      }
+    ],
+    "research_ref": "research/x-bookmarks-gta-vi-build.md",
+    "notes": null,
+    "evidence_finds": [],
+    "updated_at": "2026-11-23"
+  }
+]

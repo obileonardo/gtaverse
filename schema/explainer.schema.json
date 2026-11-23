@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/explainer.schema.json",
+  "title": "Explainer frontmatter",
+  "description": "Frontmatter of content/explainers/*.md. Body citations [n] refer to sources[n-1]. Every claim line in the body must carry at least one citation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "slug", "status", "spoiler", "updated_at", "sources"],
+  "properties": {
+    "title": { "type": "string", "minLength": 3 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Must match the file name and be unique across finds and explainers." },
+    "status": { "enum": ["published", "draft"] },
+    "spoiler": { "type": "boolean" },
+    "updated_at": { "type": "string", "format": "date" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "title"],
+        "properties": { "url": { "type": "string", "format": "uri" }, "title": { "type": "string" } }
+      }
+    }
+  }
+}

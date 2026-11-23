@@ -1,0 +1,1202 @@
+[
+  {
+    "id": "beebom",
+    "name": "Beebom",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://beebom.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "bloody-disgusting",
+    "name": "Bloody Disgusting",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://bloody-disgusting.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "comicbook",
+    "name": "ComicBook.com",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://comicbook.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "complex",
+    "name": "Complex",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://complex.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "cultured-vultures",
+    "name": "Cultured Vultures",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://culturedvultures.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "dexerto",
+    "name": "Dexerto",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://www.dexerto.com",
+    "status": "active",
+    "notes": "Breaks many finds; has a GTA 6 wiki section. Not fetchable by the research agent (DNS failure)."
+  },
+  {
+    "id": "dexter-daily",
+    "name": "Dexter Daily",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://dexterdaily.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "fandomwire",
+    "name": "FandomWire",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://fandomwire.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "game-checklists",
+    "name": "Game Checklists",
+    "handle": null,
+    "platform": "web",
+    "role": "map",
+    "url": null,
+    "status": "active",
+    "notes": "Collectible maps drawn on the official Leonida map. Their pins are their work: cross-reference only, never copy pins wholesale. Seen via the @Sksj002 repost; original URL not recorded."
+  },
+  {
+    "id": "gamerant",
+    "name": "GameRant",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gamerant.com",
+    "status": "active",
+    "notes": "Fast step-by-step guides; rarely credits finders."
+  },
+  {
+    "id": "gamespot",
+    "name": "GameSpot",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gamespot.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "gamesradar",
+    "name": "GamesRadar+",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gamesradar.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "gamingbible",
+    "name": "GamingBible",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://www.gamingbible.com",
+    "status": "active",
+    "notes": "Links original Reddit threads."
+  },
+  {
+    "id": "gta-maplib",
+    "name": "GTA Maplib",
+    "handle": null,
+    "platform": "web",
+    "role": "map",
+    "url": "https://map.gtadb.org",
+    "status": "active",
+    "notes": "Map database linked from State of Leonida. Not fetched."
+  },
+  {
+    "id": "gta-vi-mapping-discord",
+    "name": "GTA VI Mapping Project (Discord)",
+    "handle": null,
+    "platform": "discord",
+    "role": "map",
+    "url": null,
+    "status": "caution",
+    "notes": "Mapping effort since 2022; member Jared found the Belville house. The server vanished on 11 Nov 2026 and reportedly shared leaks (research/legal-fan-site.md 4.1). Do not link its invite."
+  },
+  {
+    "id": "gta-vice-guides",
+    "name": "GTA Vice Guides",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gtaviceguides.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "gta-wiki",
+    "name": "GTA Wiki (community)",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://gta.wiki",
+    "status": "active",
+    "notes": "Linked from the mapping community; X @GTAWikiOfficial credits finders."
+  },
+  {
+    "id": "gta6info",
+    "name": "GTA6Info wiki",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://gta6info.com/wiki/",
+    "status": "active",
+    "notes": "Best single aggregator; marks single-source claims. No content licence stated. An aggregator, not an independent confirmation."
+  },
+  {
+    "id": "gta6tuto",
+    "name": "gta6tuto",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gta6tuto.com",
+    "status": "caution",
+    "notes": "SEO fan domain (research/gta6-sources.md section 8): a lead only, never the sole source."
+  },
+  {
+    "id": "gta6wiki-eu",
+    "name": "gta6wiki.eu",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://gta6wiki.eu/easter-eggs/",
+    "status": "active",
+    "notes": "No open licence; takedowns to contact@gta6wiki.eu."
+  },
+  {
+    "id": "gtabase",
+    "name": "GTABase",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://www.gtabase.com/gta-6/",
+    "status": "active",
+    "notes": "Map, vehicles, gangs, wanted level and Criminal Profile guides. Proprietary map data: do not scrape."
+  },
+  {
+    "id": "gulf-news",
+    "name": "Gulf News",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://gulfnews.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "hotcars",
+    "name": "HotCars",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://www.hotcars.com",
+    "status": "active",
+    "notes": "Round-ups that credit creators."
+  },
+  {
+    "id": "hypefresh",
+    "name": "HypeFresh",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://hypefresh.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "ign",
+    "name": "IGN",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://www.ign.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "ign-official-guide",
+    "name": "IGN official GTA 6 guide (MapGenie)",
+    "handle": null,
+    "platform": "web",
+    "role": "map",
+    "url": "https://www.ign.com/wikis/gta-6",
+    "status": "active",
+    "notes": "Official Rockstar-partnered guide launched 20 Nov 2026. Proprietary; assume no reuse. Not fetched."
+  },
+  {
+    "id": "instagram-battlefieldbosh",
+    "name": "BattleFieldBosh",
+    "handle": "BattleFieldBosh",
+    "platform": "instagram",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Credited by HotCars as an early finder of the Paul Walker Eclipse. Profile URL not recorded."
+  },
+  {
+    "id": "kotaku",
+    "name": "Kotaku",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://kotaku.com",
+    "status": "active",
+    "notes": "Launch live blog; credits Reddit and X finders by handle."
+  },
+  {
+    "id": "mobalytics",
+    "name": "Mobalytics",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://mobalytics.gg",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "outputlag",
+    "name": "OutputLag",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://outputlag.com/guides/gta-6-unique-weapons-locations/",
+    "status": "active",
+    "notes": "Unique and gold weapon tracker."
+  },
+  {
+    "id": "polygon",
+    "name": "Polygon",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://polygon.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "powerpyx",
+    "name": "PowerPyx",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://www.powerpyx.com",
+    "status": "active",
+    "notes": "Trophy guide; cited for mechanics."
+  },
+  {
+    "id": "prodigy-gamers",
+    "name": "Prodigy Gamers",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://prodigygamers.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "reddit-r-gta",
+    "name": "r/GTA",
+    "handle": null,
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/r/GTA/",
+    "status": "active",
+    "notes": "Launch-week detail clips."
+  },
+  {
+    "id": "reddit-r-gta6",
+    "name": "r/GTA6",
+    "handle": null,
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/r/GTA6/",
+    "status": "active",
+    "notes": "Origin of many finds. Blocked to the research fetcher; use RSS or the official API."
+  },
+  {
+    "id": "reddit-r-gta6unmoderated",
+    "name": "r/GTA6unmoderated",
+    "handle": null,
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/r/GTA6unmoderated/",
+    "status": "active",
+    "notes": "Raw clips."
+  },
+  {
+    "id": "reddit-u-akspree",
+    "name": "u/akspree",
+    "handle": "u/akspree",
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/user/akspree",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "reddit-u-seepa-man",
+    "name": "u/seepa-man",
+    "handle": "u/seepa-man",
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/user/seepa-man",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "reddit-u-tr1anglechoke",
+    "name": "u/Tr1angleChoke",
+    "handle": "u/Tr1angleChoke",
+    "platform": "reddit",
+    "role": "community",
+    "url": "https://www.reddit.com/user/Tr1angleChoke",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "rockstar-discord",
+    "name": "Rockstar Discord (grand-theft-auto-vi channel)",
+    "handle": null,
+    "platform": "discord",
+    "role": "official",
+    "url": null,
+    "status": "active",
+    "notes": "Official community hub per a Sportskeeda search snippet. No public invite URL recorded."
+  },
+  {
+    "id": "rockstar-gta-vi-site",
+    "name": "GTA VI official site",
+    "handle": null,
+    "platform": "web",
+    "role": "official",
+    "url": "https://www.rockstargames.com/VI",
+    "status": "active",
+    "notes": "Official region pages (Only in Leonida), media and downloads, including the official Leonida map."
+  },
+  {
+    "id": "rockstar-newswire",
+    "name": "Rockstar Newswire",
+    "handle": null,
+    "platform": "web",
+    "role": "official",
+    "url": "https://www.rockstargames.com/newswire",
+    "status": "active",
+    "notes": "Ground truth for patches and confirmations. JS-rendered; fetchers see only the title."
+  },
+  {
+    "id": "rockstarintel",
+    "name": "RockstarINTEL",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://rockstarintel.com",
+    "status": "active",
+    "notes": "Independent Rockstar news outlet, states no affiliation. X: https://x.com/RockstarINTEL"
+  },
+  {
+    "id": "soap-central",
+    "name": "Soap Central",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://soapcentral.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "sportskeeda",
+    "name": "Sportskeeda",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://sportskeeda.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "state-of-leonida",
+    "name": "State of Leonida map",
+    "handle": null,
+    "platform": "web",
+    "role": "map",
+    "url": "https://map.stateofleonida.net/",
+    "status": "active",
+    "notes": "Mapping community interactive map. No licence: never scrape its markers."
+  },
+  {
+    "id": "the-big-lead",
+    "name": "The Big Lead",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://thebiglead.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "thegamer",
+    "name": "TheGamer",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://www.thegamer.com",
+    "status": "active",
+    "notes": "Links original Reddit threads."
+  },
+  {
+    "id": "vice-city-db",
+    "name": "Vice City DB",
+    "handle": null,
+    "platform": "web",
+    "role": "wiki",
+    "url": "https://vicecitydb.org",
+    "status": "active",
+    "notes": "Secrets pages with numbered confirmations and access-dated sources. Corrections: info@vicecitydb.org."
+  },
+  {
+    "id": "x-badgergoodger",
+    "name": "Badger Goodger",
+    "handle": "@BadgerGoodger",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/BadgerGoodger",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-biofalkner",
+    "name": "@biofalkner",
+    "handle": "@biofalkner",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/biofalkner",
+    "status": "active",
+    "notes": "World events happening without the player (via Kotaku)."
+  },
+  {
+    "id": "x-broughy1322",
+    "name": "Broughy1322",
+    "handle": "@Broughy1322",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/Broughy1322",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-cclipgod",
+    "name": "@cclipgod",
+    "handle": "@cclipgod",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/cclipgod",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "x-darkviperau",
+    "name": "DarkViperAU",
+    "handle": "@DarkViperAU",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/DarkViperAU",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-gameroll",
+    "name": "@GameRoll_",
+    "handle": "@GameRoll_",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/GameRoll_",
+    "status": "active",
+    "notes": "Amplified Belville."
+  },
+  {
+    "id": "x-ghillieyt",
+    "name": "GhillieMaster",
+    "handle": "@GhillieYT",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/GhillieYT",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-gtaseries",
+    "name": "@GTASeries",
+    "handle": "@GTASeries",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/GTASeries",
+    "status": "active",
+    "notes": "X account of the GTA Series Videos YouTube channel."
+  },
+  {
+    "id": "x-gtasix",
+    "name": "@gtasix_",
+    "handle": "@gtasix_",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/gtasix_",
+    "status": "active",
+    "notes": "GTA 6 news aggregator."
+  },
+  {
+    "id": "x-gtasixinfo",
+    "name": "@GTASixInfo",
+    "handle": "@GTASixInfo",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/GTASixInfo",
+    "status": "active",
+    "notes": "Collector's Box map labels. Post not fetched."
+  },
+  {
+    "id": "x-gtawikiofficial",
+    "name": "@GTAWikiOfficial",
+    "handle": "@GTAWikiOfficial",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/GTAWikiOfficial",
+    "status": "active",
+    "notes": "Credited Jared from the GTA VI Mapping server for Belville."
+  },
+  {
+    "id": "x-mrbossftw",
+    "name": "MrBossFTW",
+    "handle": "@MrBossFTW",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/MrBossFTW",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-poulpylibre",
+    "name": "@PoulpyLibre",
+    "handle": "@PoulpyLibre",
+    "platform": "x",
+    "role": "community",
+    "url": null,
+    "status": "blocked",
+    "notes": "Posts about a leaked-build PC port. Never link, embed or cite (piracy)."
+  },
+  {
+    "id": "x-professormikex",
+    "name": "@ProfessorMikeX",
+    "handle": "@ProfessorMikeX",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/ProfessorMikeX",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "x-rockstargames",
+    "name": "@RockstarGames",
+    "handle": "@RockstarGames",
+    "platform": "x",
+    "role": "official",
+    "url": "https://x.com/RockstarGames",
+    "status": "active",
+    "notes": "Listed by gta6everything.com."
+  },
+  {
+    "id": "x-rockstarsupport",
+    "name": "@RockstarSupport",
+    "handle": "@RockstarSupport",
+    "platform": "x",
+    "role": "official",
+    "url": "https://x.com/RockstarSupport",
+    "status": "active",
+    "notes": "Bug and patch status. Listed, not verified."
+  },
+  {
+    "id": "x-sickducking",
+    "name": "@sickducking",
+    "handle": "@sickducking",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/sickducking",
+    "status": "active",
+    "notes": "Snapmatic doomscrolling (via Kotaku)."
+  },
+  {
+    "id": "x-sirjosephwindsr",
+    "name": "@SirJosephWindsr",
+    "handle": "@SirJosephWindsr",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/SirJosephWindsr",
+    "status": "active",
+    "notes": "Fat Jason weight clip (via Kotaku)."
+  },
+  {
+    "id": "x-sksj002",
+    "name": "@Sksj002 (Marvel Mania)",
+    "handle": "@Sksj002",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/Sksj002/status/2124675198209364423",
+    "status": "active",
+    "notes": "Reposted the 12 Game Checklists maps on 2026-11-23. Not the original author."
+  },
+  {
+    "id": "x-sourcevi",
+    "name": "@SourceVI",
+    "handle": "@SourceVI",
+    "platform": "x",
+    "role": "community",
+    "url": "https://x.com/SourceVI",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "x-tggonyt",
+    "name": "TGG",
+    "handle": "@TGGonYT",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/TGGonYT",
+    "status": "active",
+    "notes": "Pre-launch analysis; interviewed Rob Nelson. Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "x-tylariousyt",
+    "name": "Tylarious",
+    "handle": "@TylariousYT",
+    "platform": "x",
+    "role": "creator",
+    "url": "https://x.com/TylariousYT",
+    "status": "active",
+    "notes": "Listed by gta6everything.com, not individually verified."
+  },
+  {
+    "id": "yahoo-tech",
+    "name": "Yahoo Tech",
+    "handle": null,
+    "platform": "web",
+    "role": "press",
+    "url": "https://tech.yahoo.com",
+    "status": "active",
+    "notes": null
+  },
+  {
+    "id": "yt-afterframe",
+    "name": "AFTERFRAME",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-aimske",
+    "name": "AIMSKE",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-arekkz-gaming",
+    "name": "Arekkz Gaming",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@ArekkzGaming",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-cytorial",
+    "name": "Cytorial",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-dailyreel",
+    "name": "DailyReel",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-dan-allen-gaming",
+    "name": "Dan Allen Gaming",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-deltias-gaming",
+    "name": "Deltia's Gaming",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-deluxplays",
+    "name": "DeluxPlays",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-dice-pkb",
+    "name": "Dice PKB",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-djchats",
+    "name": "DjChats",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-edepot",
+    "name": "edepot",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-ekw-the-gamer",
+    "name": "EKW the gamer",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-epic-moment",
+    "name": "Epic Moment",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-fizhy",
+    "name": "Fizhy",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-gamer-guides",
+    "name": "Gamer Guides",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@GamerGuidesYT",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-gamer-guru",
+    "name": "Gamer Guru",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-games-from-mars",
+    "name": "Games from Mars",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-gcrock-xtra",
+    "name": "GCROCK XTRA",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-gosunoob",
+    "name": "GosuNoob",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@Gosunoob",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-greenskull",
+    "name": "Greenskull",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-gta-6-talking",
+    "name": "GTA 6 Talking",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-gta-series-videos",
+    "name": "GTA Series Videos",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@GTASeriesVideos",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-hollow",
+    "name": "Hollow",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-icantsayit",
+    "name": "icantsayit",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-jokemen-fc",
+    "name": "Jokemen FC",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@jokemenfc6356",
+    "status": "active",
+    "notes": "Credited by HotCars as an early finder of the Paul Walker Eclipse."
+  },
+  {
+    "id": "yt-ked-creator-clips",
+    "name": "Ked Creator Clips",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-kryptmedia",
+    "name": "kryptmedia",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-leonida-daily",
+    "name": "Leonida Daily",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-lootward",
+    "name": "Lootward",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@Lootward",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-lunargaming",
+    "name": "LunarGaming",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@xLunarGaming",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-mon-facts",
+    "name": "Mon Facts",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-mrdalekjd",
+    "name": "MrDalekJD",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@MrDalekJD",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-perfect-score",
+    "name": "Perfect Score",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@PerfectScore",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-postmode",
+    "name": "Postmode",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@postmodeorg",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-robbin-rams",
+    "name": "Robbin Rams",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@RobbinRams",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-short-slade",
+    "name": "Short Slade",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-skill-games",
+    "name": "Skill Games",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-subscribefortacos",
+    "name": "SubscribeForTacos",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-techzamazing",
+    "name": "Techzamazing",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@Techzamazing",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-thegamingrevolution",
+    "name": "TheGamingRevolution",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@TheGamingRevo",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-tristan",
+    "name": "Tristan",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-whats-eating-gta",
+    "name": "What's Eating GTA?",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-whizl",
+    "name": "WhizL",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-xeagleeyeslive",
+    "name": "xEagleEyesLive",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-xgarbett",
+    "name": "xGarbett",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@xGarbett",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  },
+  {
+    "id": "yt-zaccoxtv",
+    "name": "ZacCoxTV",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-zafrostpet",
+    "name": "ZaFrostPet",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": null,
+    "status": "active",
+    "notes": "Channel URL not recorded in research; see the video URLs on the finds that cite it."
+  },
+  {
+    "id": "yt-zonex",
+    "name": "ZoneX",
+    "handle": null,
+    "platform": "youtube",
+    "role": "creator",
+    "url": "https://www.youtube.com/@ZoneXbez",
+    "status": "active",
+    "notes": "Channel URL verified in research/gta6-sources.md."
+  }
+]

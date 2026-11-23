@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/sources.schema.json",
+  "title": "Source registry",
+  "description": "content/sources.json: every creator, outlet, wiki, map project and account we cite or credit. Articles are keyed by outlet; the author stays on the find's source entry.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "handle", "platform", "role", "url", "status", "notes"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "name": { "type": "string", "minLength": 1 },
+      "handle": { "type": ["string", "null"] },
+      "platform": { "enum": ["youtube", "x", "reddit", "tiktok", "instagram", "twitch", "discord", "web"] },
+      "role": { "enum": ["official", "press", "wiki", "map", "creator", "community"] },
+      "url": { "type": ["string", "null"], "format": "uri", "description": "Null when the research did not record a URL, or when the source must not be linked." },
+      "status": { "enum": ["active", "caution", "blocked"], "description": "caution: a lead only, never the sole source. blocked: never cite, link or embed (piracy, leaks)." },
+      "notes": { "type": ["string", "null"] }
+    }
+  }
+}

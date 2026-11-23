@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/connections.schema.json",
+  "title": "Rockstar connections",
+  "description": "content/connections.json: lore items linking GTA VI to the wider Rockstar universe.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated", "updated_at", "confidence_notes", "items"],
+  "properties": {
+    "generated": { "type": "string", "format": "date" },
+    "updated_at": { "type": "string", "format": "date" },
+    "confidence_notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canon", "strong", "speculative", "debunked"],
+      "properties": {
+        "canon": { "type": "string" },
+        "strong": { "type": "string" },
+        "speculative": { "type": "string" },
+        "debunked": { "type": "string" }
+      }
+    },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/connection" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "slug", "title", "type", "confidence", "games", "summary", "related_finds", "sources", "updated_at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "slug": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 3 },
+        "type": { "enum": ["character", "brand", "location", "theory", "mystery", "memorial", "real-world", "prediction"] },
+        "confidence": { "enum": ["canon", "strong", "speculative", "debunked"], "description": "See confidence_notes. Theories are never canon unless Rockstar confirmed them." },
+        "games": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "summary": { "type": "string", "minLength": 10 },
+        "related_finds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" }, "description": "Ids from content/finds.json. Must mirror the find's related_connections." },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["url", "title"],
+            "properties": {
+              "url": { "type": "string", "format": "uri" },
+              "title": { "type": "string" }
+            }
+          }
+        },
+        "updated_at": { "type": "string", "format": "date" }
+      }
+    }
+  }
+}
