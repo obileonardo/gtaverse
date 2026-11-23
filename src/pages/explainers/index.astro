@@ -1,0 +1,8 @@
+---
+import Base from '../../layouts/Base.astro';
+import { explainers } from '../../lib/content';
+---
+<Base title="Explainers">
+  <h1>Explainers</h1>
+  <ul>{explainers.map((e) => <li><a href={`/explainers/${e.frontmatter.slug}`}>{e.frontmatter.title}</a>{e.frontmatter.status === 'draft' ? ' (draft)' : ''}</li>)}</ul>
+</Base>

@@ -1,0 +1,32 @@
+---
+// Unstyled skeleton. The look comes from the taste board picks.
+interface Props { title: string; description?: string }
+const { title, description = 'A fan-made field guide to GTA VI and the Rockstar universe.' } = Astro.props;
+const nav = [
+  { href: '/map', label: 'Map' },
+  { href: '/finds', label: 'Finds' },
+  { href: '/explainers', label: 'Explainers' },
+  { href: '/lore', label: 'Lore' },
+];
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title === 'The Vice Files' ? title : `${title} | The Vice Files`}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <header role="banner">
+      <a href="/">The Vice Files</a>
+      <nav aria-label="Main"><ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul></nav>
+    </header>
+    <main><slot /></main>
+    <footer>
+      <p>The Vice Files is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names, images and materials are trademarks and copyrights of their respective owners. Clips play from their creators' own posts.</p>
+      <p>Takedowns and credit corrections: <a href="mailto:takedown@thevicefiles.com">takedown@thevicefiles.com</a></p>
+    </footer>
+  </body>
+</html>

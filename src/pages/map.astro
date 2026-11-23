@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import { finds } from '../lib/content';
+const pinned = finds.filter((f) => f.pin);
+---
+<Base title="Map of Leonida">
+  <h1>Map of Leonida</h1>
+  <p>The interactive map mounts here once the official map tiles are built. {pinned.length} of {finds.length} finds have pins so far.</p>
+  <h2>All finds as a list</h2>
+  <ul>{finds.map((f) => <li><a href={`/finds/${f.slug}`}>{f.title}</a>{f.pin ? '' : ' (no pin yet)'}</li>)}</ul>
+</Base>

@@ -9,6 +9,9 @@ dist/
 .wrangler/
 .vercel/
 
+# Astro
+.astro/
+
 # Official Leonida map: Rockstar copyright, never committed (docs/MAP.md)
 .cache/
 public/map/
