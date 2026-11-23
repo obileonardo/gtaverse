@@ -7,7 +7,7 @@ An unofficial, non-commercial fan field guide to Grand Theft Auto VI. Three part
 2. **Explainers.** Plain-language guides to how the game works: wanted level and heat, the two protagonists, NPC behaviour, danger and wealth by area, the relationship system.
 3. **Lore.** Pages connecting GTA VI to the wider Rockstar universe: GTA I to V, Vice City, San Andreas, Red Dead Redemption, Bully, L.A. Noire, Max Payne and Manhunt.
 
-Domain: thevicefiles.com (Namecheap, DNS on Cloudflare Free plan), with rockstarworld.elvisobi.com as a second address for now. Repository: github.com/obileonardo/gtaverse (the repo name stays for now).
+Domain: thevicefiles.com (Namecheap, DNS on Cloudflare Free plan). Repository: github.com/obileonardo/thevicefiles.
 
 ## Who it is for
 - Players hunting secrets who want to know where something is, whether it is real, and who found it.
@@ -20,7 +20,7 @@ The most trustworthy GTA VI secrets guide: every fact sourced, every finder cred
 ## Stakes
 - **Legal survival.** The site lives on Rockstar's written tolerance for non-commercial fan use. Breaking it (ads, logos, leaks, spoiler clips) risks a takedown. See [docs/LEGAL.md](docs/LEGAL.md).
 - **Community trust.** Wrong locations or uncredited finds cost credibility with the people who supply the content.
-- **Owner exposure.** The site still answers on a subdomain of the owner's personal domain, and the owner's Rockstar account is bound by Rockstar's terms.
+- **Maintainer exposure.** The maintainers' Rockstar accounts are bound by Rockstar's terms, so project work stays inside Rockstar's posting policy.
 
 ## Limits
 - Non-commercial: no ads, no paid tiers, no sponsorships.
@@ -34,4 +34,4 @@ The most trustworthy GTA VI secrets guide: every fact sourced, every finder cred
 Medium-large. Roughly 85 finds and 85 lore connections at launch week, growing daily; a map with layers for 12 collectible types (hundreds of items); explainers; a contributor workflow for at least one collaborator (ChimeXXD).
 
 ## Current stage
-Content foundations. The research is versioned in `research/`, normalised into `content/`, described by `schema/` and checked by `pnpm validate`. No visual design or site code yet: the owner chose to build the data and docs first. Live status is in [docs/NOW.md](docs/NOW.md); decisions are in [docs/DECISIONS.md](docs/DECISIONS.md).
+Site build. The research is versioned in `research/`, normalised into `content/`, described by `schema/` and checked by `pnpm validate`. The Astro site (design system, home, map screen, find, explainer and GTAverse pages) is on `staging`; the map pins and the deploy of the site are next. Live status is in [docs/NOW.md](docs/NOW.md); decisions are in [docs/DECISIONS.md](docs/DECISIONS.md).

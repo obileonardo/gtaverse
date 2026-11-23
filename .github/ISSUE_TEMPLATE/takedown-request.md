@@ -5,7 +5,7 @@ title: "Takedown: "
 labels: takedown
 ---
 
-<!-- We act on creator requests within 24 hours, no questions asked. -->
+<!-- We act on creator requests within 48 hours, no questions asked. -->
 <!-- Rights holders: this issue is public. If you prefer private contact, email takedown@thevicefiles.com. -->
 
 ## What should we remove or change?

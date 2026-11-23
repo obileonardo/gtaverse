@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/regions.schema.json",
+  "$id": "https://thevicefiles.com/schema/regions.schema.json",
   "title": "Regions",
   "description": "content/regions.json: Leonida's state, counties, headline regions, districts, towns, islands and water. A region needs at least one source URL or one evidence find (the validator enforces this).",
   "type": "array",

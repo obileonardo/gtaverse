@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/map.schema.json",
+  "$id": "https://thevicefiles.com/schema/map.schema.json",
   "title": "Map",
   "description": "content/map.json: the coordinate system of the official Rockstar Leonida map. Every pin and label is a pixel position in the original image, origin top-left. See docs/MAP.md.",
   "type": "object",

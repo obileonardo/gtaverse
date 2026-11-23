@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/explainer.schema.json",
+  "$id": "https://thevicefiles.com/schema/explainer.schema.json",
   "title": "Explainer frontmatter",
   "description": "Frontmatter of content/explainers/*.md. Body citations [n] refer to sources[n-1]. Every claim line in the body must carry at least one citation.",
   "type": "object",
