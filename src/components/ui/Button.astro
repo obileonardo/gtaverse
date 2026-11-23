@@ -6,13 +6,14 @@
 //   glass     translucent pill over art or map (Apple Games)
 //   secondary pink tint fill, pink label (Apple Maps secondary actions)
 //   quiet     surface fill, normal label (Cancel and other low-weight actions)
+//   ghost     no fill until hover (bare icon actions: Felt inspector actions, panel close)
 // size: s 32, m 40 (default), l 48, xl 56. iconOnly makes it a circle of the same height.
 // Pass href to render a link; otherwise a <button>. Extra attributes pass through.
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 interface Props {
   href?: string;
-  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet';
+  variant?: 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'ghost';
   size?: 's' | 'm' | 'l' | 'xl';
   icon?: IconName;
   iconEnd?: IconName;
@@ -36,60 +37,3 @@ const attrs = href ? { href } : { type: (rest.type as string) ?? 'button' };
   {!iconOnly && <span class="btn__label"><slot /></span>}
   {iconEnd && <Icon name={iconEnd} size={iconSize} />}
 </Tag>
-
-<style>
-  .btn {
-    --h: var(--btn-h-m);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    height: var(--h);
-    padding-inline: calc(var(--h) * 0.45);
-    border-radius: var(--radius-full);
-    border: var(--border-w) solid transparent;
-    font-family: var(--font-body);
-    font-size: var(--text-label);
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-      transform var(--dur-press) var(--ease-out),
-      background-color var(--dur-colour) var(--ease-colour),
-      color var(--dur-colour) var(--ease-colour),
-      border-color var(--dur-colour) var(--ease-colour);
-  }
-  .btn:active { transform: scale(0.97); }
-
-  .btn--s { --h: var(--btn-h-s); font-size: 13px; }
-  .btn--m { --h: var(--btn-h-m); }
-  .btn--l { --h: var(--btn-h-l); font-size: 17px; padding-inline: 32px; }
-  .btn--xl { --h: var(--btn-h-xl); font-size: 18px; padding-inline: 36px; }
-  .btn--icon { width: var(--h); padding: 0; }
-
-  .btn--primary { background: var(--accent); color: var(--on-accent); }
-  .btn--inverse { background: var(--inverse-fill); color: var(--inverse-text); }
-  .btn--glass {
-    background: var(--glass-fill);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    border-color: var(--glass-border);
-    color: var(--text-1);
-  }
-  .btn--secondary { background: var(--accent-tint); color: var(--accent-text); }
-  .btn--quiet { background: var(--surface-2); color: var(--text-1); border-color: var(--border-1); }
-
-  @media (hover: hover) and (pointer: fine) {
-    .btn--primary:hover { background: #fb8fbf; }
-    .btn--inverse:hover { background: #ffffff; }
-    :global([data-theme='light']) .btn--inverse:hover { background: #1f1f1f; }
-    .btn--glass:hover { background: var(--glass-fill-strong); }
-    .btn--secondary:hover { background: rgb(249 118 176 / 0.24); }
-    .btn--quiet:hover { background: var(--surface-3); }
-  }
-
-  @media (prefers-reduced-transparency: reduce) {
-    .btn--glass { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  }
-</style>

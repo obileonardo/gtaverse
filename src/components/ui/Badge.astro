@@ -17,33 +17,3 @@ const { variant = 'meta', icon, caps = true, class: className, title } = Astro.p
   {icon && <Icon name={icon} size={14} stroke={2} />}
   <span class="badge__label"><slot /></span>
 </span>
-
-<style>
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    height: 22px;
-    padding-inline: 7px;
-    border-radius: var(--radius-xs);
-    border: var(--border-w) solid transparent;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-  .badge--caps { text-transform: uppercase; letter-spacing: 0.06em; }
-  .badge--meta { background: var(--badge-meta-fill); color: var(--badge-meta-text); }
-  .badge--verified {
-    background: var(--badge-verify-fill);
-    border: var(--border-w-strong) solid var(--badge-verify-border);
-    color: var(--badge-verify-text);
-  }
-  .badge--outline { border-color: currentColor; color: var(--text-1); }
-  .badge--muted { background: var(--surface-2); color: var(--text-2); border: var(--border-w) dashed var(--border-2); }
-  .badge--debunked { background: var(--surface-2); color: var(--text-2); }
-  .badge--debunked .badge__label { text-decoration: line-through; text-decoration-thickness: 1px; }
-  .badge--new { background: #ffffff; color: #0d0c1a; letter-spacing: 0.1em; }
-</style>
