@@ -30,4 +30,5 @@ const id = `also-${Math.random().toString(36).slice(2, 8)}`;
   .also__label { color: var(--text-3); }
   .also__list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
   .also__chip { gap: 10px; padding-left: 6px; }
+  @media (max-width: 767px) { .also__chip { height: 44px; } }
 </style>

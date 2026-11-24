@@ -176,7 +176,7 @@ const path = Astro.url.pathname;
     const springTo = (id: string, velocity = 0, instant = false) => {
       cancelAnimationFrame(raf);
       target = id;
-      games.dataset.snap = id === 'closed' ? games.dataset.snap ?? 'closed' : id;
+      games.dataset.snap = id; // the snap it is heading to: below full the whole sheet drags (touch-action none)
       const to = snaps[id]();
       if (instant) { write(to); settled(id); return; }
       if (reduced()) {
@@ -238,15 +238,21 @@ const path = Astro.url.pathname;
     };
     layoutGames();
 
-    gamesBtn.addEventListener('click', (e) => (sheetOpen() ? closeSheet() : openSheet(e.detail === 0)));
-    gamesClose.addEventListener('click', (e) => closeSheet(e.detail === 0));
+    // Keyboard activations never animate (design system). A click counts as keyboard when no pointer made it.
+    let keyed = false;
+    header.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') keyed = true; });
+    header.addEventListener('pointerdown', () => { keyed = false; });
+    const fromKeys = (e: MouseEvent) => { const k = e.detail === 0 || keyed; keyed = false; return k; };
+    gamesBtn.addEventListener('click', (e) => (sheetOpen() ? closeSheet() : openSheet(fromKeys(e))));
+    gamesClose.addEventListener('click', (e) => closeSheet(fromKeys(e)));
     gamesScrim.addEventListener('click', () => closeSheet(false));
 
     // Drag: the whole sheet below the full snap, only the handle at the full snap (the list scrolls there).
     let drag: { id: number; startY: number; startSheet: number; samples: { t: number; y: number }[]; active: boolean } | null = null;
     let suppressClick = false;
     games.addEventListener('pointerdown', (e) => {
-      if (!phone.matches || !sheetOpen() || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (!phone.matches || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (!sheetOpen() && y >= H() - 1) return; // closed and settled; a closing sheet can still be caught
       const atTop = Math.abs(y - snaps.full()) < 2;
       if (atTop && !(e.target as HTMLElement).closest('[data-sheet-handle]')) return;
       cancelAnimationFrame(raf); // catch it mid-flight, from where it is
@@ -280,7 +286,7 @@ const path = Astro.url.pathname;
       const projected = y + project(v);
       const best = (['full', 'half', 'closed'] as const).reduce((m, id) => (Math.abs(snaps[id]() - projected) < Math.abs(snaps[m]() - projected) ? id : m), 'half' as 'full' | 'half' | 'closed');
       if (best === 'closed') { gamesBtn.setAttribute('aria-expanded', 'false'); springTo('closed', v); gamesBtn.focus({ preventScroll: true }); }
-      else springTo(best, v);
+      else { gamesBtn.setAttribute('aria-expanded', 'true'); springTo(best, v); }
     };
     games.addEventListener('pointerup', endDrag);
     games.addEventListener('pointercancel', endDrag);
@@ -290,17 +296,15 @@ const path = Astro.url.pathname;
     // A page can ask for the switcher ("Switch game" on a game hub).
     document.addEventListener('vf:open-games', () => {
       if (!isOpen()) open();
-      requestAnimationFrame(() => {
-        if (phone.matches) openSheet();
-        else (games.querySelector<HTMLElement>('[aria-current="page"]') ?? games.querySelector<HTMLElement>('[data-game-row]'))?.focus({ preventScroll: true });
-      });
+      if (phone.matches) openSheet();
+      else (games.querySelector<HTMLElement>('[aria-current="page"]') ?? games.querySelector<HTMLElement>('[data-game-row]'))?.focus({ preventScroll: true });
     });
 
     openBtn.addEventListener('click', (e) => {
       if (isOpen()) return close();
       open();
       // Opened from the keyboard: put focus inside the menu (the current page, else the first site row).
-      if (e.detail === 0 && !phone.matches) requestAnimationFrame(() => (menu.querySelector<HTMLElement>('.menu__list [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__list a'))?.focus({ preventScroll: true }));
+      if (fromKeys(e) && !phone.matches) (menu.querySelector<HTMLElement>('.menu__list [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__list a'))?.focus({ preventScroll: true });
     });
     closeBtn.addEventListener('click', () => close());
     scrim.addEventListener('click', () => close(false, false));
