@@ -60,3 +60,16 @@ test('masks use the per-instance id token, and nothing has an em or en dash', ()
     }
   }
 });
+
+test('the map island subset (blips-map.ts) carries the same blips and pins as the family', async () => {
+  const { mapBlips, categoryGlyphs: mapCategories, blipBadges: mapBadges } = await import('../../src/icons/blips-map.ts');
+  const { blipBadges } = await import('../../src/icons/family.ts');
+  assert.deepEqual(mapCategories, categoryGlyphs);
+  assert.deepEqual(mapBadges, blipBadges);
+  for (const [name, b] of Object.entries(mapBlips)) {
+    const g = glyphs[name as keyof typeof glyphs] as { blip?: string; pin?: string };
+    assert.equal(b.blip, g.blip, `${name} blip`);
+    assert.equal(b.pin, g.pin, `${name} pin`);
+  }
+  for (const glyph of new Set(Object.values(categoryGlyphs))) assert.ok(glyph in mapBlips, `${glyph} is in the map subset`);
+});

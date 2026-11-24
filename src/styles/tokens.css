@@ -69,7 +69,11 @@
 
   /* Map (dark) */
   --map-land: #1f1f38;
-  --map-halo: rgb(13 12 26 / 0.8);}
+  --map-halo: rgb(13 12 26 / 0.8);
+  /* Map round 2 (tokens-r2.md): Jeff christy C12's vignette and C06's glow disc (a gradient element, never a shadow) */
+  --map-vignette: radial-gradient(ellipse at center, rgb(13 12 26 / 0) 55%, rgb(13 12 26 / 0.85) 100%);
+  --blip-glow: radial-gradient(closest-side, rgb(249 118 176 / 0.35), rgb(249 118 176 / 0));
+}
 
 [data-scheme='dark'] { color: var(--text-1); }
 
@@ -141,6 +145,11 @@
   --island-sub-h: 44px;
   --island-top: 32px;
   --island-gap: 2px;
+  /* Map round 2 layout (tokens-r2.md): Felt's panel widths, both panels 16 under the island, C12's hint row */
+  --map-panel-w: clamp(320px, 18.5vw, 400px);
+  --map-detail-w: clamp(320px, 21vw, 400px);
+  --map-panel-top: calc(var(--island-top) + var(--island-h) + 16px);
+  --hud-row-h: 44px;
   --tab-underline: 3px;
 
   /* ---------- Radii ---------- */
@@ -297,4 +306,5 @@
 
   --map-land: #f9f5f0;
   --map-halo: rgb(249 245 240 / 0.85);
+  --map-vignette: radial-gradient(ellipse at center, rgb(249 245 240 / 0) 55%, rgb(249 245 240 / 0.6) 100%);
 }

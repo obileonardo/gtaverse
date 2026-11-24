@@ -2,6 +2,7 @@
 // Kept free of content imports so the island bundle carries only what the map needs.
 import type { IconName } from '../ui/icons';
 import { matchesSearch } from './search';
+import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
 
 export type MapFind = {
   slug: string;
@@ -13,6 +14,7 @@ export type MapFind = {
   regionLabel: string;
   verification: string;
   spoiler: boolean;
+  chapterGate: string | null; // "Chapter 3": a spoiler opens by itself once the visitor's chapter setting reaches it
   mature: boolean;
   pin: { x: number; y: number } | null;
   pinAccuracy: string | null;
@@ -24,13 +26,17 @@ export type MapFind = {
   sources: { type: string; url: string; creator: string | null }[];
   finder: { handle: string; platform: string; url: string | null } | null;
   updated: string | null;
+  added: string | null; // for the Newest sort
+  connections: number; // GTAverse connections it belongs to (the detail panel's numbers)
+  games: number; // other games it crosses over with
+  related: string[]; // finds that share a connection with it (the selected pin's connection lines)
 };
 
 export type MapCategory = { id: string; label: string; icon: IconName; count: number };
 /** A collectible transcribed from another map (content/collectibles.json). Off the map until its layer is turned on. */
 export type MapCollectible = { id: string; layer: string; number: number | null; x: number; y: number; label: string; note: string | null; url: string };
 /** A collectible layer: `count` items here, `marked` of `total` on the source map. */
-export type MapLayer = { id: string; label: string; count: number; marked: number; total: number; source: string };
+export type MapLayer = { id: string; label: string; count: number; marked: number; total: number; source: string; url: string };
 export type MapRegion = { id: string; name: string };
 export type MapMeta = { width: number; height: number; maxZoom: number; tileSize?: number; tileUrl: string; base?: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
 
@@ -72,12 +78,14 @@ export const saveFilters = (f: Filters) => {
 type Skip = keyof Filters | 'search' | null;
 const NONE = new Set<string>();
 /** Does a find pass the filters? `skip` leaves one group out, for counts beside that group's options. `found` is the found set. */
-export const passes = (f: MapFind, flt: Filters, search: string, skip: Skip = null, found: Set<string> = NONE) => {
+export const passes = (f: MapFind, flt: Filters, search: string, skip: Skip = null, found: Set<string> = NONE, chapter: ChapterSetting = 'none') => {
   if (skip !== 'categories' && flt.categories.length && !flt.categories.includes(f.category)) return false;
   if (skip !== 'region' && flt.region !== 'all' && !f.regionIds.includes(flt.region)) return false;
   if (skip !== 'verification' && flt.verification !== 'all' && f.verification !== flt.verification) return false;
   if (skip !== 'hasClip' && flt.hasClip && !f.clip) return false;
-  if (skip !== 'spoilers' && !flt.spoilers && f.spoiler) return false;
+  // Spoilers show when the visitor asked for them, or when their chapter setting has reached the find's chapter
+  // (src/lib/chapter.ts). Mature content is never opened by the chapter setting.
+  if (skip !== 'spoilers' && !flt.spoilers && f.spoiler && !isUnlocked(f.chapterGate, chapter)) return false;
   if (skip !== 'mature' && !flt.mature && f.mature) return false;
   if (skip !== 'hideFound' && flt.hideFound && found.has(f.slug)) return false;
   if (skip !== 'search' && search && !matchesSearch(f, search)) return false; // search.ts: words, our synonyms, finders
@@ -98,6 +106,9 @@ export const sourceIcon = (type: string): IconName =>
   type === 'youtube' || type === 'video' ? 'clip' : type === 'wiki' ? 'explainers' : type === 'article' || type === 'news' ? 'article' : 'chat';
 
 export const platformLabel = (p: string) => ({ youtube: 'YouTube', x: 'X', reddit: 'Reddit', tiktok: 'TikTok', twitch: 'Twitch', discord: 'Discord', instagram: 'Instagram' }[p] ?? p.charAt(0).toUpperCase() + p.slice(1));
+
+/** Art (a clip still) shows for a find unless it is mature, or a spoiler the visitor has not opened. */
+export const showArt = (f: MapFind, chapter: ChapterSetting = 'none') => !!f.still && !f.mature && (!f.spoiler || isUnlocked(f.chapterGate, chapter));
 
 export const findUrl = (slug: string) => `/finds/${slug}`;
 

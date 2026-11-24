@@ -4,22 +4,27 @@
 //   ?region=grassrivers    the region filter
 //   ?view=3d               the 3D view (2d is the default and is left out)
 //   ?find=<slug>           the open find
+//   ?layer=a,b             the collectible layers that are on (ids from content/collectibles.json), so a link can
+//                          open the map with a layer showing (the home page's collectibles chapter links here)
 // Defaults are left out of the URL. Unknown values are ignored.
 export type MapView = '2d' | '3d';
-export type UrlState = { q: string; categories: string[]; region: string; view: MapView; find: string | null };
+export type UrlState = { q: string; categories: string[]; region: string; view: MapView; find: string | null; layers: string[] };
 
-export function readUrl(known: { categories: Set<string>; regions: Set<string>; finds: Set<string> }): UrlState & { hasFilters: boolean } {
+export function readUrl(known: { categories: Set<string>; regions: Set<string>; finds: Set<string>; layers: Set<string> }): UrlState & { hasFilters: boolean; hasLayers: boolean } {
   const p = new URLSearchParams(location.search);
   const categories = (p.get('category') ?? '').split(',').map((s) => s.trim()).filter((c) => known.categories.has(c));
   const region = p.get('region') ?? '';
   const find = p.get('find');
+  const layers = (p.get('layer') ?? '').split(',').map((s) => s.trim()).filter((l) => known.layers.has(l));
   return {
     q: (p.get('q') ?? '').slice(0, 120),
     categories: [...new Set(categories)],
     region: known.regions.has(region) ? region : 'all',
     view: p.get('view') === '3d' ? '3d' : '2d',
     find: find && known.finds.has(find) ? find : null,
+    layers: [...new Set(layers)],
     hasFilters: p.has('q') || p.has('category') || p.has('region'),
+    hasLayers: p.has('layer'),
   };
 }
 
@@ -31,5 +36,6 @@ export function writeUrl(s: UrlState) {
   set('region', s.region !== 'all' ? s.region : null);
   set('view', s.view === '3d' ? '3d' : null);
   set('find', s.find);
+  set('layer', s.layers.length ? s.layers.join(',') : null);
   if (url.href !== location.href) history.replaceState(history.state, '', url);
 }

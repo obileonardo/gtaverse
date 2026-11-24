@@ -1,37 +1,30 @@
-// The map's pieces on the design system page, built from the map island's own parts: DrawerContent (the drawer's real
-// content), the React twins in ui.tsx, usePresence for exits, and map.css for the look. The drawer frame, the list row
+// The map's pieces on the design system page, built from the map island's own parts: DrawerContent (the detail panel's
+// real content), the React twins in ui.tsx, usePresence for exits, and map.css for the look. The drawer frame, the list row
 // and the toast are markup that MapApp.tsx keeps inside itself, so they are drawn here with the same classes and the
 // same exit timings (drawer out --dur-peek-out, toast out 260ms). The root carries .vf-map, the scope every map.css
 // rule sits under. Data: one real find, and a worst case.
 import { useEffect, useRef, useState } from 'react';
 import { DrawerContent } from '../map/FindDetail';
-import { Icon, Verification, Button } from '../map/ui';
+import { Icon, Button } from '../map/ui';
+import { Blip } from '../map/blip';
 import { usePresence } from '../map/motion';
-import { findUrl, type MapFind, type MapMeta } from '../map/types';
+import { findUrl, showArt, type MapFind, type MapMeta } from '../map/types';
 import '../map/map.css';
 
 function Row({ find }: { find: MapFind }) {
-  const art = find.still && !find.spoiler && !find.mature;
   return (
     <li className="frow-item">
       <a className="frow" href={findUrl(find.slug)}>
-        <span className="media media--row" aria-hidden="true">
-          {art ? <img src={find.still!} alt="" loading="lazy" decoding="async" /> : <span className="media__glow"><span className="media__kind">{find.categoryLabel}</span></span>}
+        <span className="media" aria-hidden="true">
+          {showArt(find) ? <img src={find.still!} alt="" loading="lazy" decoding="async" /> : <span className="media__glow"><span className="media__kind">{find.categoryLabel}</span></span>}
         </span>
         <span className="frow__text">
-          <span className="frow__kicker">{find.regionLabel}</span>
-          <h4 className="frow__title">{find.title}</h4>
-          <span className="frow__meta">
-            <Icon name={find.icon} size={16} />
-            {find.categoryLabel}
-            {find.clip && <><span aria-hidden="true">·</span><Icon name="clip" size={16} />Clip</>}
-          </span>
-          <span className="frow__foot">
-            <Verification level={find.verification} />
-            {find.pin && <span className="frow__pinned"><Icon name="pin" size={16} />On the map</span>}
-          </span>
+          <span className="frow__kicker"><Blip category={find.category} size={20} />{find.categoryLabel}</span>
+          <span className="frow__title">{find.title}</span>
+          <span className="frow__meta">{find.regionLabel}{find.pin ? ' · on the map' : ''}</span>
         </span>
       </a>
+      <button type="button" className="frow__found" aria-pressed={false} aria-label={`Mark ${find.title} as found`}><Icon name="check" size={18} stroke={2} /></button>
     </li>
   );
 }
@@ -78,6 +71,7 @@ export default function MapSpecimens({ demo, worst, meta }: { demo: MapFind; wor
                   onShare={() => {}}
                   found={found}
                   onToggleFound={() => setFound((f) => !f)}
+                  chapter="none"
                 />
               </div>
             </article>

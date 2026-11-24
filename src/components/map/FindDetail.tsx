@@ -1,13 +1,15 @@
 // One find, in two shapes.
-//   Desktop: the Felt inspector card at the right of the map. Clip on top (16:9, Frame.io player surface), display
-//   caps title (corner) and close, the summary, the verification badge row (corner), Felt's icon actions, then
-//   underline tabs: Details (PamPam labelled wells and Apple TV credit cards) and Sources (Zesty source chips).
+//   Desktop: Felt's inspector at the right of the map, dressed as Jeff christy C08's frosted panel (round 2): clip on
+//   top, C08's hanging tab and corner ticks, the title between two hairlines, the number box, status lines and the
+//   numbers pair, Felt's icon row (Found, Share, Copy link, Open page), then the Details and Sources tabs.
 //   Phone: the Apple Maps place sheet with the clip at the top (MasterClass, owner answer 4B): grabber, share and
-//   close circles, centred title and subtitle, badge, three equal actions, the stat row, credits, about, sources.
+//   close circles, centred title (C08's hairlines) and subtitle, badge, actions, C08's numbers, credits, about, sources.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ClipPlayer } from './ClipPlayer';
 import { Button, Icon, Tabs, Verification } from './ui';
-import { accuracyLabels, cellOf, findUrl, formatDate, platformLabel, sourceIcon, type MapFind, type MapMeta } from './types';
+import { accuracyLabels, cellOf, findUrl, formatDate, platformLabel, sourceIcon, verificationLabels, type MapFind, type MapMeta } from './types';
+import { blipSvg, glyphOf } from './blip';
+import type { ChapterSetting } from '../../lib/chapter';
 
 type Common = {
   find: MapFind;
@@ -19,6 +21,7 @@ type Common = {
   titleId: string;
   found: boolean; // found tracker (found.ts)
   onToggleFound: () => void;
+  chapter: ChapterSetting; // the visitor's chapter setting (src/lib/chapter.ts): opens spoiler clips it has reached
 };
 
 /**
@@ -100,23 +103,61 @@ function pinText(find: MapFind, meta: MapMeta) {
   return [find.pinAccuracy ? accuracyLabels[find.pinAccuracy] ?? find.pinAccuracy : null, cell ? `cell ${cell}` : null].filter(Boolean).join(', ');
 }
 
-export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleId, found, onToggleFound }: Common) {
+/**
+ * Jeff christy C08's numbers, filled with ours: the number box (sources), the verification and pin status lines
+ * (his objectives) and the "rewards" pair (GTAverse connections and crossover games) around a tiny boxed plus.
+ */
+export function FindNumbers({ find, meta }: { find: MapFind; meta: MapMeta }) {
+  const cell = cellOf(find.pin, meta);
+  const acc = find.pinAccuracy ? (accuracyLabels[find.pinAccuracy] ?? find.pinAccuracy).replace(/ only$/, '') : 'placed';
+  const pinned = find.pin ? `Pinned: ${acc}${cell ? `, ${cell}` : ''}` : 'Not pinned yet';
+  return (
+    <div className="dnums">
+      <p className="dnum"><span className="dnum__box tabular">{find.sources.length}</span><span className="dnum__label">{find.sources.length === 1 ? 'Source' : 'Sources'}</span></p>
+      <ul className="dstatus" role="list">
+        <li className={find.verification === 'multi-source' ? 'is-accent' : undefined}>{verificationLabels[find.verification] ?? find.verification}</li>
+        <li className="is-quiet">{pinned}</li>
+      </ul>
+      <dl className="dpair">
+        <div><dt>{find.connections === 1 ? 'Connection' : 'Connections'}</dt><dd className="tabular">{find.connections}</dd></div>
+        <span className="dpair__plus" aria-hidden="true" />
+        <div><dt>{find.games === 1 ? 'Game' : 'Games'}</dt><dd className="tabular">{find.games}</dd></div>
+      </dl>
+    </div>
+  );
+}
+
+/** The summary in three lines with "More" (C08's body). Whole lines are hidden, so no glyph is ever cut. */
+function Summary({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 150;
+  return (
+    <div className="dsum">
+      <p className={`dsum__text${long && !open ? ' is-clamped' : ''}`}>{text}</p>
+      {long && <button type="button" className="dsum__more" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Less' : 'More'}</button>}
+    </div>
+  );
+}
+
+export function DrawerContent({ find, meta, onClose, onCopy, onShare, titleId, found, onToggleFound, chapter }: Common) {
   const [tab, setTab] = useState<'details' | 'sources'>('details');
   return (
     <>
-      <ClipPlayer find={find} variant="drawer" />
+      <ClipPlayer find={find} variant="drawer" chapter={chapter} />
+      <Button variant="glass" size="m" icon="close" iconOnly label="Close" onClick={onClose} className="drawer__close" />
       <div className="drawer__body">
-        <div className="drawer__head">
-          <h2 className="drawer__title" id={titleId}>{find.title}</h2>
-          <Button variant="ghost" size="s" icon="close" iconOnly label="Close" onClick={onClose} className="drawer__close" />
-        </div>
-        <p className="drawer__summary">{find.summary}</p>
-        <p className="drawer__tags"><Verification level={find.verification} /><span className="drawer__tagline">{find.categoryLabel} · {find.regionLabel}</span></p>
+        {/* C08's hanging tab (the find's blip plate grown into a tab, holding its type glyph) and the corner ticks */}
+        <span className="dtab" aria-hidden="true" dangerouslySetInnerHTML={{ __html: blipSvg(glyphOf(find.category), { size: 24, uid: `dtab-${find.slug}` }) }} />
+        <span className="dticks" aria-hidden="true"><i /><i /><i /><i /></span>
+        <p className="dkicker">{find.categoryLabel} · {find.regionLabel}</p>
+        <h2 className="dtitle" id={titleId}>{find.title}</h2>
+        <FindNumbers find={find} meta={meta} />
+        <Summary text={find.summary} />
         <div className="drawer__actions">
-          <CopyButton onCopy={onCopy} label="Copy link to this find" />
-          <Button variant="ghost" size="m" icon="pin" iconOnly label={find.pin ? 'Show on the map' : 'No pin yet'} onClick={onShowOnMap} disabled={!find.pin} />
           <Button variant="ghost" size="m" icon="check" iconOnly label={found ? 'Found. Mark as not found' : 'Mark as found'} aria-pressed={found} onClick={onToggleFound} className="found-toggle" />
-          <Button variant="ghost" size="m" icon="arrow-right" iconOnly label="Open the find page" href={findUrl(find.slug)} className="drawer__open" />
+          <Button variant="ghost" size="m" icon="share" iconOnly label="Share this find" onClick={onShare} />
+          <CopyButton onCopy={onCopy} label="Copy link to this find" />
+          <Button variant="ghost" size="m" icon="arrow-right" iconOnly label="Open the find page" href={findUrl(find.slug)} />
         </div>
         <div className="drawer__tabs">
           <Tabs id="drawer" label="Find" selected={tab} onSelect={(t) => setTab(t as 'details' | 'sources')} tabs={[{ id: 'details', label: 'Details' }, { id: 'sources', label: `Sources (${find.sources.length})` }]}>
@@ -139,25 +180,18 @@ export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleI
   );
 }
 
-export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleId, found, onToggleFound }: Common) {
-  const pinValue = find.pin ? (find.pinAccuracy ? (accuracyLabels[find.pinAccuracy] ?? find.pinAccuracy).split(' ')[0] : 'Placed') : 'None';
-  const stats = [
-    { label: 'Sources', value: String(find.sources.length) },
-    { label: 'Clip', value: find.clip ? platformLabel(find.clip.platform) : 'None' },
-    { label: 'Pin', value: pinValue },
-    { label: 'Updated', value: formatDate(find.updated) ?? 'n/a' },
-  ];
+export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleId, found, onToggleFound, chapter }: Common) {
   return (
     <>
       <div className="fsheet__top" data-sheet-handle>
-        <ClipPlayer find={find} variant="sheet" />
+        <ClipPlayer find={find} variant="sheet" chapter={chapter} />
         <span className="grabber" aria-hidden="true" />
         <Button variant="glass" size="l" icon="share" iconOnly label="Share this find" onClick={onShare} className="fsheet__corner fsheet__corner--left" />
         <Button variant="glass" size="l" icon="close" iconOnly label="Close" onClick={onClose} className="fsheet__corner fsheet__corner--right" />
       </div>
       <div className="fsheet__body">
         <header className="fsheet__head" data-sheet-handle>
-          <h2 className="fsheet__title" id={titleId}>{find.title}</h2>
+          <h2 className="fsheet__title dtitle" id={titleId}>{find.title}</h2>
           <p className="fsheet__sub">{find.categoryLabel} · {find.regionLabel}</p>
           <p className="fsheet__badge"><Verification level={find.verification} /></p>
         </header>
@@ -167,11 +201,7 @@ export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleI
           <Button variant="secondary" stack icon="check" onClick={onToggleFound} aria-pressed={found} className="found-toggle">Found</Button>
           <Button variant="secondary" stack icon="share" onClick={onShare}>Share</Button>
         </div>
-        <dl className="stats">
-          {stats.map((s) => (
-            <div key={s.label} className="stats__item"><dt>{s.label}</dt><dd className="tabular">{s.value}</dd></div>
-          ))}
-        </dl>
+        <FindNumbers find={find} meta={meta} />
         <section className="fsheet__section" aria-labelledby={`${titleId}-credits`}>
           <h3 className="fsheet__label" id={`${titleId}-credits`}>Credits</h3>
           <Credits find={find} />
