@@ -167,7 +167,7 @@ const thumb = (f: Find) => {
                 {t ? <img data-src={t} alt="" decoding="async" /> : <span class="atv__peek-glow"></span>}
               </div>
               <p class="atv__kicker">{categoryLabel(f)}</p>
-              <h2 class="atv__title"><a href={`/finds/${f.slug}`} data-atv-link>{f.title}</a></h2>
+              <h2 class="atv__title"><a href={`/finds/${f.slug}`} data-atv-link><span class="atv__title-in">{f.title}</span></a></h2>
               <div class="atv__meta">
                 <span>{regionLabel(f)}</span>
                 <Verification level={f.verification} />
@@ -374,7 +374,8 @@ const thumb = (f: Find) => {
     gap: 14px;
     max-width: 100%;
     color: #ffffff;
-    transition: opacity var(--dur-colour) var(--ease-colour);
+    overflow: clip; /* the mask each line rises through; the link box itself never moves */
+    transition: opacity 160ms var(--ease-colour);
   }
   .a24__title {
     font-family: var(--font-body);
@@ -389,14 +390,26 @@ const thumb = (f: Find) => {
   }
   .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
   .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
-  .a24__list[data-hot] .a24__item { opacity: 0.55; }
+  /* While one line is hot (the peek frame beside it), the others step back. */
+  .a24__list[data-hot] .a24__item { opacity: 0.45; transition-duration: var(--dur-colour); }
   .a24__list[data-hot] .a24__item.is-hot { opacity: 1; }
 
-  .a24__list li {
-    animation: a24-rise 600ms var(--ease-out) both;
-    animation-delay: calc(var(--i) * 70ms - var(--i) * var(--i) * 6ms);
+  /* ---------- Entrance: one wave (motion study item 3) ----------
+     The lines lead: each rises through its own mask, in order, the gaps shrinking (--stagger-hero, i*70 - i*i*6).
+     The category labels ride with their line. The controls fade in place at 300ms. Under a second in all; nothing
+     replays on a back navigation; every link is clickable from the first frame (only its contents move). */
+  html.js:not(.nav-back) .a24__title,
+  html.js:not(.nav-back) .a24__sup {
+    animation: hero-line var(--dur-reveal) var(--ease-reveal) both;
+    animation-delay: calc(var(--i) * var(--stagger-hero) - var(--i) * var(--i) * 6ms);
   }
-  @keyframes a24-rise { from { opacity: 0; transform: translateY(14px); } }
+  /* The label is small: it starts a whole title line lower, so it rises with its line, not inside it. */
+  html.js:not(.nav-back) .a24__sup { animation-name: hero-line-sup; }
+  @keyframes hero-line-sup { from { translate: 0 calc(clamp(40px, 4vw, 72px) * 1.05); } }
+  html.js:not(.nav-back) :is(.hero__controls, .a24__down, .atv__dots) { animation: hero-fade 400ms var(--ease-colour) 300ms both; }
+  @keyframes hero-line { from { translate: 0 105%; } }
+  @keyframes hero-fade { from { opacity: 0; } }
+  @keyframes hero-rise { from { opacity: 0; translate: 0 8px; } }
 
   .a24__down {
     position: absolute;
@@ -430,17 +443,21 @@ const thumb = (f: Find) => {
     outline-offset: -1px;
     pointer-events: none;
     opacity: 0;
-    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(0.96);
-    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
+    /* Position and tilt are written by hero-peek.ts (critically damped springs); opening is opacity and scale. */
+    transform: rotate(-3deg);
+    scale: 0.96;
+    will-change: transform;
+    transition: opacity var(--dur-popover-out) var(--ease-standard), scale var(--dur-popover-out) var(--ease-standard);
   }
   .peek.is-open {
     opacity: 1;
-    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(1);
-    transition: opacity var(--dur-popover-in) var(--ease-out), transform 280ms var(--ease-out);
+    scale: 1;
+    transition: opacity var(--dur-popover-in) var(--ease-out), scale var(--dur-popover-in) var(--ease-out);
   }
   .peek.is-instant { transition: none; }
-  .peek__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-colour) var(--ease-colour); }
+  .peek__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
   .peek__img.is-on { opacity: 1; }
+  .peek__img.is-top { z-index: 1; }
 
   /* ---------- Phone: Apple TV ---------- */
   .atv { display: none; }
@@ -515,6 +532,11 @@ const thumb = (f: Find) => {
       text-transform: uppercase;
       color: var(--accent-text);
     }
+    .atv__title a { display: inline-block; overflow: clip; vertical-align: top; }
+    .atv__title-in { display: block; }
+    html.js:not(.nav-back) .atv__slide:first-child .atv__title-in { animation: hero-line var(--dur-reveal) var(--ease-reveal) both; }
+    html.js:not(.nav-back) .atv__slide:first-child .atv__kicker { animation: hero-fade 400ms var(--ease-colour) both; }
+    html.js:not(.nav-back) .atv__slide:first-child :is(.atv__meta, .atv__actions) { animation: hero-rise 480ms var(--ease-reveal) 160ms both; }
     .atv__title {
       margin-top: 8px;
       font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
@@ -554,10 +576,12 @@ const thumb = (f: Find) => {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .a24__list li { animation-name: a24-fade; }
-    @keyframes a24-fade { from { opacity: 0; } }
+    /* The entrance is one 200ms fade of everything together. */
+    html.js:not(.nav-back) :is(.a24__title, .a24__sup, .hero__controls, .a24__down, .atv__dots, .atv__slide:first-child :is(.atv__title-in, .atv__kicker, .atv__meta, .atv__actions)) {
+      animation: hero-fade 200ms var(--ease-colour) both;
+    }
     .stage__art.is-active img { animation: none; }
-    .peek, .peek.is-open { transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)); }
+    .peek, .peek.is-open { scale: 1; }
     .atv__peek, .atv__slide.is-peek .atv__peek { transform: translateX(-50%) rotate(-3deg); }
   }
   @media (prefers-reduced-transparency: reduce) {
