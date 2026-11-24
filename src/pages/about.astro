@@ -1,0 +1,52 @@
+---
+// About: what the site is, how it is made, what it never does. Written for the site; the rules come from
+// docs/LEGAL.md, docs/CONTENT-GUIDE.md and LICENSE-CONTENT.
+import Base from '../layouts/Base.astro';
+import DocPage from '../components/site/DocPage.astro';
+import Button from '../components/ui/Button.astro';
+import { finds, connections, explainers } from '../lib/content';
+import { creditTotals } from '../lib/credits';
+import { site } from '../lib/site';
+import { submitFindLink } from '../lib/issues';
+import { organization, webPage } from '../lib/seo';
+import { POLICIES_UPDATED } from '../lib/trust';
+import { staticRoutes } from '../lib/routes';
+
+const r = staticRoutes.find((x) => x.path === '/about')!;
+---
+<Base title={r.title} description={r.description} jsonLd={[webPage('/about', r.title, r.description, 'AboutPage'), organization()]} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'About', href: '/about' }]}>
+  <DocPage title={r.title} standfirst="A fan-made field guide to GTA VI. Every secret we list is shown in the clip of the fan who found it, with its sources and an honest label for how sure we are." updated={POLICIES_UPDATED}>
+    <h2>What it is</h2>
+    <p>The Vice Files collects the secrets, Easter eggs and hidden places players find in Leonida. Today that is {finds.length} finds, {connections.length} links between GTA VI and the rest of the Rockstar universe, and {explainers.length} explainers on how the game's systems work.</p>
+    <p>Each find says who showed it first, where to see it for yourself, and which sources back it up. We credit {creditTotals.people} finders and creators and {creditTotals.outlets} outlets by name on <a href="/finders">the finders page</a>.</p>
+
+    <h2>How it is made</h2>
+    <ul>
+      <li><strong>Sources first.</strong> No source link, no fact. Each find carries a verification level: multi-source, single source, rumour or debunked. Rumours stay off the site until a second independent source shows them. <a href="/editorial-policy">How we verify</a>.</li>
+      <li><strong>Credit the finder.</strong> When a source names who found something first, they are credited by handle with a link to their post. Clips play from the creator's own post.</li>
+      <li><strong>Our own words.</strong> Summaries are written by us. We never copy another guide's text or another map's pins.</li>
+      <li><strong>In the open.</strong> The content and the code live on <a href={site.repo}>GitHub</a>. Anyone can <a href={submitFindLink()}>submit a find</a> or <a href="/corrections">suggest a correction</a>.</li>
+    </ul>
+
+    <h2>What we never do</h2>
+    <ul>
+      <li>No ads, no paid tiers, no affiliate links, no analytics or tracking scripts. The site is non-commercial and stays that way.</li>
+      <li>No leaks, no pre-release footage, no piracy, and no money glitches or exploits.</li>
+      <li>No AI processing of Rockstar's art, screenshots or map, and no AI analysis of them either.</li>
+      <li>No re-hosted clips. Videos are embedded from their platforms and load only when you press play. The stills you see are the creators' own thumbnails, served by YouTube.</li>
+    </ul>
+
+    <h2>Not official</h2>
+    <p>The Vice Files is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto and related names, images and the Leonida map belong to their owners and appear here for non-commercial fan commentary and reference.</p>
+
+    <h2>Reuse</h2>
+    <p>Our own writing and data are licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>: share and adapt them for non-commercial use, credit "The Vice Files contributors" and say what you changed. The code is MIT licensed. Game material is not ours to license.</p>
+
+    <h2>Contact</h2>
+    <p>Takedowns and credit changes: <a href={`mailto:${site.takedownEmail}`}>{site.takedownEmail}</a>, answered within {site.responseHours} hours (<a href="/takedown">how it works</a>). Conduct reports for the project: <a href={`mailto:${site.conductEmail}`}>{site.conductEmail}</a>.</p>
+    <div class="doc__actions">
+      <Button href={submitFindLink()} variant="primary" size="l" icon="plus">Submit a find</Button>
+      <Button href="/editorial-policy" variant="quiet" size="l" iconEnd="chevron-right">Editorial policy</Button>
+    </div>
+  </DocPage>
+</Base>
