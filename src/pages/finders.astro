@@ -14,7 +14,7 @@ import { site } from '../lib/site';
 const r = staticRoutes.find((x) => x.path === '/finders')!;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const initial = (name: string) => name.replace(/^(u\/|@)/, '').charAt(0).toUpperCase();
-const roleLabel: Record<Post['role'], string> = { first: 'Found it first', clip: 'Clip', source: 'Video' };
+const roleLabel: Record<Post['role'], string> = { first: 'Found it first', clip: 'Made the clip', source: 'Video' };
 // One line per find: a person can be the finder and the clip on the same find.
 const perFind = (posts: Post[]) => {
   const m = new Map<string, { post: Post; roles: Post['role'][] }>();
@@ -45,21 +45,23 @@ const ld = collectionPage('/finders', r.title, r.description, finders.map((p) =>
               <span class="person__handle">{p.name}</span>
               <span class="person__role">{p.platform}</span>
             </span>
-            {p.profile && <Button href={p.profile} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener" class="person__profile" aria-label={`${p.name} on ${p.platform}`}>Profile</Button>}
           </div>
-          <p class="person__counts mono">
-            <span>{plural(p.finds, 'find')}</span>
-            {p.firstFinds > 0 && <span>{p.firstFinds} found first</span>}
-            {p.clips > 0 && <span>{plural(p.clips, 'clip')}</span>}
-          </p>
+          <div class="person__bar">
+            <p class="person__counts mono">
+              <span>{plural(p.finds, 'find')}</span>
+              {p.firstFinds > 0 && <span>{p.firstFinds} found first</span>}
+              {p.clips > 0 && <span>{plural(p.clips, 'clip')}</span>}
+            </p>
+            {p.profile && <Button href={p.profile} variant="outline" size="l" iconEnd="arrow-up-right" target="_blank" rel="noopener" class="person__profile" aria-label={`${p.name} on ${p.platform}`}>Profile</Button>}
+          </div>
           <ul class="person__finds" role="list">
             {perFind(p.posts).map(({ post, roles }) => (
               <li>
-                <a class="person__find" href={`/finds/${post.find.slug}`}>{post.find.title}</a>
-                <span class="person__post">
-                  {roles.map((role) => roleLabel[role]).join(', ')}
-                  {post.url && <> · <a class="person__link" href={post.url} target="_blank" rel="noopener">Original post<Icon name="arrow-up-right" size={12} /></a></>}
-                </span>
+                <a class="person__find" href={`/finds/${post.find.slug}`}>
+                  <span class="person__find-title">{post.find.title}</span>
+                  <span class="person__post">{roles.map((role) => roleLabel[role]).join(', ')}</span>
+                </a>
+                {post.url && <Button href={post.url} variant="ghost" size="m" icon="arrow-up-right" iconOnly label={`Original post by ${p.name}: ${post.find.title}`} target="_blank" rel="noopener" class="person__link" />}
               </li>
             ))}
           </ul>
@@ -124,13 +126,15 @@ const ld = collectionPage('/finders', r.title, r.description, finders.map((p) =>
   .person__name { display: flex; flex-direction: column; min-width: 0; flex: 1; }
   .person__handle { font-weight: 600; overflow-wrap: anywhere; }
   .person__role { color: var(--text-2); font-size: var(--text-body-s); }
-  .person__who :global(.person__profile) { flex: none; }
+  .person__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 48px; }
+  .person__bar :global(.person__profile) { flex: none; }
   .person__counts { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); color: var(--text-2); }
-  .person__finds { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--border-w) solid var(--border-1); }
-  .person__finds li { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .person__find { font-weight: 500; overflow-wrap: anywhere; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color var(--dur-colour) var(--ease-colour); }
+  .person__finds { display: flex; flex-direction: column; gap: 0; padding-top: var(--space-3); border-top: var(--border-w) solid var(--border-1); }
+  .person__finds li { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+  .person__find { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 44px; justify-content: center; padding-block: var(--space-1); }
+  .person__find-title { font-weight: 500; overflow-wrap: anywhere; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color var(--dur-colour) var(--ease-colour); }
   .person__post { color: var(--text-3); font-size: var(--text-caption); }
-  .person__link { display: inline-flex; align-items: center; gap: 2px; color: var(--accent-text); }
+  .person__finds :global(.person__link) { flex: none; width: 44px; height: 44px; color: var(--accent-text); }
 
   .outlets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
   .outlet {
@@ -151,7 +155,7 @@ const ld = collectionPage('/finders', r.title, r.description, finders.map((p) =>
   .outlet__meta { color: var(--text-2); font-size: var(--text-body-s); }
 
   @media (hover: hover) and (pointer: fine) {
-    .person__find:hover { text-decoration-color: currentColor; }
+    .person__find:hover .person__find-title { text-decoration-color: currentColor; }
     a.outlet:hover { background: var(--surface-1); }
   }
   @media (min-width: 768px) and (max-width: 1199px) {
@@ -164,6 +168,6 @@ const ld = collectionPage('/finders', r.title, r.description, finders.map((p) =>
     .outlets { grid-template-columns: minmax(0, 1fr); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .outlet, .person__find { transition: none; }
+    .outlet, .person__find-title { transition: none; }
   }
 </style>

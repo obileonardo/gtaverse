@@ -58,5 +58,11 @@ export const regionTypeLabel: Record<string, string> = {
   state: 'State', county: 'County', region: 'Region', district: 'District', place: 'Place', island: 'Island', water: 'Water', town: 'Town',
 };
 
-/** Nearby finds for a find page: by pin distance when pinned, else by shared region (src/lib/nearby.ts). */
-export const nearbyFinds = (f: Find, n = 6) => nearby(f, finds, regionDepth, n);
+const subtreeSets = new Map<string, Set<string>>();
+const inSubtree = (rid: string, x: { region_ids: string[] }) => {
+  let set = subtreeSets.get(rid);
+  if (!set) { set = new Set(subtree(rid)); subtreeSets.set(rid, set); }
+  return x.region_ids.some((r) => set!.has(r));
+};
+/** Nearby finds for a find page: by pin distance when pinned, else in the same place or anywhere inside it. */
+export const nearbyFinds = (f: Find, n = 6) => nearby(f, finds, regionDepth, n, inSubtree);

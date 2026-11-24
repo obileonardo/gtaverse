@@ -41,8 +41,8 @@ const C = { bg: '#0D0C1A', text1: 'rgba(255,255,255,0.92)', text2: 'rgba(255,255
 type Node = { type: string; props: { style?: Record<string, unknown>; children?: Node | string | (Node | string)[] } };
 const el = (type: string, style: Record<string, unknown>, children?: Node['props']['children']): Node => ({ type, props: { style, children } });
 
-/** Display size that keeps a title to about three lines in the 1056px column. */
-const titleSize = (t: string) => (t.length <= 24 ? 128 : t.length <= 44 ? 104 : t.length <= 70 ? 84 : 68);
+/** Display size that keeps a title to five lines or fewer in the 1056px column (checked with a 150 character title). */
+const titleSize = (t: string) => (t.length <= 24 ? 128 : t.length <= 44 ? 104 : t.length <= 70 ? 84 : t.length <= 110 ? 68 : 56);
 
 export async function ogCard({ kicker, title, meta }: { kicker: string; title: string; meta?: string }) {
   const tree = el(

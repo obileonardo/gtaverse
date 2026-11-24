@@ -5,10 +5,13 @@
 
 export type NearbyInput = { slug: string; region_ids: string[]; pin: { x: number; y: number } | null };
 export type RegionDepth = (id: string) => number;
+/** Whether a find lies in a region. Default: the region is one of its own; hubs.ts passes "or anywhere inside it". */
+export type InRegion = (regionId: string, find: NearbyInput) => boolean;
+const ownRegion: InRegion = (rid, x) => x.region_ids.includes(rid);
 
 export type NearbyHit<T> = { find: T; reason: 'distance' | 'region'; distance: number | null; region: string | null };
 
-export function nearby<T extends NearbyInput>(find: T, all: T[], depth: RegionDepth, n = 6): NearbyHit<T>[] {
+export function nearby<T extends NearbyInput>(find: T, all: T[], depth: RegionDepth, n = 6, inRegion: InRegion = ownRegion): NearbyHit<T>[] {
   const others = all.filter((x) => x.slug !== find.slug);
   const hits: NearbyHit<T>[] = [];
 
@@ -27,7 +30,7 @@ export function nearby<T extends NearbyInput>(find: T, all: T[], depth: RegionDe
   const mine = find.region_ids.filter((r) => depth(r) > 0).sort((a, b) => depth(b) - depth(a));
   for (const rid of mine) {
     for (const x of others) {
-      if (taken.has(x.slug) || !x.region_ids.includes(rid)) continue;
+      if (taken.has(x.slug) || !inRegion(rid, x)) continue;
       taken.add(x.slug);
       hits.push({ find: x, reason: 'region', distance: null, region: rid });
     }

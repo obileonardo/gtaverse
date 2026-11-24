@@ -48,3 +48,10 @@ test('sharing only the root region (the whole state) does not count as nearby', 
   const me = f('me', ['state:leonida']);
   assert.deepEqual(nearby(me, [me, f('a', ['state:leonida'])], depth), []);
 });
+
+test('a custom region test lets a county include the places inside it', () => {
+  const me = f('me', ['county:a']);
+  const inside = (rid: string, x: NearbyInput) => x.region_ids.includes(rid) || (rid === 'county:a' && x.region_ids.includes('district:x'));
+  const out = nearby(me, [me, f('in-district', ['district:x']), f('elsewhere', ['county:b'])], depth, 6, inside);
+  assert.deepEqual(out.map((h) => h.find.slug), ['in-district']);
+});

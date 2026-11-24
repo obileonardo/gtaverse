@@ -23,7 +23,10 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/styles/tokens.css` | Every token: colour (dark and light), type, spacing, sizes, radii, borders, motion, z layers |
 | `src/styles/base.css` | Reset, page ground, type role classes, `.container`, `.page`, `.sr-only`, skip link |
 | `src/styles/components.css` | The styles of every shared component (Icon, Button, Chip, Badge, Tabs), loaded on every page by `base.css`. The Astro components and the map's React island render the same classes, so each component has one look |
-| `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer. Props `title`, `description`, `layout` (`page` or `bare`), `sub` |
+| `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer, search and sharing tags. Props `title`, `description`, `layout` (`page` or `bare`), `sub`, and (optional) `jsonLd`, `breadcrumbs`, `ogType`, `noindex` |
+| `src/components/site/PageHead.astro` | List page head: display caps title, mono count, lede, optional breadcrumb trail (finders, region and category hubs) |
+| `src/components/site/DocPage.astro` | Policy page: the explainer's reading column with a rail of the policy pages (about, editorial policy, corrections, takedowns) |
+| `src/components/FindGrid.astro` | The finds index card grid as a component (hubs) |
 | `src/components/site/Header.astro` | The NEON island, the desktop popover menu and the phone overlay menu, the theme toggle, the sub bar |
 | `src/components/site/Footer.astro` | Footer with the legal disclaimer and takedown address (legal copy: keep word for word) |
 | `src/components/ui/Button.astro` | Pill button |
@@ -176,6 +179,15 @@ The map is a React island, and Astro components cannot render inside it. `ui.tsx
 ### Page layouts
 - `layout="page"` (default): content sits in `.container.page`, below the floating island.
 - `layout="bare"`: full width (heroes, the map). Add your own `.container` for content that should line up.
+
+### Search and sharing (`Base.astro`, `src/lib/seo.ts`, `src/lib/routes.ts`)
+- Every page gets a canonical URL, Open Graph and Twitter tags and its own Open Graph card: a 1200 x 630 PNG drawn at build time (`src/lib/og.ts`) on the night navy ground with the sunrise glow, the kicker in pink caps, the title in Big Shoulders 900, one meta line in Inter and the wordmark. Text only: never Rockstar art or a YouTube still.
+- `src/lib/routes.ts` lists every public page; the sitemap, `llms.txt` and the cards are built from it. A new page type goes there.
+- Search engines are kept out by one switch, `site.indexable` in `src/lib/site.ts` (robots meta, `X-Robots-Tag` in `dist/_headers`, `robots.txt`).
+
+### Policy pages and credits
+- The footer carries a second row: the policy pages (`src/lib/trust.ts`), "Submit a find", "Suggest a correction" (prefilled GitHub issue links from `.github/ISSUE_TEMPLATE/*`, `src/lib/issues.ts`) and the RSS feed. The legal paragraphs stay word for word.
+- `/finders` rows reuse the find page's credit card (avatar initial on the pink tint, name, platform) with an outline "Profile" pill and a 44px ghost circle per original post.
 
 ## Art and stills
 

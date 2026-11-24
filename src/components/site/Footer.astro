@@ -52,17 +52,17 @@ import { submitFindLink, correctionLink } from '../../lib/issues';
     .footer__nav a:hover { color: var(--text-1); }
   }
   .footer__more { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 var(--space-6); margin-top: calc(var(--space-6) * -1); }
-  .footer__links { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); }
+  /* Links pad only on their right (a wider hit area), so the first link of every wrapped row sits on the page edge. */
+  .footer__links { display: flex; flex-wrap: wrap; gap: 0 var(--space-4); }
   .footer__links a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    padding-inline: var(--space-3);
+    padding-right: var(--space-3);
     color: var(--text-3);
     font-size: var(--text-body-s);
     transition: color var(--dur-colour) var(--ease-colour);
   }
-  .footer__links li:first-child a { padding-left: 0; }
   @media (hover: hover) and (pointer: fine) {
     .footer__links a:hover { color: var(--text-1); }
   }
