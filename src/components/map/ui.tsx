@@ -66,6 +66,7 @@ export function Chip({ icon, selected = false, glass, touch, count, children, cl
       {icon && <Icon name={icon} size={touch ? 20 : 16} />}
       <span>{children}</span>
       {count !== undefined && <span className="chip__count tabular">{count}</span>}
+      <span className="chip__check" aria-hidden="true"><span><Icon name="check" size={touch ? 18 : 16} stroke={2} /></span></span>
     </button>
   );
 }

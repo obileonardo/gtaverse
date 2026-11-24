@@ -4,7 +4,7 @@
 //   underline tabs: Details (PamPam labelled wells and Apple TV credit cards) and Sources (Zesty source chips).
 //   Phone: the Apple Maps place sheet with the clip at the top (MasterClass, owner answer 4B): grabber, share and
 //   close circles, centred title and subtitle, badge, three equal actions, the stat row, credits, about, sources.
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ClipPlayer } from './ClipPlayer';
 import { Button, Icon, Tabs, Verification } from './ui';
 import { accuracyLabels, cellOf, findUrl, formatDate, platformLabel, sourceIcon, type MapFind, type MapMeta } from './types';
@@ -14,12 +14,39 @@ type Common = {
   meta: MapMeta;
   onClose: () => void;
   onShowOnMap: () => void;
-  onCopy: () => void;
+  onCopy: () => Promise<boolean> | void;
   onShare: () => void;
   titleId: string;
   found: boolean; // found tracker (found.ts)
   onToggleFound: () => void;
 };
+
+/**
+ * Copy link (motion study item 11): the link icon turns away as a check arrives, holds for 1.6s, then turns back.
+ * The look lives in components.css (.copy), shared with the find page. A second press while it shows "Copied"
+ * copies again and keeps it there: nothing restarts. Readers hear "Link copied" once, from the live region.
+ */
+function CopyButton({ onCopy, label }: { onCopy: () => Promise<boolean> | void; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return (
+    <button type="button" className="btn btn--ghost btn--m btn--icon copy" aria-label={label} title={label} data-copied={copied || undefined}
+      onClick={async () => {
+        const ok = await onCopy();
+        if (ok === false) return;
+        setCopied(true);
+        clearTimeout(timer.current);
+        timer.current = window.setTimeout(() => setCopied(false), 1600);
+      }}>
+      <span className="copy__icons" aria-hidden="true">
+        <Icon name="link" size={20} className="copy__from" />
+        <Icon name="check" size={20} className="copy__to" />
+      </span>
+      <span className="sr-only" aria-live="polite">{copied ? 'Link copied' : ''}</span>
+    </button>
+  );
+}
 
 const hostOf = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 
@@ -86,7 +113,7 @@ export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleI
         <p className="drawer__summary">{find.summary}</p>
         <p className="drawer__tags"><Verification level={find.verification} /><span className="drawer__tagline">{find.categoryLabel} · {find.regionLabel}</span></p>
         <div className="drawer__actions">
-          <Button variant="ghost" size="m" icon="link" iconOnly label="Copy link to this find" onClick={onCopy} />
+          <CopyButton onCopy={onCopy} label="Copy link to this find" />
           <Button variant="ghost" size="m" icon="pin" iconOnly label={find.pin ? 'Show on the map' : 'No pin yet'} onClick={onShowOnMap} disabled={!find.pin} />
           <Button variant="ghost" size="m" icon="check" iconOnly label={found ? 'Found. Mark as not found' : 'Mark as found'} aria-pressed={found} onClick={onToggleFound} className="found-toggle" />
           <Button variant="ghost" size="m" icon="arrow-right" iconOnly label="Open the find page" href={findUrl(find.slug)} className="drawer__open" />

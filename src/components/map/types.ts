@@ -32,7 +32,7 @@ export type MapCollectible = { id: string; layer: string; number: number | null;
 /** A collectible layer: `count` items here, `marked` of `total` on the source map. */
 export type MapLayer = { id: string; label: string; count: number; marked: number; total: number; source: string };
 export type MapRegion = { id: string; name: string };
-export type MapMeta = { width: number; height: number; maxZoom: number; tileSize?: number; tileUrl: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
+export type MapMeta = { width: number; height: number; maxZoom: number; tileSize?: number; tileUrl: string; base?: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
 
 export type Filters = {
   categories: string[];

@@ -5,6 +5,7 @@
 //   public/map/tiles/{z}/{x}/{y}.webp  zoom 0 to maxZoom, maxZoom is full resolution
 //   public/map/meta.json               what the front end needs to load the tiles
 //   public/map/preview.jpg             1600 px wide preview for quick checks
+//   public/map/base.webp               480 px wide, blurred: the map's base under the tiles while they load
 //
 // Coordinate rule: at zoom z the image is scaled by 2^(z - maxZoom). Tile (x, y)
 // at zoom z covers scaled pixels [x*T, (x+1)*T) by [y*T, (y+1)*T) with T = 512, so
@@ -115,6 +116,9 @@ for (let z = 0; z <= maxZoom; z++) {
 const previewWidth = 1600;
 await sharp(full.data, { raw: fullRaw }).resize(previewWidth).jpeg({ quality: 80, mozjpeg: true }).toFile(join(outDir, 'preview.jpg'));
 
+// Base: the whole map, small and already blurred, shown under the tiles so the map never opens on an empty frame.
+await sharp(full.data, { raw: fullRaw }).resize(480).blur(3).webp({ quality: 70 }).toFile(join(outDir, 'base.webp'));
+
 const metaOut = {
   width: W,
   height: H,
@@ -124,6 +128,7 @@ const metaOut = {
   format: FORMAT,
   tileUrl: `tiles/{z}/{x}/{y}.${FORMAT}`,
   preview: { file: 'preview.jpg', width: previewWidth, height: Math.round((H * previewWidth) / W) },
+  base: { file: 'base.webp', width: 480, height: Math.round((H * 480) / W) },
   tileCount: count,
   totalBytes: bytes,
   perZoom,
@@ -138,4 +143,4 @@ if (count > CF_MAX_FILES || largest > CF_MAX_FILE_BYTES) {
   console.error('build-tiles: output breaks a Cloudflare static asset limit');
   process.exit(1);
 }
-console.log(`wrote   ${join(outDir, 'meta.json')} and preview.jpg`);
+console.log(`wrote   ${join(outDir, 'meta.json')}, preview.jpg and base.webp`);

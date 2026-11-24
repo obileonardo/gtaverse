@@ -14,4 +14,5 @@ const attrs = href ? { href, 'aria-current': selected ? 'page' : undefined } : {
   {icon && <Icon name={icon} size={touch ? 20 : 16} />}
   <span><slot /></span>
   {count !== undefined && <span class="chip__count tabular">{count}</span>}
+  {!href && <span class="chip__check" aria-hidden="true"><span><Icon name="check" size={touch ? 18 : 16} stroke={2} /></span></span>}
 </Tag>

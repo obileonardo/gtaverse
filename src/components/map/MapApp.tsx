@@ -11,6 +11,7 @@ import { Sheet, type SnapPoint } from './Sheet';
 import { DrawerContent, SheetContent } from './FindDetail';
 import { BasemapMenu, FilterMenu, LayerRows } from './Menus';
 import { Button, Chip, Icon, Tabs, Verification } from './ui';
+import { RollNumber, listFlip, usePresence } from './motion';
 import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
 import './map.css';
 
@@ -41,7 +42,7 @@ function Media({ find, size }: { find: MapFind; size: 'row' | 'card' | 'popup' }
 
 function Row({ find, selected, onOpen, onHover }: { find: MapFind; selected: boolean; onOpen: (f: MapFind, el: HTMLElement) => void; onHover: (slug: string | null) => void }) {
   return (
-    <li className="frow-item">
+    <li className="frow-item" data-key={find.slug}>
       <a
         className="frow"
         href={findUrl(find.slug)}
@@ -143,7 +144,8 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     return () => { mq.removeEventListener('change', on); removeEventListener('keydown', kd, true); removeEventListener('pointerdown', pd, true); };
   }, []);
 
-  const setFilters = (f: Filters) => { setFiltersState(f); saveFilters(f); };
+  const setFilters = (f: Filters) => { flip.capture(listRef.current); setFiltersState(f); saveFilters(f); };
+  const setSearchFlip = (q: string) => { flip.capture(listRef.current); setSearch(q); };
   const setViewSaved = (v: View) => { setView(v); writeJson(VIEW_STORE, v); };
   const setLayersOn = (ids: string[]) => {
     setViewSaved({ ...view, layers: ids });
@@ -159,9 +161,9 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   }, [view.layers.length]);
   const shownCollectibles = useMemo(() => collectibles.filter((c) => view.layers.includes(c.layer)), [collectibles, view.layers]);
   const pickedItem = picked ? collectibles.find((c) => c.id === picked) ?? null : null;
-  const pickedLayer = pickedItem ? layers.find((l) => l.id === pickedItem.layer) : undefined;
   const closePicked = () => { setPicked(null); const back = opener.current; if (back?.isConnected) back.focus({ preventScroll: true }); };
   const resetFilters = () => { setFilters(defaultFilters); setSearch(''); };
+  const toggleFoundFlip = (slug: string) => { if (filters.hideFound) flip.capture(listRef.current); toggleFound(slug); };
 
   const visible = useMemo(() => {
     const list = finds.filter((f) => passes(f, filters, search, null, found));
@@ -175,6 +177,18 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const lastFind = useRef<MapFind | null>(null);
   if (current) lastFind.current = current;
   const previewFind = preview ? finds.find((f) => f.slug === preview) ?? null : null;
+  // Exits (motion study item 7): each surface stays mounted while it leaves the way it came in, at 60 to 75% of
+  // its entrance (map.css: [data-state='closing']), and reverses from where it is if it is opened again.
+  const drawerP = usePresence(!phone ? current : null, 180);
+  const popupP = usePresence(!phone ? previewFind : null, 120);
+  const cpopupP = usePresence(!phone ? pickedItem : null, 120);
+  const cardP = usePresence(phone && previewFind && !selected ? previewFind : null, 180);
+  const ccardP = usePresence(phone && pickedItem && !selected ? pickedItem : null, 180);
+  const toastP = usePresence(toast, 260);
+  // Filters (motion study item 9): rows keep their place while the list changes.
+  const listRef = useRef<HTMLUListElement>(null);
+  const flip = useRef(listFlip()).current;
+  useLayoutEffect(() => { flip.play(listRef.current, keyboard.current); }, [visible]);
 
   const showToast = useCallback((t: NonNullable<Toast>, ms = 2600) => {
     clearTimeout(toastTimer.current);
@@ -236,11 +250,13 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     if (!phone) requestAnimationFrame(() => drawerRef.current?.focus({ preventScroll: true }));
   };
   const closeFind = () => {
-    setInstant(keyboard.current);
+    const keys = keyboard.current;
+    setInstant(keys);
     setSelected(null);
     setFindSnap('closed');
     const back = opener.current;
-    if (back && back.isConnected) requestAnimationFrame(() => back.focus({ preventScroll: true }));
+    // Focus goes back to the row after the drawer has left (at once from the keyboard, which never animates).
+    if (back && back.isConnected) window.setTimeout(() => requestAnimationFrame(() => back.focus({ preventScroll: true })), keys || phone ? 0 : 180);
   };
 
   // Escape: the open menu first (handled by the menu), then the find, then the preview.
@@ -274,10 +290,11 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     setPicked(id);
   };
 
-  const copyLink = async (f: MapFind) => {
+  // quiet: the copy button shows (and announces) "Copied" itself, so no toast.
+  const copyLink = async (f: MapFind, quiet = false) => {
     const url = `${location.origin}/map?find=${f.slug}`;
-    try { await navigator.clipboard.writeText(url); showToast({ id: Date.now(), icon: 'link', text: 'Link copied' }); }
-    catch { showToast({ id: Date.now(), icon: 'link', text: url }, 5000); }
+    try { await navigator.clipboard.writeText(url); if (!quiet) showToast({ id: Date.now(), icon: 'link', text: 'Link copied' }); return true; }
+    catch { showToast({ id: Date.now(), icon: 'link', text: url }, 5000); return false; }
   };
   const share = async (f: MapFind) => {
     const url = `${location.origin}/map?find=${f.slug}`;
@@ -309,8 +326,8 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const onFindSnap = (id: string) => { setFindSnap(id); if (id === 'closed') closeFind(); };
 
   // Desktop popup position at the pin (Airbnb), recomputed as the map moves.
-  const popupAt = !phone && previewFind ? mapApi()?.pointOf(previewFind) ?? null : null;
-  const cpopupAt = !phone && pickedItem ? mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null : null;
+  const popupAt = popupP.item ? mapApi()?.pointOf(popupP.item) ?? null : null;
+  const cpopupAt = cpopupP.item ? mapApi()?.pointAt(cpopupP.item.x, cpopupP.item.y) ?? null : null;
   useLayoutEffect(() => { placePopup(popupRef.current, popupAt, 320); placePopup(cpopupRef.current, cpopupAt, 220); });
   // Keep a popup on its pin while the map moves (2D or 3D): written straight to the element, no re-render per frame.
   const popupRef = useRef<HTMLDivElement>(null);
@@ -324,14 +341,14 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   };
   const onMove = () => {
     if (phone) return;
-    if (previewFind) placePopup(popupRef.current, mapApi()?.pointOf(previewFind) ?? null, 320);
-    if (pickedItem) placePopup(cpopupRef.current, mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null, 220);
+    if (popupP.item) placePopup(popupRef.current, mapApi()?.pointOf(popupP.item) ?? null, 320);
+    if (cpopupP.item) placePopup(cpopupRef.current, mapApi()?.pointAt(cpopupP.item.x, cpopupP.item.y) ?? null, 220);
   };
 
   const filterCount = activeFilterCount({ ...filters, categories: [] });
   const fitPadding = phone ? { top: 130, right: 16, bottom: 150, left: 16 } : { top: 72, right: 16, bottom: 16, left: 16 };
   const shown = lastFind.current;
-  const countText = `${visible.length} ${visible.length === 1 ? 'find' : 'finds'}`;
+  const countText = <><RollNumber value={visible.length} instant={keyboard.current} /> {visible.length === 1 ? 'find' : 'finds'}</>;
   const pinText = pinned.length ? `${pinned.length} on the map` : 'none pinned yet';
 
   const chipRow = (touch: boolean) => (
@@ -352,7 +369,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   );
 
   const list = (
-    <ul className="frows" role="list">
+    <ul className="frows" role="list" ref={listRef}>
       {visible.map((f) => <Row key={f.slug} find={f} selected={f.slug === selected} onOpen={openFind} onHover={setHovered} />)}
     </ul>
   );
@@ -396,7 +413,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
           <>
             <div className="map-list__handle" data-sheet-handle>
               <span className="grabber" aria-hidden="true" />
-              <p className="map-list__count" aria-live="polite"><span className="tabular">{countText}</span></p>
+              <p className="map-list__count" aria-live="polite">{countText}</p>
             </div>
             <div className="map-list__scroll">{visible.length ? list : empty}</div>
           </>
@@ -408,7 +425,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
                   {chipRow(false)}
                   <Button variant="quiet" size="s" icon="chevron-right" iconOnly label="More types" className="chips-more" onClick={() => { const c = chipsRef.current; if (!c) return; const end = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4; c.scrollTo({ left: end ? 0 : c.scrollLeft + 240, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }} />
                 </div>
-                <p className="map-list__summary caption" aria-live="polite"><span className="tabular">{countText}</span>, {pinText}</p>
+                <p className="map-list__summary caption" aria-live="polite">{countText}, {pinText}</p>
                 {visible.length ? list : empty}
               </>
             ) : legend}
@@ -447,66 +464,66 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
         </p>
 
         {/* Desktop: the open collectible's card at its pin */}
-        {pickedItem && cpopupAt && (
-          <div className="popup popup--c" ref={cpopupRef}>
-            <CollectibleCard item={pickedItem} layer={pickedLayer} onClose={closePicked} close="glass" />
+        {cpopupP.item && cpopupAt && (
+          <div className="popup popup--c" ref={cpopupRef} data-state={cpopupP.closing ? 'closing' : undefined} inert={cpopupP.closing}>
+            <CollectibleCard item={cpopupP.item} layer={layers.find((l) => l.id === cpopupP.item!.layer)} onClose={closePicked} close="glass" />
           </div>
         )}
 
         {/* Desktop: Airbnb popup anchored to the pin */}
-        {previewFind && popupAt && (
-          <div className="popup" ref={popupRef}>
-            <button type="button" className="popup__card" onClick={() => openFind(previewFind, opener.current)} aria-label={`Open ${previewFind.title}`}>
-              <Media find={previewFind} size="popup" />
+        {popupP.item && popupAt && (() => { const pf = popupP.item; return (
+          <div className="popup" ref={popupRef} data-state={popupP.closing ? 'closing' : undefined} inert={popupP.closing}>
+            <button type="button" className="popup__card" onClick={() => openFind(pf, opener.current)} aria-label={`Open ${pf.title}`}>
+              <Media find={pf} size="popup" />
               <span className="popup__text">
-                <span className="popup__title">{previewFind.title}</span>
-                <span className="popup__line">{previewFind.categoryLabel} · {previewFind.regionLabel}</span>
-                <span className="popup__line"><b>{previewFind.verification === 'multi-source' ? 'Multi-source' : previewFind.verification === 'single-source' ? 'Single source' : previewFind.verification}</b> · {previewFind.sources.length} sources</span>
+                <span className="popup__title">{pf.title}</span>
+                <span className="popup__line">{pf.categoryLabel} · {pf.regionLabel}</span>
+                <span className="popup__line"><b>{pf.verification === 'multi-source' ? 'Multi-source' : pf.verification === 'single-source' ? 'Single source' : pf.verification}</b> · {pf.sources.length} sources</span>
               </span>
             </button>
             <Button variant="glass" size="s" icon="close" iconOnly label="Close" className="popup__close" onClick={() => { setPreview(null); opener.current?.focus({ preventScroll: true }); }} />
           </div>
-        )}
+        ); })()}
 
         {/* Desktop: Felt inspector */}
-        {!phone && current && (
-          <article ref={drawerRef} className="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" tabIndex={-1} data-instant={instant || undefined}>
-            <div className="drawer__content" key={current.slug}>
-              <DrawerContent find={current} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(current)} onCopy={() => copyLink(current)} onShare={() => share(current)} found={found.has(current.slug)} onToggleFound={() => toggleFound(current.slug)} />
+        {drawerP.item && (() => { const df = drawerP.item; return (
+          <article ref={drawerRef} className="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" tabIndex={-1} data-instant={instant || undefined} data-state={drawerP.closing ? 'closing' : undefined} inert={drawerP.closing}>
+            <div className="drawer__content" key={df.slug}>
+              <DrawerContent find={df} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(df)} onCopy={() => copyLink(df, true)} onShare={() => share(df)} found={found.has(df.slug)} onToggleFound={() => toggleFoundFlip(df.slug)} />
             </div>
           </article>
-        )}
+        ); })()}
 
-        {toast && (
-          <div className="toast" role="status" key={toast.id}>
-            <Icon name={toast.icon} size={22} />
-            <span className="toast__text">{toast.text}</span>
-            <button type="button" className="toast__close" aria-label="Dismiss" onClick={dismissToast}><Icon name="close" size={18} /></button>
+        {toastP.item && (
+          <div className="toast" role="status" key={toastP.item.id} data-state={toastP.closing ? 'closing' : undefined}>
+            <Icon name={toastP.item.icon} size={22} />
+            <span className="toast__text">{toastP.item.text}</span>
+            <button type="button" className="toast__close" aria-label="Dismiss" onClick={dismissToast} tabIndex={toastP.closing ? -1 : undefined}><Icon name="close" size={18} /></button>
           </div>
         )}
       </div>
 
       {/* Phone: the open collectible's card, in the Strava card's place */}
-      {phone && pickedItem && !selected && (
-        <div className="pcard pcard--c">
-          <CollectibleCard item={pickedItem} layer={pickedLayer} onClose={closePicked} close="quiet" />
+      {ccardP.item && (
+        <div className="pcard pcard--c" data-state={ccardP.closing ? 'closing' : undefined} inert={ccardP.closing}>
+          <CollectibleCard item={ccardP.item} layer={layers.find((l) => l.id === ccardP.item!.layer)} onClose={closePicked} close="quiet" />
         </div>
       )}
 
       {/* Phone: Strava selected card, Rodeo chips, toggle and search */}
-      {phone && previewFind && !selected && (
-        <div className="pcard">
-          <button type="button" className="pcard__open" onClick={() => openFind(previewFind, opener.current)} aria-label={`Open ${previewFind.title}`}>
-            <Media find={previewFind} size="card" />
+      {cardP.item && (() => { const cf = cardP.item; return (
+        <div className="pcard" data-state={cardP.closing ? 'closing' : undefined} inert={cardP.closing}>
+          <button type="button" className="pcard__open" onClick={() => openFind(cf, opener.current)} aria-label={`Open ${cf.title}`}>
+            <Media find={cf} size="card" />
             <span className="pcard__text">
-              <span className="pcard__title">{previewFind.title}</span>
-              <span className="pcard__meta"><Icon name={previewFind.icon} size={20} /><Verification level={previewFind.verification} /></span>
-              <span className="pcard__place"><Icon name="pin" size={20} />{previewFind.regionLabel}</span>
+              <span className="pcard__title">{cf.title}</span>
+              <span className="pcard__meta"><Icon name={cf.icon} size={20} /><Verification level={cf.verification} /></span>
+              <span className="pcard__place"><Icon name="pin" size={20} />{cf.regionLabel}</span>
             </span>
           </button>
           <Button variant="quiet" size="s" icon="close" iconOnly label="Close" className="pcard__close" onClick={() => setPreview(null)} />
         </div>
-      )}
+      ); })()}
 
       <div className="map-bottom">
         {chipRow(true)}
@@ -518,15 +535,15 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
           <label className="map-search">
             <Icon name="search" size={22} />
             <span className="sr-only">Search finds</span>
-            <input ref={searchRef} type="search" placeholder="Search" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearch(e.target.value)} />
-            {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearch(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
+            <input ref={searchRef} type="search" placeholder="Search" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
+            {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
           </label>
         </div>
       </div>
 
       {/* Phone: Apple Maps sheet, clip at the top */}
       <Sheet snaps={findSnaps} snap={phone ? findSnap : 'closed'} onSnap={onFindSnap} closedId="closed" enabled={phone} inert={!phone || !selected} className="fsheet" label={shown ? shown.title : 'Find'} role="dialog">
-        {phone && shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} found={found.has(shown.slug)} onToggleFound={() => toggleFound(shown.slug)} />}
+        {phone && shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} found={found.has(shown.slug)} onToggleFound={() => toggleFoundFlip(shown.slug)} />}
       </Sheet>
     </section>
   );
