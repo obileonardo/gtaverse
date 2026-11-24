@@ -65,7 +65,7 @@ Also:
 - **No game logo files.** They live in `public/media/logos/`, fetched at build from the official URLs in `content/games.json` (decision GS2).
 - **No secrets** (`.env` files are ignored).
 
-CI fails any pull request that adds an image, font, video, audio or archive file. If a change genuinely needs an original asset (for example a favicon drawn for the project), say so in the issue first; the maintainers decide and add it to the allowlist in `.github/workflows/ci.yml`.
+CI fails any pull request that adds an image, font, video, audio or archive file. If a change genuinely needs an original asset (for example a favicon drawn for the project), say so in the issue first; the maintainers decide and add it to the allowlist in `.github/workflows/ci.yml`, by exact path. Today the allowlist holds only the four favicon images of our logo (decision LG6); they are drawn by `pnpm brand:icons` from `src/brand/logo.ts`, so change the logo code and rerun it rather than editing them.
 
 ## Licence of your contribution
 

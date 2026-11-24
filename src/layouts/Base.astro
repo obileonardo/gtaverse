@@ -38,6 +38,11 @@ const ldJson = (o: object) => JSON.stringify(o).replace(/</g, '\\u003c');
     <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#0d0c1a" />
     <title>{fullTitle}</title>
+    <!-- Favicons: the Case File mark (LG5, LG6), drawn by pnpm brand:icons from src/brand/logo.ts. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="description" content={description} />
     {!noindex && <link rel="canonical" href={canonical} />}
     <link rel="alternate" type="application/rss+xml" title={`New finds | ${site.name}`} href="/rss.xml" />

@@ -1,6 +1,6 @@
 // Open Graph cards: one 1200 x 630 PNG per page, text only, drawn at build time in our type and colours.
 // No Rockstar art and no YouTube thumbnails, ever: the card is the night navy ground, the sunrise glow, the
-// page's kicker, title and one meta line, and the wordmark.
+// page's kicker, title and one meta line, and the logo (Case File, decision LG5).
 // Type: Big Shoulders (Display cut, opsz 72, weight 900) and Inter, the site's own faces (SIL Open Font License).
 // They are fetched once from Google Fonts as static TrueType instances (satori cannot read WOFF2) and cached in
 // node_modules/.cache, the same way Astro fetches the site's fonts at build time. Nothing is committed.
@@ -9,6 +9,7 @@ import sharp from 'sharp';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { site } from './site';
+import { BRAND, lockupSvg } from '../brand/logo';
 
 const FONTS = [
   { name: 'Big Shoulders', weight: 900 as const, css: 'https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@72,900' },
@@ -38,8 +39,15 @@ const fonts = () => (fontsPromise ??= Promise.all(FONTS.map(async (f) => ({ name
 // Colours: the dark tokens in src/styles/tokens.css.
 const C = { bg: '#0D0C1A', text1: 'rgba(255,255,255,0.92)', text2: 'rgba(255,255,255,0.64)', text3: 'rgba(255,255,255,0.5)', accent: '#F976B0', border: '#38365D' };
 
-type Node = { type: string; props: { style?: Record<string, unknown>; children?: Node | string | (Node | string)[] } };
+type Node = { type: string; props: { style?: Record<string, unknown>; children?: Node | string | (Node | string)[]; [attr: string]: unknown } };
 const el = (type: string, style: Record<string, unknown>, children?: Node['props']['children']): Node => ({ type, props: { style, children } });
+
+// The logo (Case File, LG5): Chime's one-line lockup with a 36 px folder (caps about 32 px), pink folder, navy VF and
+// a white wordmark on the navy card. Drawn from the logo code as an SVG image, so it is exact and needs no font.
+const LOGO_H = 36;
+const logo = lockupSvg({ height: LOGO_H, small: false, colours: { folder: BRAND.pink, cut: BRAND.navy, word: '#FFFFFF' } });
+const logoW = Number(logo.match(/width="([\d.]+)"/)![1]);
+const logoImg: Node = { type: 'img', props: { src: `data:image/svg+xml;base64,${Buffer.from(logo).toString('base64')}`, width: logoW, height: LOGO_H, alt: site.name, style: { display: 'flex' } } };
 
 /** Display size that keeps a title to five lines or fewer in the 1056px column (checked with a 150 character title). */
 const titleSize = (t: string) => (t.length <= 24 ? 128 : t.length <= 44 ? 104 : t.length <= 70 ? 84 : t.length <= 110 ? 68 : 56);
@@ -65,7 +73,7 @@ export async function ogCard({ kicker, title, meta }: { kicker: string; title: s
         ...(meta ? [el('div', { display: 'flex', fontSize: 30, fontWeight: 500, color: C.text2 }, meta)] : []),
       ]),
       el('div', { display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 24, borderTop: `1px solid ${C.border}` }, [
-        el('div', { display: 'flex', fontFamily: 'Big Shoulders', fontWeight: 900, fontSize: 40, letterSpacing: 1, textTransform: 'uppercase', color: C.text1 }, site.name),
+        logoImg,
         el('div', { display: 'flex', fontSize: 24, fontWeight: 500, color: C.text3 }, new URL(site.url).host),
       ]),
     ],

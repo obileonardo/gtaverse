@@ -65,7 +65,7 @@ Project docs:
 | [docs/CONTENT-GUIDE.md](docs/CONTENT-GUIDE.md) | How to add a find or fix content |
 | [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) | Design tokens and components |
 | [docs/MAP.md](docs/MAP.md) | The map pipeline, coordinates and pins |
-| [docs/LOGO.md](docs/LOGO.md) | The logo directions in Figma and how the chosen one lands in the site |
+| [docs/LOGO.md](docs/LOGO.md) | The logo (Case File, by Chime): where it lives in code, its rules, the favicons, and the seven directions it was chosen from |
 | [docs/LEGAL.md](docs/LEGAL.md) | Legal position, footer disclaimer and takedown process |
 
 ## Contributing

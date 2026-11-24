@@ -1,6 +1,30 @@
-# Logo directions
+# Logo
 
-By Chime, 24 Nov 2026. **Seven directions, none chosen yet.** Elvis and I pick one (or two to refine) before anything goes into the site.
+**Chosen: Case File, designed by Chime.** Elvis picked direction 1 on 24 Nov 2026 (decision LG5) and it is implemented from Chime's exported SVGs; Chime may polish it later. A folder with "VF" cut in it, beside THE VICE FILES in Big Shoulders Black caps. Every find is a file: sourced, credited, filed.
+
+## The logo in the site
+
+| Where | What |
+|---|---|
+| `src/brand/logo.ts` | The drawing: Chime's own outlines (no live text), taken once from the Figma export, moved to the origin and rounded to 0.01. `MARK` (logo panel), `MARK_SMALL` (mark sheet, 32 px and under), `WORDMARK` (one line, from the board's signature lockup), `WORDMARK_STACKED` (logo panel). Renderers: `lockupSvg()`, `stackedSvg()`, `markSvg()`, `faviconSvg()`, `appIconSvg()`. No imports, so Node, Astro and satori all use it. |
+| `src/components/ui/Logo.astro` | The component: `variant` `lockup` (default), `stacked` or `mark`; `height` in px; `tone` `site` or `on-pink`; `label` only when it is not inside a labelled link. |
+| Header island | The one-line lockup, 18 px folder, 16 px caps, in the link "The Vice Files, home" (desktop, phone and with the menu open). |
+| Open Graph cards | The one-line lockup, 36 px folder, white wordmark, bottom left (`src/lib/og.ts`). |
+| Favicons | `public/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` (180), `icon-512.png`, `site.webmanifest`, drawn by `pnpm brand:icons` (`scripts/brand/build-favicons.mjs`) and allowed by exact path in the CI asset guard (LG6). `pnpm test` fails if they drift from the logo code. |
+| `/design`, Logo | Lockups, mark sizes, clear space, colours, favicons, do and don't, all rendered from the code. |
+
+Rules:
+- **Colours** are tokens only: the folder `--accent` (pink `#F976B0`), the VF `--on-accent` (navy `#0D0C1A`), the same in both themes, as on Chime's mark sheet; the wordmark takes the text colour. On a pink ground use `tone="on-pink"` (navy folder, pink VF, navy wordmark), as on Chime's logo panel. Blush is not approved (LG4).
+- **Clear space**: half the folder's height on every side.
+- **Minimum sizes**: the one-line lockup 13.5 px tall (12 px caps); the mark an 11 px folder (the 16 px favicon). At 32 px and under the mark uses Chime's small drawing.
+- **Never** retype the wordmark as live text, stretch, outline, add effects, recolour outside the tokens, or set the logo beside a Rockstar or game mark as one lockup.
+- **To update** after Chime polishes it: replace the four path constants in `src/brand/logo.ts` from the new export, run `pnpm brand:icons`, commit `public/`.
+
+What differs from Chime's files (decisions LG7 to LG10): the header uses the board's one-line signature lockup with the VF mark in place of its plain folder; the site colourway is the mark sheet's (pink folder, navy VF) rather than the logo panel's navy folder, which would vanish on the navy island; the 16 px favicon is the 32 px drawing scaled; the touch and manifest icons are composed after Chime's app icon panel.
+
+## The seven directions (history)
+
+By Chime, 24 Nov 2026. Seven directions were shortlisted; Case File was chosen.
 
 ## Where to look
 
@@ -50,10 +74,10 @@ I reviewed the directions in rounds on 24 Nov 2026 and kept only the ones I like
 4. Two more. Kept: Marked. Dropped: Clipped (paperclip), as too generic. Unfolded replaced it.
 5. Three extras to challenge Unfolded. Kept: Postcard, Cracked. Dropped: Route (a one-line VF monogram).
 
-## What happens after the pick
+## After the pick
 
-1. **Choose.** Elvis, reply on the pull request or tell me: one direction, or two to refine.
-2. **Refine in Figma:** spacing, the mark at 16, 32 and 180 px, a one-colour version, light and dark grounds.
-3. **Land it in the site.** The CI asset guard blocks committed `.svg` files, so the logo ships the way the icons do (decision IC3): as SVG markup in code. It replaces the text wordmark in the header island and the text in the Open Graph cards (decision SF2).
-4. **Favicon.** A favicon file is a binary asset, so it needs Elvis's OK and an entry in the asset guard allowlist in `.github/workflows/ci.yml` (CONTRIBUTING.md, "Files that must never be committed").
-5. Record the choice in `docs/DECISIONS.md` and update `docs/DESIGN-SYSTEM.md`.
+1. **Chosen:** Case File (LG5).
+2. **Refine in Figma:** open. Chime may polish spacing, the small sizes and a one-colour version; the site takes the new paths when they come.
+3. **Landed in the site:** done, as SVG markup in code (IC3), in the header island and the Open Graph cards (SF2).
+4. **Favicon:** done, with the owner's OK and exact-path allowlist entries (LG6).
+5. Recorded in `docs/DECISIONS.md` (LG5 to LG10) and `docs/DESIGN-SYSTEM.md`.

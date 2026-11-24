@@ -1,5 +1,6 @@
 // Checks the built site (dist/) for the launch SEO rules. Run after pnpm build: pnpm seo:check
-// - every page: one canonical (except the 404), one og:title, og:image pointing at a card that exists, a Twitter card
+// - every page: one canonical (except the 404), one og:title, og:image pointing at a card that exists, a Twitter card,
+//   and the favicon, touch icon and manifest links, each pointing at a file that was built
 // - the robots meta, the X-Robots-Tag header and robots.txt all match the switch (site.indexable in src/lib/site.ts)
 // - JSON-LD parses, uses schema.org, and each type carries the properties we rely on
 // - sitemap.xml lists exactly the pages that were built (less the 404, the PRD and the /design review pages)
@@ -35,7 +36,7 @@ const all = (html, re) => [...html.matchAll(re)].map((m) => m[1]);
 // Properties each JSON-LD type must carry (what search engines need and what we promise).
 const REQUIRED = {
   WebSite: ['name', 'url', 'potentialAction'],
-  Organization: ['name', 'url', 'publishingPrinciples', 'correctionsPolicy'],
+  Organization: ['name', 'url', 'logo', 'publishingPrinciples', 'correctionsPolicy'],
   BreadcrumbList: ['itemListElement'],
   ItemPage: ['name', 'url', 'description', 'isPartOf', 'citation'],
   Article: ['headline', 'url', 'author', 'publisher', 'dateModified', 'image'],
@@ -74,6 +75,13 @@ for (const file of pages) {
     else if (!is404 && !ogImage[0].endsWith(path === '/' ? '/og/index.png' : `/og${path}.png`)) fail(where, `og:image ${ogImage[0]} is not this page's own card`);
   }
   if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) fail(where, 'missing twitter:card');
+
+  // Favicons (LG6): each page links the SVG favicon, the PNG fallback, the touch icon and the manifest, and each exists.
+  for (const rel of ['icon', 'apple-touch-icon', 'manifest']) {
+    const hrefs = all(html, new RegExp(`<link rel="${rel}" href="([^"]*)"`, 'g'));
+    if (!hrefs.length) fail(where, `missing <link rel="${rel}">`);
+    for (const h of hrefs) if (!existsSync(join(dist, h))) fail(where, `${rel} ${h} is not in dist`);
+  }
   if (/i\.ytimg\.com|rockstargames\.com/.test(ogImage[0] ?? '')) fail(where, 'og:image must be our own card');
 
   for (const raw of all(html, /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {

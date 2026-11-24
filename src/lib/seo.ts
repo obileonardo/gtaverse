@@ -17,6 +17,7 @@ export const organization = (): Json => ({
   '@id': ORG_ID,
   name: site.name,
   url: absolute('/'),
+  logo: absolute('/icon-512.png'),
   description: site.description,
   email: site.takedownEmail,
   sameAs: [site.repo],
