@@ -65,7 +65,8 @@ const meta: MapMeta = {
   height: mapJson.image.height,
   maxZoom: 5,
   tileSize: mapJson.tiles.tile_size, // 512: see docs/MAP.md, "Sharpness"
-  tileUrl: '/map/tiles/{z}/{x}/{y}.webp',
+  // Versioned by tile size: tiles are cached for a week, so a format change must change the URL.
+  tileUrl: `/map/tiles/{z}/{x}/{y}.webp?v=${mapJson.tiles.tile_size}`,
   attribution: 'Map © Rockstar Games',
   frame: mapJson.grid.frame,
   rows: mapJson.grid.rows,
