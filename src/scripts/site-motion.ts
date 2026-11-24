@@ -77,8 +77,20 @@ function initGameDirection() {
   });
 }
 
+/**
+ * Item 1: the island is its own layer in a page transition. It is named only for the transition (see Header.astro):
+ * here as the old page is captured, and cleared again if the page comes back from the back-forward cache.
+ */
+function initIslandLayer() {
+  const island = document.querySelector<HTMLElement>('.island');
+  if (!island) return;
+  addEventListener('pageswap', (e) => { if ((e as Event & { viewTransition?: unknown }).viewTransition) island.style.viewTransitionName = 'island'; });
+  addEventListener('pageshow', () => { island.style.viewTransitionName = ''; });
+}
+
 export function initSiteMotion() {
   document.documentElement.classList.add('motion');
+  initIslandLayer();
   initReveal();
   initGameDirection();
 }

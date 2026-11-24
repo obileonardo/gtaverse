@@ -60,9 +60,9 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
                     const n = connectionCount(g.id);
                     return (
                       <li>
-                        <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} data-game-row>
+                        <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} title={g.name} data-game-row>
                           <GamePlate game={g} size="rail" class="games__plate" />
-                          <span class="games__name">{g.short_name}<sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
+                          <span class="games__name"><span class="games__label">{g.short_name}</span><sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
                         </a>
                       </li>
                     );
@@ -407,10 +407,12 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
     border: var(--border-w) solid var(--glass-border);
     border-radius: var(--radius-xs);
     isolation: isolate;
-    /* Its own layer in page transitions: the same pixels on both pages, so the island never redraws. */
-    view-transition-name: island;
   }
-  :global(html.vt-theme) .island { view-transition-name: none; } /* the theme circle reveals the island too */
+  /* Its own layer in page transitions, so it never redraws. Named only while a transition runs (the old page names
+     it in pageswap, site-motion.ts): a named element is a backdrop root, and a permanent name would stop the island
+     and its menu from blurring the page behind them. The theme circle reveals the island with everything else. */
+  :global(html:active-view-transition) .island { view-transition-name: island; }
+  :global(html.vt-theme) .island { view-transition-name: none; }
   .island::before {
     content: '';
     position: absolute;
@@ -561,7 +563,7 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
   }
   .games__scroll { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; }
   .games__group { display: grid; grid-template-columns: 84px minmax(0, 1fr); }
-  .games__glabel { padding: 11px 8px 0 10px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
+  .games__glabel { hyphens: auto; -webkit-hyphens: auto; padding: 11px 4px 0 10px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
   .games__list { display: flex; flex-direction: column; gap: 4px; }
   .games__row {
     display: flex;
@@ -575,8 +577,10 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .games__row.is-current { background: var(--glass-hover); }
-  .games__name { min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; } /* sideways only: the count's superscript stays whole */
-  .games__count { margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); vertical-align: super; line-height: 0; }
+  .games__name { display: flex; align-items: baseline; min-width: 0; }
+  /* A long name truncates on its own; the count beside it always stays. The ellipsis clips sideways only. */
+  .games__label { min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .games__count { flex: none; position: relative; top: -0.5em; margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); line-height: 1; }
   .games__tm { padding: 6px 10px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
   @media (hover: hover) and (pointer: fine) {
     .games__row:not(.is-current):hover, .games__all:hover { background: var(--glass-hover-soft); }
