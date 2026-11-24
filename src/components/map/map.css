@@ -211,49 +211,9 @@
 :where(.vf-map) .cluster:focus-visible .cluster__pop { opacity: 1; scale: 1; transition-duration: var(--dur-popover-in); }
 @media (hover: hover) and (pointer: fine) { :where(.vf-map) .cluster:hover .cluster__pop { opacity: 1; scale: 1; transition-duration: var(--dur-popover-in); } }
 
-/* Collectible pins: the coral collectible blip at 20 on its pointer (28 selected), under the find pins. Zoomed in
-   (data-cnum), the checklist number shows in a mono tag beside it. Items sharing one spot sit on a small ring. */
-:where(.vf-map) .cpin {
-  --s: 20;
-  --tip: calc(var(--s) * 0.5175px + 15px);
-  position: absolute;
-  left: -15px;
-  top: calc(var(--tip) * -1);
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transform-origin: 15px var(--tip);
-  transition: scale var(--dur-press) var(--ease-out);
-}
-:where(.vf-map) .cpin.is-selected { --s: 28; }
-:where(.vf-map) .cpin:active { scale: 0.94; }
-:where(.vf-map) .cpin:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 0; }
-:where(.vf-map) .cpin__plate { position: absolute; left: calc(15px - var(--s) * 0.5px); top: calc(15px - var(--s) * 0.4425px); line-height: 0; }
-:where(.vf-map) .cpin__n {
-  display: none;
-  position: absolute;
-  top: 50%;
-  left: calc(15px + var(--s) * 0.3875px + 3px);
-  padding: 2px 5px;
-  border-radius: var(--radius-xs);
-  background: var(--inverse-fill);
-  border: var(--border-w) solid var(--bg);
-  color: var(--inverse-text);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 14px;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-:where(.vf-map) .map-canvas[data-cnum='true'] .cpin__n { display: block; }
-
-:where(.vf-map) .cpin--ring { --r: calc(6px + var(--ring) * 2.5px); translate: calc(cos(var(--a)) * var(--r)) calc(sin(var(--a)) * var(--r)); }
-:where(.vf-map) .map-canvas[data-cnum='true'] .cpin--ring { --r: calc(14px + var(--ring) * 5px); }
+/* Collectible pins: drawn on one canvas (blipCanvas.ts), which follows the map's zoom with one transform. */
+:where(.vf-map) .vf-ccanvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+:where(.vf-map) .map-canvas.is-pointing { cursor: pointer; }
 
 /* ---------- Left panel: Felt's Legend | List, headed by Jeff christy C12's HUD ---------- */
 :where(.vf-map) .mpanel {
@@ -839,7 +799,6 @@
   :where(.vf-map) .pcard { position: absolute; left: var(--map-inset); right: var(--map-inset); bottom: calc(var(--bottom-gap) + 68px); z-index: 36; border-radius: var(--radius-l); background: var(--glass-fill-strong); border: var(--border-w) solid var(--glass-border); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: opacity var(--dur-peek-in) var(--ease-out), transform var(--dur-peek-in) var(--ease-out); }
   @starting-style { :where(.vf-map) .pcard { opacity: 0; transform: translateY(12px); } }
   :where(.vf-map) .pcard[data-state='closing'] { opacity: 0; transform: translateY(12px); pointer-events: none; transition-duration: var(--dur-peek-out); transition-timing-function: var(--ease-standard); }
-  :where(.vf-map) .cpin::before { content: ''; position: absolute; inset: -7px; } /* a 44 px target */
 
   /* Tide Guide's menus as measured: a little narrower than the screen, rows 44 */
   :where(.vf-map) .popover { width: min(300px, calc(100vw - 32px)); max-height: calc(100dvh - var(--my) - 24px); }

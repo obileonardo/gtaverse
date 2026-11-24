@@ -6,6 +6,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { blipSvg, glyphOf } from './blip';
+import { createBlipCanvas } from './blipCanvas';
 import type { MapCollectible, MapFind, MapMeta } from './types';
 
 type Padding = { top: number; right: number; bottom: number; left: number };
@@ -102,7 +103,9 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const links = useRef<Leaflet.LayerGroup | null>(null);
   const markers = useRef(new Map<string, Leaflet.Marker>()); // single find pins by slug, rebuilt with every draw
   const inCluster = useRef(new Map<string, Leaflet.LatLng>()); // slug -> its cluster's point, from the last draw
-  const cpins = useRef<Leaflet.LayerGroup | null>(null);
+  const ccanvas = useRef<ReturnType<typeof createBlipCanvas> | null>(null); // the collectible canvas layer
+  const lastSig = useRef(''); // the grouping on screen (draw)
+  const clusters = useRef(new Map<string, { members: { f: MapFind; p: Leaflet.Point }[] }[]>()); // per zoom, cached
   const live = useRef(props);
   live.current = props;
 
@@ -215,21 +218,23 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       m.getContainer().setAttribute('aria-label', 'Map of Leonida. Use the arrow keys to move and plus or minus to zoom.');
       grid.current = lib.layerGroup().addTo(m); // under everything else
       links.current = lib.layerGroup().addTo(m);
-      // Collectibles: their own pane under the find pins (600). Up to 892 markers, each of which Leaflet would move
-      // on every frame of a zoom flight, so the group steps off the map while a zoom is in flight and is back the
-      // moment it lands (measured: docs/MAP.md, "Performance"). Panning keeps them: a pan moves the pane only.
-      m.createPane('vf-cpane').style.zIndex = '590';
-      cpins.current = lib.layerGroup().addTo(m);
-      m.on('zoomstart', () => { if (live.current.collectibles.length > 150) cpins.current?.remove(); });
-      m.on('zoomend', () => { if (cpins.current && !m.hasLayer(cpins.current)) cpins.current.addTo(m); });
+      // Collectibles: one canvas in their own pane under the find pins (600); see blipCanvas.ts.
+      const cpane = m.createPane('vf-cpane');
+      cpane.style.zIndex = '590';
+      cpane.style.pointerEvents = 'none';
+      ccanvas.current = createBlipCanvas(lib, { maxZoom: meta.maxZoom, numbersFrom: meta.maxZoom - 1.5, onPick: (id) => { if (box.current) live.current.onCollectible(id, box.current); } });
+      ccanvas.current.layer.addTo(m);
+      (box.current as HTMLDivElement & { __vfc?: unknown }).__vfc = ccanvas.current; // read by the verification scripts
       pins.current = lib.layerGroup().addTo(m);
-      m.on('zoomend', () => { draw(true); numbers(); gridLabels(); });
+      // Zoom end: the collectible canvas redraws in this frame (its own moveend); the find pins follow in the next one,
+      // and only if the grouping changed, so no single frame carries all of it.
+      let next = 0;
+      m.on('zoomend', () => { gridLabels(); cancelAnimationFrame(next); next = requestAnimationFrame(() => draw(true)); });
       m.on('moveend', () => { placeTags(); });
       m.on('move zoom', () => live.current.onMove());
       drawGrid();
       draw(false);
       drawCollectibles();
-      numbers();
       gridLabels();
       live.current.onReady();
     })();
@@ -273,22 +278,33 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     const lib = L.current, m = map.current, layer = pins.current;
     if (!lib || !m || !layer) return;
     const { finds, selected, hovered, found, meta } = live.current;
-    layer.clearLayers();
-    markers.current.clear();
     const before = inCluster.current;
     const now = new Map<string, Leaflet.LatLng>();
     const zoom = m.getZoom();
     const radius = zoom >= m.getMaxZoom() - 0.5 ? 0 : 64;
-    const pts = finds.filter((f) => f.pin).map((f) => ({ f, p: m.project(toLatLng(f.pin!.x, f.pin!.y), zoom) }));
-    const used = new Set<number>();
-    const groups: { members: typeof pts }[] = [];
-    pts.forEach((a, i) => {
-      if (used.has(i)) return;
-      used.add(i);
-      const members = [a];
-      if (a.f.slug !== selected) pts.forEach((b, j) => { if (!used.has(j) && b.f.slug !== selected && a.p.distanceTo(b.p) <= radius) { used.add(j); members.push(b); } });
-      groups.push({ members });
-    });
+    // Grouped once per zoom level and cached until the pins or the selection change (useEffect below clears it).
+    const cacheKey = `${zoom}|${selected ?? ''}`;
+    let groups = clusters.current.get(cacheKey);
+    if (!groups) {
+      const pts = finds.filter((f) => f.pin).map((f) => ({ f, p: m.project(toLatLng(f.pin!.x, f.pin!.y), zoom) }));
+      const used = new Set<number>();
+      groups = [];
+      pts.forEach((a, i) => {
+        if (used.has(i)) return;
+        used.add(i);
+        const members = [a];
+        if (a.f.slug !== selected) pts.forEach((b, j) => { if (!used.has(j) && b.f.slug !== selected && a.p.distanceTo(b.p) <= radius) { used.add(j); members.push(b); } });
+        groups!.push({ members });
+      });
+      clusters.current.set(cacheKey, groups);
+    }
+    // Same groups as on screen (a zoom that split or merged nothing, same selection and found set): keep the markers;
+    // Leaflet has already moved them. Only the tags need placing.
+    const sig = `${selected ?? ''}|${hovered ?? ''}|${found.size}|${groups.map((g) => g.members.map((x) => x.f.slug).join(',')).join(';')}`;
+    if (animate && sig === lastSig.current) { placeTags(); return; }
+    lastSig.current = sig;
+    layer.clearLayers();
+    markers.current.clear();
     // Finds on the very same spot fan out on a small ring at the deepest zoom, so each can be picked.
     const spots = new Map<string, number>();
     const move = !reduced() && animate;
@@ -359,35 +375,9 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     }
   };
 
-  // Collectible pins: the coral collectible blip at 20 on its pointer, one per item, never grouped. Zoomed in
-  // (data-cnum), the checklist number shows in a mono tag beside it. Items sharing one spot sit on a small ring.
-  const drawCollectibles = () => {
-    const lib = L.current, m = map.current, layer = cpins.current;
-    if (!lib || !m || !layer) return;
-    const { collectibles, selectedCollectible } = live.current;
-    layer.clearLayers();
-    const spots = new Map<string, MapCollectible[]>();
-    for (const c of collectibles) { const k = `${c.x},${c.y}`; spots.set(k, [...(spots.get(k) ?? []), c]); }
-    const blips = new Map<string, string>(); // one markup per layer and state, reused for every item
-    const markup = (layerId: string, sel: boolean) => {
-      const k = `${layerId}|${sel}`;
-      if (!blips.has(k)) blips.set(k, blipSvg(glyphOf(layerId), { form: 'pin', size: sel ? 28 : 20, state: sel ? 'selected' : 'default', uid: `c-${layerId}-${sel ? 's' : 'r'}` }));
-      return blips.get(k)!;
-    };
-    for (const c of collectibles) {
-      const sel = c.id === selectedCollectible;
-      const same = spots.get(`${c.x},${c.y}`)!;
-      const ring = same.length > 1 ? ` style="--a:${((360 * same.indexOf(c)) / same.length).toFixed(1)}deg;--ring:${same.length}"` : '';
-      const html = `<button type="button" class="cpin${sel ? ' is-selected' : ''}${ring ? ' cpin--ring' : ''}"${ring} aria-label="${esc(c.label)}${c.number !== null ? `, number ${c.number}` : ''}" data-cid="${esc(c.id)}"><span class="cpin__plate">${markup(c.layer, sel)}</span><span class="cpin__n tabular" aria-hidden="true">${c.number ?? '?'}</span></button>`;
-      const mk = lib.marker(toLatLng(c.x, c.y), { icon: lib.divIcon({ className: 'map-marker', html, iconSize: [0, 0] }), keyboard: false, pane: 'vf-cpane', zIndexOffset: sel ? 900 : 0 });
-      mk.on('click', () => { const el = mk.getElement()?.querySelector<HTMLElement>('.cpin'); if (el) live.current.onCollectible(c.id, el); });
-      layer.addLayer(mk);
-    }
-  };
-  const numbers = () => {
-    const m = map.current;
-    if (m && box.current) box.current.dataset.cnum = String(m.getZoom() >= live.current.meta.maxZoom - 1.5);
-  };
+  // Collectible pins: the coral collectible blip at 20 on its pointer, one per item, never grouped, drawn on one
+  // canvas (blipCanvas.ts). Zoomed in, the checklist number shows in a tag beside each.
+  const drawCollectibles = () => { ccanvas.current?.set(live.current.collectibles, live.current.selectedCollectible); };
   const gridLabels = () => {
     const m = map.current;
     if (m && box.current) box.current.dataset.cells = String(m.getZoom() >= 3);
@@ -411,6 +401,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     for (const c of meta.columns) layer.addLayer(label(c.id, (c.x0 + c.x1) / 2, f.y0 + 60));
   };
 
+  useEffect(() => { clusters.current.clear(); }, [props.finds]);
   useEffect(() => { draw(false); }, [props.finds, props.selected, props.found]);
   useEffect(() => { placeTags(); }, [props.covered.right]);
   // Hovering a list row raises its pin and shows its tag. The pin is updated in place, not redrawn, so it can animate.

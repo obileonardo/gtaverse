@@ -198,14 +198,17 @@ These round-trip, so a view can be shared and survives a reload (`src/components
 
 ## Performance (round 2)
 
-Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4, 1440 x 900 at 2x, flat placeholder tiles, a temporary fixture of 70 pinned finds and all 12 collectible layers on (892 collectible pins). Frame interval in ms, median / 95th percentile / longest:
+Collectible pins (up to 892 with every layer on) are drawn on one canvas (`src/components/map/blipCanvas.ts`), not one DOM marker each. It works like Leaflet's canvas renderer: the canvas covers the view plus a 15% margin, redraws when a move or zoom ends, and follows a zoom while it animates with one CSS transform, so the pins stay on screen and travel with the map. Sprites are the same blip SVG as everywhere else, rasterised once per layer and state at the device pixel ratio. Clicks and hovers are hit-tested against a 32 px grid index built with each draw (a 30 px target, 44 on touch). The canvas is `aria-hidden`; the list and the detail panel are the accessible path, and a picked collectible opens the same card. Find pins stay DOM buttons (focusable, with tags); their clusters are computed once per zoom level and cached, and on zoom end the markers are rebuilt only when the grouping changed, one frame after the canvas redraw.
 
-| Action | CPU 1x | CPU 4x |
-|---|---|---|
-| Pan (four 0.6 s pans) | 16.7 / 16.7 / 33.3 | 33.3 / 66.6 / 83.4 |
-| Zoom (fly in two levels and back) | 16.7 / 16.8 / 166.7 | 16.7 / 33.4 / 616.6 |
-| Filter (six Legend toggles) | 16.7 / 16.7 / 33.4 | 16.7 / 50 / 83.4 |
-| Open a find (three, each flies to its pin) | 16.7 / 33.3 / 166.5 | 16.7 / 166.6 / 516.7 |
-| 3D (four zoom steps) | 16.7 / 16.7 / 16.8 | 16.7 / 16.8 / 66.7 |
+Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4, 1440 x 900 at 2x, flat placeholder tiles, a temporary fixture of 70 pinned finds and all 12 layers on. Frame interval in ms, median / 95th percentile / longest:
 
-What it took: with 892 collectible markers on, Leaflet moved every marker on every frame of a zoom flight (zoom median 100 ms, opening a find 50 to 67 ms). The collectible group now steps off the map while a zoom is in flight and comes back when it lands (`MapCanvas.tsx`), so flights run at the frame rate; the cost left is the one long frame when the 892 pins come back (the "longest" column) and, at 4x CPU, panning 892 composited markers. With no layer on, every action is 16.7 ms median. Next step if layers become a default: draw collectibles on a canvas layer with its own hit test. CPU throttling does not model a weaker GPU: measure on a real mid laptop and phone before launch.
+| Action | Before (892 DOM markers), 1x | After, 1x | Before, 4x | After, 4x |
+|---|---|---|---|---|
+| Pan (four 0.6 s pans) | 16.7 / 16.7 / 16.8 | 16.7 / 16.8 / 16.8 | 16.7 / 33.4 / 66.7 | 16.7 / 16.8 / 33.4 |
+| Zoom flight (two levels in and back) | 100 / 149.9 / 200 | 16.7 / 16.8 / 16.8 | 100 / 166.7 / 283.3 | 16.7 / 16.8 / 50.1 |
+| Zoom buttons (three in, three out) | not measured | 16.7 / 16.7 / 16.8 | not measured | 16.7 / 33.4 / 100.1 |
+| Filter (six Legend toggles) | 16.7 / 16.8 / 33.4 | 16.7 / 16.8 / 16.8 | 16.7 / 50 / 83.3 | 16.7 / 16.7 / 66.7 |
+| Open a find (three, each flies to its pin) | 66.6 / 183.3 / 233.4 | 16.7 / 16.8 / 50 | 150.1 / 399.9 / 399.9 | 16.7 / 33.4 / 83.4 |
+| 3D (four zoom steps) | 16.7 / 16.7 / 16.8 | 16.7 / 16.8 / 33.3 | 16.7 / 16.8 / 100 | 16.7 / 16.8 / 116.7 |
+
+The longest frames left at 4x are not the collectibles: with no layer on at all, the same runs at 4x peak at 83 (zoom flight), 67 (zoom buttons) and 133 ms (open a find), from new tiles arriving and the detail panel mounting. CPU throttling does not model a weaker GPU: measure on a real mid laptop and phone before launch.
