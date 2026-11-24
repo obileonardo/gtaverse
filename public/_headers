@@ -25,3 +25,7 @@
 # The PRD is never for search engines, whatever the launch switch says.
 /prd
   X-Robots-Tag: noindex, nofollow
+
+# The design system's review pages (the icon sheet) are never for search either.
+/design/*
+  X-Robots-Tag: noindex, nofollow
