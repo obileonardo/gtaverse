@@ -25,7 +25,7 @@ Jason and Lucia's relationship moves through four unnumbered levels: Running on 
 
 ## What it does not do
 
-There are no breakups and no cheating [1].
+There are <mark data-draw>no breakups and no cheating</mark> [1].
 
 Rockstar North's Rob Nelson said being lovers gives no "particular gameplay benefit", as reported by GameSpot and cited by GTA6Info [1].
 

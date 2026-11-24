@@ -1,0 +1,144 @@
+---
+// Layout: the gutter per breakpoint (tokens.css media blocks), the container, the header island and its D8 exception,
+// the grids the pages use (read from their sources), and the spacing, radius, size and z scales.
+import LevelTable, { type LevelRow } from '../ui/LevelTable.astro';
+import { baseDecls, overrides, mediaLabel, tokensWhere } from './tokens';
+import { read, usage } from './source';
+
+const px = (v: string) => parseFloat(v);
+const gutterBase = baseDecls.find((d) => d.name === '--gutter')?.value ?? '128px';
+// The steps, widest first: the base value, then each max-width override.
+const steps = [
+  { label: '1440 and wider', width: 1440, gutter: px(gutterBase) },
+  ...(overrides.get('--gutter') ?? [])
+    .map((o) => ({ max: Number(o.media.match(/max-width:\s*(\d+)/)?.[1] ?? 0), gutter: px(o.value) }))
+    .sort((a, b) => b.max - a.max)
+    // Drawn at the narrow end of its range (390 for the phone).
+    .map((o, i, all) => (all[i + 1] ? { label: `${all[i + 1].max + 1} to ${o.max}`, width: all[i + 1].max + 1, gutter: o.gutter } : { label: `below ${o.max + 1} (drawn at 390)`, width: 390, gutter: o.gutter })),
+];
+const containerMax = baseDecls.find((d) => d.name === '--container-max')?.value ?? '';
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const rows = (re: RegExp): LevelRow[] => tokensWhere(re).map((d) => {
+  const o = overrides.get(d.name) ?? [];
+  const n = usage(d.name).length;
+  return {
+    label: `<span class="ds-tok">${d.name}</span>`,
+    cells: [`<span class="ds-mono">${esc(d.value)}${o.length ? `<br /><span class="ds-dim">${o.map((x) => `${esc(x.value)} ${mediaLabel(x.media)}`).join('<br />')}</span>` : ''}</span>`, `${d.note ? `${esc(d.note)}<br />` : ''}<span class="ds-dim">${n ? `${n} file${n === 1 ? '' : 's'}` : 'Not read by any file yet'}</span>`],
+  };
+});
+const spaces = tokensWhere(/^--space-/);
+const radii = tokensWhere(/^--radius-/);
+
+// The grids, as their sources write them.
+const rule = (file: string, re: RegExp) => (read(file).match(re) ?? []).map((m) => m.trim()).join('\n');
+const grids = [
+  { name: 'Find card grid', file: 'src/components/FindGrid.astro', css: rule('src/components/FindGrid.astro', /^\s*\.fgrid \{[^}]*\}/gm) + '\n' + rule('src/components/FindGrid.astro', /^\s*@media[^{]*\{\s*\.fgrid[^}]*\}/gm), note: 'Five columns on desktop, three on tablets, two on the phone. The finds index and every hub.' },
+  { name: 'Explainer reading column', file: 'src/pages/explainers/[slug].astro', css: rule('src/pages/explainers/[slug].astro', /^\s*\.doc \{[^}]*\}/gm), note: 'A 712 reading column and the 200 contents rail, centred together; one column below 1024.' },
+  { name: 'Map', file: 'src/components/map/map.css', css: rule('src/components/map/map.css', /^\s*--map-list-w:[^;]*;/gm), note: 'The list column beside a rounded map on desktop; the full map with sheets on the phone.' },
+];
+---
+<div class="ds-block">
+  <h3 class="ds-h3">The gutter</h3>
+  <p class="ds-note">One left and right edge for page content, header-aligned content, the home hero and the footer (decision L1). <code>--page-pad</code> is the same value under the name the components use. <code>.container</code> is the one container: <code>max-width: calc(var(--container-max) + 2 * var(--page-pad))</code>, so wider screens keep the gutter and centre the rest ({containerMax} of content at most).</p>
+  <ul class="ds-gutters" role="list">
+    {steps.map((s) => (
+      <li class="ds-gutter">
+        <div class="ds-gutter__frame" style={`--w: ${s.width}; --g: ${s.gutter}`}>
+          <span class="ds-gutter__pad" aria-hidden="true"></span>
+          <span class="ds-gutter__content" aria-hidden="true"></span>
+          <span class="ds-gutter__pad" aria-hidden="true"></span>
+        </div>
+        <p class="ds-gutter__label"><span class="mono tabular">{s.gutter}px</span> <span class="ds-dim">{s.label}</span></p>
+      </li>
+    ))}
+  </ul>
+  <p class="ds-cap" data-gutter-now>At this window</p>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">The header island</h3>
+  <p class="ds-note">The NEON compact island: {baseDecls.find((d) => d.name === '--island-w')?.value} by {baseDecls.find((d) => d.name === '--island-h')?.value}, centred, {baseDecls.find((d) => d.name === '--island-top')?.value} from the top ({overrides.get('--island-top')?.map((o) => `${o.value} ${mediaLabel(o.media)}`).join(', ')}), glass, radius 4. It is always visible and always above page content; an open menu dims everything but the header. On the phone it spans the width less the gutter.</p>
+  <p class="ds-note"><strong>The D8 exception.</strong> A centred island cannot share the page’s left and right edge, so the design audit’s “shared edges” check fails on desktop by design (decision D8, owner, 23 Nov 2026). Treat those two desktop fails as known and every other fail as real.</p>
+  <LevelTable head={['Token', 'Value', 'Use']} rows={rows(/^--island-/)} caption="Header island tokens" />
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Grids</h3>
+  <div class="ds-grid ds-grid--wide">
+    {grids.map((g) => (
+      <div class="ds-tile">
+        <p class="ds-tile__t">{g.name}</p>
+        <p class="ds-tile__d">{g.note}</p>
+        <code class="ds-cap">{g.file}</code>
+        <pre class="ds-code"><code>{g.css}</code></pre>
+      </div>
+    ))}
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Spacing</h3>
+  <p class="ds-note">A 4 px base. Space separates regions; a hairline marks a boundary at most once.</p>
+  <ul class="ds-space" role="list">
+    {spaces.map((d) => (
+      <li class="ds-space__row">
+        <span class="ds-tok">{d.name}</span>
+        <span class="ds-space__bar" style={`width: var(${d.name})`} aria-hidden="true"></span>
+        <span class="ds-mono">{d.value}{overrides.get(d.name)?.map((o) => `, ${o.value} ${mediaLabel(o.media)}`).join('')}</span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Radii</h3>
+  <p class="ds-note">One radius per size class. Buttons, chips and pills are full.</p>
+  <ul class="ds-radii" role="list">
+    {radii.map((d) => (
+      <li class="ds-radius">
+        <span class="ds-radius__box" style={`border-radius: var(${d.name})`} aria-hidden="true"></span>
+        <span class="ds-tok">{d.name}</span>
+        <span class="ds-mono">{d.value}{overrides.get(d.name)?.map((o) => `, ${o.value} ${mediaLabel(o.media)}`).join('')}</span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Sizes, borders and layers</h3>
+  <LevelTable head={['Token', 'Value', 'Use']} rows={rows(/^--(chip-h|btn-h|ctrl-size|tab-|icon-|border-w|measure|container|gutter|page-pad)/)} caption="Component sizes and borders" />
+  <LevelTable head={['Layer', 'Value', 'Use']} rows={rows(/^--z-/)} caption="Z layers" footnote="The header is always on top of page content; an open menu dims everything but the header." />
+</div>
+
+<script>
+  const out = document.querySelector<HTMLElement>('[data-gutter-now]');
+  const show = () => { if (out) out.textContent = `At this window (${innerWidth}px): --gutter is ${getComputedStyle(document.documentElement).getPropertyValue('--gutter').trim()}`; };
+  show();
+  addEventListener('resize', show, { passive: true });
+</script>
+
+<style>
+  .ds-gutters { display: flex; flex-direction: column; gap: var(--space-3); }
+  .ds-gutter { display: grid; grid-template-columns: minmax(0, 1fr) 200px; align-items: center; gap: var(--space-4); }
+  /* A window drawn to scale: its width against 1440, the gutters against its width. */
+  .ds-gutter__frame { display: flex; width: calc(var(--w) / 1440 * 100%); height: 28px; border-radius: var(--radius-s); border: var(--border-w) solid var(--border-2); overflow: hidden; }
+  .ds-gutter__pad { flex: none; width: calc(var(--g) / var(--w) * 100%); background: var(--accent-tint); }
+  .ds-gutter__content { flex: 1; background: var(--surface-2); }
+  .ds-gutter__label { font-size: var(--text-body-s); }
+
+  .ds-space { display: flex; flex-direction: column; gap: var(--space-2); }
+  .ds-space__row { display: grid; grid-template-columns: 160px minmax(0, 1fr); grid-template-areas: 'name bar' 'name val'; align-items: center; column-gap: var(--space-4); }
+  .ds-space__row > .ds-tok { grid-area: name; }
+  .ds-space__bar { grid-area: bar; display: block; height: 12px; border-radius: var(--radius-xs); background: var(--accent); }
+  .ds-space__row > .ds-mono { grid-area: val; }
+
+  .ds-radii { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-4); }
+  .ds-radius { display: flex; flex-direction: column; gap: var(--space-1); }
+  .ds-radius__box { display: block; width: 100%; height: 72px; margin-bottom: var(--space-2); border: var(--border-w) solid var(--border-2); background: var(--surface-2); }
+
+  @media (max-width: 767px) {
+    .ds-gutter { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+    .ds-space__row { grid-template-columns: 120px minmax(0, 1fr); }
+  }
+</style>

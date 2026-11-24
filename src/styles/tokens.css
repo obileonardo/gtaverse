@@ -17,15 +17,17 @@
   --surface-3: #2f2e52;     /* hover, current row */
   --border-1: #38365d;      /* 1px separators and card edges (replaces every shadow) */
   --border-2: #433f6a;      /* strong outlines */
+  --rule-soft: rgb(255 255 255 / 0.08); /* round 2: HUXLEY 007, 009, 013 ruled cells, a page rule quieter than a card edge */
   --frame: #1d002e;         /* letterbox behind clips */
   --icon-cut: #0d0c1a;      /* the cut inside solid icons; set it to the ground the icon sits on */
 
   --text-1: rgb(255 255 255 / 0.92);
   --text-2: rgb(255 255 255 / 0.64);
-  --text-3: rgb(255 255 255 / 0.5);
+  --text-3: rgb(255 255 255 / 0.52); /* labels, footnotes: 4.69:1 on --surface-3, the darkest ground it sits on */
 
   --accent: #f976b0;        /* GTA pink */
   --accent-text: #f976b0;   /* pink used as text (links, active labels) */
+  --accent-ink: #f976b0;    /* pink that marks state on the ground: focus ring, current marker, active underline */
   --on-accent: #0d0c1a;
   --accent-tint: rgb(249 118 176 / 0.16);
 
@@ -34,6 +36,8 @@
   --badge-verify-text: #0d0c1a;
   --badge-meta-fill: #2f2e52;
   --badge-meta-text: rgb(255 255 255 / 0.8);
+  --badge-new-fill: #ffffff;
+  --badge-new-text: #0d0c1a;
 
   --inverse-fill: #f2f2f2;  /* Apple TV white pill */
   --inverse-text: #0d0c1a;
@@ -45,13 +49,9 @@
   --glass-hover-soft: rgb(255 255 255 / 0.05); /* hover, lighter than current */
   --glass-blur: blur(20px) saturate(140%); /* GTA site uses 25px; 20px keeps animated glass (menu) smooth in Safari */
 
-  --scrim: rgb(13 12 26 / 0.6);
   /* Official game logos sit on one fixed dark plate in both themes, the ground they are published on (GS3). */
   --logo-plate: #0d0c1a;
   --logo-plate-edge: rgb(255 255 255 / 0.1);
-  --overlay-fill: rgb(13 12 26 / 0.72);
-  --art-scrim: linear-gradient(to top, rgb(13 12 26 / 0.78) 0%, rgb(13 12 26 / 0.32) 38%, rgb(13 12 26 / 0) 62%);
-  --art-fade: linear-gradient(to bottom, rgb(13 12 26 / 0) 55%, var(--bg) 100%);
   --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.35) 0%, rgb(244 113 124 / 0.35) 50%, rgb(233 99 199 / 0.35) 100%);
 
   /* Level colours (explainer: wanted level), on dark surfaces */
@@ -61,14 +61,18 @@
   --level-4: #f59289;
   --level-5: #ffa948;
 
+  /* Map blips: collectible-layer plates (owner pick, 24 Nov 2026: GTA coral from the GTA VI sunset ramp).
+     Navy glyph on coral 6.6:1; the navy keyline holds the coral plate off any map ground. */
+  --blip-collectible: #f76685;
+  --blip-collectible-ink: #0d0c1a;
+  --blip-collectible-key: #0d0c1a;
+
   /* Map (dark) */
   --map-land: #1f1f38;
-  --map-road: #38365d;
-  --map-road-major: #433f6a;
-  --map-water: #0d0c1a;
-  --map-park: #243830;
-  --map-label: rgb(255 255 255 / 0.64);
   --map-halo: rgb(13 12 26 / 0.8);
+  /* Map round 2 (tokens-r2.md): Jeff christy C12's vignette and C06's glow disc (a gradient element, never a shadow) */
+  --map-vignette: radial-gradient(ellipse at center, rgb(13 12 26 / 0) 55%, rgb(13 12 26 / 0.85) 100%);
+  --blip-glow: radial-gradient(closest-side, rgb(249 118 176 / 0.35), rgb(249 118 176 / 0));
 }
 
 [data-scheme='dark'] { color: var(--text-1); }
@@ -99,13 +103,11 @@
   --text-mono: 13px;
   --text-mono-caps: 12px;
   --text-stat: 20px;
-  --text-menu: 25px;
 
   --leading-display: 0.92;
   --leading-tight: 1.15;
   --leading-body: 1.45;
   --tracking-display: -0.015em;
-  --tracking-tight: -0.02em;
   --tracking-caps: 0.12em;
 
   /* ---------- Spacing (4pt base) ---------- */
@@ -121,8 +123,11 @@
   --space-16: 64px;
   --space-section: 96px;
 
-  --page-pad: 40px;          /* A24 left inset, the edge every page shares */
-  --container-max: 1360px;   /* 1440 minus the page pad on both sides */
+  /* The gutter (owner decision, 24 Nov 2026): the left and right edge every page shares, header-aligned content,
+     the hero and the footer. 128px at 1440 and wider, stepping down at 1280, 1024 and 768, 16px on the phone. */
+  --gutter: 128px;
+  --page-pad: var(--gutter); /* the name every component already uses for the shared edge */
+  --container-max: 1664px;   /* 1920 minus the gutter on both sides: wider screens keep 128px and centre the rest */
   --measure-short: 500px;
   --measure: 680px;
 
@@ -133,20 +138,19 @@
   --btn-h-m: 40px;
   --btn-h-l: 48px;
   --btn-h-xl: 56px;
-  --ctrl-size-s: 32px;
   --ctrl-size: 44px;
-  --ctrl-size-l: 48px;
   --ctrl-size-xl: 52px;
   --island-w: 336px;
   --island-h: 48px;
   --island-sub-h: 44px;
   --island-top: 32px;
   --island-gap: 2px;
+  /* Map round 2 layout (tokens-r2.md): Felt's panel widths, both panels 16 under the island, C12's hint row */
+  --map-panel-w: clamp(320px, 18.5vw, 400px);
+  --map-detail-w: clamp(320px, 21vw, 400px);
+  --map-panel-top: calc(var(--island-top) + var(--island-h) + 16px);
+  --hud-row-h: 44px;
   --tab-underline: 3px;
-  --icon-s: 16px;
-  --icon-m: 20px;
-  --icon-l: 24px;
-  --icon-stroke: 1.5;
 
   /* ---------- Radii ---------- */
   --radius-xs: 4px;
@@ -170,31 +174,65 @@
 
   --dur-press: 140ms;
   --dur-colour: 200ms;
+  /* Every exit takes 60 to 75% of its entrance (decision M1). */
   --dur-popover-in: 180ms;
-  --dur-popover-out: 140ms;
-  --dur-overlay-in: 220ms;
-  --dur-overlay-out: 160ms;
-  --dur-peek-in: 260ms;
-  --dur-peek-out: 200ms;
-  --dur-drawer-in: 420ms;
-  --dur-drawer-out: 300ms;
-  --dur-fly: 600ms;
+  --dur-popover-out: 130ms;  /* 72% */
+  --dur-peek-in: 260ms;      /* the map's drawer and phone card arrive */
+  --dur-peek-out: 180ms;     /* 69%: and leave */
   --dur-crossfade: 500ms;
   --dur-card-lift: 500ms;
-  --stagger: 40ms;
+
+  /* ---------- Motion, part 2 (motion study, 24 Nov 2026) ---------- */
+  /* Curves */
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);   /* long once-per-visit reveals: titles, card walls, 404. Softer tail than --ease-out */
+  --ease-crit: linear(0, 0.036 4%, 0.120 8%, 0.224 12%, 0.360 17%, 0.486 22%, 0.615 28%, 0.733 35%, 0.828 43%, 0.898 52%, 0.944 62%, 0.973 74%, 0.988 87%, 1);
+                                                     /* a critically damped spring from rest, for CSS-only indicators; no overshoot */
+  /* Durations */
+  --dur-page-out: 180ms;     /* view transition: old page fades (64% of the entrance) */
+  --dur-page-in: 280ms;      /* view transition: new page rises 8px and fades in, after the old one */
+  --dur-morph: 280ms;        /* one surface changing shape: island to menu, chip widening, copy button */
+  --dur-morph-out: 180ms;
+  --dur-roll: 280ms;         /* a digit or word rolling to a new value */
+  --dur-reveal: 640ms;       /* title lines, once per page */
+  --dur-reveal-group: 480ms; /* cards and rows the first time they enter view */
+  --dur-image-in: 240ms;     /* a still fading in when it has decoded */
+  --dur-theme: 520ms;        /* light or dark: the circle from the toggle */
+  --dur-ping: 700ms;         /* the map's one-off "here it is" ring */
+  --dur-moment: 900ms;       /* rare moments only (404) */
+  --dur-fade-reduced: 150ms; /* reduced motion: every movement becomes an opacity fade this long */
+  /* Stagger */
+  --stagger-group: 50ms;     /* cards and rows on first view; shrink each gap by 10% */
+  --stagger-hero: 70ms;      /* hero lines; existing formula i*70 - i*i*6 */
+  --stagger-cap: 6;          /* items after the sixth arrive with the sixth */
+  /* Springs (JS reads these; seconds of response, damping ratio always 1) */
+  --spring-sheet: 0.4;       /* sheets, drawer drag (matches Sheet.tsx) */
+  --spring-travel: 0.3;      /* one element travelling between targets: peek frame, menu hover pill */
+  --spring-lead: 0.2;        /* the edge of an indicator facing the move */
+  --spring-trail: 0.34;      /* the edge that lags: this makes the stretch */
 
   /* ---------- Z layers ---------- */
-  --z-map: 0;
-  --z-pins: 10;
-  --z-map-ui: 20;
-  --z-panel: 30;
-  --z-drawer: 40;
-  --z-scrim: 45;
   --z-header: 50;
-  --z-popover: 60;
   --z-overlay: 70;
-  --z-toast: 80;
+
+  /* ---------- Round 2: home chapters and footer (board analysis tokens-r2.md, 24 Nov 2026) ---------- */
+  --rule-dotted: radial-gradient(circle, var(--text-3) 1px, transparent 1.5px) 0 50% / 11px 4px repeat-x; /* Eat Hungry Tiger */
+  --frame-card: linear-gradient(135deg, #ffdf80, #f4717c 50%, #e963c7); /* Q5: the sunrise stops at full strength */
+  --text-section: clamp(44px, 4.2vw, 80px);   /* Unseen Studio, Joby: Inter chapter titles */
+  --text-manifesto: clamp(64px, 6.7vw, 128px); /* Justin Jefferson 012: 96 at 1440 (Big Shoulders is wider than their face; this keeps three lines in 880px) */
+  --text-stat-xl: clamp(88px, 9.4vw, 180px);   /* Coda: one number per screen */
+  --text-mono-display: 64px;                   /* HUXLEY 007: a name in light mono caps */
+  --tracking-wide: 0.2em;                      /* spaced mono caps labels (Coda pill, Justin Jefferson stat lines) */
+  --cut-s: 12px;                               /* card notch, bracket length */
+  --cut-m: 24px;
+  --cut-l: 56px;
+  --tilt: 2.5deg;                              /* Justin Jefferson 005: cards tilted alternately */
+  --space-chapter: 160px;                      /* the gap between home chapters */
 }
+
+/* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
+@media (max-width: 1439px) { :root { --gutter: 96px; } }
+@media (max-width: 1279px) { :root { --gutter: 64px; } }
+@media (max-width: 1023px) { :root { --gutter: 40px; } }
 
 /* Phone sizes: only where the Loves differ */
 @media (max-width: 767px) {
@@ -208,10 +246,15 @@
     --text-body-s: 15px;
     --text-label: 15px;
     --text-mono: 17px;
-    --page-pad: 16px;
+    --gutter: 16px;
     --space-section: 64px;
     --island-top: 8px;
     --radius-xl: 28px;
+    --text-section: 40px;
+    --text-manifesto: 56px;
+    --text-stat-xl: 64px;
+    --text-mono-display: 32px;
+    --space-chapter: 96px;
   }
 }
 
@@ -232,13 +275,17 @@
   --text-2: #5f5f5f;
   --text-3: #666666;
 
-  --accent: #f976b0;          /* fill only in light: 2.6:1 on white, never text */
+  --accent: #f976b0;          /* fill only in light (2.35:1 on the ground): behind a navy label, never text or a state mark */
   --accent-text: #8d4053;
+  /* GTA pink #f976b0 shaded 38% toward night navy #0d0c1a: 4.57:1 on --surface-3, 5.05:1 on the ground */
+  --accent-ink: #9f4e77;
   --on-accent: #0d0c1a;
   --accent-tint: rgb(141 64 83 / 0.1);
 
   --badge-meta-fill: #eceae7;
   --badge-meta-text: #2f2f2f;
+  --badge-new-fill: #2f2f2f;  /* the light theme's inverse pill: white on cream vanished */
+  --badge-new-text: #ffffff;
 
   --inverse-fill: #2f2f2f;
   --inverse-text: #ffffff;
@@ -248,17 +295,16 @@
   --glass-border: rgb(47 47 47 / 0.12);
   --glass-hover: rgb(47 47 47 / 0.08);
   --glass-hover-soft: rgb(47 47 47 / 0.04);
+  --rule-soft: rgb(47 47 47 / 0.1);
 
-  --scrim: rgb(47 47 47 / 0.32);
-  --overlay-fill: rgb(249 245 240 / 0.78);
-  --art-fade: linear-gradient(to bottom, rgb(249 245 240 / 0) 55%, var(--bg) 100%);
   --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.28) 0%, rgb(244 113 124 / 0.2) 50%, rgb(233 99 199 / 0.16) 100%);
 
+  /* Map blips: coral keeps its hue; the keyline stays navy so the plate edge holds on cream (coral on cream is 2.7:1) */
+  --blip-collectible: #f76685;
+  --blip-collectible-ink: #0d0c1a;
+  --blip-collectible-key: #0d0c1a;
+
   --map-land: #f9f5f0;
-  --map-road: #d8d8d6;
-  --map-road-major: #c5c5c8;
-  --map-water: #afe2f0;
-  --map-park: #dcebd9;
-  --map-label: #6b6b6b;
   --map-halo: rgb(249 245 240 / 0.85);
+  --map-vignette: radial-gradient(ellipse at center, rgb(249 245 240 / 0) 55%, rgb(249 245 240 / 0.6) 100%);
 }

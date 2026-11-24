@@ -108,7 +108,13 @@ const thumb = (f: Find) => {
     <div class="stage__scrim"></div>
   </div>
 
+  <!-- What the site is, top left at the gutter, level with the island (owner decision, 24 Nov 2026). -->
+  <div class="hero__top container" data-hero-top>
+    <p class="hero__intro"><span class="hero__intro-name">The Vice Files</span> is a fan-made field guide to GTA&nbsp;VI. Every secret in Leonida, shown in the clip of the fan who found it, labelled by how sure we are, and linked across the Rockstar universe.</p>
+  </div>
+
   <div class="hero__controls container">
+    <div class="hero__buttons" data-hero-buttons>
     {modes.length > 1 && (
       <div class="modes" role="group" aria-label="Hero background" data-modes>
         {modes.map((m, i) => (
@@ -122,15 +128,18 @@ const thumb = (f: Find) => {
         ))}
       </div>
     )}
+    <!-- Sound (owner, 24 Nov 2026): option A, beside the mode circles; option B (?sound=b, temporary until the owner
+         picks) moves it top left beside the intro. Shown only while the trailer plays (hero-stage.ts). -->
+    {trailer && manifest?.sound && (
+      <button type="button" class="sound" data-sound-btn aria-pressed="false" aria-label="Turn the trailer sound on" hidden>
+        <span class="sound__icon sound__icon--off"><Icon name="sound-off" size={20} /></span>
+        <span class="sound__icon sound__icon--on"><Icon name="sound" size={20} /></span>
+      </button>
+    )}
+    </div>
     <p class="hero__credit" data-credit data-credits={JSON.stringify(credits)}>{credits[modes[0].id as keyof typeof credits]}</p>
   </div>
 
-  {trailer && manifest?.sound && (
-    <button type="button" class="sound" data-sound-btn aria-pressed="false" aria-label="Turn the trailer sound on" hidden>
-      <span class="sound__icon sound__icon--off"><Icon name="sound-off" size={20} /></span>
-      <span class="sound__icon sound__icon--on"><Icon name="sound" size={20} /></span>
-    </button>
-  )}
 
   <!-- Desktop: A24 -->
   <div class="a24" data-a24>
@@ -150,7 +159,7 @@ const thumb = (f: Find) => {
         <img class="peek__img" data-peek-img="1" alt="" decoding="async" />
       </div>
       <a class="a24__down" href="#more" aria-label="More finds below">
-        <svg width="16" height="46" viewBox="0 0 16 46" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8 0v45M1 38l7 7 7-7" /></svg>
+        <Icon name="arrow-down" size={20} />
       </a>
     </div>
   </div>
@@ -167,7 +176,7 @@ const thumb = (f: Find) => {
                 {t ? <img data-src={t} alt="" decoding="async" /> : <span class="atv__peek-glow"></span>}
               </div>
               <p class="atv__kicker">{categoryLabel(f)}</p>
-              <h2 class="atv__title"><a href={`/finds/${f.slug}`} data-atv-link>{f.title}</a></h2>
+              <h2 class="atv__title"><a href={`/finds/${f.slug}`} data-atv-link><span class="atv__title-in">{f.title}</span></a></h2>
               <div class="atv__meta">
                 <span>{regionLabel(f)}</span>
                 <Verification level={f.verification} />
@@ -195,6 +204,12 @@ const thumb = (f: Find) => {
 
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   if (hero) {
+    // Temporary (owner to pick, 24 Nov 2026): ?sound=b puts the sound toggle top left beside the intro (option B);
+    // the default is option A, beside the mode circles. Remove the flag once the owner has chosen.
+    const place = new URLSearchParams(location.search).get('sound');
+    const sound = hero.querySelector('[data-sound-btn]');
+    const top = hero.querySelector('[data-hero-top]');
+    if (place === 'b' && sound && top) { hero.dataset.soundPlace = 'b'; top.append(sound); }
     initStage(hero);
     initPeek(hero);
   }
@@ -264,7 +279,10 @@ const thumb = (f: Find) => {
   @keyframes art-push { from { transform: scale(1); } to { transform: scale(1.06); } }
 
   .stage__line { background: var(--bg); }
-  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* The free band for the line art (line-art.ts reads these in px): below the island, its sub bar, the intro and the
+     caption, so a drawing never runs under them. Phone: the island, the circles and a two line caption. */
+  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; --line-top: 150px; --line-bottom: 0px; }
+  @media (max-width: 767px) { .stage__canvas { --line-top: 176px; } }
 
   /* Dispersed, monochrome: keeps the white type at AA over any frame without reading as a band. */
   .stage__scrim {
@@ -284,10 +302,11 @@ const thumb = (f: Find) => {
     inset: 0 0 auto 0;
     z-index: 2;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    padding-top: calc(var(--island-top) + 2px);
+    flex-direction: row-reverse; /* the circles sit at the right gutter, their caption just left of them */
+    align-items: center;
+    gap: 12px;
+    /* Centred on the island: its top plus half the difference between the island and a circle. */
+    padding-top: calc(var(--island-top) + (var(--island-h) - var(--ctrl-size)) / 2);
     pointer-events: none;
   }
   .modes { display: flex; gap: 8px; pointer-events: auto; }
@@ -328,19 +347,59 @@ const thumb = (f: Find) => {
     letter-spacing: 0.02em;
     color: rgb(255 255 255 / 0.72);
     text-align: right;
+    white-space: pre-line; /* a credit may carry its own line break (the coastline's) */
   }
-  /* Desktop: never reach under the centred island and its sub bar. */
-  @media (min-width: 768px) {
-    .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 12px)); }
+  /* The caption never reaches under the centred island and its sub bar: it keeps 24px clear of the island's right
+     edge. Beside the circles it also clears the buttons (three circles and the sound toggle's kept place, 206px);
+     that leaves room for the longest credit line (284px) only from 1680px. */
+  @media (min-width: 1680px) {
+    .hero__credit { max-width: min(320px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 206px - 12px - 24px)); }
+  }
+  /* Below that the caption goes under the circles, right aligned, as on the phone. */
+  @media (min-width: 768px) and (max-width: 1679px) {
+    .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
+    .hero__credit { max-width: min(300px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px)); }
   }
 
-  /* ---------- Sound toggle (bottom right, trailer only) ---------- */
-  .sound {
+  /* ---------- Intro (top left) ----------
+     Small body type, about 36 characters a line, text-2 with the name in text-1, no panel. A soft local scrim
+     under it keeps it at AA over the brightest trailer frame or key art (the stage's own scrim fades by 18%). */
+  .hero__top { position: absolute; inset: 0 0 auto 0; z-index: 2; padding-top: var(--island-top); pointer-events: none; }
+  .hero__intro {
+    position: relative;
+    max-width: min(37ch, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px));
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    line-height: 1.5;
+    pointer-events: auto;
+  }
+  .hero__intro::before {
+    content: '';
     position: absolute;
+    inset: -48px -80px -56px calc(-1 * var(--page-pad));
+    z-index: -1;
+    background: radial-gradient(closest-side, rgb(13 12 26 / 0.62), rgb(13 12 26 / 0.38) 60%, rgb(13 12 26 / 0));
+    pointer-events: none;
+  }
+  .hero__intro-name { color: var(--text-1); font-weight: 500; }
+  .hero[data-sound-place='b'] .hero__top { display: flex; align-items: last baseline; gap: 16px; }
+  .hero[data-sound-place='b'] .hero__top .sound { pointer-events: auto; align-self: flex-end; }
+  /* Between the phone and 1024 the island leaves no room beside it; on the phone the Apple TV slides fill the art
+     from the bottom and the peek frame opens into that space, so the intro stays off (the page heading reads it). */
+  @media (max-width: 1023px) {
+    .hero__top { display: none; }
+    /* Option B below 1024: the toggle alone, top left (level with the island, or under it on the phone). */
+    .hero[data-sound-place='b'] .hero__intro { display: none; }
+  }
+  @media (max-width: 767px) {
+    .hero[data-sound-place='b'] .hero__top { padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
+  }
+
+  /* ---------- Sound toggle (trailer only): beside the mode circles (A) or beside the intro (B) ---------- */
+  .hero__buttons { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; pointer-events: auto; }
+  .sound {
+    position: relative;
     z-index: 3;
-    /* Above the scroll arrow, in the column the stack leaves free. */
-    right: calc(var(--page-pad) - 14px);
-    bottom: 116px;
     display: grid;
     place-items: center;
     width: var(--ctrl-size);
@@ -354,7 +413,10 @@ const thumb = (f: Find) => {
     touch-action: manipulation;
     transition: transform var(--dur-press) var(--ease-out), opacity var(--dur-colour) var(--ease-out);
   }
-  .sound[hidden] { display: none; }
+  /* A toggle, not a mode: an outlined ring instead of a filled circle, a little apart from them. Its place is kept
+     while it is hidden (trailer not playing), so the caption beside it never jumps. */
+  .sound[hidden] { display: grid; visibility: hidden; }
+  .hero__buttons .sound { margin-right: 6px; }
   .sound:active { transform: scale(0.94); }
   @starting-style { .sound { opacity: 0; } }
   @media (hover: hover) and (pointer: fine) {
@@ -367,52 +429,76 @@ const thumb = (f: Find) => {
   /* ---------- Desktop: A24 ---------- */
   .a24 { position: relative; height: 100svh; min-height: 640px; }
   .a24__inner { position: relative; height: 100%; display: flex; align-items: flex-end; padding-bottom: 52px; }
-  .a24__list { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
+  .a24__list { --a24-size: clamp(40px, 3.5vw, 72px); /* 3.5vw: every featured title (47 characters at most) fits between the 128px gutters */ --a24-room: calc(var(--a24-size) * 0.2); position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
   .a24__item {
     display: inline-flex;
     align-items: flex-start;
     gap: 14px;
     max-width: 100%;
     color: #ffffff;
-    transition: opacity var(--dur-colour) var(--ease-colour);
+    pointer-events: auto;
+    transition: opacity 160ms var(--ease-colour);
   }
+  /* Each line rises through its own mask, the list item, which carries 0.2em of room above and below the line for
+     descenders and accents (cancelled by a negative margin, so the rhythm holds). It takes no pointer events, so the
+     room never steals hover or clicks from the lines beside it; the link box itself never moves. */
+  .a24__list li { overflow: hidden; overflow: visible clip; padding-block: var(--a24-room); margin-block: calc(-1 * var(--a24-room)); pointer-events: none; }
   .a24__title {
     font-family: var(--font-body);
     font-weight: 500;
-    font-size: clamp(40px, 4vw, 72px);
+    font-size: var(--a24-size);
     line-height: 0.94;
     letter-spacing: -0.035em;
     white-space: nowrap;
+    /* The ellipsis clips sideways only: descenders and accents above and below the tight line box stay whole.
+       min-width 0: a clipping (not scrolling) box keeps its content width otherwise, and would push the label out. */
+    min-width: 0;
     overflow: hidden;
+    overflow: clip visible;
     text-overflow: ellipsis;
-    padding-bottom: 0.06em;
   }
   .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
   .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
-  .a24__list[data-hot] .a24__item { opacity: 0.55; }
+  /* While one line is hot (the peek frame beside it), the others step back. */
+  .a24__list[data-hot] .a24__item { opacity: 0.45; transition-duration: var(--dur-colour); }
   .a24__list[data-hot] .a24__item.is-hot { opacity: 1; }
 
-  .a24__list li {
-    animation: a24-rise 600ms var(--ease-out) both;
-    animation-delay: calc(var(--i) * 70ms - var(--i) * var(--i) * 6ms);
+  /* ---------- Entrance: one wave (motion study item 3) ----------
+     The lines lead: each rises through its own mask, in order, the gaps shrinking (--stagger-hero, i*70 - i*i*6).
+     The category labels ride with their line. The controls fade in place at 300ms. Under a second in all; nothing
+     replays on a back navigation; every link is clickable from the first frame (only its contents move). */
+  html.js:not(.nav-back) .a24__title,
+  html.js:not(.nav-back) .a24__sup {
+    animation: hero-line var(--dur-reveal) var(--ease-reveal) both;
+    animation-delay: calc(100ms + var(--i) * var(--stagger-hero) - var(--i) * var(--i) * 6ms);
   }
-  @keyframes a24-rise { from { opacity: 0; transform: translateY(14px); } }
+  html.js:not(.nav-back) .hero__intro { animation: hero-rise 480ms var(--ease-reveal) both; }
+  /* The label is small: it starts a whole title line lower, so it rises with its line, not inside it. */
+  html.js:not(.nav-back) .a24__sup { animation-name: hero-line-sup; }
+  @keyframes hero-line-sup { from { translate: 0 calc(var(--a24-size) * 1.45); } }
+  html.js:not(.nav-back) :is(.hero__controls, .a24__down, .atv__dots) { animation: hero-fade 400ms var(--ease-colour) 300ms both; }
+  @keyframes hero-line { from { translate: 0 calc(105% + var(--a24-room, 0px)); } }
+  @keyframes hero-fade { from { opacity: 0; } }
+  @keyframes hero-rise { from { opacity: 0; translate: 0 8px; } }
 
+  /* Small and quiet (owner, 24 Nov 2026): a 20px icon in a 44px hit area, its glyph's right edge on the gutter and
+     its bottom on the list's last line. */
   .a24__down {
     position: absolute;
     z-index: 1;
     right: var(--page-pad);
-    bottom: 52px;
+    bottom: calc(52px - 12px);
     display: grid;
     place-items: center;
     width: 44px;
-    height: 56px;
-    margin-right: -14px;
-    color: #ffffff;
-    transition: transform var(--dur-colour) var(--ease-out);
+    height: 44px;
+    margin-right: -12px;
+    border-radius: var(--radius-full);
+    color: var(--text-2);
+    transition: transform var(--dur-colour) var(--ease-out), color var(--dur-colour) var(--ease-colour);
   }
   @media (hover: hover) and (pointer: fine) {
-    .a24__down:hover { transform: translateY(4px); }
+    .a24__down:hover { transform: translateY(3px); color: var(--text-1); }
   }
 
   /* The peek frame: the hovered find's clip, tilted, over the list beside its line. */
@@ -430,17 +516,21 @@ const thumb = (f: Find) => {
     outline-offset: -1px;
     pointer-events: none;
     opacity: 0;
-    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(0.96);
-    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
+    /* Position and lean are written by hero-peek.ts (it follows the cursor on critically damped springs); entering
+       and leaving are opacity and scale, from the corner nearest the cursor (transform-origin, also set there). */
+    scale: 0.92;
+    will-change: transform;
+    transition: opacity var(--dur-popover-out) var(--ease-standard), scale var(--dur-popover-out) var(--ease-standard);
   }
   .peek.is-open {
     opacity: 1;
-    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(1);
-    transition: opacity var(--dur-popover-in) var(--ease-out), transform 280ms var(--ease-out);
+    scale: 1;
+    transition: opacity var(--dur-popover-in) var(--ease-out), scale var(--dur-popover-in) var(--ease-out);
   }
   .peek.is-instant { transition: none; }
-  .peek__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-colour) var(--ease-colour); }
+  .peek__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
   .peek__img.is-on { opacity: 1; }
+  .peek__img.is-top { z-index: 1; }
 
   /* ---------- Phone: Apple TV ---------- */
   .atv { display: none; }
@@ -454,8 +544,8 @@ const thumb = (f: Find) => {
         linear-gradient(to bottom, rgb(13 12 26 / 0.45) 0%, rgb(13 12 26 / 0) 16%);
     }
     /* Under the island on the phone, so the two never meet. */
-    .hero__controls { padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
-    .sound { right: var(--page-pad); bottom: 0; }
+    .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
+
 
     .a24 { display: none; }
     .atv { display: block; position: relative; padding-bottom: 28px; }
@@ -515,6 +605,12 @@ const thumb = (f: Find) => {
       text-transform: uppercase;
       color: var(--accent-text);
     }
+    /* The title's mask, with room for accents above the caps and anything below the line (never clips glyphs). */
+    .atv__title a { display: inline-block; overflow: clip; vertical-align: top; padding-block: 0.14em; margin-block: -0.14em; }
+    .atv__title-in { display: block; }
+    html.js:not(.nav-back) .atv__slide:first-child .atv__title-in { animation: hero-line var(--dur-reveal) var(--ease-reveal) both; }
+    html.js:not(.nav-back) .atv__slide:first-child .atv__kicker { animation: hero-fade 400ms var(--ease-colour) both; }
+    html.js:not(.nav-back) .atv__slide:first-child :is(.atv__meta, .atv__actions) { animation: hero-rise 480ms var(--ease-reveal) 160ms both; }
     .atv__title {
       margin-top: 8px;
       font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
@@ -554,10 +650,12 @@ const thumb = (f: Find) => {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .a24__list li { animation-name: a24-fade; }
-    @keyframes a24-fade { from { opacity: 0; } }
+    /* The entrance is one 200ms fade of everything together. */
+    html.js:not(.nav-back) :is(.a24__title, .a24__sup, .hero__intro, .hero__controls, .a24__down, .atv__dots, .atv__slide:first-child :is(.atv__title-in, .atv__kicker, .atv__meta, .atv__actions)) {
+      animation: hero-fade 200ms var(--ease-colour) both;
+    }
     .stage__art.is-active img { animation: none; }
-    .peek, .peek.is-open { transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)); }
+    .peek, .peek.is-open { scale: 1; }
     .atv__peek, .atv__slide.is-peek .atv__peek { transform: translateX(-50%) rotate(-3deg); }
   }
   @media (prefers-reduced-transparency: reduce) {

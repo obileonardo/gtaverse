@@ -70,6 +70,34 @@ const ldJson = (o: object) => JSON.stringify(o).replace(/</g, '\\u003c');
         var m = document.querySelector('meta[name="theme-color"]');
         if (m) m.setAttribute('content', t === 'light' ? '#f9f5f0' : '#0d0c1a');
       })();
+      // Motion before first paint (docs/DESIGN-SYSTEM.md, "Motion"). Hidden start states apply only under html.js,
+      // so without JavaScript, in print and in screenshots everything is visible.
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        // Back and forward: entrances never replay (a page restored from the back-forward cache keeps its state).
+        try { if (performance.getEntriesByType('navigation')[0].type === 'back_forward') d.classList.add('nav-back'); } catch (_) {}
+        // Stills fade in once decoded instead of popping in. An image ready by the first frame shows at once.
+        var first = true;
+        requestAnimationFrame(function () { requestAnimationFrame(function () { first = false; }); });
+        var show = function (img) { if (first) img.setAttribute('data-instant', ''); img.setAttribute('data-in', ''); };
+        document.addEventListener('load', function (e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'IMG' || t.hasAttribute('data-in')) return;
+          if (first || !t.decode) show(t); else t.decode().then(function () { show(t); }, function () { show(t); });
+        }, true);
+        document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG') show(t); }, true);
+        // If the motion script never runs, reveal everything that waits for it.
+        setTimeout(function () { if (!d.classList.contains('motion')) d.classList.add('rv-off'); }, 2500);
+        // Page transitions: a move between game hubs slides from the side of the game chosen (site-motion.ts sets
+        // the direction as the old page leaves; this reads it as the new page is revealed).
+        addEventListener('pagereveal', function (e) {
+          var vt = e.viewTransition;
+          var g = null;
+          try { g = JSON.parse(sessionStorage.getItem('vf-vt') || 'null'); sessionStorage.removeItem('vf-vt'); } catch (_) {}
+          if (vt && vt.types && g && g.to === location.pathname && Date.now() - g.t < 8000) vt.types.add(g.type);
+        });
+      })();
     </script>
     <Font cssVariable="--font-display-src" preload />
     <Font cssVariable="--font-body-src" preload />
@@ -83,5 +111,9 @@ const ldJson = (o: object) => JSON.stringify(o).replace(/</g, '\\u003c');
       {layout === 'page' ? <div class="container page"><slot /></div> : <slot />}
     </main>
     <Footer />
+    <script>
+      import { initSiteMotion } from '../scripts/site-motion';
+      initSiteMotion();
+    </script>
   </body>
 </html>

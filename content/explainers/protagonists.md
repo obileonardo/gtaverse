@@ -45,7 +45,7 @@ You can switch between Jason and Lucia during free play. How freely you can swit
 
 Each carries two handguns and two long guns. Spares go in your car trunk or an Ammu-Nation weapon locker [4].
 
-Each protagonist has a separate Criminal Profile, so how you play one does not change the other's [5].
+Each protagonist has <mark data-draw>a separate Criminal Profile</mark>, so how you play one does not change the other's [5].
 
 Banked money is shared between them [6].
 

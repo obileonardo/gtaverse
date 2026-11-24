@@ -23,7 +23,7 @@ Everything in Figma is editable: text is real text in the brand fonts, marks are
 
 ## The rules every direction follows
 
-- **Colours from the site tokens** (`src/styles/tokens.css`): pink `#F976B0` on navy `#0D0C1A`, with cream `#F9F5F0`, blush `#FBD3E6`, surface `#1F1F38` and wine `#8D4053`. I fixed this palette: the directions differ in style, not in colour.
+- **Colours from the site tokens** (`src/styles/tokens.css`): pink `#F976B0` on navy `#0D0C1A`, with cream `#F9F5F0`, surface `#1F1F38` and wine `#8D4053`. I fixed this palette: the directions differ in style, not in colour. The boards also use a blush `#FBD3E6`, which is **not** a site token: the chosen logo uses token colours only unless Elvis approves blush (decision LG4).
 - **No Rockstar or GTA marks** (decisions 6 and GS1): no game logo, no Rockstar logo, no GTAArtDeco or Pricedown, nothing that reads as official. Every mark is an original drawing.
 - **No Rockstar material went into any tool.** The marks were drawn from scratch as vector shapes; no screenshot, art or map was used as a reference.
 - **Fonts with open licences**, all on Google Fonts: Big Shoulders, Archivo, Syne, Fraunces, DM Serif Display and Inter (SIL Open Font License), Permanent Marker (Apache 2.0). Big Shoulders is already the site's display face (decision D2).

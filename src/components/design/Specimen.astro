@@ -1,0 +1,26 @@
+---
+// A live component on the design system page: its name and file, the instance itself on the page ground, the notes
+// from the top of its own source, and its props as the source declares them (read at build time, never retyped).
+//   <Specimen name="Button" file="src/components/ui/Button.astro" props={/interface Props/}>...live instances...</Specimen>
+import Icon from '../ui/Icon.astro';
+import { declaration, headerNote } from './source';
+interface Props { id?: string; name: string; file: string; props?: RegExp; note?: string; notes?: boolean; stage?: boolean }
+const { id, name, file, props, note, notes = true, stage = true } = Astro.props;
+const fromSource = notes ? headerNote(file) : '';
+const decl = props ? declaration(file, props) : '';
+---
+<article class="ds-spec" id={id}>
+  <header class="ds-spec__head">
+    <h3 class="ds-spec__name">{name}</h3>
+    <code class="ds-spec__file">{file}</code>
+  </header>
+  {note && <p class="ds-note">{note}</p>}
+  {stage ? <div class="ds-stage"><slot /></div> : <slot />}
+  {fromSource && <p class="ds-spec__notes">{fromSource}</p>}
+  {decl && (
+    <details class="ds-props">
+      <summary>Props, from the source<Icon name="chevron-down" size={16} /></summary>
+      <pre class="ds-code"><code>{decl}</code></pre>
+    </details>
+  )}
+</article>

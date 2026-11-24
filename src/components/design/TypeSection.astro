@@ -1,0 +1,146 @@
+---
+// Type: the four families (read from astro.config.mjs, where the font loader fetches them), the scale tokens with their
+// phone values (tokens.css), and each role class of base.css set live, its computed size, weight, line height and
+// tracking measured in the browser. The glyph-clip rule closes the section.
+import LevelTable, { type LevelRow } from '../ui/LevelTable.astro';
+import { read, usage } from './source';
+import { baseDecls, overrides, mediaLabel } from './tokens';
+import { finds } from '../../lib/content';
+
+// The longest find title we publish, so the title line shows how real data wraps.
+const longestTitle = [...finds].sort((a, b) => b.title.length - a.title.length)[0]?.title ?? '';
+
+const config = read('astro.config.mjs');
+const fontOf = (cssVariable: string) => {
+  const m = config.match(new RegExp(`name: '([^']+)', cssVariable: '${cssVariable}', weights: \\['([^']+)'\\]`));
+  return m ? { name: m[1], weights: m[2] } : { name: '?', weights: '?' };
+};
+const families = [
+  { token: '--font-display', src: '--font-display-src', cls: 'ds-fam--display', use: 'Caps titles: find titles, the phone hero title, the wordmark, card glow labels, section titles. Always with font-variation-settings: var(--font-display-axes) (opsz 72, the Display cut).', sample: 'Every secret in Leonida' },
+  { token: '--font-body', src: '--font-body-src', cls: 'ds-fam--body', use: 'Everything you read: body, labels, buttons, menus, the A24 title stack (weight 500).', sample: 'Shown in the clip of the fan who found it.' },
+  { token: '--font-mono', src: '--font-mono-src', cls: 'ds-fam--mono', use: 'Dates, years, counts, timecodes and superscripts: numbers that line up.', sample: '1986 · 03:14 · 12 of 48' },
+  { token: '--font-serif', src: '--font-serif-src', cls: 'ds-fam--serif', use: 'Lore pages only (the GTAverse timeline and connections), never elsewhere.', sample: 'The same bridge, two decades apart.' },
+].map((f) => ({ ...f, ...fontOf(f.src) }));
+
+// The role classes in base.css, each with the size token it reads.
+const roles: { cls: string; token: string | null; sample: string }[] = [
+  { cls: 'display-xl', token: '--text-display-xl', sample: 'Leonida' },
+  { cls: 'display-l', token: '--text-display-l', sample: 'Vice City' },
+  { cls: 'display-m', token: '--text-display-m', sample: 'Port Gellhorn' },
+  { cls: 'display-s', token: '--text-display-s', sample: 'Kelly County' },
+  { cls: 'h1', token: '--text-h1', sample: 'The encounter nobody can explain' },
+  { cls: 'h2', token: '--text-h2', sample: 'Animals that talk back' },
+  { cls: 'title', token: '--text-title', sample: longestTitle },
+  { cls: 'body-l', token: '--text-body-l', sample: 'Every secret in Leonida, labelled by how sure we are.' },
+  { cls: '', token: '--text-body', sample: 'Body text is the page default: Inter at the body size with 1.45 leading.' },
+  { cls: 'body-s', token: '--text-body-s', sample: 'Secondary text, meta lines and notes under a component.' },
+  { cls: 'caption', token: '--text-caption', sample: 'Clip by a creator on YouTube. Original post' },
+  { cls: 'label-caps', token: '--text-label-caps', sample: 'Easter egg' },
+  { cls: 'mono', token: '--text-mono', sample: '23 Nov 2026 · 85 finds' },
+  { cls: 'mono-caps', token: '--text-mono-caps', sample: 'Chapter 3' },
+];
+const size = (t: string | null) => {
+  if (!t) return '';
+  const d = baseDecls.find((x) => x.name === t)?.value ?? '';
+  const phone = (overrides.get(t) ?? []).map((o) => `${o.value} ${mediaLabel(o.media)}`).join(', ');
+  return phone ? `${d}, ${phone}` : d;
+};
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const scaleRows: LevelRow[] = baseDecls.filter((d) => /^--(text-(display|h\d|title|body|label|caption|mono|stat|menu)|leading-|tracking-)/.test(d.name)).map((d) => {
+  const o = overrides.get(d.name) ?? [];
+  const files = usage(d.name);
+  return {
+    label: `<span class="ds-tok">${d.name}</span>`,
+    cells: [`<span class="ds-mono">${esc(d.value)}</span>`, o.length ? `<span class="ds-mono">${o.map((x) => `${esc(x.value)} ${mediaLabel(x.media)}`).join('<br />')}</span>` : '<span class="ds-dim">Same</span>', files.length ? `<span class="ds-dim">${files.length} file${files.length === 1 ? '' : 's'}</span>` : '<span class="ds-dim">Not read yet</span>'],
+  };
+});
+---
+<div class="ds-block">
+  <h3 class="ds-h3">Families</h3>
+  <p class="ds-note">Fetched from Google Fonts at build time by Astro’s font loader and served from our own domain (astro.config.mjs). Weights are what the loader fetches.</p>
+  <div class="ds-fams">
+    {families.map((f) => (
+      <div class="ds-fam">
+        <p class={`ds-fam__sample ${f.cls}`}>{f.sample}</p>
+        <div class="ds-fam__meta">
+          <p class="ds-fam__name">{f.name} <span class="ds-dim mono">{f.weights}</span></p>
+          <p class="ds-cap">{f.token}</p>
+          <p class="ds-note">{f.use}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Scale, set live</h3>
+  <p class="ds-note">Each line is the real role class from base.css. The numbers under it are measured in your browser at this window size (size, weight, line height, tracking), so they change on the phone.</p>
+  <ul class="ds-scale" role="list">
+    {roles.map((r) => (
+      <li class="ds-scale__row">
+        <div class="ds-scale__meta">
+          <code class="ds-tok">{r.cls ? `.${r.cls}` : 'body'}</code>
+          <span class="ds-cap">{r.token}: {size(r.token)}</span>
+          <span class="ds-cap" data-measured>Measuring</span>
+        </div>
+        <p class:list={['ds-scale__sample', r.cls]} data-measure>{r.sample}</p>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Scale tokens</h3>
+  <LevelTable head={['Token', 'Desktop', 'Smaller screens', 'Use']} rows={scaleRows} caption="Type scale tokens" />
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Glyphs are never clipped</h3>
+  <p class="ds-note">A box that clips and holds text gives every line the room of its whole glyphs: descenders (g, j, p, q, y) and accented capitals (É, Ñ) stay whole, also mid-animation. Clip sideways only for an ellipsis (<code>overflow: clip visible</code>), or move the clip to a non-interactive wrapper with about 0.14 to 0.2em of <code>padding-block</code>, cancelled by a matching negative margin (decision L4). The line below is a single line with an ellipsis that clips sideways only; its tails and accents pass the box.</p>
+  <div class="ds-clipdemo">
+    <p class="ds-clipdemo__line display-l">Éjército Ñandú: the jogger of Grassrivers, Penmarch Isle and Emerald Springs</p>
+  </div>
+</div>
+
+<script>
+  // Fill each role's measured values from the browser: the scale as it renders at this width.
+  const fill = () => document.querySelectorAll<HTMLElement>('[data-measure]').forEach((el) => {
+    const cs = getComputedStyle(el);
+    const out = el.parentElement?.querySelector<HTMLElement>('[data-measured]');
+    if (!out) return;
+    const lh = cs.lineHeight === 'normal' ? 'normal' : `${Math.round(parseFloat(cs.lineHeight))}px`;
+    const ls = cs.letterSpacing === 'normal' ? '0' : `${(parseFloat(cs.letterSpacing) / parseFloat(cs.fontSize)).toFixed(3)}em`;
+    out.textContent = `Measured: ${Math.round(parseFloat(cs.fontSize) * 10) / 10}px, weight ${cs.fontWeight}, line ${lh}, tracking ${ls}`;
+  });
+  document.fonts?.ready.then(fill);
+  fill();
+  addEventListener('resize', fill, { passive: true });
+</script>
+
+<style>
+  .ds-fams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .ds-fam { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-6); padding: var(--space-6); border-radius: var(--radius-l); border: var(--border-w) solid var(--border-1); background: var(--surface-1); min-width: 0; }
+  .ds-fam__sample { font-size: 32px; line-height: 1.15; overflow-wrap: anywhere; }
+  .ds-fam--display { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; text-transform: uppercase; letter-spacing: var(--tracking-display); font-size: 40px; line-height: 1; }
+  .ds-fam--body { font-family: var(--font-body); font-weight: 500; }
+  .ds-fam--mono { font-family: var(--font-mono); font-size: 26px; font-variant-numeric: tabular-nums; }
+  .ds-fam--serif { font-family: var(--font-serif); }
+  .ds-fam__meta { display: flex; flex-direction: column; gap: var(--space-1); }
+  .ds-fam__name { font-weight: 600; }
+
+  .ds-scale { display: flex; flex-direction: column; }
+  .ds-scale__row { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: baseline; gap: var(--space-6); padding-block: var(--space-5); border-top: var(--border-w) solid var(--border-1); }
+  .ds-scale__row:last-child { border-bottom: var(--border-w) solid var(--border-1); }
+  .ds-scale__meta { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .ds-scale__sample { min-width: 0; overflow-wrap: anywhere; }
+
+  .ds-clipdemo { padding: var(--space-6); border-radius: var(--radius-l); border: var(--border-w) solid var(--border-1); background: var(--surface-1); }
+  /* The rule in use: one line, the ellipsis clipping sideways only, so tails and accents pass the line box. */
+  .ds-clipdemo__line { white-space: nowrap; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; text-transform: none; }
+
+  @media (max-width: 767px) {
+    .ds-fams { grid-template-columns: minmax(0, 1fr); }
+    .ds-scale__row { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  }
+</style>

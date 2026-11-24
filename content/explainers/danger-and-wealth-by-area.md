@@ -51,7 +51,7 @@ Rockstar has not confirmed gang wars or territory conquest, and whether players 
 - Mount Kalaga National Park: forests and hills built around hunting and legendary animals, where "you may end up the prey" [2].
 - Hamlet: the M7 gang's junkyard [[find:gauntlet-hellfire-hamlet]] [3].
 - Hyde Island: you can wake up in a shipping container with an explosive collar while an armoured hunter and his dog stalk you [[find:hyde-island-hunt]] [6].
-- North Port Gellhorn at night: the Circles of Hell house opens between midnight and 4 AM [[find:hellspawn-satan-boss]] [7], and a hidden missing-tourists murder mystery starts at the Starlet Motel [[find:port-gellhorn-missing-persons]] [8].
+- North Port Gellhorn at night: the Circles of Hell house opens <mark data-draw>between midnight and 4 AM</mark> [[find:hellspawn-satan-boss]] [7], and a hidden missing-tourists murder mystery starts at the Starlet Motel [[find:port-gellhorn-missing-persons]] [8].
 
 ## Where the money is
 

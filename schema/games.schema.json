@@ -46,7 +46,39 @@
           "description": "Every exact string used for this game in connections.games and finds.crossover_games. The normalisation map: content text is never rewritten."
         },
         "logo": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/logo" }] },
-        "logo_note": { "type": "string", "minLength": 1, "description": "Why there is no logo (a text plate is shown)." }
+        "logo_note": { "type": "string", "minLength": 1, "description": "Why there is no logo (a text plate is shown)." },
+        "art": { "$ref": "#/$defs/art", "description": "Official cover art for the header menu's art panel (decisions M1 to M4). Optional: a game without it shows the sunrise glow." }
+      }
+    },
+    "art": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page_url", "file_url", "file", "seen_as", "focus", "retrieved", "sha256", "bytes", "width", "height", "licence_note"],
+      "properties": {
+        "page_url": { "type": "string", "format": "uri", "pattern": "^https://(www\\.)?(rockstargames\\.com|take2games\\.com)/", "description": "The official page the art appears on." },
+        "file_url": { "type": "string", "format": "uri", "pattern": "^https://(www\\.rockstargames\\.com|media-rockstargames-com\\.akamaized\\.net|media\\.rockstargames\\.com|www\\.take2games\\.com)/", "description": "The file as that page loads it, at full size. Official hosts only." },
+        "file": { "type": "string", "pattern": "^[a-z0-9-]+\\.(jpg|png|webp)$", "description": "File name under .cache/media/menu/ (git-ignored); the sized copies go to public/media/menu/." },
+        "seen_as": { "type": "string", "minLength": 1, "description": "Where on that page the image is shown, to show which image was taken." },
+        "focus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y"],
+          "properties": { "x": { "type": "number", "minimum": 0, "maximum": 1 }, "y": { "type": "number", "minimum": 0, "maximum": 1 } },
+          "description": "The point kept in view when the panel crops the art (object-position): x for the tall desktop panel, y for the short phone banner."
+        },
+        "crop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["left", "top", "width", "height"],
+          "properties": { "left": { "type": "integer", "minimum": 0 }, "top": { "type": "integer", "minimum": 0 }, "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } },
+          "description": "Optional: the region of a wide source kept for the panel, in source pixels."
+        },
+        "retrieved": { "type": "string", "format": "date" },
+        "sha256": { "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-f0-9]{64}$" }] },
+        "bytes": { "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }] },
+        "width": { "oneOf": [{ "type": "null" }, { "type": "number", "exclusiveMinimum": 0 }] },
+        "height": { "oneOf": [{ "type": "null" }, { "type": "number", "exclusiveMinimum": 0 }] },
+        "licence_note": { "type": "string", "minLength": 1 }
       }
     },
     "logo": {

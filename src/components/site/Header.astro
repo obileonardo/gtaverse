@@ -1,27 +1,168 @@
 ---
-// The site header: the NEON island, fixed and centred, always visible.
-//   Desktop: hamburger + wordmark on the left, Map and theme on the right. The hamburger opens the Apple Sports
-//   style glass popover anchored to the island; the page dims behind it, the header stays in focus.
-//   Phone: the same island across the width; the hamburger opens the Peacock style full screen blurred menu with
-//   icon rows and a round close button at the bottom. No tab bar.
-// Games switcher (decisions GS1 to GS6): on desktop a vertical "Games" rail is the popover's left column, beside the
-// site rows; on the phone a "Games" row opens the same element as a bottom sheet (drag, snap, interruptible). Each
-// row: the official logo on its plate, the game's name in text, its GTAverse connection count.
+// The site header: the NEON island, fixed and centred, always visible, and the full screen menu it opens
+// (decisions M1 to M4, the owner's BitcoinOS "full-screen menu with art panel" pick).
+//   Desktop (1280 and up): the menu is one surface that grows out of the island to fill the window. Left, a tall
+//   art panel with cut corners; hovering or focusing a link crossfades it to that link's picture (official cover
+//   art per game, the GTA VI wallpapers and our own coast drawing for the main links). Middle, the search, the
+//   numbered heavy caps links under bracket labels, the small utility links, the chapter setting and the theme.
+//   Right, the Games list (decisions GS1 to GS6): official logo plate, name, connection count, by group.
+//   Phone and tablet: the same surface as a full screen sheet; the art panel is a short banner that follows the
+//   item last focused or touched, the sections stack below and scroll.
+// The menu button turns into the close cross; Escape closes; focus stays inside the header while it is open and
+// returns to the menu button. The page behind is inert.
 // Optional sub bar (NEON "GET TICKETS" row): pass `sub` from a page with a hero; desktop only.
 import Icon from '../ui/Icon.astro';
 import GamePlate from '../games/GamePlate.astro';
+import ChapterControl from '../ChapterControl.astro';
 import { nav, isCurrent } from '../../lib/nav';
-import { switcherGroups, connectionCount, TRADEMARK_LINE } from '../../lib/games';
+import { switcherGroups, connectionCount, games as allGames, TRADEMARK_LINE } from '../../lib/games';
+import { gameArt, linkArt, type MenuArt } from '../../lib/menu';
+import { byNewest } from '../../lib/feed';
+import { categoryLabel, regionLabel } from '../../lib/media';
+import { submitFindLink } from '../../lib/issues';
 export interface SubBar { href: string; label: string; image?: string | null }
 interface Props { sub?: SubBar }
 const { sub } = Astro.props;
 const path = Astro.url.pathname;
+// Switcher order, then the games outside it: a move between hubs slides the way this list runs (site-motion.ts).
+const switcherIds = switcherGroups.flatMap((g) => g.games.map((x) => x.id));
+const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !switcherIds.includes(id))];
+
+// One picture per link that has art; the panel starts on the current page's picture.
+const arts: MenuArt[] = [
+  ...nav.map((n) => linkArt(n.href)),
+  ...switcherGroups.flatMap((gr) => gr.games.map(gameArt)),
+].filter((a): a is MenuArt => a !== null);
+const artKeys = new Set(arts.map((a) => a.key));
+const currentGame = switcherIds.find((id) => isCurrent(path, `/gtaverse/games/${id}`));
+const currentLink = nav.find((n) => n.href !== '/' && isCurrent(path, n.href))?.href ?? '/';
+const startKey = [currentGame, currentLink, '/'].find((k) => k && artKeys.has(k)) ?? '';
+const start = arts.find((a) => a.key === startKey);
+const SIZES = '(max-width: 1279px) calc(100vw - 32px), 30vw';
+
+// Story spoilers and mature finds never appear in previews (feed.ts), so the latest three skip them.
+const latest = byNewest.filter((f) => !f.spoiler && !f.mature).slice(0, 3);
+const utility = [
+  { href: '/about', label: 'About' },
+  { href: '/finders', label: 'Finders' },
+  { href: '/data', label: 'Data' },
+  { href: submitFindLink(), label: 'Submit a find', external: true },
+];
+// The links arrive one after another once the art has settled; each gap a little shorter (choreography).
+const delays = [0, 40, 75, 105, 130];
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<header class="site-header" data-header>
+<header class="site-header" data-header data-game-order={JSON.stringify(gameOrder)}>
+  <div class="menu" id="site-menu" data-menu hidden data-art-start={startKey}>
+    <div class="menu__inner" data-menu-inner>
+      <div class="menu__art">
+        <div class="menu__frame" data-art-frame>
+          <div class="menu__glow" aria-hidden="true"></div>
+          {arts.map((a) => (
+            <picture class="menu__pic" data-art={a.key} data-caption={a.caption} data-credit={a.credit} style={`--pos: ${a.position}; --pos-phone: ${a.phonePosition}`}>
+              {a.sources.map((s) => <source type={s.type} media={s.media} data-srcset={s.srcset} sizes={SIZES} />)}
+              <img alt="" data-src={a.src} decoding="async" draggable="false" />
+            </picture>
+          ))}
+        </div>
+        <p class="menu__caption" aria-hidden="true">
+          <span class="menu__caption-text" data-art-caption>{start?.caption ?? 'The Vice Files'}</span>
+          <span class="menu__credit" data-art-credit>{start?.credit ?? ''}</span>
+        </p>
+      </div>
+
+      <form class="menu__search menu__fade" action="/map" method="get" role="search">
+        <Icon name="search" size={20} class="menu__search-icon" />
+        <input class="menu__search-input" type="search" name="q" placeholder="Search finds and places" aria-label="Search finds and places" autocomplete="off" enterkeyhint="search" maxlength="120" />
+        <button class="menu__search-go" type="submit" aria-label="Search"><Icon name="arrow-right" size={18} /></button>
+      </form>
+
+      <nav class="menu__guide" aria-labelledby="menu-guide-label">
+        <p class="menu__bracket menu__fade" id="menu-guide-label">[ The guide ]</p>
+        <ol class="menu__links" role="list">
+          {nav.map((item, i) => {
+            const current = isCurrent(path, item.href);
+            return (
+              <li class="menu__item" style={`--d: ${delays[i] ?? 130}ms`}>
+                <a class:list={['menu__link', { 'is-current': current }]} href={item.href} aria-current={current ? 'page' : undefined} data-art-key={item.href}>
+                  <span class="menu__num tabular" aria-hidden="true">{pad(i + 1)}</span>
+                  <Icon name={item.icon} size={24} solid={current} class="menu__icon" />
+                  <span class="menu__label">{item.label}{item.count !== undefined && <sup class="menu__count tabular">({item.count})</sup>}</span>
+                  <Icon name="arrow-right" size={20} class="menu__arrow" />
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      <section class="menu__latest menu__fade" aria-labelledby="menu-latest-label">
+        <p class="menu__bracket" id="menu-latest-label">[ Latest finds ]</p>
+        <ul class="menu__finds" role="list">
+          {latest.map((f) => (
+            <li>
+              <a class="menu__find" href={`/finds/${f.slug}`} data-art-key="/finds">
+                <span class="menu__find-title">{f.title}</span>
+                <span class="menu__find-meta">{categoryLabel(f)}, {regionLabel(f)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="games menu__fade" id="games-switcher" aria-labelledby="games-title" data-games>
+        <div class="games__head">
+          <h2 class="menu__bracket games__title" id="games-title">[ Games ]</h2>
+          <a class="games__all" href="/gtaverse/games">All games</a>
+        </div>
+        <div class="games__scroll" data-games-scroll>
+          {switcherGroups.map((group) => (
+            <div class="games__group">
+              <p class="games__glabel" id={`games-g-${group.id}`}>{group.label}</p>
+              <ul class="games__list" role="list" aria-labelledby={`games-g-${group.id}`}>
+                {group.games.map((g) => {
+                  const href = `/gtaverse/games/${g.id}`;
+                  const current = isCurrent(path, href);
+                  const n = connectionCount(g.id);
+                  return (
+                    <li>
+                      <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} data-game-row data-art-key={g.id} title={g.name}>
+                        <GamePlate game={g} size="rail" class="games__plate" />
+                        <span class="games__name"><span class="games__label">{g.short_name}</span><sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+          <p class="games__tm">{TRADEMARK_LINE} Used only to identify each game. Cover art: Rockstar Games.</p>
+        </div>
+      </section>
+
+      <div class="menu__foot menu__fade">
+        <ul class="menu__util" role="list" aria-label="More">
+          {utility.map((u) => (
+            <li><a class="menu__util-link" href={u.href} rel={u.external ? 'noopener' : undefined}>{u.label}{u.external && <Icon name="arrow-up-right" size={14} />}</a></li>
+          ))}
+        </ul>
+        <ChapterControl class="menu__chapter" />
+      </div>
+
+      <div class="menu__corner menu__fade">
+        <button class="menu__theme" type="button" data-theme-toggle aria-label="Switch to light theme">
+          <span class="theme-icon theme-icon--sun"><Icon name="sun" size={20} /></span>
+          <span class="theme-icon theme-icon--moon"><Icon name="moon" size={20} /></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="island-wrap">
     <nav class="island" aria-label="Main">
       <button class="island__btn island__menu" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Menu" data-menu-open>
-        <Icon name="menu" size={24} />
+        <!-- The two lines meet and turn into a cross while the menu is open (drawn here so each line can move). -->
+        <svg class="icon burger" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path class="burger__l burger__l1" d="M4 9.25h16" /><path class="burger__l burger__l2" d="M4 14.75h16" /></svg>
       </button>
       <a class="island__mark" href="/" aria-label="The Vice Files, home">The Vice Files</a>
       <div class="island__actions">
@@ -31,66 +172,6 @@ const path = Astro.url.pathname;
         <button class="island__btn" type="button" data-theme-toggle aria-label="Switch to light theme">
           <span class="theme-icon theme-icon--sun"><Icon name="sun" size={20} /></span>
           <span class="theme-icon theme-icon--moon"><Icon name="moon" size={20} /></span>
-        </button>
-      </div>
-
-      <div class="menu" id="site-menu" data-menu hidden>
-        <!-- Games: a vertical rail beside the site rows on desktop; on the phone the same element is a bottom sheet
-             opened from the "Games" row. Rows are plain links (navigation, not role="menu"). -->
-        <div class="games-scrim" data-games-scrim aria-hidden="true" hidden></div>
-        <section class="games" id="games-switcher" aria-labelledby="games-title" data-games data-snap="closed">
-          <div class="games__handle" data-sheet-handle aria-hidden="true"><span class="games__grabber"></span></div>
-          <div class="games__head">
-            <h2 class="games__title" id="games-title">Games</h2>
-            <a class="games__all" href="/gtaverse/games">All games</a>
-            <button class="games__close" type="button" aria-label="Close games" data-games-close><Icon name="close" size={20} /></button>
-          </div>
-          <div class="games__scroll" data-games-scroll>
-            {switcherGroups.map((group) => (
-              <div class="games__group">
-                <p class="games__glabel" id={`games-g-${group.id}`}>{group.label}</p>
-                <ul class="games__list" role="list" aria-labelledby={`games-g-${group.id}`}>
-                  {group.games.map((g) => {
-                    const href = `/gtaverse/games/${g.id}`;
-                    const current = isCurrent(path, href);
-                    const n = connectionCount(g.id);
-                    return (
-                      <li>
-                        <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} data-game-row>
-                          <GamePlate game={g} size="rail" class="games__plate" />
-                          <span class="games__name">{g.short_name}<sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-            <p class="games__tm">{TRADEMARK_LINE} Used only to identify each game.</p>
-          </div>
-        </section>
-
-        <ul class="menu__list" role="list">
-          {nav.map((item) => {
-            const current = isCurrent(path, item.href);
-            return (
-              <li>
-                <a class:list={['menu__link', { 'is-current': current }]} href={item.href} aria-current={current ? 'page' : undefined}>
-                  <Icon name={item.icon} size={24} solid={current} class="menu__icon" />
-                  <span class="menu__label">{item.label}{item.count !== undefined && <sup class="menu__count tabular">({item.count})</sup>}</span>
-                </a>
-              </li>
-            );
-          })}
-          <li class="menu__games-item">
-            <button class="menu__link menu__games" type="button" aria-expanded="false" aria-controls="games-switcher" data-games-open>
-              <Icon name="grid" size={24} class="menu__icon" />
-              <span class="menu__label">Games<sup class="menu__count tabular">({switcherGroups.reduce((n, gr) => n + gr.games.length, 0)})</sup></span>
-            </button>
-          </li>
-        </ul>
-        <button class="menu__close" type="button" aria-label="Close menu" data-menu-close>
-          <Icon name="close" size={22} />
         </button>
       </div>
     </nav>
@@ -103,245 +184,223 @@ const path = Astro.url.pathname;
       </a>
     )}
   </div>
-  <div class="menu-scrim" data-menu-scrim hidden></div>
 </header>
 
 <script>
+  import { travellingPill } from '../../scripts/motion/pill';
   const header = document.querySelector<HTMLElement>('[data-header]');
   if (header) {
     const openBtn = header.querySelector<HTMLButtonElement>('[data-menu-open]')!;
     const menu = header.querySelector<HTMLElement>('[data-menu]')!;
-    const closeBtn = header.querySelector<HTMLButtonElement>('[data-menu-close]')!;
-    const scrim = header.querySelector<HTMLElement>('[data-menu-scrim]')!;
-    const phone = matchMedia('(max-width: 767px)');
+    const inner = header.querySelector<HTMLElement>('[data-menu-inner]')!;
+    const island = header.querySelector<HTMLElement>('.island')!;
+    const frame = header.querySelector<HTMLElement>('[data-art-frame]')!;
+    const caption = header.querySelector<HTMLElement>('[data-art-caption]')!;
+    const credit = header.querySelector<HTMLElement>('[data-art-credit]')!;
+    const desktop = matchMedia('(min-width: 1280px)');
+    const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const css = getComputedStyle(document.documentElement);
+    const ms = (name: string, fallback: number) => parseFloat(css.getPropertyValue(name)) || fallback;
     let closeTimer = 0;
 
-    const open = () => {
+    // ---------- Art panel. Pictures sit stacked; the new one fades in on top of the old, which stays fully visible
+    // until the fade ends, so the glow behind never shows through (no flash). A picture only fades in once decoded.
+    const pics = new Map([...frame.querySelectorAll<HTMLElement>('[data-art]')].map((p) => [p.dataset.art!, p]));
+    let hydrated = false;
+    const hydrate = (p: HTMLElement, priority: 'high' | 'low') => {
+      const img = p.querySelector('img')!;
+      if (img.getAttribute('src')) return;
+      p.querySelectorAll<HTMLSourceElement>('source[data-srcset]').forEach((s) => { s.srcset = s.dataset.srcset!; });
+      img.fetchPriority = priority;
+      img.src = img.dataset.src!;
+    };
+    // Preload on open: the starting picture at once, every other one at low priority once the surface has grown
+    // (so their decoding never lands on the opening frames). A picture asked for earlier loads on demand.
+    const preload = (first?: HTMLElement) => {
+      if (first) hydrate(first, 'high');
+      if (hydrated) return;
+      hydrated = true;
+      window.setTimeout(() => pics.forEach((p) => hydrate(p, 'low')), ms('--dur-morph', 280) + 120);
+    };
+    let shown: HTMLElement | null = null;
+    let want = '';
+    let z = 1;
+    const showText = (p: HTMLElement | null) => {
+      caption.textContent = p?.dataset.caption ?? 'The Vice Files';
+      credit.textContent = p?.dataset.credit ?? '';
+    };
+    const setArt = async (key: string, instant = false) => {
+      if (key === want) return;
+      want = key;
+      const p = pics.get(key) ?? null;
+      if (!p) return; // no art for this link: keep the current picture
+      hydrate(p, 'high');
+      const img = p.querySelector('img')!;
+      if (!instant) {
+        try { await img.decode(); } catch { /* not decodable yet: show it when it loads */ }
+        if (want !== key) return; // a newer choice arrived while decoding
+      }
+      const prev = shown;
+      shown = p;
+      showText(p);
+      p.style.zIndex = String(++z);
+      p.classList.add('is-on');
+      const done = () => { if (shown === p) pics.forEach((q) => { if (q !== p) q.classList.remove('is-on'); }); };
+      if (instant || !prev || prev === p) { p.getAnimations().forEach((a) => a.cancel()); done(); return; }
+      const fade = p.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduced() ? ms('--dur-fade-reduced', 150) : ms('--dur-image-in', 240), easing: css.getPropertyValue('--ease-colour').trim() || 'ease' });
+      fade.finished.then(done, () => {});
+    };
+    const reset = () => {
+      want = '';
+      const start = pics.get(menu.dataset.artStart ?? '') ?? null;
+      pics.forEach((q) => { q.classList.remove('is-on'); q.getAnimations().forEach((a) => a.cancel()); });
+      shown = null;
+      if (start) { preload(start); setArt(start.dataset.art!, true); } else { preload(); showText(null); }
+    };
+
+    // Hover asks for the art after a short pause so a fast sweep across the list does not flicker through every
+    // picture; focus and touch ask at once.
+    let hoverTimer = 0;
+    inner.addEventListener('pointerover', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[data-art-key]');
+      if (!el || e.pointerType !== 'mouse') return;
+      window.clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(() => setArt(el.dataset.artKey!), 60);
+    });
+    inner.addEventListener('pointerout', () => window.clearTimeout(hoverTimer));
+    inner.addEventListener('pointerdown', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[data-art-key]');
+      if (el && e.pointerType !== 'mouse') setArt(el.dataset.artKey!);
+    });
+    inner.addEventListener('focusin', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[data-art-key]');
+      if (el) setArt(el.dataset.artKey!);
+    });
+
+    // ---------- Open and close.
+    // The surface grows out of the island (clip-path from the island's own rectangle to the window). The art fades
+    // and settles, then the links rise one after another; the rest fades in with the last link. Closing, every word
+    // fades at once and the surface folds back into the island, faster and on the exit curve. Keyboard opens and
+    // closes never animate; reduced motion keeps only fades (the CSS holds the timings).
+    const isOpen = () => openBtn.getAttribute('aria-expanded') === 'true';
+    const outside = () => [...document.body.children].filter((el) => el !== header && !el.matches('script')) as HTMLElement[];
+    const placeFrom = () => {
+      const r = island.getBoundingClientRect();
+      const t = Math.max(0, r.top), l = Math.max(0, r.left);
+      const rr = Math.max(0, innerWidth - r.right), b = Math.max(0, innerHeight - r.bottom);
+      menu.style.setProperty('--from', `inset(${t}px ${rr}px ${b}px ${l}px round var(--radius-xs))`);
+    };
+    const open = (instant = false) => {
       window.clearTimeout(closeTimer);
+      placeFrom();
       menu.hidden = false;
-      scrim.hidden = false;
+      header.dataset.motion = instant ? 'none' : '';
       openBtn.setAttribute('aria-expanded', 'true');
-      if (phone.matches) document.documentElement.classList.add('is-locked');
-      if (phone.matches) (menu.querySelector<HTMLElement>('.menu__list [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__list a'))?.focus({ preventScroll: true });
-      requestAnimationFrame(() => { header.dataset.menu = 'open'; });
+      document.documentElement.classList.add('is-locked');
+      outside().forEach((el) => { el.inert = true; });
+      inner.scrollTop = 0;
+      reset();
+      menu.getBoundingClientRect(); // commit the closed state so the open state transitions from it
+      header.dataset.menu = 'open';
     };
     const close = (instant = false, restoreFocus = true) => {
-      if (sheetOpen()) closeSheet(true, false);
-      header.dataset.menu = instant ? 'instant' : 'closing';
+      if (!isOpen()) return;
+      window.clearTimeout(hoverTimer);
+      placeFrom();
+      header.dataset.motion = instant ? 'none' : '';
+      header.dataset.menu = 'closing';
       openBtn.setAttribute('aria-expanded', 'false');
       document.documentElement.classList.remove('is-locked');
-      const done = () => { menu.hidden = true; scrim.hidden = true; delete header.dataset.menu; };
-      if (instant) done(); else closeTimer = window.setTimeout(done, 180);
+      outside().forEach((el) => { el.inert = false; });
+      const done = () => { menu.hidden = true; delete header.dataset.menu; header.dataset.motion = ''; pills.forEach((p) => p.reset()); };
+      if (instant || reduced()) closeTimer = window.setTimeout(done, instant ? 0 : ms('--dur-fade-reduced', 150));
+      else closeTimer = window.setTimeout(done, ms('--dur-morph-out', 180));
       if (restoreFocus) openBtn.focus({ preventScroll: true });
     };
-    const isOpen = () => openBtn.getAttribute('aria-expanded') === 'true';
-    const island = header.querySelector<HTMLElement>('.island')!;
 
-    // ---------- Games switcher. Desktop: a rail inside the popover. Phone: a bottom sheet over the overlay menu,
-    // dragged 1:1, released into a critically damped spring seeded with the finger's speed (the map sheet's
-    // physics, docs/DESIGN-SYSTEM.md), snapping to half or full height, and caught again mid-flight.
-    const games = header.querySelector<HTMLElement>('[data-games]')!;
-    const gamesBtn = header.querySelector<HTMLButtonElement>('[data-games-open]')!;
-    const gamesClose = header.querySelector<HTMLButtonElement>('[data-games-close]')!;
-    const gamesScrim = header.querySelector<HTMLElement>('[data-games-scrim]')!;
-    const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const H = () => window.innerHeight;
-    const snaps: Record<string, () => number> = {
-      full: () => 56 + (parseFloat(getComputedStyle(games).getPropertyValue('--safe-top')) || 0),
-      half: () => Math.round(H() * 0.42),
-      closed: () => H(),
-    };
-    const project = (v: number, rate = 0.998) => ((v / 1000) * rate) / (1 - rate);
-    const rubberband = (over: number, dim: number, c = 0.55) => (over * dim * c) / (dim + c * Math.abs(over));
-    let y = H();
-    let raf = 0;
-    let target = 'closed';
-    const sheetOpen = () => gamesBtn.getAttribute('aria-expanded') === 'true';
-    const write = (v: number) => {
-      y = v;
-      games.style.transform = `translate3d(0, ${v}px, 0)`;
-      // One source of truth: the scrim is exactly as dark as the sheet is open, mid-drag included.
-      gamesScrim.style.opacity = String(Math.max(0, Math.min(1, 1 - (v - snaps.half()) / (H() - snaps.half()))));
-    };
-    const settled = (id: string) => {
-      games.dataset.snap = id;
-      if (id === 'closed') {
-        games.inert = true;
-        gamesScrim.hidden = true;
-        games.style.visibility = 'hidden';
-      }
-    };
-    const springTo = (id: string, velocity = 0, instant = false) => {
-      cancelAnimationFrame(raf);
-      target = id;
-      games.dataset.snap = id; // the snap it is heading to: below full the whole sheet drags (touch-action none)
-      const to = snaps[id]();
-      if (instant) { write(to); settled(id); return; }
-      if (reduced()) {
-        // Reduced motion: a short fade in place of the travel.
-        const closing = id === 'closed';
-        if (!closing) { write(to); settled(id); }
-        games.animate([{ opacity: closing ? 1 : 0 }, { opacity: closing ? 0 : 1 }], { duration: closing ? 140 : 180, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' })
-          .finished.then(() => { if (closing && target === 'closed') { write(to); settled(id); } }, () => {});
-        return;
-      }
-      const omega = (2 * Math.PI) / 0.4;
-      let x = y, v = velocity, last = performance.now();
-      const step = (now: number) => {
-        const dt = Math.max(0, Math.min((now - last) / 1000, 1 / 30));
-        last = now;
-        v += (-omega * omega * (x - to) - 2 * omega * v) * dt;
-        x += v * dt;
-        if (Math.abs(x - to) < 0.5 && Math.abs(v) < 8) { write(to); settled(id); return; }
-        write(x);
-        raf = requestAnimationFrame(step);
-      };
-      raf = requestAnimationFrame(step);
-    };
-    const focusables = (box: HTMLElement) =>
-      [...box.querySelectorAll<HTMLElement>('a[href], button')].filter((el) => !el.closest('[inert]') && el.offsetParent !== null);
-    const openSheet = (instant = false) => {
-      if (!phone.matches) return;
-      cancelAnimationFrame(raf);
-      games.inert = false;
-      games.style.visibility = 'visible';
-      gamesScrim.hidden = false;
-      gamesBtn.setAttribute('aria-expanded', 'true');
-      if (target === 'closed' && Math.abs(y - H()) < 1) write(H());
-      springTo('half', 0, instant);
-      const first = games.querySelector<HTMLElement>('[aria-current="page"]') ?? games.querySelector<HTMLElement>('[data-game-row]');
-      first?.focus({ preventScroll: true });
-    };
-    const closeSheet = (instant = false, restore = true) => {
-      if (!sheetOpen()) return;
-      gamesBtn.setAttribute('aria-expanded', 'false');
-      springTo('closed', 0, instant);
-      if (restore) gamesBtn.focus({ preventScroll: true });
-    };
-    // Desktop: the rail is part of the popover and always usable. Phone: closed until the Games row opens it.
-    const layoutGames = () => {
-      cancelAnimationFrame(raf);
-      if (phone.matches) {
-        gamesBtn.setAttribute('aria-expanded', 'false');
-        target = 'closed';
-        write(H());
-        settled('closed');
-      } else {
-        games.inert = false;
-        games.style.transform = '';
-        games.style.visibility = '';
-        games.dataset.snap = 'rail';
-        gamesScrim.hidden = true;
-      }
-    };
-    layoutGames();
+    // One highlight glides between the rows under the pointer (the main links, and the Games list).
+    const pills = [
+      travellingPill(header.querySelector<HTMLElement>('.menu__links')!, '.menu__link', 'menu__hl'),
+      travellingPill(header.querySelector<HTMLElement>('[data-games-scroll]')!, '.games__row', 'games__hl'),
+    ];
 
     // Keyboard activations never animate (design system). A click counts as keyboard when no pointer made it.
     let keyed = false;
     header.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') keyed = true; });
     header.addEventListener('pointerdown', () => { keyed = false; });
     const fromKeys = (e: MouseEvent) => { const k = e.detail === 0 || keyed; keyed = false; return k; };
-    gamesBtn.addEventListener('click', (e) => (sheetOpen() ? closeSheet() : openSheet(fromKeys(e))));
-    gamesClose.addEventListener('click', (e) => closeSheet(fromKeys(e)));
-    gamesScrim.addEventListener('click', () => closeSheet(false));
 
-    // Drag: the whole sheet below the full snap, only the handle at the full snap (the list scrolls there).
-    let drag: { id: number; startY: number; startSheet: number; samples: { t: number; y: number }[]; active: boolean } | null = null;
-    let suppressClick = false;
-    games.addEventListener('pointerdown', (e) => {
-      if (!phone.matches || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
-      if (!sheetOpen() && y >= H() - 1) return; // closed and settled; a closing sheet can still be caught
-      const atTop = Math.abs(y - snaps.full()) < 2;
-      if (atTop && !(e.target as HTMLElement).closest('[data-sheet-handle]')) return;
-      cancelAnimationFrame(raf); // catch it mid-flight, from where it is
-      drag = { id: e.pointerId, startY: e.clientY, startSheet: y, samples: [{ t: e.timeStamp, y }], active: false };
-    });
-    games.addEventListener('pointermove', (e) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const dy = e.clientY - drag.startY;
-      if (!drag.active) {
-        if (Math.abs(dy) < 6) return; // taps stay taps
-        drag.active = true;
-        games.setPointerCapture(e.pointerId);
-        games.classList.add('is-dragging');
-      }
-      let next = drag.startSheet + dy;
-      const top = snaps.full();
-      if (next < top) next = top - rubberband(top - next, H());
-      write(next);
-      drag.samples.push({ t: e.timeStamp, y: next });
-      while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 100) drag.samples.shift();
-    });
-    const endDrag = (e: PointerEvent) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const d = drag;
-      drag = null;
-      games.classList.remove('is-dragging');
-      if (!d.active) { springTo(target === 'closed' ? 'half' : target); return; }
-      suppressClick = true;
-      const a = d.samples[0], b = d.samples[d.samples.length - 1];
-      const v = b.t > a.t ? ((b.y - a.y) / (b.t - a.t)) * 1000 : 0;
-      const projected = y + project(v);
-      const best = (['full', 'half', 'closed'] as const).reduce((m, id) => (Math.abs(snaps[id]() - projected) < Math.abs(snaps[m]() - projected) ? id : m), 'half' as 'full' | 'half' | 'closed');
-      if (best === 'closed') { gamesBtn.setAttribute('aria-expanded', 'false'); springTo('closed', v); gamesBtn.focus({ preventScroll: true }); }
-      else { gamesBtn.setAttribute('aria-expanded', 'true'); springTo(best, v); }
-    };
-    games.addEventListener('pointerup', endDrag);
-    games.addEventListener('pointercancel', endDrag);
-    games.addEventListener('click', (e) => { if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; } }, true);
-    addEventListener('resize', () => { if (phone.matches && sheetOpen() && !drag) { cancelAnimationFrame(raf); write(snaps[target]()); } });
-
-    // A page can ask for the switcher ("Switch game" on a game hub).
-    document.addEventListener('vf:open-games', () => {
-      if (!isOpen()) open();
-      if (phone.matches) openSheet();
-      else (games.querySelector<HTMLElement>('[aria-current="page"]') ?? games.querySelector<HTMLElement>('[data-game-row]'))?.focus({ preventScroll: true });
-    });
-
+    const firstLink = () => menu.querySelector<HTMLElement>('.menu__links [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__links a');
     openBtn.addEventListener('click', (e) => {
-      if (isOpen()) return close();
-      open();
-      // Opened from the keyboard: put focus inside the menu (the current page, else the first site row).
-      if (fromKeys(e) && !phone.matches) (menu.querySelector<HTMLElement>('.menu__list [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__list a'))?.focus({ preventScroll: true });
+      const k = fromKeys(e);
+      if (isOpen()) return close(k);
+      open(k);
+      if (k) firstLink()?.focus({ preventScroll: true });
     });
-    closeBtn.addEventListener('click', () => close());
-    scrim.addEventListener('click', () => close(false, false));
-    document.addEventListener('click', (e) => {
-      if (isOpen() && !phone.matches && !island.contains(e.target as Node)) close(false, false);
-    });
-    // Desktop: tabbing out of the island closes the popover, so no hidden link keeps focus.
-    island.addEventListener('focusout', (e) => {
-      if (isOpen() && !phone.matches && e.relatedTarget && !island.contains(e.relatedTarget as Node)) close(true, false);
-    });
-    // Keyboard closes instantly (keyboard actions do not animate). Escape closes the games sheet first.
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && sheetOpen()) { closeSheet(true); return; }
-      if (e.key === 'Escape' && isOpen()) close(true);
-      if (e.key === 'Tab' && isOpen() && phone.matches) {
-        const items = focusables(sheetOpen() ? games : menu).filter((el) => sheetOpen() || !games.contains(el));
-        if (!items.length) return;
-        const first = items[0], last = items[items.length - 1];
-        if (!items.includes(document.activeElement as HTMLElement)) { e.preventDefault(); first.focus(); }
-        else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    });
-    phone.addEventListener('change', () => { if (isOpen()) close(true, false); layoutGames(); });
 
-    // Theme toggle: the choice is remembered on this device; without one, the system setting decides.
-    const toggle = header.querySelector<HTMLButtonElement>('[data-theme-toggle]')!;
+    // A page can ask for the switcher ("Switch game" on a game hub): open on the Games list, current game first.
+    document.addEventListener('vf:open-games', () => {
+      if (!isOpen()) open(reduced());
+      const row = menu.querySelector<HTMLElement>('.games [aria-current="page"]') ?? menu.querySelector<HTMLElement>('[data-game-row]');
+      row?.focus({ preventScroll: true });
+      row?.scrollIntoView({ block: 'nearest' });
+    });
+
+    // Focus stays in the header while the menu is open: the island's controls and the menu, in page order.
+    const focusables = () => [...header.querySelectorAll<HTMLElement>('a[href], button, input, select')]
+      .filter((el) => !el.closest('[hidden], [inert], .subbar') && el.getClientRects().length > 0);
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen()) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(true); return; }
+      if (e.key !== 'Tab') return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (!items.includes(document.activeElement as HTMLElement)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    desktop.addEventListener('change', () => { if (isOpen()) placeFrom(); });
+    addEventListener('resize', () => { if (isOpen()) placeFrom(); });
+    // Leaving the page with the menu open (back and forward cache): come back closed.
+    addEventListener('pageshow', (e) => { if ((e as PageTransitionEvent).persisted && isOpen()) close(true, false); });
+
+    // Theme toggles (the island's and the menu's): the choice is remembered on this device; without one, the system
+    // setting decides.
+    const toggles = [...header.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')];
     const label = () => {
       const t = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-      toggle.setAttribute('aria-label', t === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+      toggles.forEach((b) => b.setAttribute('aria-label', t === 'light' ? 'Switch to dark theme' : 'Switch to light theme'));
     };
     label();
-    toggle.addEventListener('click', () => {
-      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    const setTheme = (next: 'light' | 'dark') => {
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem('vf-theme', next); } catch { /* private mode: the choice lasts for this page only */ }
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f9f5f0' : '#0d0c1a');
       label();
-    });
+    };
+    // The new theme opens as a circle from the toggle (motion study item 5): a same-page view transition whose new
+    // snapshot is revealed by a growing circle, while the old one stays still underneath. Keyboard and reduced
+    // motion keep the plain 200ms colour change.
+    toggles.forEach((toggle) => toggle.addEventListener('click', (e) => {
+      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> } };
+      if (!doc.startViewTransition || fromKeys(e) || reduced()) { setTheme(next); return; }
+      const r = toggle.getBoundingClientRect();
+      const x = Math.round(r.left + r.width / 2), y = Math.round(r.top + r.height / 2);
+      const end = Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)));
+      const root = document.documentElement;
+      root.classList.add('vt-theme');
+      const vt = doc.startViewTransition(() => setTheme(next));
+      vt.ready.then(() => {
+        root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`] }, {
+          duration: ms('--dur-theme', 520),
+          easing: css.getPropertyValue('--ease-in-out').trim() || 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)',
+        });
+      }, () => {});
+      vt.finished.finally(() => root.classList.remove('vt-theme'));
+    }));
   }
 </script>
 
@@ -354,6 +413,8 @@ const path = Astro.url.pathname;
     padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px));
   }
   .island-wrap {
+    position: relative;
+    z-index: 2; /* above the open menu: the island stays in place and its button closes the menu */
     width: var(--island-w);
     margin-inline: auto;
     display: flex;
@@ -362,7 +423,7 @@ const path = Astro.url.pathname;
     pointer-events: auto;
   }
 
-  /* The island. Its blur lives on ::before so the phone menu (position: fixed) is not trapped by backdrop-filter. */
+  /* The island. Its blur lives on ::before so it can sit in its own layer during page transitions. */
   .island {
     position: relative;
     display: flex;
@@ -375,6 +436,11 @@ const path = Astro.url.pathname;
     border-radius: var(--radius-xs);
     isolation: isolate;
   }
+  /* Its own layer in page transitions, so it never redraws. Named only while a transition runs (the old page names
+     it in pageswap, site-motion.ts): a named element is a backdrop root, and a permanent name would stop the island
+     from blurring the page behind it. The theme circle reveals the island with everything else. */
+  :global(html:active-view-transition) .island { view-transition-name: island; }
+  :global(html.vt-theme) .island { view-transition-name: none; }
   .island::before {
     content: '';
     position: absolute;
@@ -395,6 +461,16 @@ const path = Astro.url.pathname;
   }
   .island__btn:active { transform: scale(0.94); }
   .island__menu { width: 40px; }
+  /* Burger to cross: the lines meet in the middle, then turn (two steps, never together). Closing reverses at 0.75x. */
+  .burger__l {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: rotate 120ms var(--ease-standard), translate 90ms var(--ease-in-out) 120ms;
+  }
+  :global([data-menu='open']) .burger__l { transition: translate 120ms var(--ease-in-out), rotate 160ms var(--ease-out) 120ms; }
+  :global([data-menu='open']) .burger__l1 { translate: 0 2.75px; rotate: 45deg; }
+  :global([data-menu='open']) .burger__l2 { translate: 0 -2.75px; rotate: -45deg; }
+  :global([data-motion='none']) .burger__l { transition: none; }
   .island__mark {
     margin-left: 10px;
     font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
@@ -445,57 +521,209 @@ const path = Astro.url.pathname;
   @media (hover: hover) and (pointer: fine) {
     .subbar:hover :global(.subbar__arrow) { transform: translateX(3px); }
   }
-  :global([data-subbar='hidden']) .subbar { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+  :global([data-subbar='hidden']) .subbar,
+  :global([data-menu]) .subbar { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 
-  /* Desktop menu: glass popover from the hamburger (Apple Sports) */
-  /* Two columns since the Games rail (decision GS5): the site rows stay under the island, the rail grows to the
-     left of them, and the popover shifts right only when the window is too narrow to hold it. */
+  :global(html.is-locked) { scrollbar-gutter: stable; }
+
+  /* ================= The menu surface ================= */
   .menu {
-    --rail-w: 404px;
-    --site-w: calc(var(--island-w) - 20px);
-    --menu-w: calc(var(--rail-w) + var(--site-w) + 41px);
-    --menu-left: max(calc(var(--island-w) - var(--menu-w)), calc(16px - (100vw - var(--island-w)) / 2));
-    position: absolute;
-    top: calc(100% + 8px);
-    left: var(--menu-left);
-    width: var(--menu-w);
-    display: grid;
-    grid-template-columns: var(--rail-w) var(--site-w);
-    column-gap: 10px;
-    align-items: start;
-    padding: 10px;
-    border-radius: var(--radius-xl);
-    background: var(--glass-fill-strong);
-    border: var(--border-w) solid var(--glass-border);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    transform-origin: calc(-1 * var(--menu-left) + 20px) 0;
-    opacity: 0;
-    transform: scale(0.96);
-    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
-    z-index: 2;
+    --top: calc(env(safe-area-inset-top, 0px) + var(--island-top) + var(--island-h) + 32px);
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: auto;
+    background: var(--bg);
+    color: var(--text-1);
+    /* Closed: clipped to the island's own rectangle (written by the script), so opening grows out of the island. */
+    clip-path: var(--from, inset(0 0 100% 0));
+    transition: clip-path var(--dur-morph-out) var(--ease-standard);
   }
+  .menu[hidden] { display: none; }
   :global([data-menu='open']) .menu {
-    opacity: 1;
-    transform: none;
-    transition: opacity var(--dur-popover-in) var(--ease-out), transform var(--dur-popover-in) var(--ease-out);
+    clip-path: inset(0 0 0 0 round 0px);
+    transition: clip-path var(--dur-morph) var(--ease-out);
   }
-  :global([data-menu='instant']) .menu { transition: none; }
-  .menu__list { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 4px; }
-  .menu__games-item, .games-scrim, .games__handle, .games__close { display: none; }
 
-  /* Games rail (desktop): group labels in a left column, rows 36 high, 4 apart, 10 between groups. */
-  .games {
-    grid-column: 1;
-    grid-row: 1;
+  .menu__inner {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'art    search games'
+      'art    guide  games'
+      'art    latest games'
+      'art    .      games'
+      'corner foot   games';
+    column-gap: clamp(32px, 4vw, 64px);
+    row-gap: var(--space-6);
+    padding: var(--top) var(--gutter) var(--space-8);
+    max-width: 1920px;
+    margin-inline: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* ---------- Art panel: cut corners (the reference's chamfers), the picture under a soft caption scrim ---------- */
+  .menu__art { grid-area: art; position: relative; min-height: 0; display: flex; flex-direction: column; }
+  /* Close to the covers' own shape (0.81), so their titles stay whole; never taller than the column. */
+  .menu__frame {
+    position: relative;
+    flex: none;
+    width: 100%;
+    aspect-ratio: 0.76;
+    max-height: calc(100% - 32px);
+    overflow: hidden;
+    border-radius: var(--radius-s);
+    clip-path: polygon(0 0, calc(100% - 56px) 0, 100% 56px, 100% 100%, 56px 100%, 0 calc(100% - 56px));
+    background: var(--surface-1);
+  }
+  .menu__glow { position: absolute; inset: 0; background: var(--glow-hero), var(--surface-1); }
+  .menu__pic { position: absolute; inset: 0; display: block; opacity: 0; }
+  .menu__pic.is-on { opacity: 1; }
+  .menu__pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, 50% 50%);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* The caption sits under the art, never on it: the covers carry their own titles. */
+  .menu__caption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    min-height: 20px;
+    margin-top: var(--space-3);
+    color: var(--text-2);
+    font-size: var(--text-caption);
+    line-height: 1.4;
+  }
+  .menu__caption-text { flex: 1; min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .menu__credit { flex: none; color: var(--text-3); font-size: 12px; }
+
+  /* ---------- Search ---------- */
+  .menu__search {
+    grid-area: search;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: var(--btn-h-l);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+    transition: border-color var(--dur-colour) var(--ease-colour);
+  }
+  .menu__search:focus-within { border-color: var(--border-2); }
+  .menu__search :global(.menu__search-icon) { position: absolute; left: 16px; color: var(--text-2); pointer-events: none; }
+  .menu__search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px 0 46px;
+    background: none;
+    border: 0;
+    color: var(--text-1);
+    font: inherit;
+    font-size: 16px; /* 16 or more so phones never zoom into it */
+    outline: none;
+  }
+  .menu__search-input::placeholder { color: var(--text-3); }
+  .menu__search-input::-webkit-search-cancel-button { display: none; }
+  .menu__search-go {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-right: 5px;
+    border-radius: var(--radius-full);
+    background: var(--inverse-fill);
+    color: var(--inverse-text);
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .menu__search-go:active { transform: scale(0.97); }
+
+  /* ---------- The guide: numbered heavy caps rows with arrows, divided by hairlines ---------- */
+  .menu__guide { grid-area: guide; min-width: 0; }
+  .menu__bracket {
+    margin: 0 0 var(--space-2);
+    color: var(--text-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.04em;
+  }
+  .menu__links { position: relative; display: flex; flex-direction: column; border-top: var(--border-w) solid var(--border-1); }
+  .menu__item { border-bottom: var(--border-w) solid var(--border-1); }
+  .menu__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: clamp(50px, 6.6vh, 62px);
+    padding-inline: 8px 14px;
+    border-radius: var(--radius-full);
+    color: var(--text-1);
+    transition: background-color var(--dur-colour) var(--ease-colour);
+  }
+  .menu__link.is-current { background: var(--glass-hover); }
+  .menu__num { flex: none; width: 22px; color: var(--text-3); font-family: var(--font-mono); font-size: var(--text-mono-caps); }
+  .menu__link :global(.menu__icon) { flex: none; color: var(--text-2); }
+  .menu__link.is-current :global(.menu__icon) { color: var(--text-1); --icon-cut: var(--bg); }
+  .menu__label {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: clamp(32px, min(2.9vw, 5vh), 44px);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .menu__count {
+    margin-left: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-2);
+    vertical-align: super;
+    line-height: 0;
+  }
+  .menu__link :global(.menu__arrow) { flex: none; color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out), color var(--dur-colour) var(--ease-colour); }
+  :global(.menu__hl), :global(.games__hl) { background: var(--glass-hover-soft); }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__link:not(.is-current):hover { background: var(--glass-hover-soft); }
+    :global(.has-pill) > li > .menu__link:not(.is-current):hover { background: none; }
+    .menu__link:hover :global(.menu__arrow) { transform: translateX(3px); color: var(--text-1); }
+  }
+
+  /* ---------- Latest finds (under the art) ---------- */
+  .menu__latest { grid-area: latest; min-width: 0; }
+  .menu__finds { display: flex; flex-direction: column; }
+  .menu__find {
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - var(--island-top) - var(--island-h) - 48px);
-    padding-right: 10px;
-    border-right: var(--border-w) solid var(--glass-border);
+    justify-content: center;
+    gap: 2px;
+    min-height: clamp(42px, 5.4vh, 50px);
+    padding-block: 4px;
+    border-bottom: var(--border-w) solid var(--border-1);
+    color: var(--text-1);
   }
-  .games__head { display: flex; align-items: center; justify-content: space-between; height: 32px; padding-inline: 10px 6px; flex: none; }
-  .games__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .menu__find-title { font-size: var(--text-body-s); font-weight: 500; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .menu__find-meta { color: var(--text-2); font-size: var(--text-caption); }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__find:hover .menu__find-title { text-decoration: underline; text-underline-offset: 3px; }
+  }
+
+  /* ---------- Games (decisions GS3 and GS6): group labels in a left column so the rows keep one rhythm (4 apart,
+     10 between groups), rows 32 high ---------- */
+  .games { grid-area: games; display: flex; flex-direction: column; min-height: 0; }
+  .games__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); flex: none; }
+  .games__title { font-weight: 400; }
   .games__all {
     display: inline-flex;
     align-items: center;
@@ -506,68 +734,105 @@ const path = Astro.url.pathname;
     font-size: 13px;
     transition: background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour);
   }
-  .games__scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; }
+  .games__scroll { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; border-top: var(--border-w) solid var(--border-1); }
   .games__group { display: grid; grid-template-columns: 84px minmax(0, 1fr); }
-  .games__glabel { padding: 11px 8px 0 10px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
+  .games__glabel { hyphens: auto; -webkit-hyphens: auto; padding: 9px 6px 0 8px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
   .games__list { display: flex; flex-direction: column; gap: 4px; }
   .games__row {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 36px;
-    padding-inline: 4px 12px;
+    min-height: 32px;
+    padding: 2px 12px 2px 4px;
     border-radius: var(--radius-full);
     color: var(--text-1);
     font-size: 14px;
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .games__row.is-current { background: var(--glass-hover); }
-  .games__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .games__count { margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); vertical-align: super; line-height: 0; }
-  .games__tm { padding: 6px 10px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
+  /* A long name (Red Dead Redemption 2 at 1280 and 1440) never truncates: it wraps to a second, balanced line and
+     its row grows by 4 px; the count rides on its last word. Nothing clips, so every glyph stays whole. */
+  .games__name { display: block; min-width: 0; line-height: 1.15; text-wrap: balance; }
+  .games__count { vertical-align: baseline; position: relative; top: -0.5em; margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); line-height: 1; }
+  .games__tm { padding: 6px 8px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
   @media (hover: hover) and (pointer: fine) {
     .games__row:not(.is-current):hover, .games__all:hover { background: var(--glass-hover-soft); }
+    :global(.has-pill) .games__row:not(.is-current):hover { background: none; }
     .games__all:hover { color: var(--text-1); }
   }
-  .menu__link {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    height: 48px;
-    padding-inline: 14px;
-    border-radius: var(--radius-full);
-    color: var(--text-1);
-    font-size: 18px;
-    font-weight: 400;
-    transition: background-color var(--dur-colour) var(--ease-colour);
-  }
-  .menu__link.is-current { background: var(--glass-hover); }
-  @media (hover: hover) and (pointer: fine) {
-    .menu__link:not(.is-current):hover { background: var(--glass-hover-soft); }
-  }
-  .menu__count {
-    margin-left: 3px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-2);
-    vertical-align: super;
-    line-height: 0;
-  }
-  .menu[hidden] { display: none; }
-  .menu__close { display: none; }
-  .menu-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: var(--scrim);
-    opacity: 0;
-    transition: opacity var(--dur-popover-out) var(--ease-standard);
-    pointer-events: auto;
-  }
-  :global([data-menu='open']) .menu-scrim { opacity: 1; transition-duration: var(--dur-popover-in); }
 
-  /* Phone: island across the width, menu becomes the Peacock overlay */
+  /* ---------- Foot: utility links, chapter setting, theme ---------- */
+  .menu__foot { grid-area: foot; align-self: end; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .menu__util { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .menu__util-link { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; color: var(--text-2); font-size: var(--text-body-s); transition: color var(--dur-colour) var(--ease-colour); }
+  .menu__corner { grid-area: corner; align-self: end; display: flex; }
+  .menu__theme {
+    display: grid;
+    place-items: center;
+    width: var(--ctrl-size);
+    height: var(--ctrl-size);
+    border-radius: var(--radius-full);
+    border: var(--border-w) solid var(--border-1);
+    color: var(--text-1);
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .menu__theme:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) {
+    .menu__util-link:hover { color: var(--text-1); }
+    .menu__theme:hover { background: var(--glass-hover-soft); }
+  }
+
+  /* ---------- Choreography (open): surface 0 to 280ms; art fades in from 100ms and settles by 500ms; the links rise
+     from 320ms with shrinking gaps (0, 40, 75, 105, 130); the rest fades in with the last link. Close: every word
+     fades in 100ms while the surface folds back in 180ms. Keyboard ([data-motion='none']): no motion at all. ---------- */
+  .menu__art, .menu__fade, .menu__item { opacity: 0; transition: opacity 100ms var(--ease-standard); }
+  .menu__frame > .menu__pic img { transform: scale(1.04); transition: transform 0s linear 100ms; }
+  .menu__item { transform: translateY(16px); transition: opacity 100ms var(--ease-standard), transform 0s linear 100ms; }
+  :global([data-menu='open']) .menu__art { opacity: 1; transition: opacity 200ms var(--ease-out) 100ms; }
+  :global([data-menu='open']) .menu__frame > .menu__pic img { transform: none; transition: transform 400ms var(--ease-out) 100ms; }
+  :global([data-menu='open']) .menu__item {
+    opacity: 1;
+    transform: none;
+    transition: opacity 300ms var(--ease-out) calc(320ms + var(--d, 0ms)), transform 300ms var(--ease-out) calc(320ms + var(--d, 0ms));
+  }
+  :global([data-menu='open']) .menu__fade { opacity: 1; transition: opacity 240ms var(--ease-out) 400ms; }
+  :global([data-motion='none']) .menu,
+  :global([data-motion='none']) .menu :is(.menu__art, .menu__fade, .menu__item, .menu__pic img) { transition: none !important; }
+
+  /* ================= Tablet and phone: a full screen sheet; the art is a short banner that stays at the top ================= */
+  @media (max-width: 1279px) {
+    .menu__inner {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      padding: 0 var(--gutter) calc(env(safe-area-inset-bottom, 0px) + var(--space-10));
+      margin-top: calc(var(--top) - 24px);
+      height: calc(100% - var(--top) + 24px);
+      max-width: 720px;
+    }
+    .menu__inner > * { flex-shrink: 0; }
+    .menu__art { position: sticky; top: 0; z-index: 3; flex: none; padding-bottom: var(--space-2); background: var(--bg); }
+    .menu__frame { flex: none; aspect-ratio: auto; max-height: none; height: clamp(112px, 18svh, 168px); min-height: 0; clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 32px 100%, 0 calc(100% - 32px)); }
+    .menu__pic img { object-position: var(--pos-phone, 50% 50%); }
+      .menu__caption { margin-top: var(--space-2); }
+    .menu__search { flex: none; }
+    .menu__link { height: 56px; gap: 12px; }
+    .menu__label { font-size: 32px; }
+    .menu__latest { order: 3; }
+    .menu__guide { order: 1; }
+    .menu__search { order: 0; }
+    .games { order: 2; }
+    .menu__foot { order: 4; }
+    .menu__corner { order: 5; margin-top: calc(-1 * var(--space-4)); }
+    .games__scroll { overflow: visible; gap: 16px; }
+    .games__group { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .games__glabel { padding: 8px 8px 4px; }
+    .games__row { height: 52px; gap: 14px; padding-inline: 6px 14px; font-size: 16px; }
+    .games :global(.games__plate) { --plate-w: 120px; --plate-h: 36px; }
+    .menu__find { min-height: 56px; }
+    .menu__util-link { min-height: 44px; }
+  }
   @media (max-width: 767px) {
     .island-wrap { width: calc(100% - 2 * var(--page-pad)); }
     .island { padding-inline: 4px 4px; }
@@ -575,122 +840,23 @@ const path = Astro.url.pathname;
     .island__menu { width: 44px; }
     .island__mark { margin-left: 4px; font-size: 18px; padding-block: 13px; }
     .subbar { display: none; }
-
-    .menu {
-      position: fixed;
-      inset: 0;
-      width: auto;
-      padding: calc(env(safe-area-inset-top, 0px) + 120px) 0 calc(env(safe-area-inset-bottom, 0px) + 54px);
-      border: 0;
-      border-radius: 0;
-      background: var(--overlay-fill);
-      -webkit-backdrop-filter: blur(20px) saturate(120%);
-      backdrop-filter: blur(20px) saturate(120%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transform: none;
-      transition: opacity var(--dur-overlay-out) var(--ease-standard);
-      overscroll-behavior: contain;
-      z-index: 3;
-    }
-    .menu::after {
-      content: '';
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 22%;
-      background: linear-gradient(to bottom, transparent, var(--bg));
-      pointer-events: none;
-    }
-    :global([data-menu='open']) .menu { transform: none; transition: opacity var(--dur-overlay-in) var(--ease-out); }
-    .menu__list { gap: 0; width: 100%; padding-left: 32%; }
-    .menu__games-item { display: list-item; }
-    .menu__games { width: 100%; text-align: left; font: inherit; font-size: var(--text-menu); font-weight: 600; }
-
-    /* Games sheet (phone): the map sheet's look; moved only by transform, written by the script. */
-    .games-scrim:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 3; background: var(--scrim); opacity: 0; }
-    .games {
-      --safe-top: env(safe-area-inset-top, 0px);
-      position: fixed;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 100%;
-      max-height: none;
-      z-index: 4;
-      padding: 0 0 env(safe-area-inset-bottom, 0px);
-      border: 0;
-      border-top: var(--border-w) solid var(--border-1);
-      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-      background: var(--surface-1);
-      transform: translate3d(0, 100%, 0);
-      visibility: hidden;
-      touch-action: none;
-      overscroll-behavior: contain;
-      will-change: transform;
-    }
-    .games[data-snap='full'] { touch-action: pan-y; }
-    .games.is-dragging { user-select: none; -webkit-user-select: none; }
-    .games__handle { display: block; position: relative; height: 22px; flex: none; touch-action: none; }
-    .games__grabber { position: absolute; left: 50%; top: 8px; width: 36px; height: 5px; margin-left: -18px; border-radius: var(--radius-full); background: var(--border-2); }
-    .games__head { height: 52px; padding-inline: 20px 12px; gap: 4px; }
-    .games__title { margin-right: auto; color: var(--text-1); font-size: var(--text-h2); font-weight: 700; letter-spacing: 0; text-transform: none; }
-    .games__all { height: 44px; padding-inline: 14px; font-size: 15px; }
-    .games__close {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-full);
-      background: var(--surface-2);
-      color: var(--text-1);
-      transition: transform var(--dur-press) var(--ease-out);
-    }
-    .games__close:active { transform: scale(0.94); }
-    .games__scroll { overflow: hidden; gap: 16px; padding: 4px 12px 32px; }
-    .games[data-snap='full'] .games__scroll { overflow-y: auto; }
-    .games__group { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-    .games__glabel { padding: 8px 12px 4px; }
-    .games__row { height: 56px; gap: 14px; padding-inline: 8px 16px; font-size: 17px; }
-    .games :global(.games__plate) { --plate-w: 120px; --plate-h: 36px; }
-    .games__count { font-size: 13px; }
-    .games__tm { padding: 4px 12px 0; }
-    .menu__link {
-      height: 80px;
-      gap: 22px;
-      padding: 0;
-      border-radius: 0;
-      font-size: var(--text-menu);
-      font-weight: 600;
-      color: var(--text-2);
-      background: none;
-    }
-    .menu__link.is-current { background: none; color: var(--text-1); }
-    .menu :global(.menu__icon) { width: 31px; height: 31px; }
-    .menu__count { font-size: 13px; }
-    .menu__close {
-      display: grid;
-      place-items: center;
-      position: relative;
-      z-index: 1;
-      margin-top: auto;
-      width: var(--ctrl-size-xl);
-      height: var(--ctrl-size-xl);
-      border-radius: var(--radius-full);
-      background: var(--surface-1);
-      border: var(--border-w) solid var(--border-1);
-      color: var(--text-1);
-      transition: transform var(--dur-press) var(--ease-out);
-    }
-    .menu__close:active { transform: scale(0.94); }
-    .menu-scrim { display: none; }
+    .menu { --top: calc(env(safe-area-inset-top, 0px) + var(--island-top) + var(--island-h) + 32px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .menu, :global([data-menu='open']) .menu { transform: none; }
+    /* No growing, rising, settling or turning: the surface and its contents fade. */
+    .menu, :global([data-menu='open']) .menu { clip-path: none; }
+    .menu { opacity: 0; transition: opacity var(--dur-fade-reduced) var(--ease-standard); }
+    :global([data-menu='open']) .menu { opacity: 1; transition: opacity var(--dur-fade-reduced) var(--ease-out); }
+    .menu__art, .menu__fade, .menu__item,
+    :global([data-menu='open']) :is(.menu__art, .menu__fade, .menu__item) { opacity: 1; transform: none; transition: none; }
+    .menu__frame > .menu__pic img, :global([data-menu='open']) .menu__frame > .menu__pic img { transform: none; transition: none; }
+    .burger__l, :global([data-menu='open']) .burger__l { transition: none; }
+    :global([data-menu='open']) .burger, :global([data-menu='closing']) .burger { animation: burger-fade 120ms linear; }
+    @keyframes burger-fade { from { opacity: 0; } }
   }
   @media (prefers-reduced-transparency: reduce) {
-    .island, .menu { background: var(--surface-1); }
-    .island::before, .menu { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .island { background: var(--surface-1); }
+    .island::before { -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
 </style>

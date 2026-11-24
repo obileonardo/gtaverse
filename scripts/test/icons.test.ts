@@ -29,11 +29,47 @@ test('every category and collectible layer has a glyph', () => {
   for (const c of categories) assert.ok(names.includes((categoryGlyphs as Record<string, string>)[c.id]), `category ${c.id} has no glyph`);
 });
 
+test('every category and collectible layer has a blip and a map pin', () => {
+  for (const c of categories) {
+    const g = (glyphs as Record<string, { blip?: string; pin?: string }>)[(categoryGlyphs as Record<string, string>)[c.id]];
+    assert.ok(g.blip && g.pin, `category ${c.id} needs a blip and a pin`);
+  }
+});
+
+test('single source has its own glyph, not the check', () => {
+  assert.notEqual(glyphs['single-source'].solid, glyphs.check.solid);
+  assert.notEqual(glyphs['single-source'].line, glyphs.check.line);
+});
+
+test('blip colours come from design tokens, with an override variable', () => {
+  for (const [name, g] of Object.entries(glyphs) as [string, { blip?: string; pin?: string }][]) {
+    for (const m of [g.blip, g.pin]) {
+      if (!m) continue;
+      assert.ok(/var\(--blip-(plate|ink|key), var\(--[a-z0-9-]+, #[0-9a-f]{6}\)\)/.test(m), `${name}: colours must be token variables`);
+      const painted = m.replace(/<mask[\s\S]*?<\/mask>/g, ''); // mask content is black and white by definition
+      assert.ok(!/fill="#|stroke="#/.test(painted), `${name}: a raw colour outside the token variables`);
+    }
+  }
+});
+
 test('masks use the per-instance id token, and nothing has an em or en dash', () => {
-  for (const [name, g] of Object.entries(glyphs)) {
-    for (const m of [g.solid, g.line]) {
+  for (const [name, g] of Object.entries(glyphs) as [string, { solid: string; line: string; label: string; blip?: string; pin?: string }][]) {
+    for (const m of [g.solid, g.line, g.blip ?? '', g.pin ?? '']) {
       if (m.includes('<mask')) assert.ok(m.includes('id="%ID%"') && m.includes('url(#%ID%)'), `${name}: mask without the id token`);
       assert.ok(!/[\u2013\u2014]/.test(m + g.label), `${name}: dash`);
     }
   }
+});
+
+test('the map island subset (blips-map.ts) carries the same blips and pins as the family', async () => {
+  const { mapBlips, categoryGlyphs: mapCategories, blipBadges: mapBadges } = await import('../../src/icons/blips-map.ts');
+  const { blipBadges } = await import('../../src/icons/family.ts');
+  assert.deepEqual(mapCategories, categoryGlyphs);
+  assert.deepEqual(mapBadges, blipBadges);
+  for (const [name, b] of Object.entries(mapBlips)) {
+    const g = glyphs[name as keyof typeof glyphs] as { blip?: string; pin?: string };
+    assert.equal(b.blip, g.blip, `${name} blip`);
+    assert.equal(b.pin, g.pin, `${name} pin`);
+  }
+  for (const glyph of new Set(Object.values(categoryGlyphs))) assert.ok(glyph in mapBlips, `${glyph} is in the map subset`);
 });

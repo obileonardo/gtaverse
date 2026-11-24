@@ -1,0 +1,51 @@
+---
+// The map's parts for the design system page (/design), framed on their own page so the map's stylesheet (map.css)
+// loads only here. Its rules are scoped under .vf-map (the root of MapSpecimens), so they restyle nothing else.
+// /design embeds this page in an iframe (components/design/Frame.astro).
+import Frame from '../../components/design/Frame.astro';
+import MapSpecimens from '../../components/design/MapSpecimens';
+import { finds, regionById, categories as allCategories } from '../../lib/content';
+import { regionLabel, findStill, showcaseable, categoryChipLabel, categorySingular, categoryIcon } from '../../lib/media';
+import { youtubeId } from '../../lib/clip';
+import mapJson from '../../../content/map.json';
+import type { MapFind, MapMeta } from '../../components/map/types';
+import type { Find } from '../../lib/content';
+
+// The map's data for one find, shaped exactly as src/pages/map.astro shapes it for the map island.
+const ancestors = (id: string): string[] => {
+  const out: string[] = [];
+  for (let r = regionById(id); r; r = r.parent ? regionById(r.parent) : undefined) out.push(r.id);
+  return out;
+};
+const toMapFind = (f: Find): MapFind => {
+  const s = findStill(f);
+  return {
+    slug: f.slug, title: f.title, category: f.category, categoryLabel: categorySingular(f.category), icon: categoryIcon(f.category),
+    regionIds: [...new Set(f.region_ids.flatMap(ancestors))].filter((id) => id !== 'leonida'), regionLabel: regionLabel(f),
+    verification: f.verification, spoiler: f.spoiler, mature: f.mature, pin: f.pin,
+    pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null, summary: f.summary, where: f.location_description ?? null,
+    area: f.area ?? null, still: s ? s.thumb : null,
+    clip: f.clip ? { platform: f.clip.platform, url: f.clip.url, creator: f.clip.creator ?? null, yt: f.clip.platform === 'youtube' ? youtubeId(f.clip.url) : null } : null,
+    sources: f.sources.map((x) => ({ type: x.type, url: x.url, creator: x.creator ?? null })),
+    finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
+    updated: f.updated_at ?? null,
+    added: (f as { added_at?: string | null }).added_at ?? null, chapterGate: f.chapter_gate ?? null,
+    connections: (f.related_connections ?? []).length, games: (f.crossover_games ?? []).length, related: [],
+  };
+};
+const meta: MapMeta = {
+  width: mapJson.image.width, height: mapJson.image.height, maxZoom: 5, tileSize: mapJson.tiles.tile_size,
+  tileUrl: '', attribution: 'Map © Rockstar Games', frame: mapJson.grid.frame, rows: mapJson.grid.rows, columns: mapJson.grid.columns,
+};
+const longest = <T,>(xs: T[], key: (x: T) => string) => [...xs].sort((a, b) => key(b).length - key(a).length)[0];
+const art = finds.find((f) => showcaseable(f) && f.clip?.platform === 'youtube')!;
+const longFind = longest(finds, (f) => f.title);
+const longRegion = longest(finds, (f) => regionLabel(f));
+const longCategory = longest(allCategories, (c) => categoryChipLabel(c.id));
+const demo = toMapFind(art);
+// Worst case: the longest title, region and category labels in our content, and no still.
+const worst: MapFind = { ...toMapFind(longFind), regionLabel: regionLabel(longRegion), categoryLabel: categorySingular(longCategory.id), still: null };
+---
+<Frame title="Map parts">
+  <MapSpecimens client:load demo={demo} worst={worst} meta={meta} />
+</Frame>

@@ -29,6 +29,20 @@
         "width": 807,
         "height": 540,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/6934dc5e822bb457e127873c6114b38b.jpg",
+        "file": "gta-vi.jpg",
+        "seen_as": "the cover tile on the Rockstar Games games list",
+        "focus": { "x": 0.5, "y": 0.5 },
+        "crop": { "left": 1396, "top": 0, "width": 933, "height": 1152 },
+        "retrieved": "2026-11-24",
+        "sha256": "971cdcc51037a966c2cd2f7f2da67767a0b645bb77388904244b5ecb2cc989a6",
+        "bytes": 1596233,
+        "width": 3840,
+        "height": 1152,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -50,6 +64,19 @@
         "width": 217,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/ccac790d960f612fa0746c78b8052926.jpg",
+        "file": "gta-v.jpg",
+        "seen_as": "the cover tile on the Rockstar Games games list",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "3a26f385d0413556fd0d7e78c308a8cbf7eb9818f121bfac33eff8157305eb07",
+        "bytes": 615559,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -71,6 +98,19 @@
         "width": 245,
         "height": 34,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/IV",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/0b01707ef5603a26c1f542088f8f7c09.jpg",
+        "file": "gta-iv.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.32 },
+        "retrieved": "2026-11-24",
+        "sha256": "9add40f5ecd8b7aad466f4a168d7d75d6f495e699e4dc11dc14d6623da65ce6d",
+        "bytes": 508455,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -92,6 +132,19 @@
         "width": 294,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/sanandreas",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/bbcbd2a2bb65ddad76e831c91c17b421.jpg",
+        "file": "gta-san-andreas.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "07f5036a6345bdea3d538db30a1144d09e1d4f8d94a5c93b2f7ab4dee0a5c9bd",
+        "bytes": 537298,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -113,6 +166,19 @@
         "width": 240,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/vicecity",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/6bf5412b358a42300603159932412051.jpg",
+        "file": "gta-vice-city.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "3b8b6a8223c03375855ae7eb2f762a344c5250d6d2a5a31a8cf05fca87982d1f",
+        "bytes": 567163,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -134,6 +200,19 @@
         "width": 259,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/grandtheftauto3",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/81001f378e085cd20f8ee0182e23cb7c.jpg",
+        "file": "gta-iii.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "c5ec0a278735c6f7df14955758ae477a14d04a27eea671c183680ce3152d7b29",
+        "bytes": 431200,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -155,6 +234,19 @@
         "width": 389,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/libertycitystories",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/ab528316ca7d31c2b041b62c4ce5dd36.jpg",
+        "file": "gta-liberty-city-stories.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "37f0685a45b9966f5c6cd917e8b55ace04cdf2a83562b1bab88c82d0a17352c4",
+        "bytes": 635743,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -176,6 +268,19 @@
         "width": 267,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/vicecitystories",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/c82125e0b20342dba2008b0dcc6d55f6.jpg",
+        "file": "gta-vice-city-stories.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.4 },
+        "retrieved": "2026-11-24",
+        "sha256": "6cb5ba0b6fac793b42e1920ee6dd55b03bf2a3a0b2d1afa3127333f828478c46",
+        "bytes": 577262,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -197,6 +302,19 @@
         "width": 282,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/082b847bcab37655faf903149f80f1e4.jpg",
+        "file": "red-dead-redemption-2.jpg",
+        "seen_as": "the cover tile on the Rockstar Games games list",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "b688ca57ed54af5facefeda772c86dd1ba1d98dc526567774d917b6a6b4e6f36",
+        "bytes": 1073078,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -218,6 +336,19 @@
         "width": 254,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/5aa471f90eaff248e0fbef79400cbbf3.jpg",
+        "file": "red-dead-redemption.jpg",
+        "seen_as": "the cover tile on the Rockstar Games games list",
+        "focus": { "x": 0.5, "y": 0.28 },
+        "retrieved": "2026-11-24",
+        "sha256": "3447e945fecad24255164580955c3d25229d5669193678067474bcae039b0070",
+        "bytes": 513035,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -239,6 +370,19 @@
         "width": 143,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/5f58d386594d32f34c887da75032c5be.jpg",
+        "file": "bully.jpg",
+        "seen_as": "the cover tile on the Rockstar Games games list",
+        "focus": { "x": 0.5, "y": 0.45 },
+        "retrieved": "2026-11-24",
+        "sha256": "89fc43e3b05c8bf1b80f860eab01fad848986284021f348f84bac7c9858d961a",
+        "bytes": 662769,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -260,6 +404,19 @@
         "width": 166,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/lanoire",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/b1034f3c525b39db31d9017268a0aeb5.jpg",
+        "file": "la-noire.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.55, "y": 0.35 },
+        "retrieved": "2026-11-24",
+        "sha256": "548e987968f886af4c6b8ec7a88d4a83ccf4a73c588106395032557ed6d40d2b",
+        "bytes": 1015183,
+        "width": 1700,
+        "height": 2052,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -281,6 +438,19 @@
         "width": 362,
         "height": 64,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/maxpayne3",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/0f31b4df90bff5bab740485f2d4b8253.jpg",
+        "file": "max-payne-3.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "5480882583820496b6acf5fede025fb320f82aa1fa2677dcea1b638d198b8aed",
+        "bytes": 879406,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -302,6 +472,19 @@
         "width": 104,
         "height": 32,
         "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      },
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/manhunt",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/fa649a5d6b52121271093a7c564cc56a.jpg",
+        "file": "manhunt.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.45 },
+        "retrieved": "2026-11-24",
+        "sha256": "fe9cb7df6045b8625734722bc52475cffc617a1970136c61c2f2140bc4f4cd03",
+        "bytes": 406507,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
       }
     },
     {
@@ -313,7 +496,20 @@
       "group": "rockstar",
       "aliases": ["The Warriors"],
       "logo": null,
-      "logo_note": "The official page (https://www.rockstargames.com/games/thewarriors) showed no logo image on 2026-11-24. Text plate until an official file is confirmed."
+      "logo_note": "The official page (https://www.rockstargames.com/games/thewarriors) showed no logo image on 2026-11-24. Text plate until an official file is confirmed.",
+      "art": {
+        "page_url": "https://www.rockstargames.com/games/thewarriors",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/5239707dea0f2f4ea8351f64e6b5a921.jpg",
+        "file": "the-warriors.jpg",
+        "seen_as": "the cover on the game's Rockstar Games page (the same file as its tile on the games list)",
+        "focus": { "x": 0.5, "y": 0.3 },
+        "retrieved": "2026-11-24",
+        "sha256": "bc23133f9f60075c7cecacc8cf9d45a924b9e5bced1e5e57ae706dd1a7fc0f27",
+        "bytes": 859429,
+        "width": 1280,
+        "height": 1580,
+        "licence_note": "Copyright Rockstar Games. Not licensed by this repo. Shown only in the header menu, credited \"Art: Rockstar Games\", scaled and cropped, never altered otherwise."
+      }
     },
     {
       "id": "gta",

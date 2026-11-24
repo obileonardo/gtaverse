@@ -1,0 +1,31 @@
+---
+// One chapter of the design system page: a numbered caps kicker, its heading and a short lede. Chapters are separated by
+// space and one hairline. The id is on the section, so the contents rail follows the chapter being read.
+interface Props { id: string; n: number; title: string; lede?: string }
+const { id, n, title, lede } = Astro.props;
+---
+<section class="dsec" id={id} aria-labelledby={`${id}-title`}>
+  <p class="dsec__n mono-caps tabular" aria-hidden="true">{String(n).padStart(2, '0')}</p>
+  <h2 id={`${id}-title`} class="dsec__title">{title}</h2>
+  {lede && <p class="dsec__lede">{lede}</p>}
+  <div class="dsec__body"><slot /></div>
+</section>
+
+<style>
+  /* The section carries the id the contents rail follows, so the rail tracks the chapter being read, not its heading. */
+  .dsec { padding-top: var(--space-16); border-top: var(--border-w) solid var(--border-1); scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-4)); }
+  .dsec + :global(.dsec) { margin-top: var(--space-section); }
+  .dsec__n { color: var(--accent-text); }
+  .dsec__title {
+    margin-top: var(--space-3);
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-m);
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+  }
+  .dsec__lede { margin-top: var(--space-4); max-width: var(--measure); color: var(--text-2); font-size: var(--text-body-l); line-height: 1.5; }
+  .dsec__body { display: flex; flex-direction: column; gap: var(--space-12); margin-top: var(--space-10); }
+</style>

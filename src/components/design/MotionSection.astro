@@ -1,0 +1,346 @@
+---
+// Motion: every curve and duration token (tokens.css), plotted and playable; the entrance and exit pairs with their
+// exit ratio checked against the owner's 60 to 75% rule; the first-view stagger (site-motion.ts's own staggerDelay);
+// the "two slides never overlap" swap (the timeline's choreography); the springs; and the reduced-motion fallback.
+// Every demo reads its values from the live tokens when it plays. Demos are explicit play controls, so they also play
+// from the keyboard; on the site, keyboard actions never animate.
+import Button from '../ui/Button.astro';
+import Chip from '../ui/Chip.astro';
+import LevelTable, { type LevelRow } from '../ui/LevelTable.astro';
+import { baseDecls, tokensWhere } from './tokens';
+import { usage } from './source';
+
+const curves = tokensWhere(/^--ease-/).map((d) => {
+  let path = '';
+  const cb = d.value.match(/cubic-bezier\(([^)]+)\)/);
+  if (cb) {
+    const [x1, y1, x2, y2] = cb[1].split(',').map(Number);
+    path = `M0 100 C ${x1 * 100} ${100 - y1 * 100} ${x2 * 100} ${100 - y2 * 100} 100 0`;
+  } else if (d.value.startsWith('linear(')) {
+    const parts = d.value.slice(7, -1).split(',').map((s) => s.trim().split(/\s+/));
+    path = parts.map(([v, at], i) => `${i ? 'L' : 'M'}${at ? parseFloat(at) : (i / (parts.length - 1)) * 100} ${100 - Number(v) * 100}`).join(' ');
+  }
+  return { ...d, path, files: usage(d.name).length };
+});
+
+const ms = (v: string) => parseFloat(v);
+const durations = tokensWhere(/^--(dur-|stagger)/).map((d) => ({ ...d, ms: /ms$/.test(d.value) ? ms(d.value) : null, files: usage(d.name).length }));
+const maxMs = Math.max(...durations.map((d) => d.ms ?? 0));
+
+// Entrance and exit pairs, found by name (--dur-x-in with --dur-x-out, --dur-morph with --dur-morph-out).
+const pairs = durations.flatMap((d) => {
+  const base = d.name.endsWith('-in') ? d.name.slice(0, -3) : null;
+  const out = base ? durations.find((x) => x.name === `${base}-out`) : durations.find((x) => x.name === `${d.name}-out`);
+  if (!out || out.ms === null || d.ms === null) return [];
+  const id = (base ?? d.name).replace('--dur-', '');
+  return [{ id, in: d, out, ratio: Math.round((out.ms / d.ms) * 100) }];
+});
+const pairRows: LevelRow[] = pairs.map((p) => ({
+  label: `<span class="ds-tok">${p.id}</span>`,
+  cells: [`<span class="ds-mono">${p.in.name} ${p.in.value}</span>`, `<span class="ds-mono">${p.out.name} ${p.out.value}</span>`, `<span class="ds-ratio">${p.ratio}% <span class="badge badge--caps ${p.ratio >= 60 && p.ratio <= 75 ? 'badge--meta' : 'badge--outline'}"><span class="badge__label">${p.ratio >= 60 && p.ratio <= 75 ? 'In rule' : 'Outside 60 to 75'}</span></span></span>`],
+}));
+const springs = tokensWhere(/^--spring-/);
+const reduced = baseDecls.find((d) => d.name === '--dur-fade-reduced')?.value ?? '150ms';
+---
+<div class="ds-block" data-motion>
+  <div class="ds-row">
+    <Chip data-reduce-toggle>Preview reduced motion</Chip>
+    <p class="ds-note">With reduced motion (your system setting, or this switch) every movement below becomes a {reduced} opacity fade in place, as it does on the site. Each component carries its own reduced-motion rule; nothing cuts animation to zero.</p>
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Curves</h3>
+  <p class="ds-note">Entrances and presses ease out; movement on screen eases in and out; exits use the standard curve, never the entrance’s. No curve overshoots. Press play to run a dot across on each curve for the same 640 ms.</p>
+  <ul class="ds-curves" role="list">
+    {curves.map((c) => (
+      <li class="ds-curve">
+        <svg class="ds-curve__plot" viewBox="-4 -4 108 108" aria-hidden="true" focusable="false">
+          <path class="ds-curve__axis" d="M0 100 H100 M0 100 V0" />
+          <path class="ds-curve__line" d={c.path} />
+        </svg>
+        <div class="ds-curve__meta">
+          <p class="ds-tok">{c.name}</p>
+          <p class="ds-mono ds-curve__value">{c.value}</p>
+          <p class="ds-note">{c.note || ''} <span class="ds-dim">{c.files ? `${c.files} files` : 'Not read by any file yet'}</span></p>
+        </div>
+        <div class="ds-curve__track" aria-hidden="true"><span class="ds-curve__dot" data-dot={c.name}></span></div>
+        <Button variant="quiet" size="s" icon="play" data-play-curve={c.name}>Play</Button>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Durations</h3>
+  <p class="ds-note">Drawn to scale. UI stays under 300 ms; drawers, sheets and toasts may run to 500; rare moments (the 404) longer.</p>
+  <ul class="ds-durs" role="list">
+    {durations.map((d) => (
+      <li class="ds-dur">
+        <span class="ds-tok">{d.name}</span>
+        <span class="ds-dur__bar" style={d.ms !== null ? `width: ${(d.ms / maxMs) * 100}%` : 'width: 0'} aria-hidden="true"></span>
+        <span class="ds-mono">{d.value}{d.files ? '' : ', not read by any file yet'}</span>
+        {d.note && <span class="ds-dur__note">{d.note}</span>}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Enter and exit</h3>
+  <p class="ds-note">Arriving and leaving use different curves, and leaving takes 60 to 75% of the entrance (decision M1). The pairs below are found by name in tokens.css and their ratio is computed. Pick a pair, open and close the panel; open it again while it leaves and it turns back from where it is (a transition, not a keyframe).</p>
+  <LevelTable head={['Pair', 'Entrance', 'Exit', 'Exit is']} rows={pairRows} caption="Entrance and exit duration pairs" />
+  <div class="ds-stage">
+    <div class="ds-row" role="group" aria-label="Duration pair">
+      {pairs.map((p, i) => <Chip selected={i === 0} data-pair={p.id} data-in={p.in.name} data-out={p.out.name}>{p.id}</Chip>)}
+    </div>
+    <div class="ds-row">
+      <Button variant="primary" size="m" data-panel-toggle aria-pressed="false">Open the panel</Button>
+      <p class="ds-cap" data-panel-readout></p>
+    </div>
+    <div class="ds-panel-stage">
+      <div class="ds-panel" data-panel hidden>
+        <p class="title">A panel</p>
+        <p class="body-s muted">Enters on --ease-out (sheets on --ease-drawer), leaves on --ease-standard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Stagger on first view</h3>
+  <p class="ds-note">Cards and rows rise 12 px and fade on <code>--ease-reveal</code> over <code>--dur-reveal-group</code>, once per page and never on a back navigation. Each gap is 10% shorter than the last, capped at the sixth item (<code>staggerDelay</code> in src/scripts/site-motion.ts, used here as is).</p>
+  <div class="ds-stage">
+    <Button variant="quiet" size="m" icon="play" data-play-stagger>Play the stagger</Button>
+    <ul class="ds-stagger" role="list">
+      {Array.from({ length: 8 }, (_, i) => <li class="ds-stagger__tile" data-tile><span class="ds-cap tabular" data-delay>{i + 1}</span></li>)}
+    </ul>
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Two slides never overlap</h3>
+  <p class="ds-note">When one view replaces another, the old one stops moving before the new one starts; their fades may overlap briefly. The GTAverse timeline’s moment swap: the old moment moves 12 px and stops at 120 ms (75% of its 160 ms fade), the new one moves in from 120 ms over 280 ms. Values from src/components/lore/Timeline.astro.</p>
+  <div class="ds-stage">
+    <div class="ds-row">
+      <Button variant="outline" size="m" icon="arrow-left" iconOnly label="Previous view" data-swap="-1" />
+      <Button variant="outline" size="m" icon="arrow-right" iconOnly label="Next view" data-swap="1" />
+    </div>
+    <div class="ds-swap" aria-live="polite">
+      {['Vice City, 1986', 'Leonida, 2026', 'Liberty City, 2008'].map((t, i) => (
+        <div class="ds-swap__view" data-view hidden={i !== 0}>
+          <p class="mono-caps ds-dim">View {i + 1} of 3</p>
+          <p class="display-s">{t}</p>
+        </div>
+      ))}
+    </div>
+    <svg class="ds-swapchart" viewBox="0 0 440 66" role="img" aria-label="Timing: the old view moves from 0 to 120 ms and fades by 160 ms; the new view moves and fades in from 120 to 400 ms.">
+      <rect class="ds-swapchart__old" x="0" y="8" width="120" height="16" rx="4" />
+      <rect class="ds-swapchart__fade" x="120" y="8" width="40" height="16" rx="4" />
+      <rect class="ds-swapchart__new" x="120" y="36" width="280" height="16" rx="4" />
+      <text x="0" y="63">0</text><text x="110" y="63">120</text><text x="376" y="63">400 ms</text>
+    </svg>
+    <p class="ds-cap">Top: the old view moves (pink) then only fades (tint). Bottom: the new view moves in.</p>
+  </div>
+</div>
+
+<div class="ds-block">
+  <h3 class="ds-h3">Springs</h3>
+  <p class="ds-note">One critically damped spring (damping ratio 1) for anything that travels between targets the hand chooses: the menu’s hover pill, the switcher’s selection pill, the hero’s peek frame, the sheets. It keeps its velocity when retargeted and never passes its target (src/scripts/motion/spring.ts). Click along the track, quickly, to catch it mid-flight.</p>
+  <LevelTable head={['Token', 'Response', 'Use']} rows={springs.map((d) => ({ label: `<span class="ds-tok">${d.name}</span>`, cells: [`<span class="ds-mono">${d.value} s</span>`, d.note.replace(/&/g, '&amp;').replace(/</g, '&lt;')] }))} caption="Spring tokens" />
+  <div class="ds-stage">
+    <div class="ds-spring" data-spring role="slider" tabindex="0" aria-label="Spring demo: click or use the arrow keys to move the dot" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <span class="ds-spring__dot" data-spring-dot></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { staggerDelay } from '../../scripts/site-motion';
+  import { Spring, springToken, loop } from '../../scripts/motion/spring';
+
+  const root = document.documentElement;
+  const token = (name: string) => getComputedStyle(root).getPropertyValue(name).trim();
+  const msOf = (name: string, fallback: number) => { const v = parseFloat(token(name)); return Number.isFinite(v) ? v : fallback; };
+  const osReduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let forced = false;
+  const reduce = () => forced || osReduce.matches;
+  const fade = () => msOf('--dur-fade-reduced', 150);
+
+  // Reduced motion preview: the chip is a toggle; with the system setting on, it starts pressed and stays so.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-reduce-toggle]');
+  const syncToggle = () => {
+    toggle?.classList.toggle('is-selected', reduce());
+    toggle?.setAttribute('aria-pressed', String(reduce()));
+  };
+  toggle?.addEventListener('click', () => { if (!osReduce.matches) forced = !forced; syncToggle(); });
+  osReduce.addEventListener('change', syncToggle);
+  syncToggle();
+
+  // Curves: a dot crosses its track on the token's curve.
+  document.querySelectorAll<HTMLButtonElement>('[data-play-curve]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.playCurve!;
+      const dot = document.querySelector<HTMLElement>(`[data-dot="${name}"]`);
+      const track = dot?.parentElement;
+      if (!dot || !track) return;
+      dot.getAnimations().forEach((a) => a.cancel());
+      const dx = track.clientWidth - dot.offsetWidth;
+      if (reduce()) { dot.animate([{ opacity: 0, transform: `translateX(${dx}px)` }, { opacity: 1, transform: `translateX(${dx}px)` }], { duration: fade(), easing: 'linear', fill: 'forwards' }); return; }
+      dot.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${dx}px)` }], { duration: 640, easing: token(name), fill: 'forwards' });
+    });
+  });
+
+  // Enter and exit: a panel on CSS transitions, so a reopen mid-exit turns back from where it is.
+  const panel = document.querySelector<HTMLElement>('[data-panel]');
+  const panelBtn = document.querySelector<HTMLButtonElement>('[data-panel-toggle]');
+  const readout = document.querySelector<HTMLElement>('[data-panel-readout]');
+  const pairChips = [...document.querySelectorAll<HTMLButtonElement>('[data-pair]')];
+  let pair = pairChips[0];
+  let open = false;
+  let hideTimer = 0;
+  const describe = () => {
+    if (!pair || !readout) return;
+    const inMs = msOf(pair.dataset.in!, 200), outMs = msOf(pair.dataset.out!, 140);
+    readout.textContent = reduce() ? `Reduced: ${fade()}ms fade both ways` : `In ${inMs}ms on ${pair.dataset.pair === 'drawer' ? '--ease-drawer' : '--ease-out'}, out ${outMs}ms on --ease-standard`;
+  };
+  pairChips.forEach((c) => c.addEventListener('click', () => {
+    pair = c;
+    pairChips.forEach((x) => { x.classList.toggle('is-selected', x === c); x.setAttribute('aria-pressed', String(x === c)); });
+    describe();
+  }));
+  const setPanel = (next: boolean) => {
+    if (!panel || !pair) return;
+    open = next;
+    panelBtn?.setAttribute('aria-pressed', String(open));
+    if (panelBtn) panelBtn.querySelector('.btn__label')!.textContent = open ? 'Close the panel' : 'Open the panel';
+    const r = reduce();
+    const inMs = r ? fade() : msOf(pair.dataset.in!, 200);
+    const outMs = r ? fade() : msOf(pair.dataset.out!, 140);
+    const curveIn = pair.dataset.pair === 'drawer' ? token('--ease-drawer') : token('--ease-out');
+    clearTimeout(hideTimer);
+    if (open) {
+      panel.hidden = false;
+      void panel.offsetWidth;
+      panel.style.transition = `opacity ${inMs}ms ${r ? 'linear' : curveIn}, transform ${inMs}ms ${curveIn}`;
+      panel.dataset.state = r ? 'open-still' : 'open';
+    } else {
+      panel.style.transition = `opacity ${outMs}ms ${r ? 'linear' : token('--ease-standard')}, transform ${outMs}ms ${token('--ease-standard')}`;
+      panel.dataset.state = r ? 'closed-still' : 'closed';
+      hideTimer = window.setTimeout(() => { if (!open) panel.hidden = true; }, outMs);
+    }
+    describe();
+  };
+  panelBtn?.addEventListener('click', () => setPanel(!open));
+  describe();
+
+  // Stagger: the site's own delays.
+  document.querySelector('[data-play-stagger]')?.addEventListener('click', () => {
+    const step = msOf('--stagger-group', 50), cap = msOf('--stagger-cap', 6);
+    const dur = reduce() ? fade() : msOf('--dur-reveal-group', 480);
+    document.querySelectorAll<HTMLElement>('[data-tile]').forEach((t, i) => {
+      const delay = reduce() ? 0 : staggerDelay(i, step, cap);
+      t.querySelector('[data-delay]')!.textContent = `${delay}ms`;
+      t.getAnimations().forEach((a) => a.cancel());
+      t.animate(reduce() ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: dur, delay, easing: reduce() ? 'linear' : token('--ease-reveal'), fill: 'backwards' });
+    });
+  });
+
+  // Two slides never overlap: the timeline's swap.
+  const views = [...document.querySelectorAll<HTMLElement>('[data-view]')];
+  let current = 0;
+  document.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((b) => b.addEventListener('click', () => {
+    const dir = Number(b.dataset.swap);
+    const prev = views[current];
+    current = (current + dir + views.length) % views.length;
+    const next = views[current];
+    views.forEach((v) => v.getAnimations().forEach((a) => a.cancel()));
+    views.forEach((v) => { if (v !== prev && v !== next) v.hidden = true; });
+    next.hidden = false;
+    if (reduce()) {
+      prev.hidden = true;
+      next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: fade(), easing: 'linear' });
+      return;
+    }
+    const shift = 12;
+    prev.classList.add('is-leaving');
+    prev.animate([{ opacity: 1, transform: 'none' }, { opacity: 0.25, transform: `translateX(${-shift * dir}px)`, offset: 0.75 }, { opacity: 0, transform: `translateX(${-shift * dir}px)` }], { duration: 160, easing: token('--ease-standard'), fill: 'forwards' })
+      .finished.then(() => { prev.hidden = true; prev.classList.remove('is-leaving'); prev.getAnimations().forEach((a) => a.cancel()); }, () => prev.classList.remove('is-leaving'));
+    next.animate([{ opacity: 0, transform: `translateX(${(shift + 4) * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 120, easing: token('--ease-out'), fill: 'backwards' });
+  }));
+
+  // Spring: the site's own spring, retargeted on every click.
+  const track = document.querySelector<HTMLElement>('[data-spring]');
+  const dot = document.querySelector<HTMLElement>('[data-spring-dot]');
+  if (track && dot) {
+    const s = new Spring(0, springToken('travel', 0.3));
+    let stop: (() => void) | null = null;
+    const max = () => track.clientWidth - dot.offsetWidth;
+    const draw = () => { dot.style.transform = `translateX(${s.x}px)`; track.setAttribute('aria-valuenow', String(Math.round((s.target / Math.max(1, max())) * 100))); };
+    const go = (x: number) => {
+      const target = Math.max(0, Math.min(max(), x));
+      if (reduce()) { s.set(target); draw(); dot.animate([{ opacity: 0 }, { opacity: 1 }], { duration: fade(), easing: 'linear' }); return; }
+      s.to(target);
+      if (!stop) {
+        stop = loop((dt) => { s.step(dt); if (s.done) s.snap(); draw(); if (s.done) { stop = null; return false; } return true; });
+      }
+    };
+    track.addEventListener('click', (e) => go(e.clientX - track.getBoundingClientRect().left - dot.offsetWidth / 2));
+    // Keyboard moves jump: on the site, keyboard actions never animate.
+    track.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      s.set(Math.max(0, Math.min(max(), s.target + (e.key === 'ArrowRight' ? 1 : -1) * max() / 4)));
+      draw();
+    });
+  }
+</script>
+
+<style>
+  .ds-curves { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); }
+  .ds-curve { display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-areas: 'plot meta' 'track track' 'play play'; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-l); border: var(--border-w) solid var(--border-1); background: var(--surface-1); min-width: 0; }
+  .ds-curve__plot { grid-area: plot; width: 96px; height: 96px; overflow: visible; }
+  .ds-curve__axis { fill: none; stroke: var(--border-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .ds-curve__line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .ds-curve__meta { grid-area: meta; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .ds-curve__value { font-size: 12px; }
+  .ds-curve__track { grid-area: track; position: relative; height: 16px; border-radius: var(--radius-full); background: var(--surface-2); }
+  .ds-curve__dot { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: var(--radius-full); background: var(--accent); }
+  .ds-curve :global(.btn) { grid-area: play; justify-self: start; }
+
+  .ds-durs { display: flex; flex-direction: column; gap: var(--space-3); }
+  .ds-dur { display: grid; grid-template-columns: 200px minmax(0, 1fr) 160px; grid-template-areas: 'name bar val' 'name note note'; align-items: center; column-gap: var(--space-4); row-gap: var(--space-1); }
+  .ds-dur > .ds-tok { grid-area: name; align-self: start; }
+  .ds-dur__bar { grid-area: bar; display: block; height: 10px; min-width: 2px; border-radius: var(--radius-xs); background: var(--accent); }
+  .ds-dur > .ds-mono { grid-area: val; }
+  .ds-dur__note { grid-area: note; color: var(--text-2); font-size: var(--text-caption); line-height: 1.4; }
+
+  .ds-panel-stage { position: relative; min-height: 140px; }
+  .ds-panel[hidden] { display: none; }
+  .ds-panel { max-width: 360px; padding: var(--space-5); border-radius: var(--radius-l); border: var(--border-w) solid var(--border-1); background: var(--surface-1); opacity: 0; transform: translateY(8px); }
+  .ds-panel[data-state='open'] { opacity: 1; transform: none; }
+  .ds-panel[data-state='closed'] { opacity: 0; transform: translateY(8px); }
+  .ds-panel[data-state='open-still'] { opacity: 1; transform: none; }
+  .ds-panel[data-state='closed-still'] { opacity: 0; transform: none; }
+
+  .ds-stagger { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--space-3); }
+  .ds-stagger__tile { display: grid; place-items: end start; aspect-ratio: 3 / 4; padding: var(--space-2); border-radius: var(--radius-m); border: var(--border-w) solid var(--border-1); background: var(--glow-hero), var(--surface-1); }
+
+  .ds-swap { position: relative; display: grid; min-height: 96px; }
+  .ds-swap__view { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--space-2); }
+  .ds-swap__view[hidden] { display: none; }
+  .ds-swapchart { width: 440px; max-width: 100%; height: auto; overflow: visible; } /* the axis labels sit on the bottom edge: never cut their glyphs */
+  .ds-swapchart__old { fill: var(--accent); }
+  .ds-swapchart__fade { fill: var(--accent-tint); }
+  .ds-swapchart__new { fill: var(--text-2); }
+  .ds-swapchart text { fill: var(--text-3); font-family: var(--font-mono); font-size: 12px; }
+
+  .ds-spring { position: relative; height: 44px; border-radius: var(--radius-full); background: var(--surface-2); cursor: pointer; }
+  .ds-spring__dot { position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--inverse-fill); border: var(--border-w) solid var(--border-2); pointer-events: none; }
+
+  @media (max-width: 767px) {
+    .ds-curves { grid-template-columns: minmax(0, 1fr); }
+    .ds-dur { grid-template-columns: minmax(0, 1fr) 110px; grid-template-areas: 'name val' 'bar bar' 'note note'; }
+    .ds-stagger { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+</style>
