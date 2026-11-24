@@ -6,20 +6,24 @@
 import type { Clip } from '../lib/content';
 import { youtubeId, ytThumb, ytEmbed } from '../lib/clip';
 import Icon from './ui/Icon.astro';
-interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean; mature?: boolean; caption?: boolean; ratio?: string; class?: string }
-const { clip, title, spoiler = false, mature = false, caption = true, ratio = '16 / 9', class: className } = Astro.props;
+import ChapterControl from './ChapterControl.astro';
+// chapterGate: the find's chapter_gate. A spoiler clip (never a mature one) opens by itself when the visitor's
+// "I'm on Chapter N" setting has reached it (src/lib/chapter.ts).
+interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean; mature?: boolean; chapterGate?: string | null; caption?: boolean; ratio?: string; class?: string }
+const { clip, title, spoiler = false, mature = false, chapterGate = null, caption = true, ratio = '16 / 9', class: className } = Astro.props;
 const gated = spoiler || mature;
 const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
 const platform = ({ youtube: 'YouTube', x: 'X', reddit: 'Reddit', tiktok: 'TikTok' } as Record<string, string>)[clip.platform] ?? clip.platform;
 const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 'Mature';
 ---
-<figure class:list={['clip', className]} data-spoiler={spoiler ? 'true' : 'false'} style={`--clip-ratio: ${ratio}`}>
+<figure class:list={['clip', className]} data-spoiler={spoiler ? 'true' : 'false'} data-chapter-gate={spoiler && !mature ? chapterGate ?? '' : undefined} style={`--clip-ratio: ${ratio}`}>
   <div class="clip__frame">
     {gated && (
       <div class="clip__gate">
         <span class="clip__gate-label mono-caps">{gateLabel}</span>
         <p class="clip__gate-text">{spoiler ? 'This clip shows the secret before you find it yourself.' : 'This clip shows mature content.'}</p>
         <button type="button" class="clip-reveal">{spoiler ? 'Reveal spoiler clip' : 'Show clip'}</button>
+        {spoiler && !mature && <ChapterControl compact />}
       </div>
     )}
     <div class="clip-body" hidden={gated}>
@@ -42,15 +46,9 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
   )}
 </figure>
 <script>
+  import { initChapter, revealClip } from '../lib/chapter';
   document.querySelectorAll<HTMLElement>('.clip').forEach((fig) => {
-    fig.querySelector('.clip-reveal')?.addEventListener('click', (e) => {
-      const body = fig.querySelector('.clip-body') as HTMLElement;
-      body.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => { img.src = img.dataset.src!; });
-      body.hidden = false;
-      fig.querySelector('.clip__gate')?.remove();
-      (e.currentTarget as HTMLElement)?.remove?.();
-      fig.querySelector<HTMLElement>('.clip-play, .clip__out')?.focus();
-    });
+    fig.querySelector('.clip-reveal')?.addEventListener('click', () => revealClip(fig, true));
     const btn = fig.querySelector<HTMLButtonElement>('.clip-play');
     btn?.addEventListener('click', () => {
       const f = document.createElement('iframe');
@@ -62,6 +60,7 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
       btn.replaceWith(f);
     });
   });
+  initChapter();
 </script>
 
 <style>

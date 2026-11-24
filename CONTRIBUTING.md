@@ -27,6 +27,8 @@ pnpm build      # validate, then build the static site
 
 The map base layer is optional for most work: `pnpm map:fetch` then `pnpm map:tiles` build it locally from Rockstar's download (needs `unzip`). See [docs/MAP.md](docs/MAP.md).
 
+Game logos work the same way: `pnpm logos:fetch` downloads them from the official URLs recorded in `content/games.json` and checks each checksum. Without them the game switcher shows text plates. A deploy runs `pnpm logos:fetch` before `pnpm build`, like the map tiles (decision GS2).
+
 ## Branches and pull requests
 
 `staging` is the ground-truth branch. `main` is the released state and moves only when the maintainers say so.
@@ -60,6 +62,7 @@ Also:
 
 - **No images, fonts, video, audio or archives.** Not Rockstar media, not screenshots from other sites or design references, not font files. Fonts load from Google Fonts at build time; clips are embedded from their platforms.
 - **No map files or tiles, no hero media.** `.cache/`, `public/map/` and `public/media/` are git-ignored; keep them that way (docs/MAP.md, docs/HERO.md).
+- **No game logo files.** They live in `public/media/logos/`, fetched at build from the official URLs in `content/games.json` (decision GS2).
 - **No secrets** (`.env` files are ignored).
 
 CI fails any pull request that adds an image, font, video, audio or archive file. If a change genuinely needs an original asset (for example a favicon drawn for the project), say so in the issue first; the maintainers decide and add it to the allowlist in `.github/workflows/ci.yml`.

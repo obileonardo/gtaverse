@@ -1,0 +1,66 @@
+---
+// The game lens: ?game=<id> on /gtaverse and /finds shows only what touches that game. The address carries the lens
+// (shareable, survives reload); the selected chip clears it. Unknown ids fall back to everything, silently.
+// Items opt in with data-lens-games="<id> <id>"; groups that end up empty (data-lens-group) hide with them.
+// Other scripts (the timeline) read document.documentElement.dataset.gameLens and listen for "vf:game-lens".
+import Icon from '../ui/Icon.astro';
+import { games } from '../../lib/games';
+interface Props { noun: string; nounOne?: string }
+const { noun, nounOne = noun.replace(/s$/, '') } = Astro.props;
+const names = Object.fromEntries(games.map((g) => [g.id, g.short_name]));
+---
+<div class="lens" data-game-lens data-names={JSON.stringify(names)} data-noun={noun} data-noun-one={nounOne} hidden>
+  <span class="lens__label label-caps">Showing</span>
+  <button type="button" class="chip chip--touch is-selected lens__chip" data-lens-clear aria-label="Clear the game filter">
+    <span data-lens-name></span>
+    <Icon name="close" size={16} />
+  </button>
+  <a class="lens__hub" href="#" data-lens-hub>Game hub <Icon name="chevron-right" size={16} /></a>
+</div>
+<p class="sr-only" aria-live="polite" data-lens-status></p>
+
+<script>
+  const lens = document.querySelector<HTMLElement>('[data-game-lens]');
+  if (lens) {
+    const names = JSON.parse(lens.dataset.names ?? '{}') as Record<string, string>;
+    const status = document.querySelector<HTMLElement>('[data-lens-status]');
+    const nameEl = lens.querySelector<HTMLElement>('[data-lens-name]')!;
+    const hub = lens.querySelector<HTMLAnchorElement>('[data-lens-hub]')!;
+    const apply = (raw: string | null, announce = false) => {
+      const id = raw && names[raw] ? raw : null;
+      let shown = 0;
+      document.querySelectorAll<HTMLElement>('[data-lens-games]').forEach((el) => {
+        const on = !id || (el.dataset.lensGames ?? '').split(' ').includes(id);
+        el.toggleAttribute('data-lens-off', !on);
+        if (on) shown++;
+      });
+      document.querySelectorAll<HTMLElement>('[data-lens-group]').forEach((g) => g.toggleAttribute('data-lens-off', !!id && !g.querySelector('[data-lens-games]:not([data-lens-off])')));
+      lens.hidden = !id;
+      if (id) { nameEl.textContent = names[id]; hub.href = `/gtaverse/games/${id}`; }
+      const u = new URL(location.href);
+      if (id) u.searchParams.set('game', id); else u.searchParams.delete('game');
+      if (u.href !== location.href) history.replaceState(history.state, '', u);
+      if (id) document.documentElement.dataset.gameLens = id; else delete document.documentElement.dataset.gameLens;
+      document.dispatchEvent(new CustomEvent('vf:game-lens', { detail: id }));
+      if (status && (announce || id)) status.textContent = id ? `Showing ${shown} ${shown === 1 ? lens.dataset.nounOne : lens.dataset.noun} for ${names[id]}` : `Showing all ${lens.dataset.noun}`;
+    };
+    apply(new URL(location.href).searchParams.get('game'));
+    lens.querySelector('[data-lens-clear]')!.addEventListener('click', () => {
+      apply(null, true);
+      const h = document.querySelector<HTMLElement>('h1');
+      if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+    });
+  }
+</script>
+
+<style>
+  .lens { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .lens[hidden] { display: none; }
+  .lens__label { color: var(--text-3); }
+  .lens__chip { gap: 8px; }
+  .lens__hub { display: inline-flex; align-items: center; gap: 2px; min-height: 40px; color: var(--accent-text); font-size: var(--text-body-s); font-weight: 600; }
+  :global([data-lens-off]) { display: none !important; }
+  @media (hover: hover) and (pointer: fine) {
+    .lens__hub:hover { text-decoration: underline; text-underline-offset: 3px; }
+  }
+</style>

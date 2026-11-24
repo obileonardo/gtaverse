@@ -13,7 +13,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 - No box shadows. Elevation is a surface step plus a 1px `--border-1`.
 - No bounce easing. Exits are faster than entrances. Only `transform` and `opacity` animate (plus `clip-path` for reveals). Keyboard actions never animate.
 - No em or en dashes in copy or code comments.
-- No GTA VI logo, Rockstar logo, GTAArtDeco or Pricedown. Icons are our own drawings.
+- No Rockstar logo, GTAArtDeco or Pricedown, and no game logo as our brand. Official game logos appear only as game identifiers through `GamePlate` (switcher, hubs, "Also in" chips), unaltered, beside the game's name, with the trademark line (decisions GS1 to GS6). Icons are our own drawings.
 - Text never under 12px. Touch targets 44px or more on phone.
 
 ## Files
@@ -43,6 +43,11 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/lib/nav.ts` | Main navigation items and counts, `isCurrent()` |
 | `src/lib/media.ts` | `findStill()` (YouTube thumbnail of the creator's post), `showcaseable()`, `categoryLabel()`, `regionLabel()`, `categoryIcon()`, `categoryChipLabel()` |
 | `src/lib/clip.ts` | `youtubeId()`, `ytThumb()`, `ytEmbed()`: the click-to-load clip helpers shared by `Clip.astro` and the map |
+| `src/components/games/` | `GamePlate.astro` (a game's official logo on the fixed dark plate, or a text plate), `GameChips.astro` ("Also in" link chips), `GameLens.astro` (the `?game=` lens and its "Showing" chip) |
+| `src/components/lore/ConnectionList.astro` | The numbered connection list by year, on `/gtaverse` and every game hub |
+| `src/components/ChapterControl.astro`, `src/lib/chapter.ts` | "I'm on Chapter N": the select and the shared rules that open spoilers the visitor has played past |
+| `src/components/Spoiler.astro`, `src/lib/spoiler.ts` | The inline spoiler block (native `<details>`), also made from explainer "Spoiler:" paragraphs |
+| `src/lib/games.ts` | Games, aliases, counts, `logoOf()`, the switcher groups (`content/games.json`) |
 | `src/components/map/` | The map screen and find drawer (React island on `/map`): `MapApp.tsx`, `MapCanvas.tsx` (Leaflet), `Sheet.tsx` (phone sheets), `FindDetail.tsx`, `Menus.tsx`, `ClipPlayer.tsx`, `ui.tsx` (the shared components for React), `map.css` |
 
 ## Theme
@@ -76,6 +81,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `--glow-hero` | sunrise radial at 35% | at 16 to 28% | hero moments, items without art |
 | `--badge-verify-*` | `#FBC7E4` fill, pink edge, navy text | same | multi-source verification |
 | `--level-1` to `--level-5` | mint, lavender, pink, peach, amber | | wanted level columns (explainer) |
+| `--logo-plate`, `--logo-plate-edge` | `#0D0C1A`, white 10% | same (fixed) | the plate behind an official game logo, the same in both themes (GS4) |
 | `--map-*` | navy ramp | GetYourGuide palette | map land, roads, water, park, labels, halos |
 
 ## Type
@@ -167,6 +173,20 @@ One selected moment at a time. Desktop: Grok hairline across the page, mono year
 - Desktop: island 336 x 48, centred, 32 from the top, glass, radius 4. Left: hamburger and wordmark. Right: Map and the theme toggle. The hamburger opens the glass popover (Apple Sports): icon + label rows 48 high, 4 apart, current item in a pill with a solid icon, counts as mono superscripts. The page behind dims; the header stays clear. Escape closes instantly.
 - Phone: the island spans the width less 16 each side. The hamburger opens the full screen overlay (Peacock): rows 80 apart, icon 31, label 25 semibold, the column at 32% of the width, current item white with a solid icon, a 52 close circle at the bottom. Focus stays inside; Escape closes.
 - Sub bar (NEON): pass `sub={{ href, label, image }}` to `Base` on pages with a hero. Desktop only. Add `data-subbar="hidden"` on the header to step it away (the home page does this once the hero scrolls off).
+
+- Games switcher (decisions GS3 and GS6). Desktop: the popover has two columns; the "Games" rail (404 wide) sits left of the site rows, which stay under the island. Caps "Games" label and an "All games" link, then the groups with their labels in an 84 wide left column, rows 36 high, 4 apart and 10 between groups: plate (104 x 28), short name, mono superscript connection count; the current hub gets the current pill and `aria-current`; the trademark line closes the rail. The rail scrolls if the window is short. Phone: a "Games" row (a button with `aria-expanded`) in the overlay opens the same element as a bottom sheet over a scrim tied to the sheet's position: handle, "Games" title, "All games", a 44 close circle, rows 56 high with 120 x 36 plates. It drags 1:1, springs (critically damped, seeded with the flick's speed) to half or full height or closed, can be caught mid-flight, scrolls its list only at full height, and closes with Escape, the close circle, the scrim or a flick down; focus moves into it and back to the Games row. Keyboard opens never animate. `vf:open-games` (a document event) opens it from any page.
+
+### GamePlate (`games/GamePlate.astro`)
+The official logo, scaled to fit a fixed box with `object-fit: contain` on the fixed dark plate (`--logo-plate`, radius 8, 1px edge), never recoloured, filtered or cropped. Without a fetched official file it is a text plate (the short name in display caps). `size`: `rail` 104 x 28, `sheet` 120 x 36, `chip` 64 x 22, `hub` 280 x 64. `alt` stays empty when the name is visible beside it; pass the full title where the plate stands alone (hub header).
+
+### GameChips (`games/GameChips.astro`)
+"Also in": a caps label and one touch chip per game (chip plate + short name), oldest first, each linking to `/gtaverse/games/[id]`. Renders nothing for no games.
+
+### GameLens (`games/GameLens.astro`)
+`?game=<id>` on a page: items with `data-lens-games` that do not list the id get `data-lens-off` (hidden), `data-lens-group` hides when empty, a "Showing" caps label with the selected chip (close icon) clears it, and "Game hub" links on. The timeline listens (`vf:game-lens`) and dims and skips the other moments.
+
+### ChapterControl (`ChapterControl.astro`) and Spoiler (`Spoiler.astro`)
+ChapterControl: "I'm on" and a pill select (40 high, 44 and 16px on the phone so iOS does not zoom); every copy stays in sync. Spoiler: a `<details>` on `--surface-2` with a dashed edge, the muted caps badge ("Spoiler, Chapter 3") and a pink "Reveal" as its summary; it opens by itself once the chapter setting reaches it.
 
 ### React twins (`map/ui.tsx`)
 The map is a React island, and Astro components cannot render inside it. `ui.tsx` renders `Icon`, `Button`, `Chip`, `Badge`, `Verification` and `Tabs` with exactly the classes and markup of the Astro components, reading the same `icons.ts`; their look lives once, in `components.css`. Change a component's look there, never in the twin.

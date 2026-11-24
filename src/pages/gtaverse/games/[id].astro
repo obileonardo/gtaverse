@@ -1,0 +1,126 @@
+---
+// A game hub: one page per game in content/games.json. The game's official logo on its plate (or a text plate), the
+// facts we hold, its GTAverse connections on the shared connection list, and the GTA VI finds that touch it.
+// Spoiler and mature finds show no art (cardImage). Thin games say so and ask for more, instead of a blank section.
+import Base from '../../../layouts/Base.astro';
+import Button from '../../../components/ui/Button.astro';
+import Card from '../../../components/ui/Card.astro';
+import ConnectionList from '../../../components/lore/ConnectionList.astro';
+import GamePlate from '../../../components/games/GamePlate.astro';
+import { games, connectionsForGame, findsForGame, TRADEMARK_LINE, type Game } from '../../../lib/games';
+import { moments } from '../../../lib/lore';
+import { categoryLabel, regionLabel } from '../../../lib/media';
+import { cardImage, verificationLabel } from '../../../lib/finds';
+
+export function getStaticPaths() {
+  return games.map((g) => ({ params: { id: g.id }, props: { game: g } }));
+}
+const { game } = Astro.props as { game: Game };
+const conns = new Set(connectionsForGame(game.id).map((c) => c.slug));
+const items = moments.filter((m) => conns.has(m.slug));
+const related = findsForGame(game.id);
+const universe = game.universe === 'other' ? 'Outside the GTA universes' : `${game.universe} universe`;
+const thin = items.length < 3;
+const suggest = 'https://github.com/obileonardo/thevicefiles/issues/new/choose';
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+---
+<Base title={game.name} description={`${game.name} in the GTAverse: ${plural(items.length, 'connection', 'connections')} to GTA VI and ${plural(related.length, 'find', 'finds')} that touch it.`} layout="bare">
+  <div class="container page hub">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/gtaverse">GTAverse</a></li>
+        <li><a href="/gtaverse/games">Games</a></li>
+        <li aria-current="page">{game.short_name}</li>
+      </ol>
+    </nav>
+
+    <header class="hub__head">
+      <GamePlate game={game} size="hub" alt={`${game.name} logo`} />
+      <h1 class="hub__title">{game.name}</h1>
+      <dl class="facts">
+        <div><dt>Released</dt><dd class="mono">{game.year}</dd></div>
+        <div><dt>Universe</dt><dd>{universe}</dd></div>
+        <div><dt>Connections</dt><dd class="mono">{items.length}</dd></div>
+        <div><dt>Finds</dt><dd class="mono">{related.length}</dd></div>
+      </dl>
+      <div class="hub__actions">
+        {items.length > 0 && <Button href={`/gtaverse?game=${game.id}`} variant="primary" size="l" icon="lore">See on the timeline</Button>}
+        {related.length > 0 && <Button href={`/finds?game=${game.id}`} variant="secondary" size="l" icon="finds">Finds for this game</Button>}
+        <Button href="/gtaverse/games" variant="quiet" size="l" icon="grid" data-open-games>Switch game</Button>
+      </div>
+      <p class="hub__tm">{TRADEMARK_LINE} The logo is shown only to identify the game. The Vice Files is an unofficial fan site.</p>
+    </header>
+
+    {thin && (
+      <p class="hub__thin">
+        We have only {items.length === 0 ? 'no connections' : items.length === 1 ? 'one connection' : `${items.length} connections`} for {game.short_name} so far.{' '}
+        <a href={suggest} rel="noopener" target="_blank">Suggest one</a>, with a source.
+      </p>
+    )}
+  </div>
+
+  <ConnectionList items={items} title="Connections" id="hub-connections" empty={`No connections for ${game.short_name} yet.`} />
+
+  <section class="container finds" aria-labelledby="hub-finds">
+    <h2 id="hub-finds" class="finds__title">In GTA VI</h2>
+    {related.length === 0 ? (
+      <p class="finds__empty">No GTA VI finds touch {game.short_name} yet.</p>
+    ) : (
+      <ul class="finds__grid">
+        {related.map((f) => {
+          const img = cardImage(f);
+          return (
+            <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={f.title} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`} /></li>
+          );
+        })}
+      </ul>
+    )}
+  </section>
+</Base>
+
+<script>
+  // "Switch game" opens the header's switcher; without JavaScript it is a link to the games index.
+  document.querySelectorAll<HTMLElement>('[data-open-games]').forEach((el) => el.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // the header closes its popover on outside clicks
+    document.dispatchEvent(new CustomEvent('vf:open-games'));
+  }));
+</script>
+
+<style>
+  .hub { display: flex; flex-direction: column; gap: var(--space-8); padding-bottom: var(--space-section); }
+  .crumbs ol { display: flex; flex-wrap: wrap; gap: var(--space-2); color: var(--text-3); font-size: var(--text-body-s); }
+  .crumbs li { display: flex; align-items: center; gap: var(--space-2); }
+  .crumbs li + li::before { content: '/'; color: var(--text-3); }
+  .crumbs a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-2); }
+  .crumbs [aria-current] { color: var(--text-1); }
+  .hub__head { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-5); max-width: 900px; }
+  .hub__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-m);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .facts { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-8); }
+  .facts div { display: flex; flex-direction: column; gap: 2px; }
+  .facts dt { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .facts dd { margin: 0; color: var(--text-1); font-size: var(--text-body); }
+  .hub__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .hub__tm { color: var(--text-3); font-size: var(--text-caption); max-width: 60ch; }
+  .hub__thin { padding: var(--space-4) var(--space-5); border-radius: var(--radius-m); background: var(--accent-tint); color: var(--text-1); max-width: 720px; }
+  .hub__thin a { color: var(--accent-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .finds { padding-bottom: var(--space-section); }
+  .finds__title { font-size: var(--text-h2); font-weight: 700; padding-bottom: var(--space-4); border-bottom: var(--border-w) solid var(--border-1); }
+  .finds__empty { padding-block: var(--space-6); color: var(--text-2); }
+  .finds__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px var(--space-5); margin-top: var(--space-8); }
+  @media (min-width: 768px) and (max-width: 1199px) { .finds__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 767px) {
+    .finds__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-3); margin-top: var(--space-6); }
+    .hub__actions { width: 100%; }
+    .hub__actions > :global(*) { flex: 1 1 100%; justify-content: center; }
+  }
+</style>

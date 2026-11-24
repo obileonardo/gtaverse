@@ -1,0 +1,68 @@
+---
+// "I'm on Chapter N": a native select that stores the visitor's story progress on this device (src/lib/chapter.ts).
+// Every copy on a page stays in sync. Shown on spoiler clip gates and on the finds list. compact: inside a gate.
+// Options run to Chapter 5 or the highest chapter any find is gated to, whichever is higher; the last numbered
+// option means "that chapter or later" because no find is gated beyond it.
+import { finds } from '../lib/content';
+import { parseChapter } from '../lib/chapter';
+interface Props { compact?: boolean; class?: string }
+const { compact = false, class: className } = Astro.props;
+const highest = Math.max(5, ...finds.map((f) => parseChapter(f.chapter_gate) ?? 0));
+const chapters = Array.from({ length: highest }, (_, i) => i + 1);
+const id = `chapter-${Math.random().toString(36).slice(2, 8)}`;
+---
+<div class:list={['chapter', { 'chapter--compact': compact }, className]}>
+  <label class="chapter__label" for={id}>I'm on</label>
+  <span class="chapter__field">
+    <select class="chapter__select" id={id} data-chapter-select>
+      <option value="none">No chapter yet, hide spoilers</option>
+      {chapters.map((n) => <option value={String(n)}>{n === highest ? `Chapter ${n} or later` : `Chapter ${n}`}</option>)}
+      <option value="all">Finished, show everything</option>
+    </select>
+    <svg class="chapter__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6" /></svg>
+  </span>
+</div>
+
+<script>
+  import { readChapter, writeChapter, onChapterChange, initChapter, type ChapterSetting } from '../lib/chapter';
+  const selects = () => [...document.querySelectorAll<HTMLSelectElement>('[data-chapter-select]')];
+  const show = (s: ChapterSetting) => selects().forEach((el) => { el.value = String(s); });
+  show(readChapter());
+  selects().forEach((el) => el.addEventListener('change', () => {
+    const v = el.value;
+    writeChapter(v === 'all' ? 'all' : v === 'none' ? 'none' : Number(v));
+  }));
+  onChapterChange(show);
+  initChapter();
+</script>
+
+<style>
+  .chapter { display: inline-flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+  .chapter__label { color: var(--text-2); font-size: var(--text-body-s); }
+  .chapter__field { position: relative; display: inline-flex; align-items: center; }
+  .chapter__select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: var(--btn-h-m);
+    padding: 0 40px 0 var(--space-4);
+    border-radius: var(--radius-full);
+    border: var(--border-w) solid var(--border-1);
+    background: var(--surface-2);
+    color: var(--text-1);
+    font: inherit;
+    font-size: var(--text-label);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--dur-colour) var(--ease-colour);
+  }
+  .chapter__chevron { position: absolute; right: 14px; pointer-events: none; color: var(--text-2); }
+  .chapter--compact .chapter__label { font-size: var(--text-caption); }
+  .chapter--compact .chapter__select { height: 36px; font-size: 13px; }
+  @media (hover: hover) and (pointer: fine) {
+    .chapter__select:hover { background: var(--surface-3); }
+  }
+  @media (max-width: 767px) {
+    /* 16px or more so iOS does not zoom the page on focus; 44 to tap. */
+    .chapter__select, .chapter--compact .chapter__select { height: 44px; font-size: 16px; }
+  }
+</style>

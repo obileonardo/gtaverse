@@ -46,6 +46,9 @@
   --glass-blur: blur(20px) saturate(140%); /* GTA site uses 25px; 20px keeps animated glass (menu) smooth in Safari */
 
   --scrim: rgb(13 12 26 / 0.6);
+  /* Official game logos sit on one fixed dark plate in both themes, the ground they are published on (GS3). */
+  --logo-plate: #0d0c1a;
+  --logo-plate-edge: rgb(255 255 255 / 0.1);
   --overlay-fill: rgb(13 12 26 / 0.72);
   --art-scrim: linear-gradient(to top, rgb(13 12 26 / 0.78) 0%, rgb(13 12 26 / 0.32) 38%, rgb(13 12 26 / 0) 62%);
   --art-fade: linear-gradient(to bottom, rgb(13 12 26 / 0) 55%, var(--bg) 100%);

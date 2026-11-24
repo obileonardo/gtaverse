@@ -1,0 +1,82 @@
+---
+// Every game in the GTAverse, grouped as the switcher groups them, plus the games the switcher leaves out ("More
+// games"). Each row opens the game's hub: the by-game door into the same section as the timeline.
+import Base from '../../../layouts/Base.astro';
+import GamePlate from '../../../components/games/GamePlate.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import { games, gameGroups, connectionCount, findsForGame, TRADEMARK_LINE } from '../../../lib/games';
+
+const groups = gameGroups.map((gr) => ({ ...gr, games: games.filter((g) => g.group === gr.id) })).filter((gr) => gr.games.length);
+---
+<Base title="Games of the GTAverse" description={`The ${games.length} Rockstar games the GTAverse links to GTA VI, each with its connections and finds.`}>
+  <header class="head">
+    <h1 class="head__title">Games<sup class="head__count mono">{games.length}</sup></h1>
+    <p class="head__lede">Every Rockstar game the GTAverse links to GTA VI. Open one to see its connections on the timeline and the finds that touch it.</p>
+  </header>
+
+  {groups.map((gr) => (
+    <section class="group" aria-labelledby={`g-${gr.id}`}>
+      <h2 class="group__title label-caps" id={`g-${gr.id}`}>{gr.label}</h2>
+      <ul class="group__list" role="list">
+        {gr.games.map((g) => {
+          const n = connectionCount(g.id);
+          const f = findsForGame(g.id).length;
+          return (
+            <li>
+              <a class="game" href={`/gtaverse/games/${g.id}`}>
+                <GamePlate game={g} size="sheet" />
+                <span class="game__text">
+                  <span class="game__name">{g.name}</span>
+                  <span class="game__meta"><span class="mono">{g.year}</span> · {n} {n === 1 ? 'connection' : 'connections'} · {f} {f === 1 ? 'find' : 'finds'}</span>
+                </span>
+                <Icon name="chevron-right" size={20} />
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  ))}
+  <p class="tm">{TRADEMARK_LINE} Logos are shown only to identify each game. The Vice Files is an unofficial fan site.</p>
+</Base>
+
+<style>
+  .head { display: flex; flex-direction: column; gap: var(--space-4); max-width: 820px; }
+  .head__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+  }
+  .head__count { margin-left: 6px; vertical-align: top; position: relative; top: 0.3em; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); }
+  .head__lede { max-width: var(--measure-short); color: var(--text-2); }
+  .group { margin-top: var(--space-12); }
+  .group__title { color: var(--text-3); padding-bottom: var(--space-3); border-bottom: var(--border-w) solid var(--border-1); }
+  .group__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-8); }
+  .game {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 72px;
+    padding-block: var(--space-3);
+    border-bottom: var(--border-w) solid var(--border-1);
+    color: var(--text-3);
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .game__text { display: flex; flex-direction: column; min-width: 0; }
+  .game__name { color: var(--text-1); font-size: var(--text-title); font-weight: 600; }
+  .game__meta { color: var(--text-2); font-size: var(--text-body-s); }
+  .tm { margin-top: var(--space-10); padding-bottom: var(--space-section); color: var(--text-3); font-size: var(--text-caption); }
+  @media (hover: hover) and (pointer: fine) {
+    .game:hover { color: var(--text-1); }
+    .game:hover .game__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  }
+  @media (max-width: 767px) {
+    .group { margin-top: var(--space-10); }
+    .group__list { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

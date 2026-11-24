@@ -5,8 +5,9 @@ import { moments } from './lore';
 import { regionHubs, categoryHubs, findsInRegion, findsInCategory, regionTypeLabel } from './hubs';
 import { categoryLabel, regionLabel } from './media';
 import { verificationLabel } from './finds';
+import { games, connectionsForGame, findsForGame } from './games';
 
-export type RouteKind = 'home' | 'section' | 'page' | 'find' | 'explainer' | 'connection' | 'region' | 'category';
+export type RouteKind = 'home' | 'section' | 'page' | 'find' | 'explainer' | 'connection' | 'region' | 'category' | 'game';
 export type Route = {
   path: string;
   title: string;
@@ -29,6 +30,8 @@ export const staticRoutes: Route[] = [
   { path: '/finds', kind: 'section', kicker: 'Finds', title: 'All finds', meta: plural(finds.length, 'find'), description: `${finds.length} secrets found in GTA VI, each shown in the clip of the fan who found it.` },
   { path: '/explainers', kind: 'section', kicker: 'Explainers', title: 'Explainers', meta: plural(explainers.length, 'guide'), description: "How GTA VI's systems work, from wanted levels to relationships, written from sources and labelled when unreviewed." },
   { path: '/gtaverse', kind: 'section', kicker: 'GTAverse', title: 'The GTAverse', meta: plural(moments.length, 'connection'), description: 'The shared universe across GTA I to VI, Red Dead, Bully and L.A. Noire: every link to GTA VI, placed on one timeline.' },
+  { path: '/gtaverse/games', kind: 'section', kicker: 'GTAverse', title: 'Games of the GTAverse', meta: plural(games.length, 'game'), description: `The ${games.length} Rockstar games the GTAverse links to GTA VI, each with its connections and finds.` },
+  { path: '/data', kind: 'page', kicker: 'Open data', title: 'Open data', description: 'Download The Vice Files finds, GTAverse connections and collectible locations as JSON, under CC BY-NC 4.0.' },
   { path: '/finders', kind: 'page', kicker: 'Credits', title: 'The finders', description: 'Every fan, creator and outlet whose find, clip or write up is in The Vice Files, with what they found and where to see it.' },
   { path: '/about', kind: 'page', kicker: 'About', title: 'About The Vice Files', description: 'What The Vice Files is, who it is for, how it is made and what it will never do.' },
   { path: '/editorial-policy', kind: 'page', kicker: 'Editorial policy', title: 'Editorial policy', description: 'How we verify a find, what each verification level means, what counts as a source, and the lines we never cross.' },
@@ -91,7 +94,21 @@ export const categoryRoutes: Route[] = categoryHubs.map((c) => {
   };
 });
 
-export const routes: Route[] = [...staticRoutes, ...findRoutes, ...explainerRoutes, ...connectionRoutes, ...regionRoutes, ...categoryRoutes];
+// Game hubs (decision GS8). Their cards carry text only: game logos never appear on social cards (GS1).
+export const gameRoutes: Route[] = games.map((g) => {
+  const n = connectionsForGame(g.id).length;
+  const f = findsForGame(g.id).length;
+  return {
+    path: `/gtaverse/games/${g.id}`,
+    kind: 'game',
+    kicker: `GTAverse · ${g.year}`,
+    title: g.name,
+    meta: `${plural(n, 'connection')} · ${plural(f, 'find')}`,
+    description: `${g.name} in the GTAverse: ${plural(n, 'connection')} to GTA VI and ${plural(f, 'find')} that touch it.`,
+  };
+});
+
+export const routes: Route[] = [...staticRoutes, ...findRoutes, ...explainerRoutes, ...connectionRoutes, ...gameRoutes, ...regionRoutes, ...categoryRoutes];
 
 /** Normalizes a request path the way the site serves it: no .html, no trailing slash, "/" for the home page. */
 export const normalizePath = (p: string) => p.replace(/\.html$/, '').replace(/\/index$/, '').replace(/\/$/, '') || '/';

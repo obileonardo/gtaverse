@@ -18,6 +18,7 @@ You need Node 22.23.4 or later and pnpm 10 (`corepack enable` picks up the versi
 pnpm install      # install dependencies
 pnpm map:fetch    # optional: download Rockstar's official Leonida map into .cache/map/ and verify it
 pnpm map:tiles    # optional: cut it into tiles in public/map/
+pnpm logos:fetch  # download the official game logos into public/media/logos/ (git-ignored); run before every deploy build
 pnpm dev          # local dev server
 pnpm build        # validate the content, then build the static site into dist/
 ```

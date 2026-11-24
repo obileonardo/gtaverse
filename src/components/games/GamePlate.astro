@@ -1,0 +1,17 @@
+---
+// A game's plate: its official logo (content/games.json, fetched by pnpm logos:fetch) scaled to fit a fixed box on
+// the fixed dark plate, or a text plate with the game's short name when no official file is confirmed or fetched.
+// alt: leave empty when the game's name is visible text in the same link (switcher rows, chips); pass the full title
+// where the plate stands alone (hub header). Decisions GS1 to GS4.
+import { logoOf, type Game } from '../../lib/games';
+interface Props { game: Game; size?: 'rail' | 'sheet' | 'chip' | 'hub'; alt?: string; class?: string }
+const { game, size = 'rail', alt = '', class: className } = Astro.props;
+const logo = logoOf(game);
+---
+<span class:list={['gplate', `gplate--${size}`, { 'gplate--textual': !logo }, className]} aria-hidden={alt ? undefined : 'true'}>
+  {logo ? (
+    <img src={logo.src} width={logo.width} height={logo.height} alt={alt} loading={size === 'hub' ? 'eager' : 'lazy'} decoding="async" />
+  ) : (
+    <span class="gplate__text" role={alt ? 'img' : undefined} aria-label={alt || undefined}>{game.short_name}</span>
+  )}
+</span>

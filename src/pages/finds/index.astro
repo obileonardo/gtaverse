@@ -1,12 +1,18 @@
 ---
 // Every find. The Disney+ related grid as the whole page: 16:9 cards, five columns on desktop, two on the phone
 // (Disney+ iOS), under the site's filter chips. Filtering is instant (used often, no motion).
+// ?game=<id> narrows the grid to finds that touch one game (the game lens). Spoiler finds gated to a chapter show
+// their art once the visitor's "I'm on Chapter N" setting has reached that chapter.
 import Base from '../../layouts/Base.astro';
 import Card from '../../components/ui/Card.astro';
 import Chip from '../../components/ui/Chip.astro';
 import { finds, categories } from '../../lib/content';
 import { categoryLabel, regionLabel } from '../../lib/media';
 import { cardImage, verificationLabel } from '../../lib/finds';
+import { findStill } from '../../lib/media';
+import { gameIdsOfFind } from '../../lib/games';
+import ChapterControl from '../../components/ChapterControl.astro';
+import GameLens from '../../components/games/GameLens.astro';
 import { categoryHubs, regionHubs, findsInCategory, findsInRegion } from '../../lib/hubs';
 import { collectionPage } from '../../lib/seo';
 
@@ -22,7 +28,9 @@ const places = regionHubs
 <Base title="All finds" description={description} jsonLd={collectionPage('/finds', 'All finds', description, finds.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }]}>
   <header class="head">
     <h1 class="head__title">Finds<sup class="head__count mono">{finds.length}</sup></h1>
-    <p class="head__lede">Every secret in Leonida we can show you, each with the clip of the creator who found it. {spoilers} are spoilers: their art stays hidden until you open them.</p>
+    <p class="head__lede">Every secret in Leonida we can show you, each with the clip of the creator who found it. {spoilers} are spoilers: their art stays hidden until you open them, or until your chapter reaches them.</p>
+    <ChapterControl />
+    <GameLens noun="finds" />
   </header>
 
   <div class="filters" role="toolbar" aria-label="Filter by category" data-filters>
@@ -34,8 +42,9 @@ const places = regionHubs
   <ul class="grid" data-grid>
     {finds.map((f, i) => {
       const img = cardImage(f);
+      const late = !img && f.spoiler && !f.mature && f.chapter_gate ? findStill(f) : null;
       return (
-        <li data-category={f.category}>
+        <li data-category={f.category} data-lens-games={gameIdsOfFind(f).join(' ')}>
           <Card
             href={`/finds/${f.slug}`}
             image={img?.src}
@@ -45,7 +54,9 @@ const places = regionHubs
             kicker={categoryLabel(f)}
             title={f.title}
             meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`}
-          />
+          >
+            {late && <img slot="media" class="card-late" data-chapter-src={late.thumb} data-chapter-gate={f.chapter_gate} alt="" width="320" height="180" loading="lazy" decoding="async" hidden />}
+          </Card>
         </li>
       );
     })}
@@ -66,6 +77,8 @@ const places = regionHubs
 </Base>
 
 <script>
+  import { initChapter } from '../../lib/chapter';
+  initChapter();
   const bar = document.querySelector<HTMLElement>('[data-filters]');
   const items = [...document.querySelectorAll<HTMLElement>('[data-grid] > li')];
   const status = document.querySelector<HTMLElement>('[data-filter-status]');
@@ -81,7 +94,7 @@ const places = regionHubs
     for (const li of items) {
       const on = id === 'all' || li.dataset.category === id;
       li.hidden = !on;
-      if (on) shown++;
+      if (on && !li.hasAttribute('data-lens-off')) shown++;
     }
     if (status) status.textContent = `${shown} finds shown`;
   });
@@ -100,6 +113,7 @@ const places = regionHubs
   }
   .head__count { margin-left: 6px; vertical-align: top; position: relative; top: 0.3em; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); }
   .head__lede { max-width: var(--measure-short); color: var(--text-2); }
+  .grid :global(.card-late) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
   .filters {
     display: flex;

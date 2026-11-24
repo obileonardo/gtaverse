@@ -58,6 +58,7 @@ const categories = readJson('content/categories.json');
 const sources = readJson('content/sources.json');
 const map = readJson('content/map.json');
 const collectibles = readJson('content/collectibles.json');
+const games = readJson('content/games.json');
 
 check('finds.schema.json', finds, 'content/finds.json');
 check('collectibles.schema.json', collectibles, 'content/collectibles.json');
@@ -66,6 +67,7 @@ check('connections.schema.json', connDoc, 'content/connections.json');
 check('regions.schema.json', regions, 'content/regions.json');
 check('categories.schema.json', categories, 'content/categories.json');
 check('sources.schema.json', sources, 'content/sources.json');
+check('games.schema.json', games, 'content/games.json');
 
 // Map extras (docs/MAP.md, docs/MAP-3D.md): our search words and our hand-drawn relief.
 const searchTerms = readJson('content/search-terms.json');
@@ -161,6 +163,9 @@ if (existsSync(join(root, explainerDir))) {
       for (const [, kind, id] of t.matchAll(/\[\[(find|connection|region):([a-z0-9-]+)\]\]/g)) crossRefs.push({ where: `${where}:${lineNo}`, kind, id });
     });
     for (let k = 1; k <= n; k++) if (!used.has(k)) warn(where, `source [${k}] is listed but never cited`);
+    // Inline spoilers (src/lib/spoiler.ts): on a page not marked spoiler, a "Spoiler:" block should name its chapter
+    // so readers past it see it open by itself.
+    if (data.spoiler !== true) body.split('\n').forEach((line, i) => { if (/^Spoiler:/i.test(line.trim())) warn(`${where}:${bodyStart + i}`, 'Spoiler block without a chapter, write "Spoiler (Chapter N):"'); });
     explainers.push({ file: where, ...data });
   }
 }
@@ -249,6 +254,7 @@ for (const f of finds ?? []) {
   if (f.added_at && f.added_at > new Date().toISOString().slice(0, 10)) err(w, `added_at ${f.added_at} is in the future`);
   if (f.status === 'published' && (f.verification === 'rumor')) err(w, 'rumors must stay draft until a second independent source confirms them');
   if (f.spoiler && f.status === 'published' && f.clip) warn(w, 'spoiler find with a clip: the site must keep the embed behind the spoiler reveal');
+  if (!f.spoiler && /(^|\s)Spoiler:\s/i.test(f.summary ?? '')) warn(w, 'summary has a Spoiler block without a chapter, write "Spoiler (Chapter N):"');
   // pins: pixel space of content/map.json (docs/MAP.md)
   if (f.pin) {
     if (!f.pin_accuracy) err(w, 'pin is set but pin_accuracy is null');
@@ -267,6 +273,28 @@ for (const c of connections) {
     else if (!finds.find((f) => f.id === fid).related_connections.includes(c.id)) err(w, `find "${fid}" does not list this connection`);
   }
   if (c.type === 'theory' && c.confidence === 'canon') err(w, 'a theory cannot be canon unless Rockstar confirmed it');
+}
+
+// ---------------------------------------------------------------- games (content/games.json, decisions GS1 to GS4)
+// Every game name used in connections.games and finds.crossover_games must resolve to one game through its
+// aliases (the normalisation map). Content text is never rewritten.
+const gameByAlias = new Map();
+if (games) {
+  const where = 'content/games.json';
+  uniq(games.items, 'id', where);
+  uniq(games.groups, 'id', `${where} groups`);
+  const groupIds = new Set((games.groups ?? []).map((g) => g.id));
+  for (const g of games.items ?? []) {
+    if (!groupIds.has(g.group)) err(`game ${g.id}`, `group "${g.group}" not in groups`);
+    for (const a of g.aliases ?? []) {
+      if (gameByAlias.has(a)) err(`game ${g.id}`, `alias "${a}" is also used by ${gameByAlias.get(a)}`);
+      gameByAlias.set(a, g.id);
+    }
+    if (g.logo && (!g.logo.sha256 || !g.logo.width || !g.logo.height)) warn(`game ${g.id}`, 'logo has no recorded checksum or size yet: run pnpm logos:fetch --record');
+    if (!g.logo && !g.logo_note) err(`game ${g.id}`, 'a game without a logo needs a logo_note saying why');
+  }
+  for (const c of connections) for (const name of c.games ?? []) if (!gameByAlias.has(name)) err(`connection ${c.id}`, `game "${name}" does not match any alias in games.json`);
+  for (const f of finds ?? []) for (const name of f.crossover_games ?? []) if (!gameByAlias.has(name)) err(`find ${f.id}`, `crossover game "${name}" does not match any alias in games.json`);
 }
 
 // ---------------------------------------------------------------- regions
@@ -384,6 +412,7 @@ console.log(`  regions      ${count(regions)}`);
 console.log(`  categories   ${count(categories)} (${(categories ?? []).filter((c) => c.kind === 'find').length} find, ${(categories ?? []).filter((c) => c.kind === 'map-layer').length} map-layer)`);
 console.log(`  sources      ${count(sources)} (${unusedCount} not yet cited by a find)`);
 console.log(`  explainers   ${explainers.length}`);
+console.log(`  games        ${count(games?.items)} (${(games?.items ?? []).filter((g) => g.logo).length} with an official logo source, ${gameByAlias.size} names mapped)`);
 const pinned = (finds ?? []).filter((f) => f.pin);
 console.log(`  map          ${map?.image ? `${map.image.width} x ${map.image.height} px` : 'missing'}; ${count(map?.labels)} labels; ${pinned.length} pinned finds (${pinned.filter((f) => f.pin_accuracy === 'exact').length} exact, ${pinned.filter((f) => f.pin_accuracy === 'landmark').length} landmark, ${pinned.filter((f) => f.pin_accuracy === 'area').length} area)`);
 console.log(`  collectibles ${count(collectibles?.items)} in ${count(collectibles?.layers)} layers (${(collectibles?.items ?? []).filter((i) => i.number === null).length} with an unreadable number)`);

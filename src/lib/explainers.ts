@@ -4,6 +4,7 @@
 import { explainers, findBySlug, connectionById, regionById } from './content';
 import { icons, type IconName } from '../components/ui/icons';
 import type { LevelRow } from '../components/ui/LevelTable.astro';
+import { spoilerParagraphs } from './spoiler';
 
 export type Explainer = (typeof explainers)[number];
 type Mod = Explainer & { compiledContent: () => Promise<string> | string; getHeadings: () => { depth: number; slug: string; text: string }[] };
@@ -62,15 +63,15 @@ export async function explainerParts(e: Explainer) {
   html = crossRefs(html);
   // Standfirst: the first plain paragraph (not a note).
   let standfirst = '';
-  html = html.replace(/<p>(?!Note:)([\s\S]*?)<\/p>/, (_, p: string) => { standfirst = p; return ''; });
+  html = html.replace(/<p>(?!Note:|Spoiler\b)([\s\S]*?)<\/p>/, (_, p: string) => { standfirst = p; return ''; });
   const segments: Segment[] = [];
   let last = 0;
   for (const m of html.matchAll(/<table>[\s\S]*?<\/table>/g)) {
-    segments.push({ type: 'html', html: citations(callouts(html.slice(last, m.index))) });
+    segments.push({ type: 'html', html: citations(spoilerParagraphs(callouts(html.slice(last, m.index)))) });
     segments.push(parseTable(m[0], e.frontmatter.sources));
     last = (m.index ?? 0) + m[0].length;
   }
-  segments.push({ type: 'html', html: citations(callouts(html.slice(last))) });
+  segments.push({ type: 'html', html: citations(spoilerParagraphs(callouts(html.slice(last)))) });
   const words = html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
   return {
     standfirst: citations(standfirst),
