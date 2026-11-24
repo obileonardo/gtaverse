@@ -21,6 +21,7 @@ You need Node 22.23.4 or later and pnpm 10 (`corepack enable` uses the version p
 ```sh
 pnpm install
 pnpm validate   # content checks
+pnpm test       # unit tests
 pnpm dev        # local site
 pnpm build      # validate, then build the static site
 ```
@@ -36,7 +37,7 @@ Game logos work the same way: `pnpm logos:fetch` downloads them from the officia
 1. Open an issue, or pick an existing one.
 2. Branch from the latest `staging`: `git fetch origin` then `git switch -c your-branch origin/staging`. Never branch from or merge `main`.
 3. Make one focused change. Keep unrelated edits out of the pull request.
-4. Run `pnpm validate` and `pnpm build`. Both must pass.
+4. Run `pnpm validate`, `pnpm test` and `pnpm build`. All three must pass.
 5. Open a pull request into `staging` with `Closes #<issue>`, fill in the checklist, and paste the `pnpm validate` summary.
 6. CI runs the same checks on every pull request. A maintainer reviews and squash-merges. Do not merge your own pull request.
 

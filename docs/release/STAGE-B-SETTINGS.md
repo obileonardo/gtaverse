@@ -1,6 +1,8 @@
 # Open-source readiness: Stage B repository settings
 
-Prepared 2026-11-24 for the owner. **Nothing in this file has been applied.** Each setting lists what it is today (read through the GitHub API on 2026-11-24), the exact command to change it, and why. Apply them after the Stage B pull request is approved, in the order below. Every command needs `gh` signed in as a repository admin.
+**Status, 2026-11-24 (Stage C, issue #61):** sections 1 to 5 are applied. Read back through the GitHub API, every setting matches this file. The optional fork approval policy in section 3 was not applied (it is still `first_time_contributors`), and the `vicefiles-prd` Worker with its domain routes was deleted by the owner, so the PRD notes at the end are closed (the PRD is served by the main site at `/prd`).
+
+Prepared 2026-11-24 for the owner. When written, nothing in this file had been applied. Each setting lists what it is today (read through the GitHub API on 2026-11-24), the exact command to change it, and why. Apply them after the Stage B pull request is approved, in the order below. Every command needs `gh` signed in as a repository admin.
 
 The repository: `obileonardo/thevicefiles`. Findings refer to [STAGE-A-AUDIT.md](STAGE-A-AUDIT.md).
 

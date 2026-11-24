@@ -28,6 +28,8 @@ Other commands:
 | Command | What it does |
 |---|---|
 | `pnpm validate` | Checks every content file against its schema, cross-references, rumour gating, citations and the no em dash rule |
+| `pnpm test` | Unit tests (`scripts/test/`) |
+| `pnpm seo:check` | After a build: checks every page's canonical, Open Graph and JSON-LD data, the sitemap and the index switch |
 | `pnpm preview` | Serves the built site from `dist/` |
 | `pnpm map:grid` | Re-measures the printed map grid and compares it with `content/map.json` |
 | `pnpm map:harness`, `pnpm map:shots` | Local map harness and its screenshots (see [docs/MAP.md](docs/MAP.md)) |
@@ -52,7 +54,7 @@ The site is an [Astro](https://astro.build) static site with no server code. All
 | `scripts/one-off/` | The one-time migration from `research/` to `content/`, kept as an audit record; do not re-run |
 | `src/` | The site: pages, components, design tokens |
 | `research/` | The original launch-week research, kept as history |
-| `prd/` | The product requirements page, deployed separately |
+| `prd/` | The product requirements page, built into the site at `/prd` (`src/pages/prd.html.ts`) |
 | `tools/map-harness/` | A local-only harness for checking the map and pins |
 
 Project docs:

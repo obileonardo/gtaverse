@@ -318,3 +318,10 @@ The owner asked for every inconsistency the `/design` page surfaced to be fixed 
 | LG8 | On the site the mark wears the mark-sheet colourway in both themes: pink folder, navy VF, wordmark in the text colour. The logo panel's navy folder with a pink VF is the `on-pink` tone, for pink grounds only. | A navy folder disappears on the navy island; the mark sheet shows pink and navy on both grounds. |
 | LG9 | At 32 px and under (folder height) the mark uses Chime's small drawing from the mark sheet, whose VF is a little wider; above, the logo panel's drawing. The 16 px favicon is the 32 px drawing scaled (Chime's 16 px frame sits the VF about a quarter pixel further left, which reads as Figma's pixel snapping). | Follows the sheet without a third drawing. |
 | LG10 | The touch and manifest icons are the mark at 56 % of a navy square with square corners (iOS and Android round them), after Chime's app icon panel. The Organization JSON-LD names `/icon-512.png` as the logo, and the SEO check now requires the icon links and that each file is built. | One source for every icon; search engines get a logo. |
+
+## 2026-11-24: Stage C release check (open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| RC1 | `prd/wrangler.jsonc` is removed. The owner deleted the `vicefiles-prd` Worker on 24 Nov 2026; the PRD page (`prd/public/index.html`) stays and is served by the main site at `/prd` (`src/pages/prd.html.ts`), noindex through `public/_headers`. This closes the open part of SF10. `prd/public/_headers` belonged to the deleted Worker and is now unused; it is kept until the owner decides. | Dead deploy config invites a deploy that recreates the old Worker. |
+| RC2 | CI also runs `pnpm test`. | The unit tests (nearby finds, line art, icons, logo) were only run by hand. |
