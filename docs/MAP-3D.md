@@ -43,8 +43,8 @@ To move a feature: run `pnpm map:harness`, click the spot, copy x and y into `po
 - **Light.** One light from the north-west, the cartographer's convention. Flat ground keeps exactly the map's own colour (shade 1.0); only slopes darken or brighten. No tone mapping, so the map's colours are not shifted.
 - **Water depth.** Water is found by colour at render time: a saturated cyan to blue hue (the thresholds were checked against the colour count in M3D4; the rule itself is generic). It gets a deeper tint away from the shore, read from a blurred mipmap of the same tile, plus a sheen that changes with the view angle. Nothing animates, so frames are drawn only when something changes.
 - **Distance haze.** Far ground fades toward the page colour, which reads as depth when tilted.
-- **Pins.** Each find with a pin is a marker (a disc with its type icon on a short stem) whose stem foot is the exact pixel, at the terrain height there. They stay visible over hills. Tap targets are 44 px around the disc. Rest is pink, hover gets a ring, selected turns white with a pink ring, as in 2D. Nearby finds are not grouped in 3D.
-- **Collectible layers.** When a layer is turned on (Legend or Basemap menu), its items show in 3D as the same small disc as the 2D `.cpin`, at the same pixels, all in one draw call; items that share a spot sit on a small ring, as in 2D. Tapping one opens the same card. Find pins win when both are under the pointer. Checklist numbers show in 2D only.
+- **Pins.** Each find with a pin is a marker (a disc with its type icon on a short stem) whose stem foot is the exact pixel, at the terrain height there. All pins at rest are one instanced draw; hovered and selected pins are a second instanced draw on top at 1.15x. Each instance samples one atlas of pin images (type icon by state), sized in CSS px in the vertex shader. Picking maps the pointer to an instance index and its slug with a screen-space test (a 44 px target around the disc), because a raycaster cannot see quads sized in the shader. They stay visible over hills. Rest is pink, hover gets a ring, selected turns white with a pink ring, as in 2D. Nearby finds are not grouped in 3D.
+- **Collectible layers.** When a layer is turned on (Legend or Basemap menu), its items show in 3D as the same small disc as the 2D `.cpin`, at the same pixels, all in one `Points` draw call (a GPU point sprite per item, the lightest instanced primitive); items that share a spot sit on a small ring, as in 2D. Tapping one opens the same card. Find pins win when both are under the pointer. Checklist numbers show in 2D only.
 - **Theme and basemap.** Colours come from the tokens (`--bg`, `--map-land`, `--accent`, `--on-accent`, `--inverse-*`) and follow the header's theme toggle. "Muted" desaturates in the shader.
 
 ## Controls
@@ -75,16 +75,16 @@ No source gave tilt angles, speeds or transitions. Ours (0 to 62 degrees, openin
 
 ## Performance
 
-Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4 (ANGLE Metal), 1440 x 900 at 2x, 8 test pins, placeholder tiles, during 3 seconds of dragging, turning, tilting and zooming:
+Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4 (ANGLE Metal), 1440 x 900 at 2x, placeholder tiles, during about 8 seconds of dragging, turning, tilting and zooming. Worst case: all 12 collectible layers on (892 discs) plus 68 test pins.
 
-| Measure | Result |
-|---|---|
-| Frame interval, median and 95th percentile | 16.7 ms and 16.7 ms (60 fps, no dropped frames) |
-| CPU time per frame (tile selection plus render call), median, 95th, max | 0.3 ms, 0.7 ms, 1.3 ms |
-| Draw calls | 22 |
-| Terrain chunks shown | 48 |
+| Measure | CPU normal | CPU throttled 4x (a mid laptop stand-in) |
+|---|---|---|
+| Frame interval, median and 95th percentile | 16.7 ms and 16.7 ms | 16.7 ms and 16.7 ms |
+| Longest frame interval | 33.3 ms | 83.3 ms (tile loads) |
+| CPU time per frame, median, 95th, max | 0.4, 0.8, 9.1 ms | 1.2, 4.1, 40.9 ms |
+| Draw calls in total, of which markers | 49, 2 | 49, 2 |
 
-An M4 is faster than a mid laptop. The CPU side has more than 10x headroom inside a 16.7 ms frame; the GPU side is about 50 chunks of at most 4,225 vertices and one texture each, which integrated laptop GPUs handle easily. Not measured on a real mid laptop or phone: do that before launch.
+Markers cost two draw calls whatever the count: one instanced draw for the pins at rest and one `Points` draw for every collectible disc (plus one each for a selected or hovered item). The rare long frames come from new tile textures being uploaded while zooming in, not from markers. CPU throttling does not model a weaker GPU: measure on a real mid laptop and phone before launch.
 
 ## Known limits
 

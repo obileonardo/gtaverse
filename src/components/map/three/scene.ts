@@ -139,7 +139,7 @@ export class MapScene {
   readonly camera: THREE.PerspectiveCamera;
   readonly controls: MapControls;
   readonly scene = new THREE.Scene();
-  readonly stats = { frames: [] as number[], renderMs: [] as number[], draws: 0, tiles: 0 };
+  readonly stats = { frames: [] as number[], renderMs: [] as number[], draws: 0, tiles: 0, markerDraws: 0 };
   private opts: SceneOptions;
   private meta: MapMeta;
   private nodes = new Map<string, Node>();
@@ -151,8 +151,15 @@ export class MapScene {
   private cPoints: THREE.Points | null = null;
   private cSelected: THREE.Points | null = null;
   private cSelectedId: string | null = null;
-  private pinData = new Map<string, { pin: Pin3D; sprite: THREE.Sprite }>();
-  private pinTex = new Map<string, THREE.Texture>();
+  // Find pins: instanced screen-facing quads, one draw for the pins at rest and one for the hovered and selected pins
+  // (drawn on top, 1.15x). Each quad samples its look from one atlas of pin images (type icon x state).
+  private pinList: Pin3D[] = [];
+  private pinRest: THREE.InstancedMesh | null = null;
+  private pinTop: THREE.InstancedMesh | null = null;
+  private pinTopSlugs: string[] = [];
+  private pinRestSlugs: string[] = [];
+  private atlas: { tex: THREE.CanvasTexture; cells: Map<string, number>; cols: number; rows: number } | null = null;
+  private pinMaterial: THREE.ShaderMaterial | null = null;
   private iconImages = new Map<string, HTMLImageElement>();
   private selected: string | null = null;
   private hovered: string | null = null;
@@ -514,31 +521,27 @@ export class MapScene {
     img = new Image();
     img.decoding = 'async';
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    img.onload = () => { for (const [slug, d] of this.pinData) this.stylePin(slug, d); this.invalidate(); };
+    img.onload = () => { this.drawAtlas(); this.invalidate(); };
     this.iconImages.set(key, img);
     return img;
   }
 
-  private pinTexture(icon: IconName, state: 'rest' | 'hover' | 'selected') {
+  /** One pin image (30 x 40 CSS px, drawn at 4x) into an atlas cell: stem, then a disc with the type icon. */
+  private drawPin(g: CanvasRenderingContext2D, ox: number, oy: number, icon: IconName, state: 'rest' | 'hover' | 'selected') {
     const t = this.theme;
+    const s = 4;
+    const W = 30 * s, H = PIN_PX * s;
     const fill = state === 'selected' ? t.inverseFill : t.accent;
     const ink = state === 'selected' ? t.inverseText : t.onAccent;
-    const key = `${icon}|${state}|${fill}|${ink}`;
-    const cached = this.pinTex.get(key);
     const img = this.iconImage(icon, ink);
-    if (cached && cached.userData.complete) return cached;
-    const s = 4; // drawn at 4x for crisp edges on 2x screens
-    const W = 30 * s, H = PIN_PX * s;
-    const c = document.createElement('canvas');
-    c.width = W; c.height = H;
-    const g = c.getContext('2d')!;
-    // Stem, from the ground point up to the head.
+    g.save();
+    g.translate(ox, oy);
+    g.clearRect(0, 0, W, H);
     g.fillStyle = state === 'selected' ? t.accent : fill;
-    g.fillRect(W / 2 - 1.5 * s / 2, 26 * s, 1.5 * s, H - 26 * s);
+    g.fillRect(W / 2 - (1.5 * s) / 2, 26 * s, 1.5 * s, H - 26 * s);
     g.beginPath();
     g.arc(W / 2, H - 1.5 * s, 2.5 * s, 0, Math.PI * 2);
     g.fill();
-    // Head: a disc with a 2px ring (selected: white disc, pink ring; hover: dark ring).
     g.beginPath();
     g.arc(W / 2, 14 * s, 13.5 * s, 0, Math.PI * 2);
     g.fillStyle = fill;
@@ -547,57 +550,130 @@ export class MapScene {
     g.strokeStyle = state === 'selected' ? t.accent : state === 'hover' ? t.inverseFill : 'rgba(13,12,26,0.35)';
     g.stroke();
     if (img.complete && img.naturalWidth) g.drawImage(img, W / 2 - 8 * s, 6 * s, 16 * s, 16 * s);
-    const tex = cached ?? new THREE.CanvasTexture(c);
-    if (cached) { (cached.image as HTMLCanvasElement) = c; cached.needsUpdate = true; }
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
-    tex.userData.complete = img.complete && !!img.naturalWidth;
-    this.pinTex.set(key, tex);
-    return tex;
+    g.restore();
   }
 
-  private stylePin(slug: string, d: { pin: Pin3D; sprite: THREE.Sprite }) {
-    const state = slug === this.selected ? 'selected' : slug === this.hovered ? 'hover' : 'rest';
-    const mat = d.sprite.material as THREE.SpriteMaterial;
-    mat.map = this.pinTexture(d.pin.icon, state);
-    mat.needsUpdate = true;
-    d.sprite.renderOrder = state === 'selected' ? 3 : state === 'hover' ? 2 : 1;
-    this.scalePin(d.sprite, state === 'rest' ? 1 : 1.15);
+  /** The atlas: every icon in use, in the three states. Redrawn when icons load or the theme changes. */
+  private drawAtlas() {
+    const used = [...new Set(this.pinList.map((p) => p.icon))].sort();
+    const keys = used.flatMap((icon) => (['rest', 'hover', 'selected'] as const).map((st) => `${icon}|${st}`));
+    if (!keys.length) return;
+    const CW = 120, CH = 160, cols = Math.min(8, keys.length), rows = Math.ceil(keys.length / cols);
+    const old = this.atlas;
+    const canvas = old && (old.tex.image as HTMLCanvasElement).width === cols * CW && (old.tex.image as HTMLCanvasElement).height === rows * CH ? (old.tex.image as HTMLCanvasElement) : document.createElement('canvas');
+    canvas.width = cols * CW;
+    canvas.height = rows * CH;
+    const g = canvas.getContext('2d')!;
+    const cells = new Map<string, number>();
+    keys.forEach((k, n) => {
+      const [icon, st] = k.split('|') as [IconName, 'rest' | 'hover' | 'selected'];
+      this.drawPin(g, (n % cols) * CW, Math.floor(n / cols) * CH, icon, st);
+      cells.set(k, n);
+    });
+    let tex = old?.tex;
+    if (!tex || tex.image !== canvas) {
+      old?.tex.dispose();
+      tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+    }
+    tex.needsUpdate = true;
+    this.atlas = { tex, cells, cols, rows };
+    if (this.pinMaterial) this.pinMaterial.uniforms.atlas.value = tex;
   }
 
-  private scalePin(s: THREE.Sprite, k = 1) {
-    const h = this.opts.canvas.clientHeight || 800;
-    const unit = (2 * Math.tan(THREE.MathUtils.degToRad(FOV / 2))) / h; // sprite scale per CSS px (sizeAttenuation off)
-    s.scale.set(30 * unit * k, PIN_PX * unit * k, 1);
-    s.userData.k = k;
+  private material3dPins() {
+    if (this.pinMaterial) return this.pinMaterial;
+    const c = this.opts.canvas;
+    this.pinMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthTest: false, // pins stay visible over hills, like the game's map blips
+      depthWrite: false,
+      uniforms: { atlas: { value: this.atlas?.tex ?? null }, viewport: { value: new THREE.Vector2(c.clientWidth || 1, c.clientHeight || 1) }, sizePx: { value: new THREE.Vector2(30, PIN_PX) } },
+      vertexShader: /* glsl */ `
+        attribute vec4 aCell;
+        attribute float aScale;
+        uniform vec2 viewport;
+        uniform vec2 sizePx;
+        varying vec2 vUv;
+        void main() {
+          vec4 anchor = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+          anchor.xy += position.xy * sizePx * aScale / viewport * 2.0 * anchor.w; // constant size in CSS px
+          gl_Position = anchor;
+          vUv = aCell.xy + uv * aCell.zw;
+        }`,
+      fragmentShader: /* glsl */ `
+        uniform sampler2D atlas;
+        varying vec2 vUv;
+        void main() {
+          vec4 c = texture2D(atlas, vUv);
+          if (c.a < 0.02) discard;
+          gl_FragColor = c;
+          #include <colorspace_fragment>
+        }`,
+    });
+    return this.pinMaterial;
+  }
+
+  private instanced(list: Pin3D[], scale: number, order: number) {
+    const quad = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0); // x -0.5..0.5, y 0..1: the stem foot is the pixel
+    const geo = new THREE.InstancedBufferGeometry().copy(quad as unknown as THREE.InstancedBufferGeometry);
+    quad.dispose();
+    const cell = new Float32Array(list.length * 4), sc = new Float32Array(list.length).fill(scale);
+    const at = this.atlas!;
+    const m = new THREE.Matrix4();
+    const mesh = new THREE.InstancedMesh(geo, this.material3dPins(), Math.max(1, list.length));
+    list.forEach((p, n) => {
+      const state = p.slug === this.selected ? 'selected' : p.slug === this.hovered ? 'hover' : 'rest';
+      const k = at.cells.get(`${p.icon}|${state}`) ?? 0;
+      const col = k % at.cols, row = Math.floor(k / at.cols);
+      cell.set([col / at.cols, 1 - (row + 1) / at.rows, 1 / at.cols, 1 / at.rows], n * 4);
+      mesh.setMatrixAt(n, m.makeTranslation(p.x, heightAt(p.x, p.y), p.y));
+    });
+    mesh.count = list.length;
+    geo.setAttribute('aCell', new THREE.InstancedBufferAttribute(cell, 4));
+    geo.setAttribute('aScale', new THREE.InstancedBufferAttribute(sc, 1));
+    mesh.frustumCulled = false; // vertices move in the shader; the pins are few and cheap
+    mesh.renderOrder = order;
+    return mesh;
+  }
+
+  private rebuildPins() {
+    for (const mesh of [this.pinRest, this.pinTop]) if (mesh) { this.pins.remove(mesh); mesh.geometry.dispose(); mesh.dispose(); }
+    this.pinRest = this.pinTop = null;
+    if (!this.pinList.length) { this.invalidate(); return; }
+    if (!this.atlas || [...new Set(this.pinList.map((p) => p.icon))].some((ic) => !this.atlas!.cells.has(`${ic}|rest`))) this.drawAtlas();
+    const top = this.pinList.filter((p) => p.slug === this.selected || p.slug === this.hovered).sort((a) => (a.slug === this.selected ? 1 : -1));
+    const rest = this.pinList.filter((p) => !top.includes(p));
+    this.pinRestSlugs = rest.map((p) => p.slug);
+    this.pinTopSlugs = top.map((p) => p.slug);
+    if (rest.length) { this.pinRest = this.instanced(rest, 1, 1); this.pins.add(this.pinRest); }
+    if (top.length) { this.pinTop = this.instanced(top, 1.15, 3); this.pins.add(this.pinTop); }
+    this.invalidate();
   }
 
   setPins(list: Pin3D[]) {
-    const keep = new Set(list.map((p) => p.slug));
-    for (const [slug, d] of this.pinData) if (!keep.has(slug)) { this.pins.remove(d.sprite); (d.sprite.material as THREE.SpriteMaterial).dispose(); this.pinData.delete(slug); }
-    for (const p of list) {
-      let d = this.pinData.get(p.slug);
-      if (!d) {
-        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ sizeAttenuation: false, depthTest: false, depthWrite: false, transparent: true }));
-        sprite.center.set(0.5, 0); // the bottom of the stem is the exact pixel
-        sprite.userData.slug = p.slug;
-        d = { pin: p, sprite };
-        this.pinData.set(p.slug, d);
-        this.pins.add(sprite);
-      }
-      d.pin = p;
-      d.sprite.position.set(p.x, heightAt(p.x, p.y), p.y);
-      this.stylePin(p.slug, d);
-    }
-    this.invalidate();
+    // South drawn last, so in the default north-up tilt nearer pins sit over farther ones.
+    this.pinList = [...list].sort((a, b) => a.y - b.y);
+    this.drawAtlas();
+    this.rebuildPins();
   }
 
   setState(selected: string | null, hovered: string | null) {
     if (selected === this.selected && hovered === this.hovered) return;
     this.selected = selected;
     this.hovered = hovered;
-    for (const [slug, d] of this.pinData) this.stylePin(slug, d);
-    this.invalidate();
+    this.rebuildPins();
+  }
+
+  /** Draw calls the pins and collectibles take, for the performance check. */
+  markerDraws() { return [this.pinRest, this.pinTop, this.cPoints, this.cSelected].filter(Boolean).length; }
+
+  /** Where a pin's disc centre is on screen, in CSS px, or null. Used by the verification scripts. */
+  pinHead(slug: string) {
+    const p = this.pinList.find((q) => q.slug === slug);
+    const at = p && this.project(p.x, p.y);
+    return at ? { x: at.x, y: at.y - (PIN_PX - 14) } : null;
   }
 
   setSelected(slug: string | null) { this.setState(slug, this.hovered); }
@@ -697,9 +773,8 @@ export class MapScene {
     (this.scene.background as THREE.Color).set(theme.background);
     this.uniforms.muted = theme.muted ? 1 : 0;
     for (const n of this.nodes.values()) if (n.mesh) n.mesh.material.uniforms.muted.value = this.uniforms.muted;
-    for (const t of this.pinTex.values()) t.dispose();
-    this.pinTex.clear();
-    for (const [slug, d] of this.pinData) this.stylePin(slug, d);
+    this.drawAtlas();
+    this.rebuildPins();
     if (this.cItems.length) this.setCollectibles(this.cItems.map(({ id, x, y }) => ({ id, x, y })), this.cSelectedId);
     this.invalidate();
   }
@@ -711,17 +786,21 @@ export class MapScene {
   private pick(e: PointerEvent) {
     const c = this.opts.canvas.getBoundingClientRect();
     const px = e.clientX - c.left, py = e.clientY - c.top;
+    // The instance index in each mesh maps back to a slug (pinTopSlugs, pinRestSlugs), as a raycaster's instanceId would.
+    // A screen-space test is used instead of THREE.Raycaster because the quads are sized in CSS px in the vertex shader,
+    // which a raycaster (testing the untransformed 1 x 1 quad in world units) cannot see.
     let best: { slug: string; d: number; order: number } | null = null;
-    for (const [slug, d] of this.pinData) {
-      const p = this.project(d.pin.x, d.pin.y);
-      if (!p) continue;
-      const k = d.sprite.userData.k ?? 1;
-      const dist = Math.hypot(px - p.x, py - (p.y - (PIN_PX - 14) * k));
-      if (dist > 22 * k) continue;
-      const order = d.sprite.renderOrder;
+    const test = (slugs: string[], k: number, order: number) => slugs.forEach((slug, instanceId) => {
+      const p = this.pinList.find((q) => q.slug === slugs[instanceId]);
+      const at = p && this.project(p.x, p.y);
+      if (!at) return;
+      const dist = Math.hypot(px - at.x, py - (at.y - (PIN_PX - 14) * k));
+      if (dist > 22 * k) return;
       if (!best || order > best.order || (order === best.order && dist < best.d)) best = { slug, d: dist, order };
-    }
-    return best?.slug ?? null;
+    });
+    test(this.pinTopSlugs, 1.15, 3);
+    test(this.pinRestSlugs, 1, 1);
+    return (best as { slug: string } | null)?.slug ?? null;
   }
 
   // ---------------------------------------------------------------- input
@@ -783,7 +862,7 @@ export class MapScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.controls.maxDistance = this.fitDistance() * 1.35;
-    for (const d of this.pinData.values()) this.scalePin(d.sprite, d.sprite.userData.k ?? 1);
+    this.pinMaterial?.uniforms.viewport.value.set(w, h);
     this.invalidate();
   }
 
@@ -822,6 +901,7 @@ export class MapScene {
     if (this.stats.frames.length > 600) this.stats.frames.splice(0, 300);
     if (this.stats.renderMs.length > 600) this.stats.renderMs.splice(0, 300);
     this.stats.draws = this.renderer.info.render.calls;
+    this.stats.markerDraws = this.markerDraws();
     this.lastFrame = now;
   }
 
@@ -842,8 +922,9 @@ export class MapScene {
       (n.texture?.image as ImageBitmap | undefined)?.close?.();
       if (n.mesh) { n.mesh.geometry.dispose(); n.mesh.material.dispose(); }
     }
-    for (const t of this.pinTex.values()) t.dispose();
-    for (const d of this.pinData.values()) (d.sprite.material as THREE.SpriteMaterial).dispose();
+    for (const mesh of [this.pinRest, this.pinTop]) if (mesh) { mesh.geometry.dispose(); mesh.dispose(); }
+    this.pinMaterial?.dispose();
+    this.atlas?.tex.dispose();
     this.disposePoints(this.cPoints);
     this.disposePoints(this.cSelected);
     this.renderer.dispose();
