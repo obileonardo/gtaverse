@@ -253,7 +253,9 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
   /* Reading progress: a fill down the rail's line, driven by the page's own scroll (off the main thread). */
   .toc__progress { position: absolute; inset: 0 auto 0 0; width: 1px; background: var(--text-3); transform-origin: 50% 0; transform: scaleY(0); display: none; }
   @supports (animation-timeline: scroll()) {
-    .toc__progress { display: block; animation: toc-progress linear both; animation-timeline: scroll(root block); }
+    .toc__progress { display: block; animation-name: toc-progress; animation-timing-function: linear; animation-fill-mode: both; }
+    /* Its own rule: a minifier must never fold the timeline into the animation shorthand (that drops it). */
+    .toc__track .toc__progress { animation-timeline: scroll(root block); }
   }
   @keyframes toc-progress { to { transform: scaleY(1); } }
   .toc__marker {

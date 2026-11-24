@@ -527,8 +527,6 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
     clip-path: inset(0 0 0 0 round var(--radius-xl));
     opacity: 1;
     transition: clip-path var(--dur-morph) var(--ease-out), opacity 120ms var(--ease-out);
-    /* Open while the page changes: it fades with the old page, apart from the island. */
-    view-transition-name: site-menu;
   }
   .menu > :is(.games, .menu__list) { opacity: 0; transition: opacity 100ms var(--ease-standard); }
   :global([data-menu='open']) .menu > :is(.games, .menu__list) { opacity: 1; transition: opacity 160ms var(--ease-out) 80ms; }

@@ -1,7 +1,7 @@
 // The travelling pill: one highlight behind a vertical list of rows that glides to the row under the pointer instead
 // of a hover colour blinking on and off (motion study items 4 and 13). Its two edges ride two critically damped
 // springs: the edge facing the move on --spring-lead, the other on --spring-trail, so the pill stretches toward where
-// it is going and lands whole, never overshooting. The stretch is capped at 40% of a row. Written as one transform
+// it is going and lands whole, never overshooting. The stretch is capped at 35% of a row. Written as one transform
 // per frame (translateY + scaleY), so it stays on the compositor.
 // First hover: the pill appears in place (opacity only). Leaving the list: it fades. Keyboard focus: it jumps.
 // Fine pointers only; reduced motion: it jumps and fades. Used by the site menu rows and the Games rail.
@@ -66,8 +66,8 @@ export function travellingPill(box: HTMLElement, rows: string, className: string
       for (let s = 0; s < 2; s++) {
         top.step(dt / 2);
         bottom.step(dt / 2);
-        const max = base * 1.4, min = base * 0.6;
-        // Cap the stretch: the trailing edge is pulled along at the lead's speed once the pill is 40% longer.
+        const max = base * 1.35, min = base * 0.65;
+        // Cap the stretch: the trailing edge is pulled along at the lead's speed once the pill is 35% longer.
         if (bottom.x - top.x > max) {
           if (down) { top.x = bottom.x - max; top.v = Math.max(top.v, bottom.v); }
           else { bottom.x = top.x + max; bottom.v = Math.min(bottom.v, top.v); }

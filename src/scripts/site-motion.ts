@@ -40,7 +40,11 @@ function initReveal() {
     // What is on screen when the page opens starts together at 120ms, after the page has arrived.
     const base = firstBatch ? 120 : 0;
     firstBatch = false;
-    entering.forEach((el, i) => {
+    // Each row staggers on its own (reading order within the row); rows that enter together start together.
+    let rowTop = NaN, i = 0;
+    entering.forEach((el) => {
+      const top = el.getBoundingClientRect().top;
+      if (!(Math.abs(top - rowTop) <= 4)) { rowTop = top; i = 0; } else i++;
       el.style.setProperty('--rv-delay', `${reduce() ? 0 : base + staggerDelay(i, step, cap)}ms`);
       el.dataset.rv = 'in';
       io.unobserve(el);
