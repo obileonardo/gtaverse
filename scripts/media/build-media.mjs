@@ -3,9 +3,10 @@
 // Run with: pnpm media:build
 //
 // Output (git-ignored, never committed: Rockstar's copyright), in public/media/hero/:
-//   trailer-1920x1080.mp4 / .webm   the trailer reel, H.264 and AV1, no audio track
-//   trailer-720x1280.mp4 / .webm    the same reel cropped for phones
-//   poster-{w}.avif / .webp         the reel's first frame (landscape), and poster-portrait-{w}.*
+//   trailer-1920x1080.mp4 / .webm   the trailer loop (trailer.use: the Launch Trailer cut, or the character
+//                                   reel as the fallback), H.264 and AV1, no audio track
+//   trailer-720x1280.mp4 / .webm    the same loop cropped for phones
+//   poster-{w}.avif / .webp         the loop's first frame (landscape), and poster-portrait-{w}.*
 //   sound.m4a                       the music, AAC; only fetched when a visitor turns sound on
 //   keyart-{n}-{w}.avif / .webp     key art (landscape), and keyart-{n}-portrait-{w}.*
 //   manifest.json                   what the hero component reads at build time
@@ -94,12 +95,48 @@ mkdirSync(outDir, { recursive: true });
 mkdirSync(tmpDir, { recursive: true });
 const manifest = { generated: new Date().toISOString().slice(0, 10), inputs, credit: config.credit };
 
-// ---------------------------------------------------------------- trailer reel
+// ---------------------------------------------------------------- trailer loop
+// trailer.use picks the source: "launch" (shots cut from the Launch Trailer, the default) or "reel" (the eight
+// character clips, kept as the fallback). Either way the loop is a list of clips joined with hard cuts. The launch
+// shots are consecutive in the trailer and the loop restarts on a shot change, so every cut, the restart included,
+// is one of the trailer's own edits.
 const t = config.trailer;
-const clips = t.clips.map((c) => ({ ...c, path: join(cacheDir, t.source, c.file) }));
+const pick = t[t.use];
+if (!pick || !['launch', 'reel'].includes(t.use)) fail(`trailer.use is "${t.use}"; use "launch" or "reel"`);
+const clips = (t.use === 'launch' ? pick.shots.map((s) => ({ ...s, file: pick.file, active: pick.active })) : pick.clips).map((c) => ({
+  ...c,
+  path: join(cacheDir, pick.source, c.file),
+}));
 for (const c of clips) if (!existsSync(c.path)) fail(`${c.path} is missing. Run pnpm media:fetch first.`);
+// The launch shots must run back to back from launch.in to launch.out (within one frame), so nothing outside the
+// chosen, checked range (the sign before it, the title card after it) can enter the loop.
+if (t.use === 'launch') {
+  const near = (a, b) => Math.abs(a - b) < 1 / pick.fps;
+  const ok = near(clips[0].in, pick.in) && near(clips.at(-1).out, pick.out) && clips.every((c, i) => c.out > c.in && (i === 0 || near(c.in, clips[i - 1].out)));
+  if (!ok) fail('trailer.launch.shots must run back to back from launch.in to launch.out');
+}
 const loopSeconds = Number(clips.reduce((s, c) => s + (c.out - c.in), 0).toFixed(3));
-if (loopSeconds < 8 || loopSeconds > 14) fail(`the reel is ${loopSeconds} s; keep it between 8 and 14 s`);
+if (loopSeconds < 8 || loopSeconds > 15) fail(`the trailer loop is ${loopSeconds} s; keep it between 8 and 15 s`);
+const fps = pick.fps;
+
+// Input arguments and the filter chain of one clip for one output size. Launch shots seek close to their in point
+// before decoding (the trailer is 4K and 89 s long) and trim by frame number, so no frame of a neighbouring shot or
+// title card slips in; "active" crops away the trailer's letterbox bars before the crop to the output ratio.
+function clipChain(c, i, r) {
+  const focusKey = r.w > r.h ? 'y' : 'x';
+  const f = { x: 0.5, y: 0.5, ...(focusKey === 'y' ? { y: c.focus.y } : { x: c.focus.x }) };
+  const matte = c.active ? `crop=${c.active.w}:${c.active.h}:${c.active.x}:${c.active.y},` : '';
+  const fit = `${matte}${crop(c.active ?? dims(c.path), r.w, r.h, f)},scale=${r.w}:${r.h}:flags=lanczos,setsar=1,fps=${fps},format=yuv420p`;
+  if (t.use === 'launch') {
+    const seek = Math.max(0, Math.floor(c.in) - 1);
+    const frame = (s) => Math.round((s - seek) * fps);
+    return {
+      input: ['-ss', String(seek), '-i', c.path],
+      chain: `[${i}:v:0]trim=start_frame=${frame(c.in)}:end_frame=${frame(c.out)},setpts=PTS-STARTPTS,${fit}[v${i}]`,
+    };
+  }
+  return { input: ['-i', c.path], chain: `[${i}:v:0]trim=start=${c.in}:end=${c.out},setpts=PTS-STARTPTS,${fit}[v${i}]` };
+}
 
 // Encode until the size lands in the target band (or the CRF limits are hit).
 function encodeSized(args, out, crf, band, step = 2) {
@@ -115,20 +152,13 @@ function encodeSized(args, out, crf, band, step = 2) {
 
 const reels = [
   { key: 'landscape', w: t.width, h: t.height, band: [2, 4], crf: 23 },
-  { key: 'portrait', w: t.portrait_width, h: t.portrait_height, band: [0.7, 1.6], crf: 24 },
+  { key: 'portrait', w: t.portrait_width, h: t.portrait_height, band: [1, 1.5], crf: 24 },
 ];
-manifest.trailer = { seconds: loopSeconds, fps: t.fps, clips: clips.length };
+manifest.trailer = { source: t.use, seconds: loopSeconds, fps, clips: clips.length, credit: t.credit };
 for (const r of reels) {
-  const focusKey = r.w > r.h ? 'y' : 'x';
-  const inputs = clips.flatMap((c) => ['-i', c.path]);
-  const chains = clips.map((c, i) => {
-    const f = { x: 0.5, y: 0.5, ...(focusKey === 'y' ? { y: c.focus.y } : { x: c.focus.x }) };
-    return (
-      `[${i}:v:0]trim=start=${c.in}:end=${c.out},setpts=PTS-STARTPTS,` +
-      `${crop(dims(c.path), r.w, r.h, f)},scale=${r.w}:${r.h}:flags=lanczos,setsar=1,fps=${t.fps},format=yuv420p[v${i}]`
-    );
-  });
-  const graph = `${chains.join(';')};${clips.map((_, i) => `[v${i}]`).join('')}concat=n=${clips.length}:v=1:a=0[out]`;
+  const parts = clips.map((c, i) => clipChain(c, i, r));
+  const inputs = parts.flatMap((p) => p.input);
+  const graph = `${parts.map((p) => p.chain).join(';')};${clips.map((_, i) => `[v${i}]`).join('')}concat=n=${clips.length}:v=1:a=0[out]`;
   const base = ['-filter_complex', graph, '-map', '[out]', '-an'];
   const name = `trailer-${r.w}x${r.h}`;
   // A lossless intermediate keeps both encodes on identical frames and runs the crop once.
@@ -137,7 +167,7 @@ for (const r of reels) {
 
   const mp4 = join(outDir, `${name}.mp4`);
   const crf = encodeSized(
-    (q) => ['-i', master, '-c:v', 'libx264', '-preset', 'slow', '-crf', String(q), '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-g', String(t.fps * 2), '-movflags', '+faststart'],
+    (q) => ['-i', master, '-c:v', 'libx264', '-preset', 'slow', '-crf', String(q), '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-g', String(Math.round(fps * 2)), '-movflags', '+faststart'],
     mp4,
     r.crf,
     r.band,
@@ -145,11 +175,11 @@ for (const r of reels) {
   const webm = join(outDir, `${name}.webm`);
   const webmArgs =
     webmCodec === 'libsvtav1'
-      ? ['-c:v', 'libsvtav1', '-preset', '5', '-crf', String(crf + 14), '-g', String(t.fps * 2), '-pix_fmt', 'yuv420p']
-      : ['-c:v', 'libvpx-vp9', '-crf', String(crf + 10), '-b:v', '0', '-row-mt', '1', '-g', String(t.fps * 2)];
+      ? ['-c:v', 'libsvtav1', '-preset', '5', '-crf', String(crf + 14), '-g', String(Math.round(fps * 2)), '-pix_fmt', 'yuv420p']
+      : ['-c:v', 'libvpx-vp9', '-crf', String(crf + 10), '-b:v', '0', '-row-mt', '1', '-g', String(Math.round(fps * 2))];
   run(['-i', master, ...webmArgs, webm]);
 
-  // Poster: the reel's first frame, decoded from the MP4 so poster and video match exactly.
+  // Poster: the loop's first frame, decoded from the MP4 so poster and video match exactly.
   const png = join(tmpDir, `${name}-poster.png`);
   run(['-i', mp4, '-frames:v', '1', png]);
   const widths = r.key === 'landscape' ? [960, 1440, 1920] : [360, 540, 720];
@@ -173,7 +203,7 @@ for (const r of reels) {
 // ---------------------------------------------------------------- sound
 if (t.sound) {
   const s = t.sound;
-  const src = join(cacheDir, t.source, s.file);
+  const src = join(cacheDir, s.source, s.file);
   const len = s.out - s.in;
   const out = join(outDir, 'sound.m4a');
   run([

@@ -1,13 +1,15 @@
-// Downloads Rockstar's official GTA VI trailer and wallpaper zips (linked from
-// https://www.rockstargames.com/VI/downloads) into the git-ignored cache
-// .cache/media/, verifies them and extracts the files the hero uses.
-// Idempotent: a cached, verified zip is reused. Run with: pnpm media:fetch
+// Downloads Rockstar's official GTA VI media into the git-ignored cache .cache/media/ and
+// verifies it: the video and wallpaper zips (linked from https://www.rockstargames.com/VI/downloads),
+// whose hero files are extracted, and the Launch Trailer MP4 (linked from
+// https://www.rockstargames.com/VI/media/videos), kept as one file the hero loop is cut from.
+// Idempotent: a cached, verified download is reused. Run with: pnpm media:fetch
 //
 // Everything here is Rockstar's copyright. Nothing is committed (.cache/ and
 // public/media/ are git-ignored) and nothing is fed into AI tools (docs/LEGAL.md).
 // The archives are untrusted data: entries are read one by one with `unzip -p`
 // into flat file names we choose, so no archive path ever reaches the disk, and
-// only video and image entries are taken.
+// only video and image entries are taken. The trailer MP4 is only ever read by ffmpeg as data;
+// its type is checked with `file` and its size and SHA-256 against content/hero-media.json.
 
 import { createHash } from 'node:crypto';
 import { closeSync, createReadStream, createWriteStream, existsSync, mkdirSync, openSync, readFileSync, readSync, renameSync, statSync, writeFileSync } from 'node:fs';
@@ -37,7 +39,47 @@ const TAKE = new Set(['.mp4', '.mov', '.m4v', '.jpg', '.jpeg', '.png', '.webp'])
 // A flat, safe name for an entry: its base name, with anything unusual replaced.
 const flat = (entry) => basename(entry).replace(/[^\w.\- ]+/g, '_');
 
+// Download url to dest (via dest.part), checking the content-type and the declared length.
+async function download(url, dest, expectedType) {
+  const res = await fetch(url);
+  if (!res.ok) fail(`download failed: HTTP ${res.status}`);
+  const type = res.headers.get('content-type');
+  if (type !== expectedType) fail(`unexpected content-type "${type}" (expected ${expectedType})`);
+  const tmp = `${dest}.part`;
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(tmp));
+  const size = statSync(tmp).size;
+  const declared = Number(res.headers.get('content-length'));
+  if (declared && size !== declared) fail(`truncated download: ${size} of ${declared} bytes`);
+  renameSync(tmp, dest);
+  return size;
+}
+
 for (const src of config.sources) {
+  // A single video file (the Launch Trailer): download, check type, size and hash. Nothing is extracted.
+  if (src.kind === 'video') {
+    const outDir = join(cacheDir, src.id);
+    mkdirSync(outDir, { recursive: true });
+    const path = join(outDir, src.file_name);
+    if (existsSync(path) && statSync(path).size === src.bytes) {
+      console.log(`${src.id}  file cached     ${path}`);
+    } else {
+      console.log(`${src.id}  downloading     ${src.url} (${(src.bytes / 1e6).toFixed(1)} MB)`);
+      console.log(`${src.id}  saved           ${path} (${await download(src.url, path, 'video/mp4')} bytes)`);
+    }
+    const mime = execFileSync('file', ['-b', '--mime-type', path], { encoding: 'utf8' }).trim();
+    if (mime !== 'video/mp4') fail(`${src.file_name} is not an MP4 (file reports ${mime})`);
+    const size = statSync(path).size;
+    const hash = await sha256(path);
+    if (size !== src.bytes || hash !== src.sha256) {
+      fail(
+        `${src.file_name} differs from the one content/hero-media.json was measured on (size ${size}, sha256 ${hash}). ` +
+          'Rockstar may have updated it: re-check the loop points (logo-free, text-free, spoiler-free), then update the pinned size and hash.',
+      );
+    }
+    console.log(`${src.id}  ok              ${mime}, ${size} bytes, sha256 verified`);
+    continue;
+  }
+
   const zipPath = join(cacheDir, src.zip_name);
   const outDir = join(cacheDir, src.id);
 
@@ -46,17 +88,7 @@ for (const src of config.sources) {
     console.log(`${src.id}  zip cached      ${zipPath}`);
   } else {
     console.log(`${src.id}  downloading     ${src.url}`);
-    const res = await fetch(src.url);
-    if (!res.ok) fail(`download failed: HTTP ${res.status}`);
-    const type = res.headers.get('content-type');
-    if (type !== 'application/zip') fail(`unexpected content-type "${type}"`);
-    const tmp = `${zipPath}.part`;
-    await pipeline(Readable.fromWeb(res.body), createWriteStream(tmp));
-    const size = statSync(tmp).size;
-    const declared = Number(res.headers.get('content-length'));
-    if (declared && size !== declared) fail(`truncated download: ${size} of ${declared} bytes`);
-    renameSync(tmp, zipPath);
-    console.log(`${src.id}  saved           ${zipPath} (${size} bytes)`);
+    console.log(`${src.id}  saved           ${zipPath} (${await download(src.url, zipPath, 'application/zip')} bytes)`);
   }
 
   // 2. Verify: zip magic, size and hash pinned in content/hero-media.json.
@@ -98,11 +130,12 @@ for (const src of config.sources) {
   console.log(`${src.id}  ok              ${taken} files in ${outDir}`);
 }
 
-// 4. Every file the selection names must now exist.
+// 4. Every file the selection names must now exist: the launch cut, the reel (the fallback), the sound and the key art.
 const { trailer } = config;
 const named = [
-  ...trailer.clips.map((c) => join(cacheDir, trailer.source, c.file)),
-  ...(trailer.sound ? [join(cacheDir, trailer.source, trailer.sound.file)] : []),
+  join(cacheDir, trailer.launch.source, trailer.launch.file),
+  ...trailer.reel.clips.map((c) => join(cacheDir, trailer.reel.source, c.file)),
+  ...(trailer.sound ? [join(cacheDir, trailer.sound.source, trailer.sound.file)] : []),
   ...config.keyart.flatMap((k) => [join(cacheDir, k.source, k.landscape), join(cacheDir, k.source, k.portrait)]),
 ];
 const missing = named.filter((p) => !existsSync(p));
