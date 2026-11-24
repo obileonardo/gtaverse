@@ -1,0 +1,104 @@
+---
+// The icon sheet: every glyph of the family (src/icons/family.ts) in both sets at 16, 20, 24 and 32 px, on this theme's
+// ground and on the other theme's (the inverse strip), with its name and the old names it replaces. A review page for
+// the design system, never for search: noindex, out of the sitemap and the route list. Rules: docs/ICONS.md.
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/site/PageHead.astro';
+import { config, glyphs, legacySolid, type GlyphGroup, type GlyphName, type IconSet } from '../../icons/family';
+import { iconSvg } from '../../icons/render';
+
+const groups: { id: GlyphGroup; title: string; note: string }[] = [
+  { id: 'blip', title: 'Map blips', note: 'One per find category in content/categories.json. Bold silhouettes that hold on a pin at 16 px.' },
+  { id: 'layer', title: 'Collectible layers', note: 'One per collectible layer on the map.' },
+  { id: 'wanted', title: 'Wanted and heat', note: 'The explainers’ wanted level states. Hollow and filled stars keep their state in both sets.' },
+  { id: 'verification', title: 'Verification', note: 'The four levels on every find and connection. Single source reuses the check.' },
+  { id: 'control', title: 'Navigation and controls', note: 'Universal marks reuse Capsa’s own drawings, so controls match the owner’s other products.' },
+  { id: 'media', title: 'Media', note: 'Clips, art modes, sound and sources.' },
+  { id: 'site', title: 'Site sections', note: 'The menu, the footer and the trust pages.' },
+];
+const sizes = config.previewSizes;
+const sets: IconSet[] = ['solid', 'line'];
+const all = Object.entries(glyphs) as [GlyphName, (typeof glyphs)[GlyphName]][];
+const total = all.length;
+const legacy = Object.entries(legacySolid);
+---
+<Base title="Icons" description="The Vice Files icon family: every glyph, solid and line, at every size." noindex>
+  <PageHead title="Icons" count={total}>
+    <p>One family of original glyphs in a GTA HUD and map blip spirit, drawn with the Capsa glyph method on a {config.grid} unit grid. Solid is the default set; Line is the setting. Each card shows both sets at {sizes.join(', ')} px on this theme, and at 16 and 24 px on the other theme below.</p>
+    <p>Switch the theme with the toggle in the header to check the other ground. Rules, sizes and the map from old names to new: docs/ICONS.md.</p>
+  </PageHead>
+
+  <section class="block sheet-key" aria-labelledby="key-title">
+    <h2 id="key-title" class="h2">Colour hierarchy</h2>
+    <p class="sheet-note">Icons take the colour of the text they sit with. Primary for the current item and actions, secondary for supporting icons, the accent only on the one main action.</p>
+    <ul class="tones" role="list">
+      {[['tone-1', 'Primary'], ['tone-2', 'Secondary'], ['tone-a', 'Accent']].map(([cls, label]) => (
+        <li class={`tone ${cls}`}>
+          <span set:html={iconSvg('pin', { size: 24 })} />
+          <span set:html={iconSvg('star-filled', { size: 24 })} />
+          <span set:html={iconSvg('found', { size: 24 })} />
+          <span class="tone__label">{label}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  {groups.map((g) => {
+    const items = all.filter(([, v]) => v.group === g.id);
+    return (
+      <section class="block" aria-labelledby={`g-${g.id}`}>
+        <h2 id={`g-${g.id}`} class="h2">{g.title}<sup class="sheet-count mono">{items.length}</sup></h2>
+        <p class="sheet-note">{g.note}</p>
+        <ul class="sheet" role="list">
+          {items.map(([name, v]) => {
+            const was = [...v.aliases, ...legacy.filter(([, t]) => t === name).map(([o]) => `${o} (solid)`)];
+            return (
+              <li class="glyph" id={`icon-${name}`}>
+                <div class="glyph__head">
+                  <span class="glyph__name mono">{name}</span>
+                  <span class="glyph__label">{v.label}</span>
+                </div>
+                {was.length > 0 && <p class="glyph__was">Replaces {was.join(', ')}</p>}
+                {sets.map((st) => (
+                  <div class="glyph__row">
+                    <span class="glyph__set">{st === 'solid' ? 'Solid' : 'Line'}</span>
+                    {sizes.map((px) => <span class="glyph__cell" set:html={iconSvg(name, { set: st, size: px })} />)}
+                  </div>
+                ))}
+                <div class="glyph__row glyph__row--inverse">
+                  <span class="glyph__set">Other theme</span>
+                  {sets.flatMap((st) => [16, 24].map((px) => <span class="glyph__cell" set:html={iconSvg(name, { set: st, size: px })} />))}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    );
+  })}
+</Base>
+
+<style>
+  .block { margin-top: var(--space-12); }
+  .sheet-note { margin-top: var(--space-2); max-width: 720px; color: var(--text-2); font-size: var(--text-body-s); }
+  .sheet-count { margin-left: var(--space-1); color: var(--text-2); }
+  .sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); margin-top: var(--space-5); }
+  .glyph { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); }
+  .glyph__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+  .glyph__name { color: var(--text-1); }
+  .glyph__label, .glyph__was { color: var(--text-2); font-size: var(--text-body-s); }
+  .glyph__label { text-align: right; }
+  .glyph__row { display: grid; grid-template-columns: 88px repeat(4, 1fr); align-items: center; min-height: 40px; color: var(--text-1); }
+  .glyph__row--inverse { margin-top: var(--space-1); padding-inline: var(--space-2); border-radius: var(--radius-m); background: var(--inverse-fill); color: var(--inverse-text); }
+  .glyph__set { color: var(--text-2); font-size: var(--text-body-s); }
+  .glyph__row--inverse .glyph__set { color: var(--inverse-text); }
+  .glyph__cell { display: inline-flex; align-items: center; justify-content: center; }
+  .glyph__cell :global(svg) { display: block; flex: none; }
+  .tones { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+  .tone { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); }
+  .tone :global(svg) { display: block; }
+  .tone__label { color: var(--text-2); font-size: var(--text-body-s); }
+  .tone-1 { color: var(--text-1); }
+  .tone-2 { color: var(--text-2); }
+  .tone-a { color: var(--accent-text); }
+</style>

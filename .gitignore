@@ -23,3 +23,6 @@ public/media/
 
 # Private research (never committed)
 private/
+
+# Python bytecode (scripts/icons)
+__pycache__/

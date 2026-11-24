@@ -2,7 +2,7 @@
 // - every page: one canonical (except the 404), one og:title, og:image pointing at a card that exists, a Twitter card
 // - the robots meta, the X-Robots-Tag header and robots.txt all match the switch (site.indexable in src/lib/site.ts)
 // - JSON-LD parses, uses schema.org, and each type carries the properties we rely on
-// - sitemap.xml lists exactly the pages that were built (less the 404 and the PRD)
+// - sitemap.xml lists exactly the pages that were built (less the 404, the PRD and the /design review pages)
 // Exit code 1 on any failure.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
@@ -25,7 +25,8 @@ const walk = (dir, out = []) => {
   }
   return out;
 };
-const pages = walk(dist).filter((p) => !p.endsWith('/prd.html'));
+// The PRD and the design system's review pages (/design/...) are never for search: noindex, no card, not in the sitemap.
+const pages = walk(dist).filter((p) => !p.endsWith('/prd.html') && !relative(dist, p).startsWith('design/'));
 const pathOf = (file) => '/' + relative(dist, file).replace(/\.html$/, '').replace(/(^|\/)index$/, '');
 const all = (html, re) => [...html.matchAll(re)].map((m) => m[1]);
 
@@ -125,6 +126,7 @@ if (!indexable) {
   if (/X-Robots-Tag/.test(pageBlock)) fail('_headers', 'the /* block still has X-Robots-Tag while site.indexable is true');
 }
 if (!/^\/prd\n\s+X-Robots-Tag: noindex/m.test(headers)) fail('_headers', '/prd must always be noindex');
+if (!/^\/design\/\*\n\s+X-Robots-Tag: noindex/m.test(headers)) fail('_headers', '/design/* must always be noindex');
 
 console.log(`SEO check: ${pages.length} pages, site.indexable = ${indexable}`);
 console.log(`  JSON-LD types: ${Object.entries(typeCount).map(([t, n]) => `${t} ${n}`).join(', ')}`);

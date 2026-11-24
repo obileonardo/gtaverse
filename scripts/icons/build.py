@@ -1,0 +1,889 @@
+#!/usr/bin/env python3
+"""The Vice Files icon family: one set of original glyphs in a GTA HUD and map blip spirit, drawn with the owner's
+Capsa glyph method (capsa.py, copied from Capsa/design-references/brand/icons). Rules: docs/ICONS.md.
+
+    python3 scripts/icons/build.py                 writes src/icons/family.ts (generated, never edit it by hand)
+    python3 scripts/icons/build.py --sheet x.html  also writes a quick contact sheet for review outside the site
+
+Standard library only. Every glyph has a Solid drawing (the default) and a Line drawing (the setting), on the
+20 unit grid. The build checks the live area, that every old icon name in src/components/ui/icons.ts still resolves,
+that every category in content/categories.json has a glyph, and that no text has an em or en dash.
+
+Nothing here copies a Rockstar file or icon: every shape is drawn from scratch with the helpers below.
+"""
+import json
+import math
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from capsa import (A, LW, P, S, SW, W, Z, arc_arrow, band, bar, bars, bubble, bubble_line, bubble_path, caret,  # noqa: E402
+                   chevron, crescent, dot, ellipse, f, frame_image, frame_image_line, head, mask_paths, page, page_line,
+                   person, pl, pt, rbar, rot, rpoly, rrect, shell, shield, shield_line, shoulders, sline, speaker,
+                   star4, star5, tray_solid, mirror)
+
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
+OUT = os.path.join(ROOT, "src", "icons", "family.ts")
+OLD = os.path.join(ROOT, "src", "components", "ui", "icons.ts")
+CATEGORIES = os.path.join(ROOT, "content", "categories.json")
+
+CONFIG = {
+    "source": "Capsa glyph method (Capsa/design-references/brand/icons, STYLE.md 'UI glyph rules'), vendored in scripts/icons/capsa.py",
+    "grid": 20,
+    "liveArea": [2, 18],
+    "lineCentres": [2.75, 17.25],
+    "lineWeight": LW,
+    "solidBar": SW,
+    "minKnockOut": 1.25,
+    "minGap": 1.5,
+    "sizes": [16, 20, 24],
+    "previewSizes": [16, 20, 24, 32],
+    "defaultSet": "solid",
+}
+
+
+# ------------------------------------------------------------------------------------------------ new helpers
+def tx(d, fn):
+    """Map every absolute x,y pair of a path through fn (Capsa paths are absolute M/L/C/Z with x,y pairs)."""
+    return re.sub(r"(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)", lambda m: pt(fn(float(m.group(1)), float(m.group(2)))), d)
+
+
+def rell(cx, cy, rx, ry, deg):
+    """An ellipse turned deg degrees about its centre."""
+    r = math.radians(deg)
+    c, s = math.cos(r), math.sin(r)
+    return tx(ellipse(cx, cy, rx, ry), lambda x, y: (cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c))
+
+
+def inset(poly, d):
+    """A polygon moved inward by d along every edge (clockwise points on screen), for an even wall."""
+    n = len(poly)
+    lines = []
+    for i in range(n):
+        (x0, y0), (x1, y1) = poly[i], poly[(i + 1) % n]
+        L = math.dist(poly[i], poly[(i + 1) % n])
+        nx, ny = -(y1 - y0) / L, (x1 - x0) / L   # inward normal for clockwise order on screen
+        lines.append(((x0 + nx * d, y0 + ny * d), (x1 + nx * d, y1 + ny * d)))
+    out = []
+    for i in range(n):
+        (a0, a1), (b0, b1) = lines[i - 1], lines[i]
+        dax, day = a1[0] - a0[0], a1[1] - a0[1]
+        dbx, dby = b1[0] - b0[0], b1[1] - b0[1]
+        den = dax * dby - day * dbx
+        t = ((b0[0] - a0[0]) * dby - (b0[1] - a0[1]) * dbx) / den
+        out.append((a0[0] + dax * t, a0[1] + day * t))
+    return out
+
+
+def seal(cx, cy, ro, ri, n=8, r=1.5):
+    """A scalloped badge (a rosette): 2n points alternating ro and ri, every corner rounded by r."""
+    pts = []
+    for i in range(2 * n):
+        a = math.radians(-90 + i * 180.0 / n)
+        rr = ro if i % 2 == 0 else ri
+        pts.append((cx + rr * math.cos(a), cy + rr * math.sin(a)))
+    return rpoly(pts, r)
+
+
+def line_head(tip, direction, length=2.9, spread=42):
+    """The line set's arrowhead: two short strokes back from tip, spread degrees either side of the shaft."""
+    dx, dy = direction
+    L = math.hypot(dx, dy)
+    dx, dy = dx / L, dy / L
+    out = []
+    for s in (spread, -spread):
+        a = math.radians(s)
+        # the back vector (-dx, -dy) turned by s degrees
+        rx = -dx * math.cos(a) + dy * math.sin(a)
+        ry = -dx * math.sin(a) - dy * math.cos(a)
+        out.append((tip[0] + rx * length, tip[1] + ry * length))
+    return P(out[0], tip, out[1])
+
+
+def hb(x0, x1, y, w=SW):
+    """A horizontal solid bar from x0 to x1, centred on y."""
+    return rbar(x0, y - w / 2, x1 - x0, w)
+
+
+def vb(x, y0, y1, w=SW):
+    """A vertical solid bar from y0 to y1, centred on x."""
+    return ("w", rrect(x - w / 2, y0, w, y1 - y0, .5))
+
+
+def kline(d, w=1.25):
+    """A knocked-out line with blunt ends (detail cut into a solid)."""
+    return ("sk", d, w, "butt", "miter")
+
+
+# ------------------------------------------------------------------------------------------------ Capsa glyphs reused
+# Drawings copied as they are from Capsa (ui_glyphs.py, glyph_sets.py, glyphs.py) for marks and controls whose meaning is
+# universal. Reusing them keeps the shared controls identical to the owner's other projects.
+def capsa_reused():
+    s, l = {}, {}
+    U, D, Lf, R = (0, -1), (0, 1), (-1, 0), (1, 0)
+    # marks
+    s["close"] = bars([(5, 5), (15, 15)], [(15, 5), (5, 15)], ext=.35)
+    l["close"] = S(P((5, 5), (15, 15)), P((15, 5), (5, 15)))
+    s["plus"] = [rbar(9.125, 3.75, SW, 12.5), rbar(3.75, 9.125, 12.5)]
+    l["plus"] = S(P((10, 4), (10, 16)), P((4, 10), (16, 10)))
+    s["check"] = bars([(3.75, 10.25), (8, 14.5), (16.5, 5.25)])
+    l["check"] = S(P((4, 10.5), (8, 14.5), (16, 5.75)))
+    s["multi-source"] = bars([(2.25, 10.25), (6.25, 14.25), (13.75, 6.25)], [(10.4, 12.9), (11.75, 14.25), (17.75, 8)])
+    l["multi-source"] = S(P((2.5, 10.25), (6.25, 14), (13.75, 6.25)), P((10.5, 12.75), (11.75, 14), (17.5, 8)))
+    # lists and views
+    s["list"] = [("w", rrect(2.75, y - 1.4, 2.8, 2.8, .7)) for y in (4.75, 10, 15.25)] + [hb(7.5, 17.25, y) for y in (4.75, 10, 15.25)]
+    l["list"] = [("w", ellipse(4.25, y, 1.15)) for y in (5, 10, 15)] + S(*[P((7.75, y), (16.5, y)) for y in (5, 10, 15)])
+    s["grid"] = W(*[rrect(x, y, 6.75, 6.75, 1.25) for x in (2.5, 10.75) for y in (2.5, 10.75)])
+    l["grid"] = S(*[rrect(x, y, 5.75, 5.75, 1.4) for x in (3, 11.25) for y in (3, 11.25)])
+    s["layers"] = [("w", rpoly([(10, 2.5), (17.5, 6.5), (10, 10.5), (2.5, 6.5)], .9))] + \
+        S(P((2.75, 10.25), (10, 14.1), (17.25, 10.25)), P((2.75, 13.75), (10, 17.6), (17.25, 13.75)), w=1.6)
+    l["layers"] = S(rpoly([(10, 3), (17.25, 6.75), (10, 10.5), (2.75, 6.75)], .8), P((2.75, 10.25), (10, 14), (17.25, 10.25)),
+                    P((2.75, 13.75), (10, 17.5), (17.25, 13.75)))
+    s["filter"] = [("w", rrect(2.5, 5, 15, 2, 1)), ("k", ellipse(7, 6, 3.75)), ("w", ellipse(7, 6, 2.75)),
+                   ("w", rrect(2.5, 13, 15, 2, 1)), ("k", ellipse(13, 14, 3.75)), ("w", ellipse(13, 14, 2.75))]
+    l["filter"] = sline(P((2.75, 6), (17.25, 6))) + [("k", ellipse(7, 6, 3.4)), ("s", ellipse(7, 6, 2.1))] + \
+        sline(P((2.75, 14), (17.25, 14))) + [("k", ellipse(13, 14, 3.4)), ("s", ellipse(13, 14, 2.1))]
+    s["search"] = [("w", ellipse(8.5, 8.5, 6.25)), ("k", ellipse(8.5, 8.5, 4.25)), ("w", bar((13, 13), (16.75, 16.75), 2.75))]
+    l["search"] = sline(ellipse(8.6, 8.6, 5.6), P((12.85, 12.85), (17, 17)))
+    s["rotate"] = [("w", arc_arrow(10, 10.25, 7.4, 5.65, 15, 330, 1.9))]
+    l["rotate"] = S(A(10, 10.5, 6.75, 0, 315) + " L16.5,8", P((16.5, 3.75), (16.5, 8), (12.25, 8)))
+    # sharing
+    s["share"] = [("w", rpoly([(3.5, 7.75), (7, 7.75), (7, 12.25), (13, 12.25), (13, 7.75), (16.5, 7.75), (16.5, 17.5), (3.5, 17.5)],
+                              [2, .6, .6, .6, .6, 2, 2.25, 2.25])),
+                  rbar(9.125, 5.75, SW, 7.75), head((10, 2), U, 4.75, 8.75)]
+    l["share"] = S("M4,10 L4,15 C4,16.1 4.9,17 6,17 L14,17 C15.1,17 16,16.1 16,15 L16,10", P((10, 3), (10, 12)), P((6.5, 6.5), (10, 3), (13.5, 6.5)))
+    s["link"] = [("s", rpoly(rot([(2.5, 10.25), (11.5, 10.25), (11.5, 14.75), (2.5, 14.75)], -45, (7, 12.5)), 2.25), 2.1),
+                 ("s", rpoly(rot([(8.5, 5.25), (17.5, 5.25), (17.5, 9.75), (8.5, 9.75)], -45, (13, 7.5)), 2.25), 2.1)]
+    l["link"] = S(rpoly(rot([(2.5, 10.25), (11.5, 10.25), (11.5, 14.75), (2.5, 14.75)], -45, (7, 12.5)), 2.25),
+                  rpoly(rot([(8.5, 5.25), (17.5, 5.25), (17.5, 9.75), (8.5, 9.75)], -45, (13, 7.5)), 2.25))
+    s["copy"] = [("w", rrect(2.5, 2.5, 10.5, 10.5, 2.25)), ("k", rrect(5.75, 5.75, 13, 13, 3.25)), ("w", rrect(7.25, 7.25, 10.25, 10.25, 2.25))]
+    l["copy"] = S(rrect(7, 7, 10, 10, 2), "M4.75,13 C3.8,13 3,12.2 3,11.25 L3,4.75 C3,3.8 3.8,3 4.75,3 L11.25,3 C12.2,3 13,3.8 13,4.75")
+    s["download"] = [tray_solid(), ("k", rpoly([(4.25, 8.25), (15.75, 8.25), (10, 15.5)], 1)), rbar(9.125, 2.5, SW, 7), head((10, 13.75), D, 5.5, 9.5)]
+    l["download"] = S(P((10, 3), (10, 12.5)), P((6.25, 8.75), (10, 12.5), (13.75, 8.75)),
+                      "M3.5,12.75 L3.5,15 C3.5,16.1 4.4,17 5.5,17 L14.5,17 C15.6,17 16.5,16.1 16.5,15 L16.5,12.75")
+    s["external-link"] = [("w", rrect(2.75, 5, 12.25, 12.25, 2.25)), ("k", rpoly([(8.5, 3.5), (19, 3.5), (19, 13.5), (11.25, 13.5), (8.5, 10.75)], 1.5)),
+                          ("w", rpoly([(17, 3), (17, 10), (10, 3)], [.9, .9, .9]))] + bars([(14, 6), (8.25, 11.75)])
+    l["external-link"] = S("M15,11.5 L15,15 C15,16.1 14.1,17 13,17 L5,17 C3.9,17 3,16.1 3,15 L3,7 C3,5.9 3.9,5 5,5 L8.5,5",
+                           P((9.25, 10.75), (16.5, 3.5)), P((12, 3.5), (16.5, 3.5), (16.5, 8)))
+    s["arrow-up-right"] = bars([(4.25, 15.75), (12, 8)]) + [("w", rpoly([(16.5, 3.5), (16.5, 13), (7, 3.5)], [.9, .9, .9]))]
+    l["arrow-up-right"] = S(P((5.5, 14.5), (14.5, 5.5)), P((7, 5.5), (14.5, 5.5), (14.5, 13)))
+    # directions
+    s["arrow-down"] = [rbar(9.125, 3, SW, 9.5), head((10, 16.75), D, 6, 10.5)]
+    s["arrow-up"] = [rbar(9.125, 7.5, SW, 9.5), head((10, 3.25), U, 6, 10.5)]
+    s["arrow-left"] = [rbar(7.5, 9.125, 9.5), head((3.25, 10), Lf, 6, 10.5)]
+    s["arrow-right"] = [rbar(3, 9.125, 9.5), head((16.75, 10), R, 6, 10.5)]
+    arrows = {"down": [P((10, 3.5), (10, 16.5)), P((5, 11.5), (10, 16.5), (15, 11.5))],
+              "up": [P((10, 16.5), (10, 3.5)), P((5, 8.5), (10, 3.5), (15, 8.5))],
+              "left": [P((16.5, 10), (3.5, 10)), P((8.5, 5), (3.5, 10), (8.5, 15))],
+              "right": [P((3.5, 10), (16.5, 10)), P((11.5, 5), (16.5, 10), (11.5, 15))]}
+    for d in ("up", "down", "left", "right"):
+        l["arrow-" + d] = S(*arrows[d])
+        s["chevron-" + d] = [caret(d)]
+        l["chevron-" + d] = S(chevron(d))
+    # media and sound
+    s["play"] = [("w", rpoly([(6, 3.5), (16.25, 10), (6, 16.5)], 1.5))]
+    l["play"] = sline(rpoly([(6.25, 4), (16, 10), (6.25, 16)], 1.25))
+    s["pause"] = [("w", rrect(5, 4, 3.5, 12, 1.1)), ("w", rrect(11.5, 4, 3.5, 12, 1.1))]
+    l["pause"] = sline(rrect(5.25, 4.25, 3, 11.5, 1), rrect(11.75, 4.25, 3, 11.5, 1))
+    spk = ("s", rpoly([(3, 7.75), (6, 7.75), (9.75, 4.5), (9.75, 15.5), (6, 12.25), (3, 12.25)], [1, .5, .6, .6, .5, 1]))
+    s["sound-on"] = [speaker()] + S(A(10, 10, 3.25, -50, 50), A(10, 10, 6.5, -52, 52))
+    l["sound-on"] = [spk] + sline(A(10, 10, 3.25, -50, 50), A(10, 10, 6.5, -52, 52))
+    s["sound-off"] = [speaker()] + S(P((12.75, 7.75), (17.25, 12.25)), P((17.25, 7.75), (12.75, 12.25)))
+    l["sound-off"] = [spk] + sline(P((12.75, 7.75), (17, 12)), P((17, 7.75), (12.75, 12)))
+    s["clip"] = [("w", rrect(2.5, 2.5, 15, 15, 3.75)), ("k", rpoly([(8, 6.25), (13.75, 10), (8, 13.75)], .8))]
+    l["clip"] = sline(rrect(2.75, 2.75, 14.5, 14.5, 3.5), rpoly([(8.25, 6.75), (13.25, 10), (8.25, 13.25)], .6))
+    s["image"] = frame_image()
+    l["image"] = frame_image_line()
+    s["article"] = page() + [("k", rrect(6.5, 10.5, 7, 1.3, .65)), ("k", rrect(6.5, 13.25, 5, 1.3, .65))]
+    l["article"] = page_line() + sline(P((7, 11), (13, 11)), P((7, 14), (11, 14)))
+    s["chat"] = [bubble()]
+    l["chat"] = [bubble_line()]
+    # theme
+    rays = []
+    for a in range(0, 360, 45):
+        c, s_ = math.cos(math.radians(a)), math.sin(math.radians(a))
+        rays.append(("w", pl([(10 + 6 * c, 10 + 6 * s_), (10 + 8.1 * c, 10 + 8.1 * s_)], 1.9, r=.5)))
+    s["theme-light"] = [("w", ellipse(10, 10, 4.1))] + rays
+    l["theme-light"] = S(ellipse(10, 10, 3.25), *[P((10 + 5.6 * math.cos(math.radians(a)), 10 + 5.6 * math.sin(math.radians(a))),
+                                                    (10 + 7.5 * math.cos(math.radians(a)), 10 + 7.5 * math.sin(math.radians(a)))) for a in range(0, 360, 45)])
+    s["theme-dark"] = [("w", ellipse(10, 10.5, 7.25)), ("k", ellipse(13.75, 6.5, 6))]
+    l["theme-dark"] = [("s", crescent((10, 10.5), 6.6, (13.6, 6.75), 5.6))]
+    # status
+    s["info"] = [("w", ellipse(10, 10, 8)), ("k", rrect(9.25, 8.75, 1.5, 6, .75)), ("k", ellipse(10, 6, 1.05))]
+    l["info"] = [("s", ellipse(10, 10, 7.25)), ("s", P((10, 9.25), (10, 13.75))), dot(10, 6.4)]
+    s["alert"] = [("w", rpoly([(10, 2.25), (18, 16.75), (2, 16.75)], 1.75)), ("k", rrect(9.25, 6.75, 1.5, 5.5, .75)), ("k", ellipse(10, 14.25, 1.05))]
+    l["alert"] = sline(rpoly([(10, 3), (17.25, 16.25), (2.75, 16.25)], 1.5), P((10, 7.5), (10, 11))) + [dot(10, 13.4)]
+    s["takedown"] = [("w", shield()), ("k", rrect(9.25, 5.75, 1.5, 5.5, .75)), ("k", ellipse(10, 13.5, 1.05))]
+    l["takedown"] = sline(shield_line(), P((10, 6.6), (10, 10.25))) + [dot(10, 12.9)]
+    eye = "M2,10 C4.1,5.9 6.8,4.25 10,4.25 C13.2,4.25 15.9,5.9 18,10 C15.9,14.1 13.2,15.75 10,15.75 C6.8,15.75 4.1,14.1 2,10 Z"
+    s["eye"] = [("w", eye), ("k", ellipse(10, 10, 3.6)), ("w", ellipse(10, 10, 2.1))]
+    l["eye"] = S("M2.5,10 C4.5,6.25 7,4.75 10,4.75 C13,4.75 15.5,6.25 17.5,10 C15.5,13.75 13,15.25 10,15.25 C7,15.25 4.5,13.75 2.5,10 Z") + \
+        [("w", ellipse(10, 10, 2.5))]
+    # places and things
+    s["pin"] = [("w", "M10,18 C10,18 3.75,12.35 3.75,8 C3.75,4.55 6.55,1.75 10,1.75 C13.45,1.75 16.25,4.55 16.25,8 C16.25,12.35 10,18 10,18 Z"),
+                ("k", ellipse(10, 8, 2.4))]
+    l["pin"] = sline("M10,17.25 C10,17.25 4.5,12.1 4.5,8 C4.5,4.95 6.95,2.5 10,2.5 C13.05,2.5 15.5,4.95 15.5,8 C15.5,12.1 10,17.25 10,17.25 Z",
+                     ellipse(10, 8, 2.1))
+    s["kitty-litter-lab"] = [("w", rpoly([(7.75, 3), (12.25, 3), (12.25, 7.5), (17, 15.4), (15.75, 17.5), (4.25, 17.5), (3, 15.4), (7.75, 7.5)],
+                                         [.3, .3, .6, 1.2, 1.2, 1.2, 1.2, .6])),
+                             ("w", rrect(6.5, 2, 7, 2, .8)), ("k", rrect(6.25, 11.75, 7.5, 1.4, .7))]
+    l["kitty-litter-lab"] = sline(rpoly([(8.25, 2.75), (11.75, 2.75), (11.75, 7.75), (16.4, 15.4), (15.4, 17.25), (4.6, 17.25), (3.6, 15.4), (8.25, 7.75)],
+                                        [.3, .3, .5, 1, 1, 1, 1, .5]), P((6.75, 2.75), (13.25, 2.75)), P((6, 12.5), (14, 12.5)))
+    # print media: Capsa's library (two books standing, the third leaning)
+    lean = rot([(12.25, 7.5), (15.5, 7.5), (15.5, 17.5), (12.25, 17.5)], 15, (15.5, 17.5))
+    s["magazine"] = [("w", rrect(2, 5, 4, 12.5, 1)), ("w", rrect(7, 2.5, 4, 15, 1)), ("k", rrect(8.25, 6, 1.5, 4, .5)), ("w", rpoly(lean, 1))]
+    leanl = rot([(11.75, 8), (14.75, 8), (14.75, 17.25), (11.75, 17.25)], 13, (14.75, 17.25))
+    l["magazine"] = sline(rrect(2.75, 5.5, 3.5, 11.75, 1), rrect(7.75, 2.75, 3.5, 14.5, 1), P((9.5, 6), (9.5, 8.5)), rpoly(leanl, 1))
+    # people
+    s["npc"] = [("w", ellipse(10, 6.5, 3.75)), ("w", "M3,17.5 C3,13.7 6.1,11.75 10,11.75 C13.9,11.75 17,13.7 17,17.5 Z")]
+    l["npc"] = sline(ellipse(10, 6.75, 3.5), "M3.5,17.25 C3.5,14 6.4,12 10,12 C13.6,12 16.5,14 16.5,17.25")
+    front = person(7.5, 3.25, 11, 3.5)
+    s["finders"] = [("w", ellipse(13.75, 5.75, 3)), ("w", "M10,17.5 C10,13.6 11.9,11.25 14.5,11.25 C16.75,11.25 18,13.1 18,15.75 L18,17.5 Z"),
+                    ("k", ellipse(7.5, 6.75, 4.75)), ("sk", front[1][1], 2.5)] + front
+    l["finders"] = sline(ellipse(7.25, 6.75, 3.25), shoulders(7.25, 12, 9, 17.25), A(13.75, 6.25, 2.75, -120, 120),
+                         "M14.75,12.1 C16.2,12.55 17.25,13.9 17.25,15.6 L17.25,17.25")
+    # hand: the pan tool
+    fingers = [(5.25, 4.75), (8.75, 2.5), (12.25, 3.25), (15.75, 5.5)]
+    s["hand"] = [("w", rrect(x, y, 2.25, 9.5, 1.125)) for x, y in fingers] + \
+        [("w", "M5.25,9.75 L18,9.75 L18,12.5 C18,15.55 15.55,18 12.5,18 L10.75,18 C8.75,18 7.4,17.3 6.3,16.2 L5.25,15.1 Z"),
+         ("w", bar((6.6, 15.65), (3.4, 12.45), 2.5))]
+    m = lambda x, y: (1.445 + .715 * x, 1.42 + .715 * y)
+    r2, r8 = 2 * .715, 8 * .715
+    fing = lambda x0, y0, top, x1, y1: "M%s L%s %s L%s" % (pt(m(x0, y0)), pt(m(x0, top)), A(*m(x0 - 2, top), r2, 0, -180, move=False), pt(m(x1, y1)))
+    l["hand"] = sline(fing(18, 11, 6, 14, 6), fing(14, 10, 4, 10, 6), fing(10, 10.5, 6, 6, 14),
+                      "M%s %s L%s %s L%s C%s %s %s L%s %s L%s" % (
+                          pt(m(18, 8)), A(*m(20, 8), r2, 180, 360, move=False), pt(m(22, 14)), A(*m(14, 14), r8, 0, 90, move=False),
+                          pt(m(12, 22)), pt(m(9.2, 22)), pt(m(7.5, 21.14)), pt(m(6.01, 19.66)), pt(m(2.41, 16.06)),
+                          A(*m(3.825, 14.65), r2, 135, 315, move=False), pt(m(7, 15))))
+    # source code (an original glyph, not GitHub's mark: see docs/ICONS.md)
+    s["github"] = [rbar(5.125, 3, SW, 10), band("M14,7.5 C14,11.25 6,10 6,13.25"), ("w", ellipse(6, 15, 2.6)), ("w", ellipse(14, 5.25, 2.6))]
+    l["github"] = S(P((6, 3), (6, 12.75)), ellipse(6, 15, 2.1), ellipse(14, 5.25, 2.1), "M14,7.4 C14,11 6,9.75 6,12.9")
+    # the globe
+    s["real-world-reference"] = [("w", ellipse(10, 10, 8)), ("sk", ellipse(10, 10, 3.25, 6.6), 1.35), ("sk", P((3.6, 10), (16.4, 10)), 1.35)]
+    l["real-world-reference"] = S(ellipse(10, 10, 7.25), ellipse(10, 10, 3, 7.25), P((2.75, 10), (17.25, 10)))
+    return s, l
+
+
+# ------------------------------------------------------------------------------------------------ the family's own drawings
+def drawn():
+    s, l = {}, {}
+
+    # ---------------- map blips: the find categories
+    egg = "M10,2.25 C13.45,2.25 16,7.65 16,11.75 C16,15.1 13.3,17.75 10,17.75 C6.7,17.75 4,15.1 4,11.75 C4,7.65 6.55,2.25 10,2.25 Z"
+    s["easter-egg"] = [("w", egg), kline(P((2.5, 12.5), (7, 8.75), (10, 11.5), (13, 8.75), (17.5, 12.5)), 1.5)]
+    eggl = "M10,2.75 C13.1,2.75 15.5,7.8 15.5,11.75 C15.5,14.85 13.05,17.25 10,17.25 C6.95,17.25 4.5,14.85 4.5,11.75 C4.5,7.8 6.9,2.75 10,2.75 Z"
+    l["easter-egg"] = sline(eggl, P((4.7, 10.6), (7.35, 8.6), (10, 10.9), (12.65, 8.6), (15.3, 10.6)))
+
+    # weapon: an original pistol in profile, muzzle to the right (the Ammu-Nation style blip, our own drawing)
+    s["weapon"] = [("w", rrect(2.5, 4.5, 15, 4.75, 1)), ("k", rrect(11, 6.1, 4.75, 1.5, .75)),
+                   ("w", rpoly([(3, 8.5), (8.75, 8.5), (7.75, 17.5), (2.5, 17.5)], [0, .4, 1, 1])),
+                   band("M8.5,9 L8.5,11.25 C8.5,12.35 9.4,13.25 10.5,13.25 L10.75,13.25 C11.75,13.25 12.5,12.5 12.5,11.5 L12.5,9", 1.5)]
+    l["weapon"] = sline(rrect(2.75, 4.75, 14.5, 4.5, 1),
+                        "M3.6,9.25 L2.85,16.25 C2.8,16.8 3.2,17.25 3.75,17.25 L6.35,17.25 C6.85,17.25 7.25,16.9 7.3,16.4 L8.1,9.25",
+                        "M8.75,9.25 L8.75,11.25 C8.75,12.35 9.65,13.25 10.75,13.25 C11.85,13.25 12.5,12.6 12.5,11.75 L12.5,9.25")
+
+    # vehicle: a coupe in profile, windows and wheel arches knocked out
+    body = [(2, 13.5), (2, 10.4), (5.1, 9.25), (7.1, 5), (13.1, 5), (15.4, 9.25), (18, 10.4), (18, 13.5)]
+    s["vehicle"] = [("w", rpoly(body, [.6, 1.1, .6, 1, 1, .6, 1.1, .6])),
+                    ("k", rpoly([(7.55, 8.5), (8.6, 6.35), (9.45, 6.35), (9.45, 8.5)], .3)),
+                    ("k", rpoly([(10.7, 6.35), (12.55, 6.35), (13.65, 8.5), (10.7, 8.5)], .3)),
+                    ("k", ellipse(6, 14, 3)), ("w", ellipse(6, 14, 2)), ("k", ellipse(14, 14, 3)), ("w", ellipse(14, 14, 2))]
+    l["vehicle"] = sline(P((3.6, 13.75), (2.75, 13.75), (2.75, 10.75), (5.5, 9.6), (7.4, 5.75), (12.8, 5.75), (14.9, 9.6), (17.25, 10.75),
+                           (17.25, 13.75), (16.4, 13.75)),
+                         P((8.4, 13.75), (11.6, 13.75)), ellipse(6, 14, 1.9), ellipse(14, 14, 1.9), P((5.5, 9.6), (14.9, 9.6)), P((10, 6), (10, 9.4)))
+
+    # collectible: a cut gem, its facets knocked out
+    gem = [(6.25, 3), (13.75, 3), (18, 8), (10, 17.5), (2, 8)]
+    s["collectible"] = [("w", rpoly(gem, [.8, .8, .7, 1, .7])), kline(P((1.5, 8), (18.5, 8))),
+                        kline(P((8.4, 2.5), (7.1, 8), (10, 15.25))), kline(P((11.6, 2.5), (12.9, 8), (10, 15.25)))]
+    geml = [(6.5, 3.25), (13.5, 3.25), (17.25, 8), (10, 16.75), (2.75, 8)]
+    l["collectible"] = sline(rpoly(geml, [.6, .6, .6, .8, .6]), P((2.75, 8), (17.25, 8)), P((8.5, 3.25), (7.25, 8), (10, 16.75)),
+                             P((11.5, 3.25), (12.75, 8), (10, 16.75)))
+
+    # memorial: a vigil candle
+    flame = "M10,2 C11.65,3.95 12.5,5.35 12.5,6.6 C12.5,8 11.4,9.1 10,9.1 C8.6,9.1 7.5,8 7.5,6.6 C7.5,5.35 8.35,3.95 10,2 Z"
+    s["memorial"] = [("w", flame), ("w", rrect(7, 10.5, 6, 6, .75)), ("w", rrect(4.25, 16, 11.5, 1.75, .875))]
+    flamel = "M10,2.75 C11.35,4.4 12,5.55 12,6.6 C12,7.75 11.1,8.6 10,8.6 C8.9,8.6 8,7.75 8,6.6 C8,5.55 8.65,4.4 10,2.75 Z"
+    l["memorial"] = sline(flamel, "M7.25,17.25 L7.25,11.75 C7.25,11.35 7.6,11 8,11 L12,11 C12.4,11 12.75,11.35 12.75,11.75 L12.75,17.25",
+                          P((4.75, 17.25), (15.25, 17.25)))
+
+    # rockstar crossover: two worlds overlapping, ours solid and the other game's as a ring (never the Rockstar mark)
+    s["rockstar-crossover"] = [("w", ellipse(7.25, 10, 5.25)), ("sk", ellipse(12.6, 10, 4.6), 4.25), ("s", ellipse(12.6, 10, 4.6), 1.75)]
+    l["rockstar-crossover"] = sline(ellipse(7.25, 10, 4.5), ellipse(12.75, 10, 4.5))
+
+    # paranormal: a sheet ghost, eyes knocked out
+    def ghost(x0, x1, top, yb):
+        w = x1 - x0
+        r = w / 6
+        cx, cy = (x0 + x1) / 2, top + w / 2
+        d = "M%s L%s %s L%s" % (pt((x0, yb)), pt((x0, cy)), A(cx, cy, w / 2, 180, 360, move=False), pt((x1, yb)))
+        for i in range(3):
+            c = x1 - r - 2 * r * i
+            d += " " + A(c, yb, r, 0, 180, move=False)
+        return d + " Z"
+    s["paranormal"] = [("w", ghost(4, 16, 2.25, 15.75)), ("k", ellipse(7.9, 8.75, 1.15, 1.55)), ("k", ellipse(12.1, 8.75, 1.15, 1.55))]
+    l["paranormal"] = sline(ghost(4.75, 15.25, 2.75, 15.5)) + [dot(8.1, 8.6, .95), dot(11.9, 8.6, .95)]
+
+    # glitch: a bug, the gamer's word for one
+    legs = [((6.1, 9), (3.4, 7)), ((5.6, 12.25), (2.5, 12.25)), ((6.1, 15.4), (3.4, 17.4))]
+    s["glitch"] = [("w", ellipse(10, 12, 4.5, 5.5)), kline(P((10, 7.5), (10, 18.5)), 1.25)] + \
+        [("w", pl([a, b], 1.6, r=.4)) for a, b in legs] + [("w", pl([mirror_pt(a), mirror_pt(b)], 1.6, r=.4)) for a, b in legs] + \
+        [("k", ellipse(10, 4.75, 4, 3.4)), ("w", ellipse(10, 4.75, 2.75, 2.25))]
+    legsl = [((6.5, 9.5), (4, 7.75)), ((6, 12.25), (2.75, 12.25)), ((6.5, 15), (4, 16.75))]
+    l["glitch"] = sline(ellipse(10, 12.1, 4, 4.9), P((10, 7.4), (10, 16.9)), "M7.9,7.6 C7.9,5.95 8.85,4.75 10,4.75 C11.15,4.75 12.1,5.95 12.1,7.6",
+                        *[P(a, b) for a, b in legsl], *[P(mirror_pt(a), mirror_pt(b)) for a, b in legsl])
+
+    # secret location: a keyhole plate
+    s["secret-location"] = [("w", ellipse(10, 10, 8)), ("k", ellipse(10, 8.25, 2.5)), ("k", rpoly([(9, 9), (11, 9), (12.1, 14.5), (7.9, 14.5)], [.2, .2, .5, .5]))]
+    l["secret-location"] = sline(ellipse(10, 10, 7.25), A(10, 8.5, 2.3, 125, 415) + " L12,13.75 L8,13.75 Z")
+
+    # activity: a pennant on its pole
+    s["activity"] = [("w", rrect(3, 2.25, 1.75, 15.5, .875)),
+                     ("w", rpoly([(4.25, 2.75), (16.75, 2.75), (13.4, 7), (16.75, 11.25), (4.25, 11.25)], [.2, .8, .5, .8, .2]))]
+    l["activity"] = sline(P((4, 2.75), (4, 17.25)), rpoly([(4, 3.25), (16.25, 3.25), (13.25, 7.25), (16.25, 11.25), (4, 11.25)], [0, .6, .4, .6, 0]))
+
+    # ---------------- collectible layers
+    back = rot([(3, 3.25), (10.5, 3.25), (10.5, 14.25), (3, 14.25)], -12, (6.75, 8.75))
+    frontc = rot([(8, 5.25), (16, 5.25), (16, 16.75), (8, 16.75)], 8, (12, 11))
+    s["card-sets"] = [("w", rpoly(back, 1.5)), ("sk", rpoly(frontc, 1.5), 3), ("w", rpoly(frontc, 1.5)), ("k", star4(12, 11, 3.1, .22))]
+    backl = rot([(3.5, 3.5), (10.25, 3.5), (10.25, 13.75), (3.5, 13.75)], -12, (6.75, 8.75))
+    frontl = rot([(8.5, 5.75), (15.5, 5.75), (15.5, 16.25), (8.5, 16.25)], 8, (12, 11))
+    l["card-sets"] = [("s", rpoly(backl, 1.25)), ("k", rpoly(frontl, 1.25)), ("sk", rpoly(frontl, 1.25), 4.5), ("s", rpoly(frontl, 1.25)),
+                      ("s", star4(12, 11, 2.4, .22))]
+
+    # cocaine flamingo: the lawn flamingo, standing on one leg
+    s["cocaine-flamingo"] = [("w", rell(12.6, 7.9, 4.75, 2.7, -14)),
+                             band("M8.6,8.4 C6.9,7.75 6,6.35 6.3,4.8 C6.55,3.5 7.55,2.75 8.8,2.75", 1.6),
+                             ("w", ellipse(9.4, 3.15, 1.45, 1.25)),
+                             ("w", rpoly([(10.4, 2.45), (12.3, 3.75), (11.6, 5.4), (10.6, 3.9)], [.3, .6, .3, .3])),
+                             ("w", rrect(11.85, 9.75, 1.5, 8, .6)),
+                             ("w", pl([(12.6, 13.25), (15.4, 12), (13.75, 10.5)], 1.5, r=.35))]
+    l["cocaine-flamingo"] = sline(rell(12.75, 7.9, 4.25, 2.2, -14), "M8.75,8.5 C7.2,7.85 6.5,6.5 6.8,5.05 C7.05,3.9 7.9,3.25 9,3.25",
+                                  P((10.2, 3), (11.9, 4.1), (11.4, 5.4)), P((12.6, 10.25), (12.6, 17.25)), P((12.6, 13.4), (15.1, 12.2), (13.9, 10.9))) + \
+        [dot(9.4, 3.3, 1.05)]
+
+    # drone time trial: a quadcopter from above
+    rotors = [(4.75, 4.75), (15.25, 4.75), (4.75, 15.25), (15.25, 15.25)]
+    s["drone-time-trial"] = bars([(4.75, 4.75), (15.25, 15.25)], [(15.25, 4.75), (4.75, 15.25)]) + \
+        [("w", ellipse(x, y, 2.75)) for x, y in rotors] + [("k", ellipse(x, y, .8)) for x, y in rotors] + \
+        [("k", rrect(6.25, 6.25, 7.5, 7.5, 2.4)), ("w", rrect(7.5, 7.5, 5, 5, 1.6))]
+    rl = [(5, 5), (15, 5), (5, 15), (15, 15)]
+    l["drone-time-trial"] = sline(*[ellipse(x, y, 2.25) for x, y in rl], rrect(8, 8, 4, 4, 1.25),
+                                  P((6.6, 6.6), (8.35, 8.35)), P((13.4, 6.6), (11.65, 8.35)), P((6.6, 13.4), (8.35, 11.65)), P((13.4, 13.4), (11.65, 11.65)))
+
+    # fishing: a fish, nose to the left
+    fish = "M2.25,10 C4,6.6 6.9,4.75 10,4.75 C12.4,4.75 14.2,6.1 15.25,8 L17.6,5.95 C17.9,5.7 18.25,5.9 18.25,6.3 L18.25,13.7 C18.25,14.1 17.9,14.3 17.6,14.05 L15.25,12 C14.2,13.9 12.4,15.25 10,15.25 C6.9,15.25 4,13.4 2.25,10 Z"
+    s["fishing"] = [("w", fish), ("k", ellipse(6, 9.3, 1.1)), kline("M9.6,6.4 C10.75,7.45 11.25,8.7 11.25,10 C11.25,11.3 10.75,12.55 9.6,13.6", 1.25)]
+    fishl = "M2.75,10 C4.4,7 7,5.5 10,5.5 C12.15,5.5 13.75,6.6 14.75,8.25 L17.25,6.4 L17.25,13.6 L14.75,11.75 C13.75,13.4 12.15,14.5 10,14.5 C7,14.5 4.4,13 2.75,10 Z"
+    l["fishing"] = sline(fishl, "M9.75,7.25 C10.5,8 10.85,9 10.85,10 C10.85,11 10.5,12 9.75,12.75") + [dot(6.25, 9.4, .95)]
+
+    # meditation: a figure sitting cross-legged
+    s["meditation"] = [("w", ellipse(10, 4.25, 2.25)),
+                       ("w", rpoly([(7.75, 8), (12.25, 8), (14.5, 12.75), (5.5, 12.75)], [1.25, 1.25, .6, .6])),
+                       ("w", rrect(2.25, 14, 15.5, 3.5, 1.75))]
+    l["meditation"] = sline(ellipse(10, 4.75, 2), rpoly([(8, 8.75), (12, 8.75), (13.75, 12.75), (6.25, 12.75)], [1, 1, .5, .5]),
+                            rrect(2.75, 14.5, 14.5, 2.75, 1.375))
+
+    # meteorite: a cratered rock with its trail
+    rock = [(3.25, 12), (5.75, 8.75), (9.75, 8.25), (12.25, 11), (11.75, 15), (8.5, 17.5), (4.5, 16.75)]
+    s["meteorite"] = [("w", rpoly(rock, 2)), ("k", ellipse(6.6, 13.6, 1.4)), ("k", ellipse(9.6, 11.4, .95)),
+                      ("w", bar((11.5, 7.5), (16, 3), 2.1)), ("w", bar((13.6, 11.1), (17, 7.7), 1.6)), ("w", bar((7.6, 6.1), (10.6, 3.1), 1.6))]
+    rockl = [(3.75, 12.25), (6, 9.5), (9.5, 9.1), (11.6, 11.4), (11.2, 14.75), (8.5, 16.9), (5, 16.25)]
+    l["meteorite"] = sline(rpoly(rockl, 1.6), P((12, 7.75), (16.75, 3)), P((14, 11), (17.25, 7.75)), P((8.25, 6.25), (11.25, 3.25))) + \
+        [dot(7.1, 13.4, 1)]
+
+    # payday loan job: a banknote
+    s["payday-loan-job"] = [("w", rrect(2, 4.5, 16, 11, 2)), ("k", ellipse(10, 10, 3)), ("w", ellipse(10, 10, 1.75)),
+                            ("k", ellipse(5, 7.5, 1)), ("k", ellipse(15, 12.5, 1))]
+    l["payday-loan-job"] = sline(rrect(2.75, 5, 14.5, 10, 2), ellipse(10, 10, 2.4)) + [dot(5.75, 7.75, .9), dot(14.25, 12.25, .9)]
+
+    # shop: a shopping bag, the handle through its two holes
+    s["shop"] = [("w", rpoly([(3.75, 7), (16.25, 7), (17, 17.5), (3, 17.5)], [1, 1, 1.75, 1.75])),
+                 ("k", ellipse(7, 9.75, 1.15)), ("k", ellipse(13, 9.75, 1.15)),
+                 band("M7,9.75 L7,5.75 C7,3.95 8.35,2.5 10,2.5 C11.65,2.5 13,3.95 13,5.75 L13,9.75", 1.5)]
+    l["shop"] = sline(rpoly([(4.25, 7.25), (15.75, 7.25), (16.5, 17.25), (3.5, 17.25)], [.75, .75, 1.5, 1.5]),
+                      "M7.25,9.75 L7.25,6 C7.25,4.2 8.5,2.75 10,2.75 C11.5,2.75 12.75,4.2 12.75,6 L12.75,9.75")
+
+    # stunt: a ramp and the jump's arc
+    arc = "M8.5,11 C9.5,5.5 13.25,4.25 14.75,9.5"
+    tan = (14.75 - 13.25, 9.5 - 4.25)
+    tl = math.hypot(*tan)
+    tdir = (tan[0] / tl, tan[1] / tl)
+    s["stunt"] = [("w", rpoly([(2, 17.5), (9.5, 17.5), (9.5, 12.5)], [.5, .75, .75])), band(arc, 1.75),
+                  head((14.75 + tdir[0] * 4.75, 9.5 + tdir[1] * 4.75), tdir, 4.75, 6.5)]
+    arcl = "M8.5,11 C9.85,6.5 14.25,5.25 15.6,11"
+    tanl = (15.6 - 14.25, 11 - 5.25)
+    l["stunt"] = sline(rpoly([(2.75, 17.25), (9.25, 17.25), (9.25, 13)], .5), arcl, line_head((15.6, 11), tanl))
+
+    # tattoo studio: the flash-sheet heart with its banner
+    heart = ("M10,17.5 C10,17.5 2,12.6 2,7.1 C2,4.55 3.85,2.5 6.25,2.5 C7.95,2.5 9.25,3.5 10,4.9 C10.75,3.5 12.05,2.5 13.75,2.5 "
+             "C16.15,2.5 18,4.55 18,7.1 C18,12.6 10,17.5 10,17.5 Z")
+    ban = rpoly([(1.75, 8.25), (18.25, 8.25), (16.9, 10), (18.25, 11.75), (1.75, 11.75), (3.1, 10)], .3)
+    s["tattoo-studio"] = [("w", heart), ("sk", ban, 2.6), ("k", ban), ("w", rpoly([(2.25, 8.6), (17.75, 8.6), (16.5, 10), (17.75, 11.4), (2.25, 11.4), (3.5, 10)], .3))]
+    heartl = ("M10,16.9 C10,16.9 2.75,12.4 2.75,7.25 C2.75,5 4.4,3.25 6.5,3.25 C8.05,3.25 9.3,4.2 10,5.5 C10.7,4.2 11.95,3.25 13.5,3.25 "
+              "C15.6,3.25 17.25,5 17.25,7.25 C17.25,12.4 10,16.9 10,16.9 Z")
+    banl = rpoly([(2.75, 8.6), (17.25, 8.6), (16.1, 10.1), (17.25, 11.6), (2.75, 11.6), (3.9, 10.1)], .3)
+    l["tattoo-studio"] = [("s", heartl), ("sk", banl, 4), ("k", banl), ("s", banl)]
+
+    # ---------------- wanted and heat
+    st = star5(10, 10.6, 8.1, 4.1)
+    s["star"] = shell(rpoly(st, .9), rpoly(inset(st, 1.75), .35))
+    l["star"] = sline(rpoly(star5(10, 10.6, 7.4, 3.75), .6))
+    s["star-filled"] = [("w", rpoly(st, .9))]
+    stl = rpoly(star5(10, 10.6, 7.4, 3.75), .6)
+    l["star-filled"] = [("w", stl), ("s", stl)]
+    small = star5(10, 10.9, 5.6, 2.85)
+    flash = [-126, -54, 18, 162]
+    pol = lambda r, a: (10 + r * math.cos(math.radians(a)), 10.9 + r * math.sin(math.radians(a)))
+    s["star-flash"] = [("w", rpoly(small, .7))] + [("w", pl([pol(6.9, a), pol(8.6, a)], 1.75, r=.45)) for a in flash]
+    l["star-flash"] = [("w", rpoly(star5(10, 10.9, 5.1, 2.6), .5)), ("s", rpoly(star5(10, 10.9, 5.1, 2.6), .5))] + \
+        sline(*[P(pol(6.9, a), pol(8.1, a)) for a in flash])
+    fl = ("M10,2.25 C10.6,5 13.2,6.4 14.5,8.75 C15.4,10.3 15.75,11.6 15.75,12.9 C15.75,15.75 13.2,17.75 10,17.75 "
+          "C6.8,17.75 4.25,15.75 4.25,12.9 C4.25,10.6 5.5,8.6 7.1,7.3 C7.2,8.75 7.9,9.75 8.9,10.2 C8.6,7.2 8.8,4.4 10,2.25 Z")
+    s["heat"] = [("w", fl), ("k", "M10,10.75 C11,12 12.1,12.75 12.1,14.25 C12.1,15.45 11.15,16.25 10,16.25 C8.85,16.25 7.9,15.45 7.9,14.25 C7.9,12.9 9,12.1 10,10.75 Z")]
+    l["heat"] = sline("M10,3 C10.55,5.4 12.85,6.75 14,8.85 C14.7,10.15 15,11.3 15,12.6 C15,15.25 12.75,17.25 10,17.25 "
+                      "C7.25,17.25 5,15.25 5,12.6 C5,10.65 6,8.95 7.35,7.75 C7.6,9 8.2,9.85 9.1,10.25 C8.85,7.6 9,5.1 10,3 Z",
+                      "M10,11.6 C10.7,12.4 11.25,13 11.25,13.8 C11.25,14.5 10.7,15 10,15 C9.3,15 8.75,14.5 8.75,13.8 C8.75,13 9.3,12.4 10,11.6 Z")
+
+    # cops responding: the patrol car's beacon
+    s["cops-responding"] = [("w", "M5.25,14.5 L5.25,11.25 C5.25,8.4 7.35,6.25 10,6.25 C12.65,6.25 14.75,8.4 14.75,11.25 L14.75,14.5 Z"),
+                            ("w", rrect(3, 14, 14, 3.5, 1.1)), kline(P((2.5, 14.25), (17.5, 14.25)), 1.25),
+                            ("k", rrect(7.5, 9.6, 1.5, 3.5, .75)),
+                            ("w", pl([(10, 2), (10, 4.4)], 1.75, r=.45)),
+                            ("w", pl([(4.1, 4.6), (5.75, 6.25)], 1.75, r=.45)), ("w", pl([(15.9, 4.6), (14.25, 6.25)], 1.75, r=.45))]
+    l["cops-responding"] = sline("M5.75,14 L5.75,11.25 C5.75,8.8 7.65,7 10,7 C12.35,7 14.25,8.8 14.25,11.25 L14.25,14",
+                                 rrect(3.25, 14, 13.5, 3.25, 1), P((10, 2.75), (10, 4.5)), P((4.6, 5), (5.85, 6.25)), P((15.4, 5), (14.15, 6.25)))
+
+    # suspect unknown: a masked figure, the eye slit knocked out
+    s["suspect-unknown"] = [band("M6.9,6.1 C6.9,3.95 8.3,2.5 10.1,2.5 C11.95,2.5 13.25,3.85 13.25,5.55 C13.25,7.85 10.1,8.1 10.1,10.25", 2.1),
+                            ("w", ellipse(10.1, 12.4, 1.3)),
+                            ("w", "M3,17.75 C3,15.4 6.1,14.35 10,14.35 C13.9,14.35 17,15.4 17,17.75 Z")]
+    l["suspect-unknown"] = sline("M7.6,6.15 C7.6,4.4 8.7,3.25 10.1,3.25 C11.55,3.25 12.55,4.3 12.55,5.6 C12.55,7.5 10.1,7.75 10.1,9.6",
+                                 "M3.5,17.25 C3.5,15.6 6.4,14.6 10,14.6 C13.6,14.6 16.5,15.6 16.5,17.25") + [dot(10.1, 11.9, 1.05)]
+
+    # ---------------- verification (multi-source is Capsa's check-check; single source reuses check)
+    q = "M7.9,6.6 C7.9,5.45 8.85,4.65 10,4.65 C11.2,4.65 12.1,5.45 12.1,6.5 C12.1,7.9 10,8.1 10,9.6"
+    s["rumour"] = [bubble(), ("sk", q, 1.5), ("k", ellipse(10, 11.9, 1.05))]
+    l["rumour"] = [bubble_line()] + sline("M8.35,6.55 C8.35,5.6 9.1,5 10,5 C10.95,5 11.65,5.6 11.65,6.45 C11.65,7.6 10,7.75 10,9.05") + [dot(10, 11.1, .9)]
+    s["debunked"] = [("w", ellipse(10, 10, 8)), ("sk", P((6.9, 6.9), (13.1, 13.1)), 1.7), ("sk", P((13.1, 6.9), (6.9, 13.1)), 1.7)]
+    l["debunked"] = sline(ellipse(10, 10, 7.25), P((7.25, 7.25), (12.75, 12.75)), P((12.75, 7.25), (7.25, 12.75)))
+
+    # ---------------- navigation and controls
+    s["menu"] = [hb(3, 17, 7), hb(3, 17, 13)]
+    l["menu"] = sline(P((3.5, 7.25), (16.5, 7.25)), P((3.5, 12.75), (16.5, 12.75)))
+    s["minus"] = [rbar(3.75, 9.125, 12.5)]
+    l["minus"] = sline(P((4, 10), (16, 10)))
+    mp = [(2.5, 4.75), (7.25, 2.75), (12.75, 4.75), (17.5, 2.75), (17.5, 15.25), (12.75, 17.25), (7.25, 15.25), (2.5, 17.25)]
+    s["map"] = [("w", rpoly(mp, [.75, .4, .4, .75, .75, .4, .4, .75])), kline(P((7.25, 1.5), (7.25, 16)), 1.25), kline(P((12.75, 4), (12.75, 18.5)), 1.25)]
+    mpl = [(2.75, 5), (7.25, 3.25), (12.75, 5), (17.25, 3.25), (17.25, 15), (12.75, 16.75), (7.25, 15), (2.75, 16.75)]
+    l["map"] = sline(rpoly(mpl, [.5, .3, .3, .5, .5, .3, .3, .5]), P((7.25, 3.5), (7.25, 14.75)), P((12.75, 5.25), (12.75, 16.5)))
+
+    # 2D and 3D: lettered, as map apps label the view switch; drawn as bars, not set in a font
+    two = "M3.4,7.25 C3.4,5.7 4.55,4.75 6,4.75 C7.5,4.75 8.6,5.75 8.6,7.15 C8.6,8.4 7.9,9.25 6.9,10.2 L3.5,13.4 L3.5,14.3 L9,14.3"
+    three = ("M3.5,6.4 C3.85,5.35 4.8,4.75 6,4.75 C7.45,4.75 8.5,5.6 8.5,6.95 C8.5,8.3 7.45,9.3 5.9,9.3 "
+             "C7.6,9.3 8.75,10.3 8.75,11.75 C8.75,13.25 7.55,14.25 6,14.25 C4.7,14.25 3.65,13.6 3.3,12.55")
+    dee = "M11.35,4.75 L13.4,4.75 C15.4,4.75 16.75,6.7 16.75,9.5 C16.75,12.3 15.4,14.25 13.4,14.25 L11.35,14.25 Z"
+    s["2d"] = [band(two, 1.9), band(dee, 1.9)]
+    l["2d"] = sline(two.replace("L3.5,13.4 L3.5,14.3 L9,14.3", "L3.5,14.25 L8.75,14.25"), dee)
+    s["3d"] = [band(three, 1.9), band(dee, 1.9)]
+    l["3d"] = sline(three, dee)
+
+    # tilt: the map plane leaning back, an arc over it
+    s["tilt"] = [("w", rpoly([(5.75, 11.5), (14.25, 11.5), (17.75, 17), (2.25, 17)], [.6, .6, .9, .9])),
+                 ("w", arc_arrow(10, 11, 7.6, 5.85, 200, 325, 1.15))]
+    a0, a1, rr = 205, 318, 6.75
+    tip = (10 + rr * math.cos(math.radians(a1)), 11 + rr * math.sin(math.radians(a1)))
+    tdl = (-math.sin(math.radians(a1)), math.cos(math.radians(a1)))
+    l["tilt"] = sline(rpoly([(6.25, 12), (13.75, 12), (17, 16.75), (3, 16.75)], [.5, .5, .75, .75]), A(10, 11, rr, a0, a1), line_head(tip, tdl, 2.6))
+
+    # zoom: the search lens with a plus or a minus inside
+    lens = [("w", ellipse(8.5, 8.5, 6.25)), ("k", ellipse(8.5, 8.5, 4.25)), ("w", bar((13, 13), (16.75, 16.75), 2.75))]
+    s["zoom-in"] = lens + [("w", rrect(7.75, 6, 1.5, 5, .5)), ("w", rrect(6, 7.75, 5, 1.5, .5))]
+    s["zoom-out"] = lens + [("w", rrect(6, 7.75, 5, 1.5, .5))]
+    lensl = sline(ellipse(8.6, 8.6, 5.6), P((12.85, 12.85), (17, 17)))
+    l["zoom-in"] = lensl + sline(P((8.6, 6.6), (8.6, 10.6)), P((6.6, 8.6), (10.6, 8.6)))
+    l["zoom-out"] = lensl + sline(P((6.6, 8.6), (10.6, 8.6)))
+
+    # locate: the player's arrow, the GTA radar's own marker idea, drawn as a plain heading arrow
+    s["locate"] = [("w", rpoly([(16.75, 3.25), (11, 16.75), (9.4, 10.6), (3.25, 9)], [.9, .9, .4, .9]))]
+    l["locate"] = sline(rpoly([(16.25, 3.75), (11, 15.75), (9.6, 10.4), (4.25, 9)], [.6, .6, .3, .6]))
+
+    # spoiler: the eye, struck through
+    eye = "M2,10 C4.1,5.9 6.8,4.25 10,4.25 C13.2,4.25 15.9,5.9 18,10 C15.9,14.1 13.2,15.75 10,15.75 C6.8,15.75 4.1,14.1 2,10 Z"
+    s["spoiler"] = [("w", eye), ("k", ellipse(10, 10, 3.6)), ("w", ellipse(10, 10, 2.1)),
+                    ("k", pl([(2.5, 2.5), (17.5, 17.5)], 4.6, ext=1)), ("w", pl([(3, 3), (17, 17)], 1.75, ext=.35))]
+    l["spoiler"] = S("M2.5,10 C4.5,6.25 7,4.75 10,4.75 C13,4.75 15.5,6.25 17.5,10 C15.5,13.75 13,15.25 10,15.25 C7,15.25 4.5,13.75 2.5,10 Z") + \
+        [("w", ellipse(10, 10, 2.5)), ("sk", P((2.75, 2.75), (17.25, 17.25)), 3.75), ("s", P((3, 3), (17, 17)), LW)]
+
+    # chapter: the story's bookmark (the on-state stays filled in both sets)
+    bm = [(4.75, 2.5), (15.25, 2.5), (15.25, 17.75), (10, 14), (4.75, 17.75)]
+    s["chapter"] = [("w", rpoly(bm, [1.75, 1.75, .6, .6, .6])), ("k", rrect(7.5, 5.5, 5, 1.5, .75))]
+    l["chapter"] = sline(Z((5.5, 3), (14.5, 3), (14.5, 17), (10, 13.5), (5.5, 17)), P((8, 6.5), (12, 6.5)))
+
+    # found: a rosette with a check; hide found strikes it through
+    tick = P((6.6, 10.2), (8.95, 12.5), (13.4, 7.9))
+    s["found"] = [("w", seal(10, 10, 8, 6.75, 8, 1.6)), ("sk", tick, 1.75)]
+    l["found"] = sline(seal(10, 10, 7.25, 6.15, 8, 1.3), P((7.1, 10.15), (9.05, 12.1), (12.9, 8.15)))
+    s["hide-found"] = s["found"] + [("k", pl([(2.5, 2.5), (17.5, 17.5)], 4.25, ext=1)), ("w", pl([(3, 3), (17, 17)], 1.75, ext=.35))]
+    l["hide-found"] = l["found"] + [("sk", P((2.75, 2.75), (17.25, 17.25)), 3.75), ("s", P((3, 3), (17, 17)), LW)]
+
+    # rss: the web feed mark (a public, free-to-use symbol), drawn as bars
+    s["rss"] = [("w", ellipse(4.85, 15.15, 2)), band(A(3.25, 16.75, 7, -90, 0), 2.1), band(A(3.25, 16.75, 12.25, -90, 0), 2.1)]
+    l["rss"] = [dot(5, 15, 1.6)] + sline(A(3.75, 16.25, 6.5, -90, 0), A(3.75, 16.25, 11.5, -90, 0))
+
+    s["dot"] = [("w", ellipse(10, 10, 3.5))]
+    l["dot"] = [("w", ellipse(10, 10, 3.5))]
+
+    # ---------------- site sections
+    s["home"] = [("w", rpoly([(10, 2.5), (17.5, 8.75), (17.5, 17.5), (2.5, 17.5), (2.5, 8.75)], [1.1, 1, 1.75, 1.75, 1])),
+                 ("k", rrect(8.25, 11.75, 3.5, 8, 1))]
+    l["home"] = sline(rpoly([(10, 3), (16.75, 8.75), (16.75, 17.25), (3.25, 17.25), (3.25, 8.75)], [.75, .75, 1.5, 1.5, .75]),
+                      "M8.25,17.25 L8.25,13.25 C8.25,12.7 8.7,12.25 9.25,12.25 L10.75,12.25 C11.3,12.25 11.75,12.7 11.75,13.25 L11.75,17.25")
+    s["finds"] = [("w", ellipse(8.5, 8.5, 6.5)), ("k", star4(8.5, 8.5, 4, .2)), ("w", bar((13.1, 13.1), (16.75, 16.75), 2.75))]
+    l["finds"] = sline(ellipse(8.6, 8.6, 5.6), P((12.85, 12.85), (17, 17)), star4(8.6, 8.6, 3, .2))
+    pg = "M9.25,5 C7.5,3.75 5,3.25 2.25,3.5 L2.25,15.75 C5,15.5 7.5,16 9.25,17.25 Z"
+    s["explainers"] = [("w", pg), ("w", mirror(pg))]
+    l["explainers"] = sline("M10,5.75 C8.25,4.5 5.75,4 2.75,4.25 L2.75,15.5 C5.75,15.25 8.25,15.75 10,17 C11.75,15.75 14.25,15.25 17.25,15.5 "
+                            "L17.25,4.25 C14.25,4 11.75,4.5 10,5.75 Z", P((10, 5.75), (10, 16.75)))
+    nodes = [(5, 5.25), (15, 5.25), (10, 14.75)]
+    s["gtaverse"] = bars([nodes[0], nodes[1]], [nodes[0], nodes[2]], [nodes[1], nodes[2]]) + [("w", ellipse(x, y, 2.75)) for x, y in nodes]
+    nl = [(5.25, 5.5), (14.75, 5.5), (10, 14.5)]
+
+    def edge(a, b, r=2.25):
+        L = math.dist(a, b)
+        ux, uy = (b[0] - a[0]) / L, (b[1] - a[1]) / L
+        return P((a[0] + ux * r, a[1] + uy * r), (b[0] - ux * r, b[1] - uy * r))
+    l["gtaverse"] = sline(*[ellipse(x, y, 2.25) for x, y in nl], edge(nl[0], nl[1]), edge(nl[0], nl[2]), edge(nl[1], nl[2]))
+    pad = ("M6,5.5 L14,5.5 C16.2,5.5 17.4,7.2 17.8,9.6 L18,12.9 C18.2,14.9 16.9,16 15.6,16 C14.6,16 13.9,15.4 13.3,14.6 L12.4,13.4 "
+           "L7.6,13.4 L6.7,14.6 C6.1,15.4 5.4,16 4.4,16 C3.1,16 1.8,14.9 2,12.9 L2.2,9.6 C2.6,7.2 3.8,5.5 6,5.5 Z")
+    s["games"] = [("w", pad), ("k", rrect(4.25, 8.85, 3.6, 1.4, .45)), ("k", rrect(5.35, 7.75, 1.4, 3.6, .45)),
+                  ("k", ellipse(13.4, 8.6, .95)), ("k", ellipse(15.1, 10.4, .95))]
+    padl = ("M6.25,6.25 L13.75,6.25 C15.75,6.25 16.75,7.75 17.1,9.9 L17.25,12.9 C17.35,14.4 16.5,15.25 15.5,15.25 C14.75,15.25 14.2,14.8 13.75,14.15 "
+            "L12.75,12.75 L7.25,12.75 L6.25,14.15 C5.8,14.8 5.25,15.25 4.5,15.25 C3.5,15.25 2.65,14.4 2.75,12.9 L2.9,9.9 C3.25,7.75 4.25,6.25 6.25,6.25 Z")
+    l["games"] = sline(padl, P((4.75, 9.6), (7.75, 9.6)), P((6.25, 8.1), (6.25, 11.1))) + [dot(13.25, 8.85, .85), dot(14.85, 10.5, .85)]
+    s["about"] = [("w", rrect(2, 4, 16, 12, 2)), ("k", ellipse(6.6, 8.6, 1.75)), ("k", "M3.85,13.75 C3.85,12.1 5.05,11.1 6.6,11.1 C8.15,11.1 9.35,12.1 9.35,13.75 Z"),
+                  ("k", rrect(11, 7.6, 4.75, 1.4, .7)), ("k", rrect(11, 10.6, 3.5, 1.4, .7))]
+    l["about"] = sline(rrect(2.75, 4.5, 14.5, 11, 2), ellipse(6.75, 8.4, 1.45), "M4.6,13 C4.75,11.85 5.65,11.25 6.75,11.25 C7.85,11.25 8.75,11.85 8.9,13",
+                       P((11.25, 8), (14.75, 8)), P((11.25, 11), (13.75, 11)))
+
+    # wire: the line-art view of the hero, a wireframe cube
+    hexa = [(10, 2.25), (17, 6.25), (17, 13.75), (10, 17.75), (3, 13.75), (3, 6.25)]
+    s["wire"] = [("w", rpoly(hexa, .9)), kline(P((2.5, 5.9), (10, 10.2), (17.5, 5.9)), 1.3), kline(P((10, 10.2), (10, 18.5)), 1.3)]
+    hexl = [(10, 2.75), (16.5, 6.5), (16.5, 13.5), (10, 17.25), (3.5, 13.5), (3.5, 6.5)]
+    l["wire"] = sline(rpoly(hexl, .6), P((3.5, 6.5), (10, 10.25), (16.5, 6.5)), P((10, 10.25), (10, 17.25)))
+    return s, l
+
+
+def mirror_pt(p, axis=10):
+    return (2 * axis - p[0], p[1])
+
+
+# ------------------------------------------------------------------------------------------------ the catalogue
+# name: (label, group, keywords). Groups: blip (find categories), layer (collectible layers), wanted, verification,
+# control, media, site. Order here is the order on the preview page.
+CATALOGUE = [
+    ("easter-egg", "Easter egg", "blip", ["egg", "joke", "hidden"]),
+    ("weapon", "Weapon", "blip", ["gun", "pistol", "ammu"]),
+    ("vehicle", "Vehicle", "blip", ["car", "rare"]),
+    ("collectible", "Collectible", "blip", ["gem", "item"]),
+    ("npc", "Character", "blip", ["person", "npc", "people"]),
+    ("memorial", "Memorial", "blip", ["candle", "tribute"]),
+    ("real-world-reference", "Real-world reference", "blip", ["globe", "world"]),
+    ("rockstar-crossover", "Rockstar crossover", "blip", ["crossover", "universe", "overlap"]),
+    ("paranormal", "Paranormal", "blip", ["ghost", "mystery"]),
+    ("glitch", "Glitch", "blip", ["bug", "error"]),
+    ("secret-location", "Secret location", "blip", ["keyhole", "hidden", "spot"]),
+    ("activity", "Activity", "blip", ["flag", "side activity"]),
+    ("card-sets", "Card sets", "layer", ["cards", "trading"]),
+    ("cocaine-flamingo", "Cocaine flamingo", "layer", ["flamingo", "bird"]),
+    ("drone-time-trial", "Drone time trial", "layer", ["drone", "race"]),
+    ("fishing", "Fishing", "layer", ["fish"]),
+    ("kitty-litter-lab", "Kitty litter lab", "layer", ["lab", "flask"]),
+    ("magazine", "Magazines, books and comics", "layer", ["books", "print", "comic"]),
+    ("meditation", "Meditation", "layer", ["focus", "calm"]),
+    ("meteorite", "Meteorite", "layer", ["space", "rock"]),
+    ("payday-loan-job", "Payday loan job", "layer", ["money", "cash", "note"]),
+    ("shop", "Shop", "layer", ["store", "bag"]),
+    ("stunt", "Stunt", "layer", ["jump", "ramp"]),
+    ("tattoo-studio", "Tattoo studio", "layer", ["tattoo", "ink"]),
+    ("star", "Wanted star", "wanted", ["wanted", "hollow"]),
+    ("star-filled", "Wanted star, filled", "wanted", ["wanted", "pursuit"]),
+    ("star-flash", "Wanted star, flashing", "wanted", ["wanted", "search", "lost"]),
+    ("heat", "Heat", "wanted", ["flame", "fire"]),
+    ("cops-responding", "Cops responding", "wanted", ["police", "siren", "beacon"]),
+    ("suspect-unknown", "Suspect unknown", "wanted", ["mask", "anonymous"]),
+    ("multi-source", "Multi-source", "verification", ["verified", "double check"]),
+    ("single-source", "Single source", "verification", ["check"]),
+    ("rumour", "Rumour", "verification", ["unconfirmed", "question"]),
+    ("debunked", "Debunked", "verification", ["false", "cross"]),
+    ("menu", "Menu", "control", ["hamburger"]),
+    ("close", "Close", "control", ["x", "dismiss"]),
+    ("search", "Search", "control", ["find", "lens"]),
+    ("filter", "Filter", "control", ["sliders"]),
+    ("layers", "Layers", "control", ["basemap"]),
+    ("map", "Map", "control", ["folded map"]),
+    ("list", "List", "control", ["rows"]),
+    ("grid", "Grid", "control", ["tiles"]),
+    ("2d", "2D view", "control", ["flat"]),
+    ("3d", "3D view", "control", ["relief"]),
+    ("tilt", "Tilt", "control", ["pitch"]),
+    ("rotate", "Rotate", "control", ["bearing"]),
+    ("zoom-in", "Zoom in", "control", ["magnify"]),
+    ("zoom-out", "Zoom out", "control", ["magnify"]),
+    ("plus", "Plus", "control", ["add"]),
+    ("minus", "Minus", "control", ["remove"]),
+    ("locate", "Locate", "control", ["gps", "me", "heading"]),
+    ("pin", "Pin", "control", ["place", "marker"]),
+    ("share", "Share", "control", ["send"]),
+    ("link", "Link", "control", ["url"]),
+    ("copy", "Copy", "control", ["duplicate"]),
+    ("check", "Check", "control", ["done", "tick"]),
+    ("play", "Play", "media", ["start"]),
+    ("pause", "Pause", "media", ["stop"]),
+    ("sound-on", "Sound on", "media", ["volume", "audio"]),
+    ("sound-off", "Sound off", "media", ["mute"]),
+    ("theme-light", "Light theme", "control", ["sun"]),
+    ("theme-dark", "Dark theme", "control", ["moon"]),
+    ("arrow-up", "Arrow up", "control", []),
+    ("arrow-down", "Arrow down", "control", []),
+    ("arrow-left", "Arrow left", "control", ["back"]),
+    ("arrow-right", "Arrow right", "control", ["next"]),
+    ("chevron-up", "Chevron up", "control", ["collapse"]),
+    ("chevron-down", "Chevron down", "control", ["expand"]),
+    ("chevron-left", "Chevron left", "control", ["previous"]),
+    ("chevron-right", "Chevron right", "control", ["opens here"]),
+    ("arrow-up-right", "Arrow up right", "control", ["opens another site"]),
+    ("external-link", "External link", "control", ["new tab"]),
+    ("info", "Info", "control", ["about"]),
+    ("alert", "Alert", "control", ["warning"]),
+    ("eye", "Show", "control", ["reveal"]),
+    ("spoiler", "Spoiler", "control", ["hide", "eye off"]),
+    ("chapter", "Chapter", "control", ["bookmark", "progress"]),
+    ("found", "Found", "control", ["badge", "tracked"]),
+    ("hide-found", "Hide found", "control", ["badge off"]),
+    ("download", "Download data", "control", ["export", "json"]),
+    ("github", "Source code", "control", ["repository", "branch"]),
+    ("rss", "RSS feed", "control", ["feed", "subscribe"]),
+    ("dot", "Dot", "control", ["bullet"]),
+    ("hand", "Hand", "control", ["pan", "drag"]),
+    ("clip", "Clip", "media", ["video", "film"]),
+    ("image", "Image", "media", ["picture", "key art"]),
+    ("wire", "Line art", "media", ["wireframe", "cube"]),
+    ("article", "Article", "media", ["page", "news"]),
+    ("chat", "Chat", "media", ["post", "comment"]),
+    ("home", "Home", "site", ["start"]),
+    ("finds", "Finds", "site", ["discoveries"]),
+    ("explainers", "Explainers", "site", ["guide", "book"]),
+    ("gtaverse", "GTAverse", "site", ["universe", "connections", "lore"]),
+    ("games", "Games", "site", ["controller"]),
+    ("finders", "Finders", "site", ["credits", "people"]),
+    ("about", "About", "site", ["id", "who"]),
+    ("takedown", "Takedown", "site", ["rights", "shield"]),
+]
+
+# A glyph name that reuses another glyph's drawing (no redraw).
+SAME_AS = {"single-source": "check"}
+
+# Old names in src/components/ui/icons.ts -> the new glyph. Names that did not change map to themselves implicitly.
+ALIASES = {
+    "lore": "gtaverse", "sun": "theme-light", "moon": "theme-dark", "question": "rumour", "cross": "debunked",
+    "egg": "easter-egg", "person": "npc", "keyhole": "secret-location", "globe": "real-world-reference", "car": "vehicle",
+    "candle": "memorial", "crosshair": "weapon", "gem": "collectible", "flag": "activity", "bolt": "glitch", "ghost": "paranormal",
+    "film": "clip", "flame": "heat", "radio": "cops-responding", "sound": "sound-on",
+}
+# Old `<Icon name="x" solid>` pairs that meant a different glyph, not the Solid set
+LEGACY_SOLID = {"star": "star-filled"}
+
+# content/categories.json ids -> glyph
+CATEGORY_GLYPHS = {
+    "easter-egg": "easter-egg", "paranormal": "paranormal", "npc": "npc", "secret-location": "secret-location",
+    "real-world-reference": "real-world-reference", "vehicle": "vehicle", "memorial": "memorial", "weapon": "weapon",
+    "rockstar-crossover": "rockstar-crossover", "collectible": "collectible", "activity": "activity", "glitch": "glitch",
+    "card-sets": "card-sets", "cocaine-flamingos": "cocaine-flamingo", "drone-time-trials": "drone-time-trial", "fishing": "fishing",
+    "kitty-litter-labs": "kitty-litter-lab", "magazines-books-comics": "magazine", "meditation-spots": "meditation",
+    "meteorites": "meteorite", "payday-loan-jobs": "payday-loan-job", "shops": "shop", "stunts": "stunt", "tattoo-studios": "tattoo-studio",
+}
+
+
+# ------------------------------------------------------------------------------------------------ output
+def markup(layers):
+    """SVG inner markup for one drawing on the 20 grid. Plain paths when nothing is knocked out; otherwise Capsa's
+    mask compositing, with %ID% standing for a mask id the renderer makes unique per instance."""
+    if not any(L[0] in ("k", "sk") for L in layers):
+        out = ""
+        for L in layers:
+            if L[0] == "w":
+                out += '<path d="%s"/>' % L[1]
+            else:
+                w = L[2] if len(L) > 2 else LW
+                cap, join = (L[3], L[4]) if len(L) > 4 else ("round", "round")
+                out += '<path d="%s" fill="none" stroke="currentColor" stroke-width="%s" stroke-linecap="%s" stroke-linejoin="%s"/>' % (L[1], f(w), cap, join)
+        return out
+    return ('<mask id="%%ID%%" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">%s</mask>'
+            '<rect width="20" height="20" fill="currentColor" mask="url(#%%ID%%)"/>' % mask_paths(layers))
+
+
+NUM = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def bounds(layers):
+    """Extent of what is drawn (adds and lines, with half the line width), ignoring knock-outs."""
+    xs, ys = [], []
+    for L in layers:
+        if L[0] not in ("w", "s"):
+            continue
+        nums = [float(v) for v in NUM.findall(L[1])]
+        pad = (L[2] if len(L) > 2 else LW) / 2 if L[0] == "s" else 0
+        for x, y in zip(nums[0::2], nums[1::2]):
+            xs += [x - pad, x + pad]
+            ys += [y - pad, y + pad]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def build():
+    cs, cl = capsa_reused()
+    ds, dl = drawn()
+    solid, line = {**cs, **ds}, {**cl, **dl}
+    for n, src in SAME_AS.items():
+        solid[n], line[n] = solid[src], line[src]
+    names = [c[0] for c in CATALOGUE]
+    problems = []
+    if len(set(names)) != len(names):
+        problems.append("duplicate names in CATALOGUE")
+    for n in names:
+        if n not in solid or n not in line:
+            problems.append("%s: missing a %s drawing" % (n, "solid" if n not in solid else "line"))
+    extra = (set(solid) | set(line)) - set(names)
+    if extra:
+        problems.append("drawn but not catalogued: %s" % sorted(extra))
+    warnings = []
+    for n in names:
+        for st, layers in (("solid", solid.get(n)), ("line", line.get(n))):
+            if not layers:
+                continue
+            x0, y0, x1, y1 = bounds(layers)
+            if x0 < 1.25 or y0 < 1.25 or x1 > 18.75 or y1 > 18.75:
+                problems.append("%s %s: outside the live area (%.2f %.2f %.2f %.2f)" % (n, st, x0, y0, x1, y1))
+            elif x0 < 1.9 or y0 < 1.9 or x1 > 18.1 or y1 > 18.1:
+                warnings.append("%s %s: touches the edge (%.2f %.2f %.2f %.2f)" % (n, st, x0, y0, x1, y1))
+    # every old name still resolves
+    old = re.findall(r"^\s{2}'?([a-z0-9-]+)'?: \{", open(OLD, encoding="utf-8").read(), re.M)
+    for o in old:
+        if o not in names and o not in ALIASES:
+            problems.append("old icon name %r has no glyph or alias" % o)
+    for a, t in {**ALIASES, **LEGACY_SOLID}.items():
+        if t not in names:
+            problems.append("alias %s -> %s: no such glyph" % (a, t))
+    cats = [c["id"] for c in json.load(open(CATEGORIES, encoding="utf-8"))]
+    for c in cats:
+        if CATEGORY_GLYPHS.get(c) not in names:
+            problems.append("category %s has no glyph" % c)
+    return solid, line, names, old, cats, problems, warnings
+
+
+def ts_str(s):
+    return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def emit(solid, line, names):
+    by = {c[0]: c for c in CATALOGUE}
+    rev = {}
+    for a, t in ALIASES.items():
+        rev.setdefault(t, []).append(a)
+    lines = [
+        "// GENERATED by scripts/icons/build.py. Do not edit by hand: change the drawing there and run",
+        "// `python3 scripts/icons/build.py`. Rules and the old to new name map: docs/ICONS.md.",
+        "//",
+        "// The Vice Files icon family: original glyphs in a GTA HUD and map blip spirit, drawn with the owner's Capsa glyph",
+        "// method (20 unit grid, Solid by default and Line as the setting). Never copied from Rockstar files.",
+        "// Each drawing is SVG markup for a 0 0 20 20 viewBox, filled with currentColor. Drawings with knock-outs use a mask",
+        "// whose id is the token %ID%: render them with src/icons/render.ts, which makes the id unique per instance.",
+        "",
+        "export const config = %s as const;" % json.dumps(CONFIG),
+        "",
+        "export type IconSet = 'solid' | 'line';",
+        "export type GlyphGroup = 'blip' | 'layer' | 'wanted' | 'verification' | 'control' | 'media' | 'site';",
+        "export type Glyph = { label: string; group: GlyphGroup; keywords: readonly string[]; aliases: readonly string[]; solid: string; line: string };",
+        "",
+        "export const glyphs = {",
+    ]
+    for n in names:
+        _, label, group, kw = by[n]
+        lines.append("  %s: {" % ts_str(n))
+        lines.append("    label: %s, group: %s, keywords: [%s], aliases: [%s]," % (
+            ts_str(label), ts_str(group), ", ".join(ts_str(k) for k in kw), ", ".join(ts_str(a) for a in sorted(rev.get(n, [])))))
+        lines.append("    solid: %s," % ts_str(markup(solid[n])))
+        lines.append("    line: %s," % ts_str(markup(line[n])))
+        lines.append("  },")
+    lines += [
+        "} as const satisfies Record<string, Glyph>;",
+        "",
+        "export type GlyphName = keyof typeof glyphs;",
+        "",
+        "/** Old names from src/components/ui/icons.ts that changed, mapped to the new glyph. Unchanged names need no entry. */",
+        "export const aliases = {",
+    ]
+    lines += ["  %s: %s," % (ts_str(a), ts_str(t)) for a, t in ALIASES.items()]
+    lines += [
+        "} as const satisfies Record<string, GlyphName>;",
+        "",
+        "/** Old `solid` pairs that meant another glyph (the filled wanted star), not the Solid set. */",
+        "export const legacySolid = {",
+    ]
+    lines += ["  %s: %s," % (ts_str(a), ts_str(t)) for a, t in LEGACY_SOLID.items()]
+    lines += [
+        "} as const satisfies Record<string, GlyphName>;",
+        "",
+        "/** content/categories.json ids to their glyph (find categories and collectible layers). */",
+        "export const categoryGlyphs = {",
+    ]
+    lines += ["  %s: %s," % (ts_str(a), ts_str(t)) for a, t in CATEGORY_GLYPHS.items()]
+    lines += ["} as const satisfies Record<string, GlyphName>;", ""]
+    text = "\n".join(lines)
+    assert "\u2013" not in text and "\u2014" not in text, "no em or en dashes"
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def sheet(path, solid, line, names):
+    """A quick contact sheet outside the site: every glyph, both sets, at 16, 20, 24 and 64, on dark and light."""
+    uid = [0]
+
+    def svg(layers, px):
+        uid[0] += 1
+        return '<svg width="%d" height="%d" viewBox="0 0 20 20" fill="currentColor">%s</svg>' % (px, px, markup(layers).replace("%ID%", "m%d" % uid[0]))
+    def cards(prefix):
+        out = []
+        for n in names:
+            rows = "".join('<div class="row">%s</div>' % "".join(svg(st[n], px) for px in (16, 20, 24, 48)) for st in (solid, line))
+            out.append('<div class="card"><div class="n">%s</div>%s</div>' % (n, rows))
+        return "".join(out)
+    html = ("<!doctype html><meta charset=utf-8><style>body{margin:0;font:11px system-ui}"
+            ".t{padding:12px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.d{background:#0d0c1a;color:#fff}.l{background:#f9f5f0;color:#0d0c1a}"
+            ".card{padding:6px}.row{display:flex;align-items:center;gap:8px;height:52px}.n{opacity:.7}</style>"
+            '<div class="t d">%s</div><div class="t l">%s</div>' % (cards("d"), cards("l")))
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(html)
+
+
+def main(argv):
+    solid, line, names, old, cats, problems, warnings = build()
+    for w in warnings:
+        print("note:", w)
+    if problems:
+        for p in problems:
+            print("FAIL:", p)
+        sys.exit(1)
+    emit(solid, line, names)
+    if "--sheet" in argv:
+        only = argv[argv.index("--only") + 1].split(",") if "--only" in argv else names
+        sheet(argv[argv.index("--sheet") + 1], solid, line, [n for n in names if n in only])
+    print("built %d glyphs x 2 sets (solid + line) = %d drawings; %d old names resolve (%d through aliases); %d categories mapped -> %s"
+          % (len(names), 2 * len(names), len(old), sum(1 for o in old if o in ALIASES), len(cats), os.path.relpath(OUT, ROOT)))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
