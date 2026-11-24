@@ -1,13 +1,14 @@
 # Now
 
-Status as of 2026-11-24. Update this file whenever something moves between states.
+Status as of 2026-11-24 (evening). Update this file whenever something moves between states.
 
 ## Waiting on owner
-- Review the logo pull request (issue #59): Case File in the header island, the Open Graph cards, the favicons and `/design`; slice decisions LG7 to LG10.
-- Review the open-source readiness pull request (Stage B, issue #19): licences, contributor files, CI, Dependabot, and the GitHub settings to apply from [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md).
-- **Map labels and first-pass pins are blocked on a rule conflict.** The map agent was asked to read place labels by opening the map image, but LEGAL.md and CONTENT-GUIDE rule 5 forbid feeding the map into AI tools. It did not view the image, so `content/map.json` `labels` is empty and no find has a pin. Choose: a person (Chime) records labels with the harness picker, or the owner explicitly allows the agent to read the map.
-- Confirm or change the slice decisions S1 to S13 in [DECISIONS.md](DECISIONS.md).
-- Send a test message to takedown@thevicefiles.com and conduct@thevicefiles.com and record that both arrive.
+- **Release `staging` to `main`.** Approved by the owner once Stage C passes. Stage C (issue #61) is the final release check: its pull request records the verdict and evidence. `main` is still the two-file first commit and `staging` is 29 commits ahead with nothing to merge back, so the release is a fast-forward through a pull request into `main` (only the owner can merge it, ruleset "main moves only on the owner's go").
+- **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for the `main` release and for Chime's first pins. Today every page is `noindex`.
+- **Mailboxes.** Send a test message to takedown@thevicefiles.com and conduct@thevicefiles.com and record that both arrive. Not done yet; `docs/LEGAL.md`, `SECURITY.md` and the Code of Conduct send people there.
+- **Old branches.** 11 merged or closed branches are still on GitHub from before "delete branch on merge" was turned on (`bookmarks-deep-read`, `content-foundations`, `design-foundation`, `home-r2-b`, `map-base`, `map-ui`, `pages-ui`, `prd-page`, `release-audit-stage-a`, `release-stage-b`, `site-scaffold`). Delete them or keep them: owner's call.
+- **`prd/public/_headers`.** It belonged to the deleted `vicefiles-prd` Worker and is now unused (the main site's `public/_headers` keeps `/prd` noindex). Remove it or keep it (decision RC1).
+- Confirm or change the open slice decisions in [DECISIONS.md](DECISIONS.md), including RC1 and RC2 from Stage C.
 - Answer the open questions below.
 
 ## Chime's first queue (research conflicts)
@@ -45,22 +46,30 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 25. Vice City districts La Perle, Tequesta, Tisha-Wocka and Peacock Bay: find a source URL before adding them to regions.
 
 ## Asked, not built
-- Map labels in `content/map.json` (blocked, see "Waiting on owner").
-- Map pins on the official Leonida map in pixel coordinates, from clips, cross-checked against Game Checklists (Chime). The fields, validator rules and workflow exist ([MAP.md](MAP.md)); 0 of 85 finds are pinned.
-- Collectible layer data for the 12 map layers: only categories and reference totals exist so far.
+- **Map pins and labels (Chime).** The owner chose that Chime places pins by hand, from clips and in game, with the harness picker ([MAP.md](MAP.md)); Chime records the place labels the same way. No agent views the official map (LEGAL.md, decision OS7); the only exception is the Game Checklists collectible maps (decision C1). Today 0 of 85 finds are pinned and `content/map.json` has no labels, so every find opens from the list.
 - "Missables before Tourist Trap" spoiler-gated checklist guide.
 - Daily update pipeline from research/gta6-sources.md section 9.
 - Follow-up on leads from public community posts (X, GTAForums, YouTube).
-- Deploy the site to thevicefiles.com (the domain serves the PRD page today).
 
 ## Built, not pushed
 - Nothing.
 
 ## Pushed, not live
-- `staging` has the content base, schemas and validator (#4), the map tile pipeline (#8), the Astro site (#7), the design system and home (#10), the map screen (#15) and the find, explainer and GTAverse pages (#16). The site is not deployed yet.
-- Official map tiles build locally (970 WebP tiles, zoom 0 to 5, 5.66 MiB, inside Cloudflare limits). Tiles are git-ignored and built from Rockstar's download, never committed.
+- The Stage C pull request (issue #61): docs, the dead `prd/wrangler.jsonc` removed, and `pnpm test` added to CI. No change to the built site.
+- `main` does not have the site yet (see "Release `staging` to `main`").
+
+## Live
+- thevicefiles.com serves `staging` through the `thevicefiles` Worker (Cloudflare static assets): home, map, finds, explainers, the GTAverse, hubs, `/design` and the PRD at `/prd`. Every page is `noindex` until launch.
+- The Case File logo by Chime (#60) is in the header, the Open Graph cards and the favicons.
+- Map tiles, the hero trailer loop and key art, game logos and cover art are built at deploy from Rockstar's official files and never committed.
+- 892 collectible locations in 12 layers, transcribed from the Game Checklists maps and credited to them (decisions C1 to C7).
 
 ## Resolved
+- Stage B (#20): licences, contributor files, CI and Dependabot are merged; the repository settings in [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md) are applied and read back as matching on 24 Nov 2026.
+- Dependabot's first update (#21, `@types/leaflet`) is merged, through CI.
+- The old `vicefiles-prd` Worker was deleted on 24 Nov 2026; the PRD is served by the main site at https://thevicefiles.com/prd.
+- 26 old agent worktrees were deleted on 24 Nov 2026.
+- Map labels and pins: Chime places them by hand (owner's choice; see "Asked, not built").
 - Pick a logo: done. Case File by Chime, implemented from Chime's SVGs (decisions LG5, LG6; [LOGO.md](LOGO.md)). Chime may polish it later.
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).
 - Branching: `staging` is ground truth; branch from it and target it (decision 16).
@@ -73,6 +82,5 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 ## Open questions
 1. **Display font.** Which licensed display face replaces GTAArtDeco?
 2. **Rumors on the site.** Rumors are draft-only today (slice decision S2). Should the site show them in a clearly labelled "unconfirmed" section instead?
-3. **Game Checklists.** Contact them about a data partnership or credit arrangement? Their original URL was not recorded, only a repost.
-4. **Map labels.** Who records the place labels printed on the map: Chime by hand with the harness, or an agent with the owner's explicit permission to view the map? (The official map file is confirmed: 5,775 x 7,900 px, 300 dpi, CMYK; grid letters A to M are rows, numbers 1 to 9 are columns.)
-5. **Paul Walker Eclipse credit.** HotCars names two early finders (BattleFieldBosh and Jokemen FC). Credit both, or leave first_finder empty until the earliest post is traced?
+3. **Game Checklists.** Contact them about a data partnership or credit arrangement? Their original post or site was not found, so the credit links to a repost (decision C7).
+4. **Paul Walker Eclipse credit.** HotCars names two early finders (BattleFieldBosh and Jokemen FC). Credit both, or leave first_finder empty until the earliest post is traced?

@@ -72,6 +72,9 @@ jobs:
       - name: Validate content
         run: pnpm validate
 
+      - name: Unit tests
+        run: pnpm test
+
       # Runs the validator again, then astro build. Map tiles are not needed: they are
       # git-ignored and the map screen simply has no base map without them.
       - name: Build
