@@ -1,0 +1,84 @@
+---
+// A category hub: every published find of one kind, the other categories as chips, and the GTAverse connections
+// those finds link to. Static and crawlable; the finds index keeps its instant filter for browsing.
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/site/PageHead.astro';
+import FindGrid from '../../components/FindGrid.astro';
+import Card from '../../components/ui/Card.astro';
+import Chip from '../../components/ui/Chip.astro';
+import Icon from '../../components/ui/Icon.astro';
+import type { Category } from '../../lib/content';
+import { categoryHubs, findsInCategory, connectionsFor } from '../../lib/hubs';
+import { categoryIcon } from '../../lib/media';
+import { confidenceLabel } from '../../lib/lore';
+import { collectionPage } from '../../lib/seo';
+
+export function getStaticPaths() {
+  return categoryHubs.map((c) => ({ params: { id: c.id }, props: { category: c } }));
+}
+const { category } = Astro.props as { category: Category };
+const list = findsInCategory(category.id);
+const lore = connectionsFor(list);
+const spoilers = list.filter((f) => f.spoiler).length;
+const path = `/categories/${category.id}`;
+const description = `${category.description} ${list.length === 1 ? 'One find' : `${list.length} finds`}, each with its sources.`;
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }, { name: category.label, href: path }];
+---
+<Base title={category.label} description={description} jsonLd={collectionPage(path, category.label, description, list.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
+  <PageHead title={category.label} count={list.length} trail={[{ name: 'Finds', href: '/finds' }]}>
+    <p>{category.description}{spoilers > 0 && ` ${spoilers === 1 ? 'One is a spoiler' : `${spoilers} are spoilers`}: its art stays hidden until you open it.`}</p>
+  </PageHead>
+
+  <nav class="cats" aria-label="Categories">
+    {categoryHubs.map((c) => (
+      <Chip href={`/categories/${c.id}`} touch icon={categoryIcon(c.id)} selected={c.id === category.id} count={findsInCategory(c.id).length}>{c.label}</Chip>
+    ))}
+  </nav>
+
+  <section class="hub" aria-labelledby="finds-title">
+    <h2 id="finds-title" class="sr-only">{category.label}</h2>
+    <FindGrid finds={list} eager={5} />
+  </section>
+
+  {lore.length > 0 && (
+    <section class="hub" aria-labelledby="lore-title">
+      <h2 id="lore-title" class="hub__title h2"><a href="/gtaverse">In the GTAverse <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
+      <ul class="hub__lore">
+        {lore.map(({ connection: c, count }) => (
+          <li><Card href={`/gtaverse/${c.slug}`} kicker="GTAverse" title={c.title} meta={`${confidenceLabel[c.confidence] ?? c.confidence} · ${count === 1 ? '1 find here' : `${count} finds here`}`} /></li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<style>
+  .cats { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-8); }
+  .hub { margin-top: var(--space-10); display: flex; flex-direction: column; gap: var(--space-4); }
+  .hub + .hub { margin-top: var(--space-16); }
+  .hub__title a { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; }
+  .hub__title a :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .hub__title a:hover :global(.icon) { transform: translateX(3px); }
+  }
+  .hub__lore { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8) var(--space-5); }
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .hub__lore { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .cats {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      margin-inline: calc(var(--page-pad) * -1);
+      padding-inline: var(--page-pad);
+    }
+    .cats > :global(*) { flex: none; }
+    .hub + .hub { margin-top: var(--space-12); }
+    .hub__lore { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-3); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hub__title a :global(.icon) { transition: none; }
+  }
+</style>

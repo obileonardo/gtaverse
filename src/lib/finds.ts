@@ -38,9 +38,9 @@ export const moreClips = (f: Find) =>
     .map((s) => ({ url: s.url, creator: s.creator ?? 'Unknown creator', id: youtubeId(s.url) }))
     .filter((s) => s.id);
 
-/** Related finds: same category first, then same region; up to `n`. */
-export const relatedFinds = (f: Find, n = 10) => {
-  const others = finds.filter((x) => x.slug !== f.slug);
+/** Related finds: same category first, then same region; up to `n`. `exclude` drops slugs shown elsewhere (Nearby). */
+export const relatedFinds = (f: Find, n = 10, exclude: string[] = []) => {
+  const others = finds.filter((x) => x.slug !== f.slug && !exclude.includes(x.slug));
   const sameCat = others.filter((x) => x.category === f.category);
   const sameRegion = others.filter((x) => x.category !== f.category && x.region_ids.some((r) => f.region_ids.includes(r)));
   return [...sameCat, ...sameRegion].slice(0, n);

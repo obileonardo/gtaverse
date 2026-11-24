@@ -11,10 +11,10 @@ export type Find = {
   spoiler: boolean; mature: boolean; chapter_gate: string | null; area?: string; region_ids: string[];
   location_description?: string; pin: { x: number; y: number } | null; summary: string;
   crossover_games?: string[]; related_connections?: string[];
-  first_finder: { handle: string; platform: string; url: string } | null; clip: Clip; sources: Source[]; updated_at?: string;
+  first_finder: { handle: string; platform: string; url: string } | null; clip: Clip; sources: Source[]; added_at?: string; updated_at?: string;
 };
 export type Connection = { id: string; slug: string; title: string; type: string; confidence: string; games: string[]; summary: string; related_finds?: string[]; sources: { url: string; title?: string }[] };
-export type Region = { id: string; name: string; type: string; parent: string | null; real_world_analogue?: string | null };
+export type Region = { id: string; name: string; type: string; parent: string | null; real_world_analogue?: string | null; vibe_note?: string | null; sources?: { url: string; title?: string }[]; updated_at?: string };
 export type Category = { id: string; label: string; kind: string; description: string };
 
 export const finds = (findsRaw as Find[]).filter((f) => f.status === 'published');

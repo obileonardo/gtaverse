@@ -1,0 +1,40 @@
+---
+// A grid of find cards, exactly as the finds index draws them: 16:9 Card, five columns on desktop, three on
+// tablets, two on the phone. Spoiler and mature finds show the sunrise glow instead of art (cardImage).
+// Used by the region and category hubs.
+import Card from './ui/Card.astro';
+import type { Find } from '../lib/content';
+import { categoryLabel, regionLabel } from '../lib/media';
+import { cardImage, verificationLabel } from '../lib/finds';
+interface Props { finds: Find[]; eager?: number; label?: string }
+const { finds, eager = 0, label } = Astro.props;
+---
+<ul class="fgrid" aria-label={label}>
+  {finds.map((f, i) => {
+    const img = cardImage(f);
+    return (
+      <li>
+        <Card
+          href={`/finds/${f.slug}`}
+          image={img?.src}
+          srcset={img?.srcset}
+          sizes="(max-width: 767px) 50vw, 20vw"
+          loading={i < eager ? 'eager' : 'lazy'}
+          kicker={categoryLabel(f)}
+          title={f.title}
+          meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`}
+        />
+      </li>
+    );
+  })}
+</ul>
+
+<style>
+  .fgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px var(--space-5); }
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .fgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-3); }
+  }
+</style>

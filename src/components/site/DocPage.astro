@@ -1,0 +1,96 @@
+---
+// A policy page (about, editorial policy, corrections, takedowns): the explainer's Obvious document as drawn there,
+// a 712 reading column with title, standfirst and byline over a hairline, and a quiet rail on the right that lists
+// the policy pages instead of contents. The rail drops on screens under 1024; the footer links the same pages.
+// Body content is the default slot, written as plain HTML (h2, p, ul, a.link).
+import Icon from '../ui/Icon.astro';
+import { formatDate } from '../../lib/finds';
+import { trustPages } from '../../lib/trust';
+interface Props { title: string; standfirst: string; updated: string }
+const { title, standfirst, updated } = Astro.props;
+const here = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '');
+---
+<div class="doc">
+  <article class="doc__main">
+    <header class="doc__head">
+      <h1 class="doc__title">{title}</h1>
+      <p class="doc__standfirst">{standfirst}</p>
+      <p class="doc__byline">
+        <span class="doc__mark" aria-hidden="true"><Icon name="article" size={16} /></span>
+        <span class="doc__by">The Vice Files</span>
+        <span aria-hidden="true">·</span>
+        <span>Updated <time datetime={updated}>{formatDate(updated)}</time></span>
+      </p>
+    </header>
+    <div class="prose doc__body"><slot /></div>
+  </article>
+  <nav class="rail" aria-label="About the site">
+    <p class="rail__title">About the site</p>
+    <ul class="rail__list">
+      {trustPages.map((p) => <li><a href={p.href} aria-current={p.href === here ? 'page' : undefined}>{p.label}</a></li>)}
+    </ul>
+  </nav>
+</div>
+
+<style>
+  .doc { display: grid; grid-template-columns: minmax(0, 712px) 200px; justify-content: center; column-gap: var(--space-12); }
+  .doc__main { min-width: 0; }
+  .doc__head { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-8); border-bottom: var(--border-w) solid var(--border-1); }
+  .doc__title { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; }
+  .doc__standfirst { color: var(--text-2); font-size: 19px; line-height: 1.45; }
+  .doc__byline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-4); color: var(--text-3); font-size: var(--text-body-s); }
+  .doc__mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); }
+  .doc__by { color: var(--text-1); font-weight: 500; }
+
+  .doc__body { padding-top: var(--space-10); font-size: 18px; line-height: 1.65; overflow-wrap: anywhere; }
+  .doc__body :global(h2) {
+    margin-top: var(--space-12);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-h2);
+    font-weight: 700;
+    line-height: 1.2;
+    scroll-margin-top: calc(var(--island-top) + var(--island-h) + var(--space-6));
+  }
+  .doc__body :global(h2:first-child) { margin-top: 0; }
+  .doc__body :global(p) { margin-bottom: var(--space-5); }
+  .doc__body :global(ul), .doc__body :global(ol) { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .doc__body :global(ul > li) { position: relative; padding-left: var(--space-6); }
+  .doc__body :global(ul > li)::before { content: ''; position: absolute; left: 6px; top: 0.72em; width: 5px; height: 5px; border-radius: var(--radius-full); background: var(--text-3); }
+  .doc__body :global(ol) { counter-reset: step; }
+  .doc__body :global(ol > li) { position: relative; padding-left: var(--space-8); counter-increment: step; }
+  .doc__body :global(ol > li)::before { content: counter(step); position: absolute; left: 0; top: 0.2em; display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-family: var(--font-mono); font-size: 12px; }
+  .doc__body :global(strong) { font-weight: 600; }
+  .doc__body :global(.doc__table) { margin-block: var(--space-6) var(--space-10); font-size: var(--text-body); line-height: 1.4; }
+  .doc__body :global(.doc__actions) { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-8); }
+
+  .rail { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); align-self: start; display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
+  .rail__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .rail__list { display: flex; flex-direction: column; border-left: var(--border-w) solid var(--border-1); }
+  .rail__list a {
+    position: relative;
+    display: block;
+    padding: 6px 0 6px var(--space-4);
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    line-height: 1.35;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .rail__list a[aria-current] { color: var(--text-1); }
+  .rail__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .rail__list a:hover { color: var(--text-1); }
+  }
+
+  @media (max-width: 1023px) {
+    .doc { grid-template-columns: minmax(0, 712px); }
+    .rail { display: none; }
+  }
+  @media (max-width: 767px) {
+    .doc__title { font-size: 32px; }
+    .doc__standfirst { font-size: 18px; }
+    .doc__body { font-size: 17px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rail__list a { transition: none; }
+  }
+</style>

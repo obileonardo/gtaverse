@@ -1,0 +1,169 @@
+---
+// The finders: every person whose find, clip or video is in the guide, most finds first, then every outlet and
+// wiki we cite. Built from published content (src/lib/credits.ts); a removal is one edit in content.
+// Rows reuse the find page's credit card look (avatar initial on the pink tint, name, role line, outline button).
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/site/PageHead.astro';
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+import { finders, outletCredits, creditTotals, type Post } from '../lib/credits';
+import { collectionPage } from '../lib/seo';
+import { staticRoutes } from '../lib/routes';
+import { site } from '../lib/site';
+
+const r = staticRoutes.find((x) => x.path === '/finders')!;
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const initial = (name: string) => name.replace(/^(u\/|@)/, '').charAt(0).toUpperCase();
+const roleLabel: Record<Post['role'], string> = { first: 'Found it first', clip: 'Clip', source: 'Video' };
+// One line per find: a person can be the finder and the clip on the same find.
+const perFind = (posts: Post[]) => {
+  const m = new Map<string, { post: Post; roles: Post['role'][] }>();
+  for (const p of posts) {
+    const e = m.get(p.find.slug);
+    if (e) e.roles.push(p.role);
+    else m.set(p.find.slug, { post: p, roles: [p.role] });
+  }
+  return [...m.values()];
+};
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Finders', href: '/finders' }];
+const ld = collectionPage('/finders', r.title, r.description, finders.map((p) => ({ name: p.name, href: p.profile ?? '/finders' })));
+---
+<Base title={r.title} description={r.description} jsonLd={ld} breadcrumbs={crumbs}>
+  <PageHead title="The finders" count={creditTotals.people}>
+    <p>Every fan and creator whose find, clip or video is in The Vice Files, most finds first. {plural(creditTotals.firstFinders, 'person is', 'people are')} credited with finding something first and {plural(creditTotals.clipMakers, 'creator')} made the clip a find plays.</p>
+    <p>Want your credit changed or your clip removed? <a class="link" href="/takedown">Tell us</a>, and it is done within {site.responseHours} hours.</p>
+  </PageHead>
+
+  <section class="block" aria-labelledby="people-title">
+    <h2 id="people-title" class="block__title h2">Finders and creators</h2>
+    <ul class="people" role="list">
+      {finders.map((p) => (
+        <li class="person">
+          <div class="person__who">
+            <span class="person__avatar" aria-hidden="true">{initial(p.name)}</span>
+            <span class="person__name">
+              <span class="person__handle">{p.name}</span>
+              <span class="person__role">{p.platform}</span>
+            </span>
+            {p.profile && <Button href={p.profile} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener" class="person__profile" aria-label={`${p.name} on ${p.platform}`}>Profile</Button>}
+          </div>
+          <p class="person__counts mono">
+            <span>{plural(p.finds, 'find')}</span>
+            {p.firstFinds > 0 && <span>{p.firstFinds} found first</span>}
+            {p.clips > 0 && <span>{plural(p.clips, 'clip')}</span>}
+          </p>
+          <ul class="person__finds" role="list">
+            {perFind(p.posts).map(({ post, roles }) => (
+              <li>
+                <a class="person__find" href={`/finds/${post.find.slug}`}>{post.find.title}</a>
+                <span class="person__post">
+                  {roles.map((role) => roleLabel[role]).join(', ')}
+                  {post.url && <> · <a class="person__link" href={post.url} target="_blank" rel="noopener">Original post<Icon name="arrow-up-right" size={12} /></a></>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block" aria-labelledby="outlets-title">
+    <h2 id="outlets-title" class="block__title h2">Outlets and wikis<sup class="block__count mono">{creditTotals.outlets}</sup></h2>
+    <p class="block__lede">The press, wikis and official pages our finds cite, most finds first.</p>
+    <ul class="outlets" role="list">
+      {outletCredits.map((o) => (
+        <li>
+          {o.url ? (
+            <a class="outlet" href={o.url} target="_blank" rel="noopener">
+              <span class="outlet__name">{o.name} <Icon name="arrow-up-right" size={14} /></span>
+              <span class="outlet__meta">{o.kind} · {plural(o.finds, 'find')}</span>
+            </a>
+          ) : (
+            <div class="outlet">
+              <span class="outlet__name">{o.name}</span>
+              <span class="outlet__meta">{o.kind} · {plural(o.finds, 'find')}</span>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .block { margin-top: var(--space-16); display: flex; flex-direction: column; gap: var(--space-6); }
+  .block__title { display: flex; align-items: flex-start; }
+  .block__count { margin-left: 6px; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); }
+  .block__lede { margin-top: calc(var(--space-4) * -1); color: var(--text-2); }
+
+  .people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+  .person {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+    min-width: 0;
+  }
+  .person__who { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+  .person__avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background: var(--accent-tint);
+    color: var(--accent-text);
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .person__name { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .person__handle { font-weight: 600; overflow-wrap: anywhere; }
+  .person__role { color: var(--text-2); font-size: var(--text-body-s); }
+  .person__who :global(.person__profile) { flex: none; }
+  .person__counts { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); color: var(--text-2); }
+  .person__finds { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--border-w) solid var(--border-1); }
+  .person__finds li { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .person__find { font-weight: 500; overflow-wrap: anywhere; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color var(--dur-colour) var(--ease-colour); }
+  .person__post { color: var(--text-3); font-size: var(--text-caption); }
+  .person__link { display: inline-flex; align-items: center; gap: 2px; color: var(--accent-text); }
+
+  .outlets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+  .outlet {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 64px;
+    justify-content: center;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-m);
+    border: var(--border-w) solid var(--border-1);
+    min-width: 0;
+    transition: background-color var(--dur-colour) var(--ease-colour), transform var(--dur-press) var(--ease-out);
+  }
+  a.outlet:active { transform: scale(0.98); }
+  .outlet__name { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: 600; overflow-wrap: anywhere; }
+  .outlet__name :global(.icon) { flex: none; color: var(--text-3); }
+  .outlet__meta { color: var(--text-2); font-size: var(--text-body-s); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .person__find:hover { text-decoration-color: currentColor; }
+    a.outlet:hover { background: var(--surface-1); }
+  }
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .outlets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .block { margin-top: var(--space-12); }
+    .people { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .person { padding: var(--space-5); border-radius: var(--radius-l); }
+    .outlets { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .outlet, .person__find { transition: none; }
+  }
+</style>
