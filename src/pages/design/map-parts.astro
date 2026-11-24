@@ -1,7 +1,7 @@
 ---
-// The map's parts for the design system page (/design), framed on their own page: the map's stylesheet (map.css) uses
-// global class names (.sheet, .media, .field) that other components also use (the timeline's .sheet), so it must not
-// load on /design itself. /design embeds this page in an iframe (components/design/Frame.astro).
+// The map's parts for the design system page (/design), framed on their own page so the map's stylesheet (map.css)
+// loads only here. Its rules are scoped under .vf-map (the root of MapSpecimens), so they restyle nothing else.
+// /design embeds this page in an iframe (components/design/Frame.astro).
 import Frame from '../../components/design/Frame.astro';
 import MapSpecimens from '../../components/design/MapSpecimens';
 import { finds, regionById, categories as allCategories } from '../../lib/content';

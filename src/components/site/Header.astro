@@ -743,18 +743,18 @@ const pad = (n: number) => String(n).padStart(2, '0');
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 32px;
-    padding-inline: 4px 12px;
+    min-height: 32px;
+    padding: 2px 12px 2px 4px;
     border-radius: var(--radius-full);
     color: var(--text-1);
     font-size: 14px;
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .games__row.is-current { background: var(--glass-hover); }
-  .games__name { display: flex; align-items: baseline; min-width: 0; }
-  /* A long name truncates on its own; the count beside it always stays. The ellipsis clips sideways only. */
-  .games__label { min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
-  .games__count { flex: none; position: relative; top: -0.5em; margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); line-height: 1; }
+  /* A long name (Red Dead Redemption 2 at 1280 and 1440) never truncates: it wraps to a second, balanced line and
+     its row grows by 4 px; the count rides on its last word. Nothing clips, so every glyph stays whole. */
+  .games__name { display: block; min-width: 0; line-height: 1.15; text-wrap: balance; }
+  .games__count { vertical-align: baseline; position: relative; top: -0.5em; margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); line-height: 1; }
   .games__tm { padding: 6px 8px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
   @media (hover: hover) and (pointer: fine) {
     .games__row:not(.is-current):hover, .games__all:hover { background: var(--glass-hover-soft); }

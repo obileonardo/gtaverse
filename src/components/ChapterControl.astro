@@ -56,6 +56,10 @@ const id = `chapter-${Math.random().toString(36).slice(2, 8)}`;
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .chapter__chevron { position: absolute; right: 14px; pointer-events: none; color: var(--text-2); }
+  /* Compact (inside a clip gate): the label wraps above the select when the gate is narrow, and the select never
+     grows past the gate (its longest option would otherwise set its width). */
+  .chapter--compact { max-width: 100%; justify-content: center; }
+  .chapter--compact .chapter__field, .chapter--compact .chapter__select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
   .chapter--compact .chapter__label { font-size: var(--text-caption); }
   .chapter--compact .chapter__select { height: 36px; font-size: 13px; }
   @media (hover: hover) and (pointer: fine) {

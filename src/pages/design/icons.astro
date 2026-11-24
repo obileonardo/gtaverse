@@ -176,14 +176,14 @@ const menu: [GlyphName, string][] = [['home', 'Home'], ['map', 'Map'], ['finds',
   .glyph__cell { display: inline-flex; align-items: center; justify-content: center; }
   .glyph__cell :global(svg), .plate :global(svg), .state :global(svg), .mapmock :global(svg) { display: block; flex: none; }
 
-  /* the stand-in map: the map tokens as blocks and roads (our own drawing, not game art) */
+  /* the stand-in map: the map land token with hairline roads (our own drawing, not game art) */
   .mapmock {
     position: relative; height: 360px; margin-top: var(--space-5); overflow: hidden; border: 1px solid var(--border-1); border-radius: var(--radius-l);
     background:
-      linear-gradient(90deg, transparent 0 31%, var(--map-road-major) 31% 32.2%, transparent 32.2% 66%, var(--map-road-major) 66% 67.2%, transparent 67.2%),
-      linear-gradient(0deg, transparent 0 44%, var(--map-road-major) 44% 46.5%, transparent 46.5%),
-      repeating-linear-gradient(90deg, transparent 0 46px, var(--map-road) 46px 50px),
-      repeating-linear-gradient(0deg, transparent 0 40px, var(--map-road) 40px 44px),
+      linear-gradient(90deg, transparent 0 31%, var(--border-2) 31% 32.2%, transparent 32.2% 66%, var(--border-2) 66% 67.2%, transparent 67.2%),
+      linear-gradient(0deg, transparent 0 44%, var(--border-2) 44% 46.5%, transparent 46.5%),
+      repeating-linear-gradient(90deg, transparent 0 46px, var(--border-1) 46px 50px),
+      repeating-linear-gradient(0deg, transparent 0 40px, var(--border-1) 40px 44px),
       var(--map-land);
   }
   .mapmock__pin, .mapmock__mark { position: absolute; display: block; transform: translate(-50%, -100%); }

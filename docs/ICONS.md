@@ -81,7 +81,7 @@ Collectible-layer plates are GTA coral `#F76685` from the GTA VI sunset ramp (ow
 
 **Grid.** 20 units, live area 2 to 18. Line centres sit within 2.75 and 17.25. Coordinates on a 0.25 grid where possible, every curve a cubic bezier. The viewBox is `0 0 20 20`. Blip glyphs may use the full 1.75 to 18.25 because they are always scaled into a plate.
 
-**Sizes.** Glyphs at 16, 20 and 24 px (`--icon-s/m/l`); blips at 20, 24, 32 and 40.
+**Sizes.** Glyphs at 16, 20 and 24 px (the Icon component's `s`, `m` and `l`); blips at 20, 24, 32 and 40.
 
 | Size | Solid bar (1.75) | Line (1.5) | Use |
 |---|---|---|---|

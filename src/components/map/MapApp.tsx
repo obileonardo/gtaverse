@@ -404,7 +404,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   );
 
   return (
-    <section className={`map-app${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} data-view={mode} aria-label="Map of Leonida">
+    <section className={`map-app vf-map${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} data-view={mode} aria-label="Map of Leonida">
       <h1 className="sr-only map-h1">Map of Leonida</h1>
 
       {/* The list: GetYourGuide's column on desktop, a sheet on phone. */}

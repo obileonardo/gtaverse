@@ -149,7 +149,7 @@
   .badge--muted { background: var(--surface-2); color: var(--text-2); border: var(--border-w) dashed var(--border-2); }
   .badge--debunked { background: var(--surface-2); color: var(--text-2); }
   .badge--debunked .badge__label { text-decoration: line-through; text-decoration-thickness: 1px; }
-  .badge--new { background: #ffffff; color: #0d0c1a; letter-spacing: 0.1em; }
+  .badge--new { background: var(--badge-new-fill); color: var(--badge-new-text); letter-spacing: 0.1em; }
 
 /* ---------- Tabs (ui/Tabs.astro) ---------- */
   .tabs__list {
@@ -182,7 +182,7 @@
     width: 1px;
     height: var(--tab-underline);
     border-radius: var(--radius-full);
-    background: var(--accent);
+    background: var(--accent-ink);
     transform-origin: left center;
     transition: transform var(--dur-colour) var(--ease-in-out);
   }

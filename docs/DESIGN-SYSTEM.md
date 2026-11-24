@@ -7,7 +7,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 ## Rules that never bend
 
 - Dark first. Light is a full theme, never the default. Base `#0D0C1A`.
-- Pink `#F976B0` is the accent. In light it is a fill only; pink text in light uses `--accent-text` (`#8D4053`).
+- Pink `#F976B0` is the accent. In light it is a fill only, always behind a navy label: pink text in light uses `--accent-text` (`#8D4053`), and a pink mark that shows a state (focus ring, current marker, active underline, the key-fact stroke) uses `--accent-ink` (`#9F4E77`, the pink shaded 38% toward night navy). In dark all three are `#F976B0`.
 - The sunrise gradient (`--glow-hero`) only for hero moments and for items without art.
 - Buttons, chips and pills are fully rounded.
 - No box shadows. Elevation is a surface step plus a 1px `--border-1`.
@@ -72,21 +72,22 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `--border-2` | `#433F6A` | `#C5C5C8` | strong outlines |
 | `--text-1` | white 92% | `#2F2F2F` | primary text |
 | `--text-2` | white 64% | `#5F5F5F` | secondary text |
-| `--text-3` | white 50% | `#666666` | labels, footnotes (AA on `--bg`) |
-| `--accent` | `#F976B0` | `#F976B0` (fill only) | primary buttons, pins, active underline |
+| `--text-3` | white 52% | `#666666` | labels, footnotes (AA on every surface, 4.69:1 on `--surface-3` in dark) |
+| `--accent` | `#F976B0` | `#F976B0` (fill only) | primary buttons, pins, the count pill: fills behind a navy label |
 | `--accent-text` | `#F976B0` | `#8D4053` | pink text and links |
+| `--accent-ink` | `#F976B0` | `#9F4E77` | pink state marks on the ground: focus ring, current marker in rails, active tab underline, timeline marker, key-fact stroke (3:1 or more on every light surface; 4.57:1 on `--surface-3`) |
 | `--on-accent` | `#0D0C1A` | `#0D0C1A` | text on pink |
 | `--accent-tint` | pink 16% | wine 10% | secondary buttons |
 | `--inverse-fill` / `--inverse-text` | `#F2F2F2` / navy | `#2F2F2F` / white | selected chip, Apple TV Play pill |
 | `--glass-fill`, `--glass-border`, `--glass-blur` | navy 72%, white 12%, 20px | white 72% | island, glass buttons and chips, menus |
 | `--glass-hover`, `--glass-hover-soft` | white 10%, 5% | ink 8%, 4% | current item pill, hover |
-| `--scrim`, `--overlay-fill` | | | behind popovers, phone menu overlay |
 | `--glow-hero` | sunrise radial at 35% | at 16 to 28% | hero moments, items without art |
 | `--badge-verify-*` | `#FBC7E4` fill, pink edge, navy text | same | multi-source verification |
+| `--badge-new-fill`, `--badge-new-text` | white, navy | `#2F2F2F`, white | the "New" badge (white on cream vanished in light) |
 | `--level-1` to `--level-5` | mint, lavender, pink, peach, amber | | wanted level columns (explainer) |
 | `--blip-collectible`, `-ink`, `-key` | GTA coral `#F76685`, navy glyph and keyline | same (fixed) | collectible-layer map blip plates (IC9, `docs/ICONS.md`) |
 | `--logo-plate`, `--logo-plate-edge` | `#0D0C1A`, white 10% | same (fixed) | the plate behind an official game logo, the same in both themes (GS4) |
-| `--map-*` | navy ramp | GetYourGuide palette | map land, roads, water, park, labels, halos |
+| `--map-land`, `--map-halo` | `#1F1F38`, navy 80% | cream, cream 85% | map ground behind the tiles, label halos |
 
 ## Type
 
@@ -99,13 +100,13 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 
 Fonts are fetched from Google Fonts at build time by Astro's font loader (`astro.config.mjs`) and served from our domain.
 
-Scale tokens (desktop / phone): `--text-display-xl` 144 clamp / 64, `--text-display-l` 72 / 56, `--text-display-m` 48 / 40, `--text-display-s` 28 / 24, `--text-h1` 28, `--text-h2` 22, `--text-title-l` 20, `--text-title` 17, `--text-body-l` 18 / 20, `--text-body` 16 / 17, `--text-body-s` 14 / 15, `--text-label` 14 / 15, `--text-label-caps` 12, `--text-caption` 13, `--text-mono` 13 / 17, `--text-mono-caps` 12, `--text-stat` 20, `--text-menu` 25. Role classes in `base.css`: `.display-xl`, `.display-l`, `.display-m`, `.display-s`, `.h1`, `.h2`, `.title`, `.body-l`, `.body-s`, `.caption`, `.label-caps`, `.mono`, `.mono-caps`, `.muted`, `.tabular`.
+Scale tokens (desktop / phone): `--text-display-xl` 144 clamp / 64, `--text-display-l` 72 / 56, `--text-display-m` 48 / 40, `--text-display-s` 28 / 24, `--text-h1` 28, `--text-h2` 22, `--text-title-l` 20, `--text-title` 17, `--text-body-l` 18 / 20, `--text-body` 16 / 17, `--text-body-s` 14 / 15, `--text-label` 14 / 15, `--text-label-caps` 12, `--text-caption` 13, `--text-mono` 13 / 17, `--text-mono-caps` 12, `--text-stat` 20. Role classes in `base.css`: `.display-xl`, `.display-l`, `.display-m`, `.display-s`, `.h1`, `.h2`, `.title`, `.body-l`, `.body-s`, `.caption`, `.label-caps`, `.mono`, `.mono-caps`, `.muted`, `.tabular`.
 
 ## Spacing, sizes, radii
 
 - Spacing on a 4px base: `--space-1` 4, `-2` 8, `-3` 12, `-4` 16, `-5` 20, `-6` 24, `-8` 32, `-10` 40, `-12` 48, `-16` 64, `--space-section` 96 desktop / 64 phone.
 - The gutter (owner decision, 24 Nov 2026): `--gutter` is 128 at 1440 and wider, 96 from 1280, 64 from 1024, 40 from 768 and 16 on the phone. `--page-pad` is the same value under the name every component already uses; `--container-max` is 1664 (1920 minus the gutter twice), so wider screens keep a 128 gutter and centre the rest. Use `.container` for anything that should line up with the header and footer: page content, the home hero (its intro, the finds list, the mode circles, the scroll arrow) and the footer all share this edge.
-- Sizes: `--chip-h` 34, `--chip-h-touch` 40, `--btn-h-s/m/l/xl` 32/40/48/56, `--ctrl-size-s/-/l/xl` 32/44/48/52, `--island-w` 336, `--island-h` 48, `--island-sub-h` 44, `--tab-underline` 3, `--icon-s/m/l` 16/20/24.
+- Sizes: `--chip-h` 34, `--chip-h-touch` 40, `--btn-h-s/m/l/xl` 32/40/48/56, `--ctrl-size` 44, `--ctrl-size-xl` 52, `--island-w` 336, `--island-h` 48, `--island-sub-h` 44, `--tab-underline` 3. Icon sizes are the Icon component's own `size` (16, 20, 24), not tokens.
 - Radii: `--radius-xs` 4 (badges, island), `-s` 8, `-m` 12 (card media), `-l` 16 (framed cards), `-xl` 20 desktop / 28 phone (menus), `--radius-sheet` 32, `--radius-full` (buttons, chips, pills).
 
 ## Motion
@@ -117,7 +118,7 @@ Scale tokens (desktop / phone): `--text-display-xl` 144 clamp / 64, `--text-disp
 | `--ease-drawer` | `cubic-bezier(0.32, 0.72, 0, 1)` | drawers and sheets |
 | `--ease-colour` | `cubic-bezier(0.455, 0.03, 0.515, 0.955)` | colour and crossfades |
 | `--ease-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | exits |
-| `--dur-press` 140, `--dur-colour` 200, `--dur-popover-in/out` 180/140, `--dur-overlay-in/out` 220/160, `--dur-peek-in/out` 260/200, `--dur-drawer-in/out` 420/300, `--dur-fly` 600, `--dur-crossfade` 500, `--dur-card-lift` 500, `--stagger` 40 | ms | |
+| `--dur-press` 140, `--dur-colour` 200, `--dur-popover-in/out` 180/130 (exit 72%), `--dur-peek-in/out` 260/180 (69%: the map's drawer and phone card), `--dur-crossfade` 500, `--dur-card-lift` 500 | ms | |
 
 Motion, part 2 (the motion study's tokens, 24 Nov 2026):
 
@@ -125,8 +126,8 @@ Motion, part 2 (the motion study's tokens, 24 Nov 2026):
 | --- | --- | --- |
 | `--ease-reveal` | `cubic-bezier(0.22, 1, 0.36, 1)` | arrivals of 480ms and longer: title lines, card walls, the 404 |
 | `--ease-crit` | `linear(...)`, a critically damped spring from rest | CSS indicators that should feel like the springs (contents marker) |
-| `--dur-page-out` / `--dur-page-in` | 160 / 280ms | page transitions: the old page fades, the new one rises 8px, fades overlap by 60ms |
-| `--dur-morph` / `--dur-morph-out` | 280 / 180ms | one surface changing shape (menu from the island, chip check, copy button), and most exits |
+| `--dur-page-out` / `--dur-page-in` | 180 / 280ms (exit 64%) | page transitions: the old page fades, the new one rises 8px, fades overlap by 60ms |
+| `--dur-morph` / `--dur-morph-out` | 280 / 180ms (exit 64%) | one surface changing shape (menu from the island, chip check, copy button), and most exits |
 | `--dur-roll` | 280ms | a digit or word rolling to a new value |
 | `--dur-reveal` / `--dur-reveal-group` | 640 / 480ms | title lines once per page; cards and rows on first view |
 | `--dur-image-in` | 240ms | a still fading in once decoded |
@@ -148,20 +149,19 @@ Where motion lives:
 
 ## Z layers
 
-`--z-map` 0, `--z-pins` 10, `--z-map-ui` 20, `--z-panel` 30, `--z-drawer` 40, `--z-scrim` 45, `--z-header` 50, `--z-popover` 60, `--z-overlay` 70, `--z-toast` 80. The header is always on top of page content; an open menu dims everything but the header.
+`--z-header` 50 (the header), `--z-overlay` 70 (the skip link sits one above it). Layers inside a component (the map's panels, pins and sheets) are local `z-index` values in its own stylesheet. The header is always on top of page content; an open menu dims everything but the header.
 
 ## Components
 
 ### Button (`ui/Button.astro`)
-Pill. `variant`: `primary` (pink, the one main action of a view), `inverse` (white pill over art, Apple TV Play), `glass` (over art or map), `secondary` (pink tint), `quiet` (surface, for Cancel), `ghost` (no fill until hover: bare icon actions such as the drawer's Felt actions and close). `.btn--stack` puts the icon above the label for equal-width actions (Apple Maps place actions), still fully rounded. Disabled buttons sit at 40% opacity. `size`: `s` 32, `m` 40, `l` 48, `xl` 56. `icon`, `iconEnd`, `iconOnly` + `label` (circle). `href` renders a link.
-Pill. `variant`: `primary` (pink, the one main action of a view), `inverse` (white pill over art, Apple TV Play), `glass` (over art or map), `secondary` (pink tint), `quiet` (surface, for Cancel), `outline` (no fill, 1px edge: V7 timeline arrows, Mindtrip "View profile"). `size`: `s` 32, `m` 40, `l` 48, `xl` 56. `icon`, `iconEnd`, `iconOnly` + `label` (circle). `href` renders a link.
+Pill. `variant`: `primary` (pink, the one main action of a view), `inverse` (white pill over art, Apple TV Play), `glass` (over art or map), `secondary` (pink tint), `quiet` (surface, for Cancel), `ghost` (no fill until hover: bare icon actions such as the drawer's Felt actions and close), `outline` (no fill, 1px edge: V7 timeline arrows, the finders' "Profile" pill). `size`: `s` 32, `m` 40, `l` 48, `xl` 56. `icon` before the label, `iconEnd` after it, `iconOnly` + `label` for a circle. `stack` puts the icon (20) above the label for equal-width actions (Apple Maps place actions: the map drawer's Find page, Map, Found, Share), still fully rounded. Disabled buttons sit at 40% opacity. `href` renders a link. The map's React twin (`map/ui.tsx`) takes the same variants and props; the look of both lives once, in `components.css`.
 ```astro
 <Button href="/finds/x" variant="inverse" size="l" icon="play">Play clip</Button>
 <Button variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
 ```
 
 ### Chip (`ui/Chip.astro`)
-Filter chip, 34 high (40 with `touch`). `selected` turns it into the white pill with a dark label and sets `aria-pressed`. `glass` for chips over the map. `icon`, `count`, `href`.
+Filter chip, 34 high (40 with `touch`). `selected` turns it into the white pill with a dark label and sets `aria-pressed`. `glass` for chips over the map. `icon`, `count`, `href`. The `lead` slot puts something before the icon and label (the game plate in the "Also in" chips).
 
 ### Badge (`ui/Badge.astro`) and Verification (`Verification.astro`)
 `variant`: `meta` (grey rectangle: type, region, game), `verified` (pink sticker), `outline`, `muted` (dashed), `debunked`, `new`. Verification maps the four content levels: multi-source = `verified` + check, single source = `outline` + dot, rumour = `muted` + question mark, debunked = `debunked` + cross. Never by colour alone.
@@ -184,8 +184,7 @@ Underline tabs: caps labels with 0.1em tracking, active at full text colour with
 
 ### Icon (`ui/Icon.astro`, `ui/icons.ts`)
 **Being replaced** by the icon family in `src/icons/` (Capsa method, Solid and Line, 97 glyphs; rules, old to new names and the migration plan in `docs/ICONS.md`, sheet at `/design/icons`). Until the migration lands, components still render the set below.
-24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-down`, `check`, `question`, `cross`, `dot`, `filter`, `layers`, `plus`, `minus`, `share`, `link`, `search`, `grid`, `hand`, `clip`, `article`, `chat`, and one per find category (`egg`, `person`, `keyhole`, `globe`, `car`, `candle`, `crosshair`, `star`, `gem`, `flag`, `bolt`, `ghost`, mapped in `categoryIcon()`). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
-24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star), and for the home hero `image`, `wire`, `sound`, `sound-off`. Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
+24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number; `stroke` overrides the 1.5. `solid` gives the filled form (for the current item, `flame`, the wanted `star`). `label` only when the icon is the whole control. Icons (`ui/icons.ts`): navigation `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `search`, `grid`; arrows `arrow-right`, `arrow-left`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`; actions and states `pin`, `play`, `sun`, `moon`, `check`, `question`, `cross`, `dot`, `filter`, `layers`, `plus`, `minus`, `share`, `link`, `hand`, `info`, `alert`; media and kinds `clip`, `film`, `article`, `chat`, `radio`; the wanted level `star` (line = hollow, solid = filled), `star-flash` (dashed, a flashing star), `flame`; the home hero `image`, `wire`, `sound`, `sound-off`; and one per find category (`egg`, `person`, `keyhole`, `globe`, `car`, `candle`, `crosshair`, `star`, `gem`, `flag`, `bolt`, `ghost`, mapped in `categoryIcon()`). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
 
 ### LevelTable (`ui/LevelTable.astro`)
 Every table on the site. A sheet on `--surface-1` (radius 20, 24 padding, 1px edge), no cell borders, a 30% label column, rows striped full width (white 4% dark, `#f8f8f8` light), values centred when every cell in the column is 28 characters or fewer, a quiet footnote. A row can carry a level badge: the rounded hexagon in `--level-1` to `--level-5` with a glyph, and the label in the same colour (ink in light). On the phone a long value drops under the short one. Explainer markdown tables render through it automatically.
@@ -194,14 +193,14 @@ Every table on the site. A sheet on `--surface-1` (radius 20, 24 padding, 1px ed
 ```
 
 ### Clip (`Clip.astro`)
-16:9 frame (`ratio` to change it) with the creator's thumbnail and a glass play circle; the player (youtube-nocookie) loads on tap. `spoiler` or `mature` show a gate on the glow with a reveal pill, and no thumbnail loads until it is revealed. `caption={false}` drops the credit line when the page credits the creator elsewhere.
+16:9 frame (`ratio` to change it) with the creator's thumbnail and a glass play circle; the player (youtube-nocookie) loads on tap. `spoiler` or `mature` show a gate on the glow with a reveal pill, and no thumbnail loads until it is revealed. The gate never clips: in a frame 420 wide or less it goes compact (tighter gaps, the text one type step down), and if it is still taller than the clip's ratio the frame grows to hold it until the clip is revealed. `caption={false}` drops the credit line when the page credits the creator elsewhere.
 
 ### Timeline (`lore/Timeline.astro`)
-One selected moment at a time. Desktop: Grok hairline across the page, mono year labels on 1px ticks, V7 ruler ticks hanging under the line, event ticks in pink, a square marker; the moment's date, serif title and description under the marker with Queue's polaroid to the right; V7 outline arrow pills, arrow keys, Home and End (keyboard moves never animate). Phone: Queue sheet with a scrubbing year ruler (native scroll and snap) under a fixed centre tick, the serif headline with a quote mark, the polaroid, "Watch the clip", the serif body; swipe to move. The track moves with `--ease-in-out` 500ms; the moment swap is direction aware: the old moment stops moving at 120ms and fades by 160ms, the new one moves in from 120ms over 280ms (never two slides at once). The polaroid settles into its tilt as it arrives, the phone ruler's year rolls, and thin accent arcs join the moment to the nearest moments that share its first game, drawn after the band has landed. Reduced motion: fades only.
+One selected moment at a time. `headingLevel` (default 1) sets the headline's level: the page's h1 on `/gtaverse` pages, 2 where it is embedded (`/design/timeline`); moment titles and their "more" headings follow one and two levels below. Its curves are read from the motion tokens. Desktop: Grok hairline across the page, mono year labels on 1px ticks, V7 ruler ticks hanging under the line, event ticks in pink, a square marker; the moment's date, serif title and description under the marker with Queue's polaroid to the right; V7 outline arrow pills, arrow keys, Home and End (keyboard moves never animate). Phone: Queue sheet with a scrubbing year ruler (native scroll and snap) under a fixed centre tick, the serif headline with a quote mark, the polaroid, "Watch the clip", the serif body; swipe to move. The track moves with `--ease-in-out` 500ms; the moment swap is direction aware: the old moment stops moving at 120ms and fades by 160ms, the new one moves in from 120ms over 280ms (never two slides at once). The polaroid settles into its tilt as it arrives, the phone ruler's year rolls, and thin accent arcs join the moment to the nearest moments that share its first game, drawn after the band has landed. Reduced motion: fades only.
 
 ### Header (`site/Header.astro`)
 - Island: 336 x 48, centred, 32 from the top (8 on the phone, where it spans the width less 16 each side), glass, radius 4. Left: the menu button and the wordmark. Right: Map and the theme toggle. It stays above the open menu; its menu button turns into the close cross.
-- Menu (decisions M1 to M8, the owner's BitcoinOS pick): one full screen surface on `--bg` that grows out of the island. Desktop (1280 and wider), three columns inside the gutter: the art panel (shape 0.76, cut corners 56, radius 8) with its caption and credit under it and the theme button below; the guide (search pill 48 high with a white round submit, "[ The guide ]" in mono, five rows of number, icon, heavy caps label in Big Shoulders 900 at 32 to 44, mono superscript count and arrow, between 1px hairlines, then "[ Latest finds ]", the utility links About, Finders, Data, Submit a find, and the chapter setting); and "[ Games ]" (group labels, rows 32 high with the 104 x 28 plate, short name and count, the trademark line). Below 1280, one scrolling sheet: the art is a banner 112 to 168 high that stays at the top, then search, links (32 caps, rows 56), Games (rows 52, 120 x 36 plates), latest finds, utility links. The current link has the solid icon and the current pill; hover glides the travelling pill.
+- Menu (decisions M1 to M8, the owner's BitcoinOS pick): one full screen surface on `--bg` that grows out of the island. Desktop (1280 and wider), three columns inside the gutter: the art panel (shape 0.76, cut corners 56, radius 8) with its caption and credit under it and the theme button below; the guide (search pill 48 high with a white round submit, "[ The guide ]" in mono, five rows of number, icon, heavy caps label in Big Shoulders 900 at 32 to 44, mono superscript count and arrow, between 1px hairlines, then "[ Latest finds ]", the utility links About, Finders, Data, Submit a find, and the chapter setting); and "[ Games ]" (group labels, rows 32 high with the 104 x 28 plate, short name and count, the trademark line; a name too long for the column wraps to a second, balanced line instead of truncating, and its row grows by 4). Below 1280, one scrolling sheet: the art is a banner 112 to 168 high that stays at the top, then search, links (32 caps, rows 56), Games (rows 52, 120 x 36 plates), latest finds, utility links. The current link has the solid icon and the current pill; hover glides the travelling pill.
 - Art (`src/lib/menu.ts`): hovering (after 60ms), focusing or touching a link with `data-art-key` crossfades the panel to that picture in `--dur-image-in`, only once it is decoded, over the old one, so the ground never flashes. Games show their official cover art (`public/media/menu/`, built by `pnpm logos:fetch`), main links the hero wallpapers and Map our coast drawing; no file means the sunrise glow. The starting picture loads on open, the rest at low priority once the surface has grown.
 - Motion (M4): open, the surface clip grows from the island in `--dur-morph` on `--ease-out`; the art fades from 100ms and settles from scale 1.04 by 500ms; the links rise 16px from 320ms with gaps of 40, 35, 30, 25ms; the other sections fade in at 400ms. Close: words fade in 100ms while the surface folds back in `--dur-morph-out` on `--ease-standard`. Keyboard: no motion. Reduced motion: the surface fades in `--dur-fade-reduced`, nothing moves.
 - Behaviour: Escape closes, focus stays inside the header while open and returns to the menu button, the page behind is `inert` and does not scroll. `vf:open-games` (a document event) opens the menu on the Games list.
@@ -211,7 +210,7 @@ One selected moment at a time. Desktop: Grok hairline across the page, mono year
 The official logo, scaled to fit a fixed box with `object-fit: contain` on the fixed dark plate (`--logo-plate`, radius 8, 1px edge), never recoloured, filtered or cropped. Without a fetched official file it is a text plate (the short name in display caps). `size`: `rail` 104 x 28, `sheet` 120 x 36, `chip` 64 x 22, `hub` 280 x 64. `alt` stays empty when the name is visible beside it; pass the full title where the plate stands alone (hub header).
 
 ### GameChips (`games/GameChips.astro`)
-"Also in": a caps label and one touch chip per game (chip plate + short name), oldest first, each linking to `/gtaverse/games/[id]`. Renders nothing for no games.
+"Also in": a caps label and one touch chip per game, oldest first, each linking to `/gtaverse/games/[id]`: the shared `Chip` with the chip plate in its `lead` slot and the short name. `level` sets the label's tag. Renders nothing for no games.
 
 ### GameLens (`games/GameLens.astro`)
 `?game=<id>` on a page: items with `data-lens-games` that do not list the id get `data-lens-off` (hidden), `data-lens-group` hides when empty, a "Showing" caps label with the selected chip (close icon) clears it, and "Game hub" links on. The timeline listens (`vf:game-lens`) and dims and skips the other moments.
@@ -223,6 +222,7 @@ ChapterControl: "I'm on" and a pill select (40 high, 44 and 16px on the phone so
 The map is a React island, and Astro components cannot render inside it. `ui.tsx` renders `Icon`, `Button`, `Chip`, `Badge`, `Verification` and `Tabs` with exactly the classes and markup of the Astro components, reading the same `icons.ts`; their look lives once, in `components.css`. Change a component's look there, never in the twin.
 
 ### Map (`/map`, `components/map/`)
+- Scope: every rule in `map.css` sits under `:where(.vf-map)`, the class on the map's root (`.map-app`, and the root of the `/design` specimens), so its class names (`.sheet`, `.tabs`, `.media`, `.field`) never restyle other components. `:where()` adds no specificity, so the cascade inside the map is unchanged. A new rule starts with `:where(.vf-map) `.
 - Desktop (GetYourGuide): list column (26%, Felt "List | Legend" tabs, GetYourGuide chip row, 120px photo rows) beside a rounded map; Mindtrip filter menu and Felt basemap popover from two glass circles top right; GetYourGuide zoom stack bottom right; Airbnb popup at a pin; Felt inspector drawer (360 wide) with the clip on top.
 - Phone (Rodeo): full map, glass chips above a list/map toggle and a search pill; Tide Guide glass menus; Strava card for a tapped pin; Apple Maps sheet with the clip on top (MasterClass). Sheets drag 1:1, release into a critically damped spring seeded with the finger's speed, snap to the point the flick was heading for, and can be caught mid-flight.
 - Pins: GetYourGuide photo and value pins (desktop), Rodeo round pins with a name (phone), Lyft pink count pills for finds close together. Selected is the inverse fill.
@@ -250,7 +250,7 @@ The home hero's background is the exception: Rockstar's official trailer clips a
 
 ## The design system page (`/design`)
 
-`/design` is this document, live: built from the code on every build, noindex and out of the sitemap, the route list and the SEO check (`public/_headers` and `scripts/check-seo.mjs` cover `/design` and `/design/*`). Tokens are read from `tokens.css` (with their use from this file's tables when the CSS has no comment), contrast is computed, components are the real components with their props and notes read from their own sources, and every motion demo plays the real tokens. Its parts live in `src/components/design/`; specimens that need a page of their own (the timeline, whose headline is always an h1, and the map's parts, whose stylesheet uses global class names) sit in frames at `/design/timeline` and `/design/map-parts` (`Frame.astro`). A "Demo data / Worst case" switch (`?data=worst`) swaps text-bearing specimens to the longest values in our content. The icon sheet is `/design/icons`. A new token or component shows up there on the next build; a new component needs a specimen in `ComponentsSection.astro`.
+`/design` is this document, live: built from the code on every build, noindex and out of the sitemap, the route list and the SEO check (`public/_headers` and `scripts/check-seo.mjs` cover `/design` and `/design/*`). Tokens are read from `tokens.css` (with their use from this file's tables when the CSS has no comment), contrast is computed, components are the real components with their props and notes read from their own sources, and every motion demo plays the real tokens. Its parts live in `src/components/design/`; specimens that need a page of their own (the timeline, whose phone layout follows the window width and which is embedded there at `headingLevel` 2, and the map's parts, so the map's stylesheet loads only there) sit in frames at `/design/timeline` and `/design/map-parts` (`Frame.astro`). A "Demo data / Worst case" switch (`?data=worst`) swaps text-bearing specimens to the longest values in our content. The icon sheet is `/design/icons`. A new token or component shows up there on the next build; a new component needs a specimen in `ComponentsSection.astro`.
 
 ## Known decisions open to the owner
 

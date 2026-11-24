@@ -3,8 +3,9 @@
 // Curated from our data (connections.games, finds.crossover_games), never matched by name in text. Renders nothing
 // when there are no games, so no empty label is left behind. Works without JavaScript.
 import GamePlate from './GamePlate.astro';
+import Chip from '../ui/Chip.astro';
 import type { Game } from '../../lib/games';
-interface Props { games: Game[]; label?: string; level?: 'h2' | 'h3' | 'p'; class?: string }
+interface Props { games: Game[]; label?: string; level?: 'h2' | 'h3' | 'h4' | 'h5' | 'p'; class?: string }
 const { games, label = 'Also in', level = 'p', class: className } = Astro.props;
 const Heading = level;
 const id = `also-${Math.random().toString(36).slice(2, 8)}`;
@@ -15,10 +16,10 @@ const id = `also-${Math.random().toString(36).slice(2, 8)}`;
     <ul class="also__list" role="list">
       {games.map((g) => (
         <li>
-          <a class="chip chip--touch also__chip" href={`/gtaverse/games/${g.id}`}>
-            <GamePlate game={g} size="chip" />
-            <span>{g.short_name}</span>
-          </a>
+          <Chip href={`/gtaverse/games/${g.id}`} touch class="also__chip">
+            <GamePlate slot="lead" game={g} size="chip" />
+            {g.short_name}
+          </Chip>
         </li>
       ))}
     </ul>
@@ -29,6 +30,7 @@ const id = `also-${Math.random().toString(36).slice(2, 8)}`;
   .also { display: flex; flex-direction: column; gap: var(--space-3); }
   .also__label { color: var(--text-3); }
   .also__list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .also__chip { gap: 10px; padding-left: 6px; }
-  @media (max-width: 767px) { .also__chip { height: 44px; } }
+  /* The shared Chip (ui/Chip.astro) with the plate in its lead slot; :global because the class is set on the Chip. */
+  .also__list :global(.also__chip) { gap: 10px; padding-left: 6px; }
+  @media (max-width: 767px) { .also__list :global(.also__chip) { height: 44px; } }
 </style>

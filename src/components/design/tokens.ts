@@ -172,14 +172,16 @@ export const contrastPairs: { fg: string; bg: string; need: number; use: string 
     { fg: '--text-3', bg, need: 4.5, use: 'Labels, footnotes' },
     { fg: '--accent-text', bg, need: 4.5, use: 'Pink text and links' },
   ]),
+  ...['--bg', '--surface-1', '--surface-2', '--surface-3'].map((bg) => ({ fg: '--accent-ink', bg, need: 3, use: 'Focus ring, current marker, active underline (graphic)' })),
   { fg: '--on-accent', bg: '--accent', need: 4.5, use: 'Label on a primary button' },
-  { fg: '--accent', bg: '--bg', need: 3, use: 'Pink fills, focus ring, underline (graphic)' },
+  { fg: '--accent', bg: '--bg', need: 0, use: 'Pink fill behind a navy label (brand fill; the label carries the meaning)' },
   { fg: '--inverse-text', bg: '--inverse-fill', need: 4.5, use: 'Selected chip, white pill' },
   { fg: '--badge-verify-text', bg: '--badge-verify-fill', need: 4.5, use: 'Multi-source badge' },
   { fg: '--badge-meta-text', bg: '--badge-meta-fill', need: 4.5, use: 'Meta badge' },
+  { fg: '--badge-new-text', bg: '--badge-new-fill', need: 4.5, use: 'New badge' },
+  { fg: '--badge-new-fill', bg: '--surface-1', need: 3, use: 'New badge against a card (graphic)' },
   { fg: '--text-1', bg: '--glass-fill', need: 4.5, use: 'Text on glass (over the ground)' },
   { fg: '--blip-collectible-ink', bg: '--blip-collectible', need: 3, use: 'Collectible blip glyph (graphic)' },
-  { fg: '--map-label', bg: '--map-land', need: 4.5, use: 'Map labels' },
   { fg: '--border-1', bg: '--bg', need: 0, use: 'Hairline (decorative, no threshold)' },
 ].filter((p) => colours.some((c) => c.name === p.fg) && colours.some((c) => c.name === p.bg));
 

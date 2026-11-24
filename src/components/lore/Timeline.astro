@@ -12,6 +12,8 @@
 // syncUrl: on a lore page, the address follows the selected moment.
 // titleAsH1: on a lore page, the page heading also names the selected moment (for readers; the eye sees it under
 // the marker).
+// headingLevel: 1 (default) makes the headline the page's h1, as on /gtaverse pages; pass 2 or 3 where the timeline
+// is embedded under other headings. Moment titles and their "more" headings sit one and two levels below it.
 import Badge from '../ui/Badge.astro';
 import Button from '../ui/Button.astro';
 import Card from '../ui/Card.astro';
@@ -26,8 +28,13 @@ import { sourceName } from '../../lib/explainers';
 import GameChips from '../games/GameChips.astro';
 import { gamesOf } from '../../lib/games';
 
-interface Props { selected?: number; syncUrl?: boolean; headline: string; intro: string; titleAsH1?: boolean }
-const { selected = 0, syncUrl = false, headline, intro, titleAsH1 = false } = Astro.props;
+interface Props { selected?: number; syncUrl?: boolean; headline: string; intro: string; titleAsH1?: boolean; headingLevel?: 1 | 2 | 3 }
+const { selected = 0, syncUrl = false, headline, intro, titleAsH1 = false, headingLevel = 1 } = Astro.props;
+// The headline takes the level it is given (the page's h1 on /gtaverse pages, lower where the timeline is embedded);
+// the moment titles and their "more" headings follow one and two levels below it.
+const Headline = `h${headingLevel}` as 'h1' | 'h2' | 'h3';
+const MomentTitle = `h${headingLevel + 1}` as 'h2' | 'h3' | 'h4';
+const MoreTitle = `h${headingLevel + 2}` as 'h3' | 'h4' | 'h5';
 const { width, yearX, momentX } = trackLayout();
 const conf: Record<string, { variant: 'verified' | 'outline' | 'muted' | 'debunked'; icon: IconName }> = {
   canon: { variant: 'verified', icon: 'check' },
@@ -39,7 +46,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
 ---
 <section class="lore" data-lore data-selected={selected} data-sync-url={syncUrl ? 'true' : undefined}>
   <header class="lore__head container">
-    <h1 class="lore__headline">{headline}{titleAsH1 && <span class="sr-only" data-headline-title>: {moments[selected].title}</span>}</h1>
+    <Headline class="lore__headline">{headline}{titleAsH1 && <span class="sr-only" data-headline-title>: {moments[selected].title}</span>}</Headline>
     <div class="lore__side">
       <p class="lore__intro">{intro}</p>
       <slot name="head" />
@@ -101,9 +108,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
         return (
           <article class="moment" data-panel={m.index} data-slug={m.slug} data-title={m.title} data-year={m.year} data-first={m.firstGame} data-games={gamesOf(m.games).map((g) => g.id).join(' ')} hidden={m.index !== selected} aria-labelledby={`moment-${m.slug}`}>
             <p class="moment__date mono-caps">{m.year} · {m.firstGame}</p>
-            <h2 class="moment__title" id={`moment-${m.slug}`}>
+            <MomentTitle class="moment__title" id={`moment-${m.slug}`}>
               {m.title}
-            </h2>
+            </MomentTitle>
             <p class="moment__desc">{m.summary}</p>
             <div class="moment__badges">
               <Badge variant={c.variant} icon={c.icon} title={`Confidence: ${confidenceLabel[m.confidence] ?? m.confidence}`}>{confidenceLabel[m.confidence] ?? m.confidence}</Badge>
@@ -131,10 +138,10 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
             )}
 
             <div class="moment__more">
-              <GameChips games={gamesOf(m.games)} label="Also in" level="h3" class="more" />
+              <GameChips games={gamesOf(m.games)} label="Also in" level={MoreTitle} class="more" />
               {m.finds.length > 0 && (
                 <section class="more">
-                  <h3 class="more__title label-caps">See it in GTA VI</h3>
+                  <MoreTitle class="more__title label-caps">See it in GTA VI</MoreTitle>
                   <ul class="more__finds">
                     {m.finds.map((f) => {
                       const img = cardImage(f);
@@ -144,7 +151,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
                 </section>
               )}
               <section class="more">
-                <h3 class="more__title label-caps">Sources</h3>
+                <MoreTitle class="more__title label-caps">Sources</MoreTitle>
                 <ul class="more__sources">
                   {m.sources.map((s) => <li><Chip href={s.url} touch target="_blank" rel="noopener" title={s.title ?? s.url}>{sourceName(s)}</Chip></li>)}
                 </ul>
@@ -159,7 +166,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
 
 <script>
   import { roll } from '../../scripts/motion/roll';
-  const ease = { out: 'cubic-bezier(0.23, 1, 0.32, 1)', exit: 'cubic-bezier(0.4, 0, 0.2, 1)', inOut: 'cubic-bezier(0.77, 0, 0.175, 1)' };
+  // The curves are the motion tokens (tokens.css), read once, so the script never keeps a second copy of a value.
+  const tokens = getComputedStyle(document.documentElement);
+  const ease = { out: tokens.getPropertyValue('--ease-out').trim(), exit: tokens.getPropertyValue('--ease-standard').trim(), inOut: tokens.getPropertyValue('--ease-in-out').trim() };
   document.querySelectorAll<HTMLElement>('[data-lore]').forEach((root) => {
     const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
     const dots = [...root.querySelectorAll<HTMLButtonElement>('.band__dot')];
@@ -434,10 +443,10 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
     height: 22px;
     display: grid;
     place-items: center;
-    border: var(--border-w) solid var(--accent);
+    border: var(--border-w) solid var(--accent-ink);
     pointer-events: none;
   }
-  .band__marker span { width: 4px; height: 4px; border-radius: var(--radius-full); background: var(--accent); }
+  .band__marker span { width: 4px; height: 4px; border-radius: var(--radius-full); background: var(--accent-ink); }
   .band__arrows { position: absolute; z-index: 1; left: var(--page-pad); top: 8px; display: flex; gap: var(--space-2); }
   .band__arrows :global(.band__arrow) { width: 52px; }
   .band__arrows :global(.band__arrow--next) { border-right-color: var(--text-1); border-bottom-color: var(--text-1); }
@@ -514,7 +523,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
 
   /* ---------- Phone (Queue) ---------- */
   @media (max-width: 767px) {
-    .lore__head { padding-top: calc(var(--island-top) + var(--island-h) + var(--space-4)); }
+    /* One column: the headline and intro are visually hidden and out of flow here, so the side column with the
+       "head" slot takes the full width instead of the 0 px a second, fixed column would leave it. */
+    .lore__head { grid-template-columns: minmax(0, 1fr); padding-top: calc(var(--island-top) + var(--island-h) + var(--space-4)); }
     .lore__headline, .lore__intro { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .band { display: none; }
     .sheet {

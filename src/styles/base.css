@@ -48,7 +48,7 @@ button, [role='button'], [role='tab'] { user-select: none; -webkit-user-select: 
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
 }
 

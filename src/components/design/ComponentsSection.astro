@@ -87,6 +87,14 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
         <Button size="xl" variant="quiet" icon="close" iconOnly label="Close" />
       </div>
     </div>
+    <div class="ds-cell"><span class="ds-cap">Stack: the icon above the label, for equal-width actions (the map’s phone sheet)</span>
+      <div class="ds-row ds-stack">
+        <Button variant="primary" icon="arrow-right" stack>Find page</Button>
+        <Button variant="secondary" icon="pin" stack>Map</Button>
+        <Button variant="secondary" icon="check" stack>Found</Button>
+        <Button variant="secondary" icon="share" stack>Share</Button>
+      </div>
+    </div>
     <div class="ds-cell"><span class="ds-cap">States: link with an end icon, disabled, pressed (hold it)</span>
       <div class="ds-row">
         <Button href="/map" variant="secondary" iconEnd="arrow-right">Link to the map</Button>
@@ -179,7 +187,7 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
     </Specimen>
   )}
 
-  <Specimen id="c-timeline" name="Timeline" file="src/components/lore/Timeline.astro" props={/interface Props \{/} stage={false} notes={false} note="The GTAverse timeline, one selected moment at a time: the Grok hairline with year ticks on desktop, the Queue ruler sheet on the phone. Arrow keys, Home and End move without animating; a moment swap never slides two views at once (see Motion). It sits in a frame (/design/timeline) because its headline is always the page’s h1.">
+  <Specimen id="c-timeline" name="Timeline" file="src/components/lore/Timeline.astro" props={/interface Props \{/} stage={false} notes={false} note="The GTAverse timeline, one selected moment at a time: the Grok hairline with year ticks on desktop, the Queue ruler sheet on the phone. Arrow keys, Home and End move without animating; a moment swap never slides two views at once (see Motion). It sits in a frame (/design/timeline) because its phone layout follows the width of the window; embedded there its headline is an h2 (headingLevel), while /gtaverse pages keep the default h1.">
     <iframe class="ds-frame ds-bleed" src="/design/timeline" title="The GTAverse timeline" loading="lazy" data-follow height="900"></iframe>
   </Specimen>
 
@@ -197,7 +205,7 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
     </div>
   </Specimen>
 
-  <Specimen id="c-map" name="Map list row, drawer and toast" file="src/components/map/" stage={false} notes={false} note="The map’s React island renders the site’s components through src/components/map/ui.tsx (same classes, same look). The drawer content is the real DrawerContent; the drawer frame, the list row and the toast are drawn with map.css’s own classes, because MapApp.tsx keeps them inside itself. They sit in a frame (/design/map-parts) because map.css’s global class names would restyle the timeline above.">
+  <Specimen id="c-map" name="Map list row, drawer and toast" file="src/components/map/" stage={false} notes={false} note="The map’s React island renders the site’s components through src/components/map/ui.tsx (same classes, same look). The drawer content is the real DrawerContent; the drawer frame, the list row and the toast are drawn with map.css’s own classes, because MapApp.tsx keeps them inside itself. They sit in a frame (/design/map-parts), so the map’s stylesheet loads only there; every map.css rule is scoped under .vf-map, so its class names (.sheet, .tabs, .media) restyle nothing outside the map.">
     <iframe class="ds-frame" src="/design/map-parts" title="The map list row, drawer and toast" loading="lazy" data-follow height="900"></iframe>
   </Specimen>
 
@@ -257,6 +265,7 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
   .ds-comp[data-data='demo'] :global([data-case='worst']), .ds-comp[data-data='worst'] :global([data-case='demo']) { display: none; }
   .ds-art { padding: var(--space-6); border-radius: var(--radius-m); background: var(--glow-hero), var(--surface-1); }
   .ds-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+  .ds-stack { display: grid; grid-template-columns: repeat(4, minmax(0, 96px)); }
   .ds-clips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8) var(--space-5); }
   .ds-clips > .ds-cell { align-items: stretch; }
   .ds-phone { display: flex; justify-content: center; padding: var(--space-6); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--surface-1); }
