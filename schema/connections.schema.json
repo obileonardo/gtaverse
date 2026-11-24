@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/connections.schema.json",
+  "$id": "https://thevicefiles.com/schema/connections.schema.json",
   "title": "Rockstar connections",
   "description": "content/connections.json: lore items linking GTA VI to the wider Rockstar universe.",
   "type": "object",

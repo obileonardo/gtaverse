@@ -7,8 +7,8 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | # | Decision | Why |
 |---|---|---|
 | 1 | The site is called **The Vice Files**. | A brand without "GTA" in it is easier to defend and does not read as an official product (research/legal-fan-site.md 3i). |
-| 2 | Temporary domain **rockstarworld.elvisobi.com**, DNS on Cloudflare. Superseded as the main domain by decision 15. | A personal subdomain is not a UDRP target; it can move later. |
-| 3 | The repository keeps the name **gtaverse** for now. | Renaming is cheap later; nothing depends on it yet. |
+| 2 | Temporary domain on a personal subdomain, DNS on Cloudflare. Superseded by decisions 15 and OS6. | A personal subdomain is not a UDRP target; it can move later. |
+| 3 | The repository keeps the name **gtaverse** for now. Superseded: renamed to **thevicefiles** on 2026-11-23. | Renaming is cheap later; nothing depends on it yet. |
 | 4 | **Non-commercial**: no ads, no paid tiers. | Keeps the site inside Rockstar's written fan-site tolerance ("non-commercial uses", research/legal-fan-site.md 2.1). |
 | 5 | **Official Rockstar media allowed inside content with a credit line**: the official Leonida map download, key art, screenshots. | Matches what every tolerated fan map does, and Rockstar offers these as downloads. |
 | 6 | **Not allowed as our branding**: the GTA VI logo, the Rockstar logo, the GTAArtDeco font. | Trademark and font-copyright risk; suggests endorsement. |
@@ -25,7 +25,7 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 
 | # | Decision | Why |
 |---|---|---|
-| 15 | **Domain: thevicefiles.com**, bought by the owner on Namecheap, DNS on Cloudflare (Free plan). rockstarworld.elvisobi.com stays as a second address for now. | A dedicated domain matches the brand and keeps the site in its own Cloudflare zone, apart from the owner's other sites. |
+| 15 | **Domain: thevicefiles.com**, bought by the owner on Namecheap, DNS on Cloudflare (Free plan). The only domain named in the repo (decision OS6). | A dedicated domain matches the brand and keeps the site in its own Cloudflare zone, apart from the owner's other sites. |
 | 16 | **Branching: `staging` is ground truth.** Branch from `staging`; pull requests target `staging`. `main` moves only on the owner's go. Never branch from or merge `origin/main`. | One integration branch the owner controls; `main` stays the released state. |
 | 17 | **Theme: dark first, light available.** | Owner choice. |
 | 18 | **Icons: GTA-native-style, near-identical original lookalikes** for this project. This overrides the owner's Capsa icon default for this project only. Never copy Rockstar files. | The owner wants the game's visual language; original drawings keep it legal (research/legal-fan-site.md 3e). |
@@ -116,3 +116,15 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | C5 | Numbers were read by eye from crops of the source maps. Shop numbers are small and blurred at the 1,080 px the repost offers: 91 of 234 are marked as hard to read and 5 as unreadable (number `null`, "Shop (number unreadable)"). | Never guess silently; the card says when a number may be wrong. |
 | C6 | Collectible layers are off by default and are turned on in the basemap menu (both sizes) and the desktop Legend; the choice is remembered on the device (`vf-map-view`). Pins are small quiet discs under the find pins, numbered once zoomed in, never grouped; items sharing one spot sit on a small ring. Their data loads from `/collectibles.json` only when a layer is first turned on. | Collectibles must not crowd the finds, and 892 pins should cost nothing for visitors who never turn them on. |
 | C7 | While any collectible layer is on, the map credit gains a second line, "Collectible locations: Game Checklists", and each collectible card ends with "Location: Game Checklists" linking to the post the map came from. Their own site or original post was not found on 24 Nov 2026, so the link is the repost. | Credit wherever their work shows. |
+## 2026-11-24: open-source readiness (owner decisions, Stage A answers)
+
+| # | Decision | Why |
+|---|---|---|
+| OS1 | **Licences:** MIT for code (`LICENSE`); CC BY-NC 4.0 for original content: `content/`, `research/`, the prose in `docs/` and the explainers (`LICENSE-CONTENT`). Copyright holder: "The Vice Files contributors". Game names, images, logos and trademarks belong to Rockstar Games and Take-Two and are not licensed by this repo. | Code stays freely reusable; NC keeps the guide inside Rockstar's non-commercial tolerance and stops ad-funded sites republishing it. |
+| OS2 | **Inbound terms:** contributions are accepted under the same licences (MIT for code, CC BY-NC 4.0 for content). No DCO, no CLA. | Simple for contributors; matches the outbound licences. |
+| OS3 | **Personal data:** removed from the current files only; git history is left as it is (Stage A option H1). | Low sensitivity, no secret involved; a rewrite would break every clone and open branch. |
+| OS4 | **Code of Conduct:** Contributor Covenant 3.0 (the current version), reports to conduct@thevicefiles.com. | The usual standard; a project address, not a personal one. |
+| OS5 | **Takedown and credit requests are answered within 48 hours**, everywhere the project states a time. | One promise the maintainers can keep. |
+| OS6 | **thevicefiles.com is the only domain in the repo** (docs and schema `$id`s); repo links point to github.com/obileonardo/thevicefiles. | One address; no personal domain in public files. |
+| OS7 | **No AI analysis of Rockstar images**, including reading colours from official art. Values sampled from Rockstar's share image were removed from `research/gta6-design-language.md`; values read from the site's CSS and cited fan measurements stay. | Rockstar ToS 2.3 and CONTENT-GUIDE rule 5, applied to analysis as well as generation. |
+| OS8 | **CI and Dependabot:** every pull request and push to `staging` and `main` runs a frozen install, `pnpm validate`, `pnpm build` and an asset guard; Dependabot opens weekly npm and Actions updates into `staging`. Repository settings are prepared in `docs/release/STAGE-B-SETTINGS.md` and applied only after the owner approves. | The validator gate cannot be skipped, third-party assets cannot slip in, and settings changes stay the owner's call. |

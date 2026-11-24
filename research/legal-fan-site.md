@@ -67,7 +67,7 @@ And: "This is not meant to be an exhaustive statement of Take-Two's policy, and 
 
 ### 2.2 Rockstar Games Terms of Service
 
-Source: https://www.rockstargames.com/legal ("Last Updated: February 28, 2025", verified). The owner, as a player with a Rockstar account, is bound by these.
+Source: https://www.rockstargames.com/legal ("Last Updated: February 28, 2025", verified). Any maintainer who plays with a Rockstar account is bound by these.
 
 > 2.1: Rockstar owns "all ... designs, graphics, artwork, illustrations, photographs, ... titles, themes, objects, characters, names, dialogue, locations, stories, plot ... and (2) trademarks, logos, trade names, trade dress, service marks, and trade identities".
 >
@@ -182,7 +182,7 @@ Scale: **allowed** / **allowed with conditions** / **risky** / **not allowed**.
 - "GTA" and "Grand Theft Auto" are Take-Two trademarks. Nominative use (referring to the game to describe what the site covers) is lawful in the US when you use only as much of the mark as needed and do not suggest sponsorship (the New Kids on the Block test; applied to domain names in Toyota v. Tabari, 9th Cir. 2010). Inference from settled doctrine; no fetched source.
 - A brand that fuses the mark ("GTA" + "verse") reads like an official product line and is harder to defend than "a fan guide to GTA VI".
 - Domains: UDRP panels have repeatedly transferred GTA-based domains to Take-Two (example: gta5betagiveaway.net, WIPO D2013-0785, https://www.wipo.int/amc/en/domains/decisions/text/2013/d2013-0785.html, a phishing case). WIPO's Overview 3.0 section 2.7 says a fan site needs to be "active, genuinely noncommercial, and clearly distinct from any official complainant site", and that mark-plus-term names (like `<celebrity-fan.tld>`) can be fair if non-commercial, with "a limited degree of incidental commercial activity" sometimes tolerated (https://www.wipo.int/amc/en/domains/search/overview3.0/, verified).
-- **The personal subdomain helps:** UDRP covers registered domain names, so a subdomain of the owner's personal domain is not a UDRP target (inference). A trademark complaint to the host is still possible.
+- **A subdomain is outside UDRP:** UDRP covers registered domain names, so a subdomain of an unrelated domain is not a UDRP target (inference). A trademark complaint to the host is still possible.
 - **Name collision (verified 23 Nov 2026):** `gtaverse.com` is parked for sale at US$300,000; `gtaverse.net` is a Turkish GTA forum titled "GTAVerse"; a direct competitor is called "Leonida Verse" (leonidaverse.com). The "-verse" naming is crowded.
 - Recommendation: a brand name without "GTA", with a descriptor such as "an unofficial guide to Grand Theft Auto VI and the Rockstar universe". If the owner keeps "GTAverse", never stylise "GTA" like the official logo and always pair it with "unofficial fan site".
 
@@ -236,11 +236,11 @@ Inference: the community norm is official imagery used in content, credited, wit
 
 ## 5. Jurisdiction notes
 
-- **Owner in Nigeria.** Nigeria's Copyright Act 2022 has a fair-dealing exception (section 20, open-ended "such as" purposes) and a notice-and-takedown regime for online service providers (Part VII). Sources: https://www.mondaq.com/nigeria/copyright/1327992/intellectual-property-law-in-nigeria-the-copyright-act-2022 and the official text at https://www.copyright.gov.ng/CopyrightAct/CopyrightAct2023FinalPublication1.pdf (not opened; section numbers beyond 20 unverified).
+- **Maintainers' home jurisdictions.** The copyright law where each maintainer lives may add its own fair-dealing exception or notice-and-takedown rules. Check it before relying on it; it does not replace the US analysis below.
 - **Hosted on Cloudflare (US).** US copyright law and the DMCA notice system (17 U.S.C. 512) apply in practice: Take-Two's notices go to Cloudflare, which acts on content it hosts (Pages, Workers, R2) and has a repeat-infringer policy. Treat US fair use as the operative test.
 - **ToS forum.** Rockstar's ToS are governed by New York law, and copyright and trademark claims are carved out of arbitration (17.5(9)), so Take-Two could sue in a US court. Realistically, against a small non-commercial fan site, the first step is a DMCA notice, not a lawsuit (inference from the precedents above).
-- **Account risk.** ToS section 6 lets Rockstar take "Adverse Action" (including account suspension) for breaches. Unlikely for a fan site, but it is the owner's Rockstar account on the line, which is one more reason to stay inside the posting policy.
-- **Personal subdomain.** A takedown aimed at GTAverse could affect the hosting account behind the owner's personal domain. Inference: host GTAverse as its own Cloudflare project (and ideally its own zone) so any action stays contained.
+- **Account risk.** ToS section 6 lets Rockstar take "Adverse Action" (including account suspension) for breaches. Unlikely for a fan site, but it is the maintainers' Rockstar accounts on the line, which is one more reason to stay inside the posting policy.
+- **Shared hosting accounts.** A takedown aimed at GTAverse could affect other sites in the same hosting account. Inference: host GTAverse as its own Cloudflare project (and ideally its own zone) so any action stays contained.
 
 ---
 
@@ -279,11 +279,11 @@ Spoiler notice on story-related pages: "Story spoilers below. Hidden by default.
 
 ## 8. Takedown-response process (recommended)
 
-1. **Publish a contact route** (email form on a dedicated page) for copyright and trademark concerns. Respond within 24 hours.
+1. **Publish a contact route** (email form on a dedicated page) for copyright and trademark concerns. Respond within 48 hours.
 2. **On any notice from Take-Two, Rockstar or their agents:** remove or disable the named item at once, without arguing first. Keep a private log: date, sender, item, URL, action taken.
 3. **Do not file counter-notices against Take-Two** unless a lawyer advises it. A counter-notice invites a lawsuit in the US.
 4. **Check for a pattern.** If the notice targets a category (e.g. official map tiles), switch that category to the original fallback (Option 2 layer) site-wide.
-5. **Creator requests** (a YouTuber wants their clip removed or wants different credit): honour within 24 hours, no questions.
+5. **Creator requests** (a YouTuber wants their clip removed or wants different credit): honour within 48 hours, no questions.
 6. **Impersonation or name complaints** (e.g. about "GTA" in the name): have a rename plan ready; keep the brand in one config so a rename is a quick change.
 7. **Cloudflare notices:** reply through Cloudflare's process; keep GTAverse on its own project or zone so action does not touch other sites.
 8. **Pre-emptive hygiene:** a "no leaks" rule for contributors; source labels on every pin (in-game verified, official media, community report); never accept submissions from leak material.

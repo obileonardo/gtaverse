@@ -103,7 +103,7 @@ When a rumor gets a second independent source, upgrade it and publish it.
 - Credit the first finder by handle, with a link, whenever a source names them.
 - Credit every creator whose clip or article we use, in the find's `sources`.
 - If the press credits someone without a link, write their name in `notes` and leave `url` null. Never guess a profile URL.
-- If a creator asks us to remove their clip or change their credit, we do it within 24 hours, no questions (see [LEGAL.md](LEGAL.md)).
+- If a creator asks us to remove their clip or change their credit, we do it within 48 hours, no questions (see [LEGAL.md](LEGAL.md)).
 - On the site every discovery card shows "Found by [creator]" with a link, and "Image (c) Rockstar Games" where an official image is used.
 
 ## Spoiler rules

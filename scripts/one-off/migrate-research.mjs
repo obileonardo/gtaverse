@@ -287,7 +287,7 @@ const outConnections = {
 
 write('content/finds.json', outFinds);
 write('content/connections.json', outConnections);
-// Registry entries from research/gta6-sources.md and research/x-bookmarks-gta-vi-build.md.
+// Registry entries from research/gta6-sources.md and the launch-week lead list (public X posts).
 // Merged over the find-derived entries: static url, role, status and notes win when present.
 const S = (id, name, handle, platform, role, url, status, notes) => ({ id, name, handle, platform, role, url, status, notes });
 const STATIC = [
@@ -352,7 +352,7 @@ write('content/sources.json', outSources);
 
 // ---------------------------------------------------------------- regions
 // From research/gta6-world.md sections 3 to 5 and the official map labels in
-// research/x-bookmarks-gta-vi-build.md. Places named only in finds carry
+// a public X post (MAPX). Places named only in finds carry
 // evidence_finds instead of a direct URL: their sources are those finds' sources.
 const WIKI = { url: 'https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI', title: 'Grand Theft Auto VI (Wikipedia)' };
 const LEON = { url: 'https://gta6info.com/wiki/Leonida', title: 'Leonida (GTA6Info wiki)' };
@@ -363,7 +363,7 @@ const MAPX = { url: 'https://x.com/Sksj002/status/2124675198209364423', title: '
 const R = (id, name, type, parent, sources, extra = {}) => ({ id, name, type, parent, vibe: [], vibe_note: null, real_world_analogue: null, sources, research_ref: 'research/gta6-world.md', notes: null, ...extra });
 const W3 = 'research/gta6-world.md section 3';
 const W4 = 'research/gta6-world.md section 4';
-const BM = 'research/x-bookmarks-gta-vi-build.md';
+const BM = 'sources: official map labels in a public X post';
 const REGIONS = [
   R('leonida', 'Leonida', 'state', null, [WIKI, LEON], { real_world_analogue: 'Florida', research_ref: W3 }),
   ...[['vice-dale-county', 'Vice-Dale County'], ['mariana-county', 'Mariana County'], ['kelly-county', 'Kelly County'], ['leonard-county', 'Leonard County'], ['lummox-county', 'Lummox County']]

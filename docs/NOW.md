@@ -1,13 +1,12 @@
 # Now
 
-Status as of 2026-11-23. Update this file whenever something moves between states.
+Status as of 2026-11-24. Update this file whenever something moves between states.
 
 ## Waiting on owner
-- Review the content-foundations pull request (#4 into `staging`, closes issue #1): content base, schemas, validator, docs, GitHub templates.
-- Review the map-base pull request (into `staging`, closes issue #6): tile pipeline, coordinate system, pin fields, harness. See [MAP.md](MAP.md).
+- Review the open-source readiness pull request (Stage B, issue #19): licences, contributor files, CI, Dependabot, and the GitHub settings to apply from [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md).
 - **Map labels and first-pass pins are blocked on a rule conflict.** The map agent was asked to read place labels by opening the map image, but LEGAL.md and CONTENT-GUIDE rule 5 forbid feeding the map into AI tools. It did not view the image, so `content/map.json` `labels` is empty and no find has a pin. Choose: a person (Chime) records labels with the harness picker, or the owner explicitly allows the agent to read the map.
 - Confirm or change the slice decisions S1 to S13 in [DECISIONS.md](DECISIONS.md).
-- Finish forwarding for takedown@thevicefiles.com.
+- Send a test message to takedown@thevicefiles.com and conduct@thevicefiles.com and record that both arrive.
 - Answer the open questions below.
 
 ## Chime's first queue (research conflicts)
@@ -45,27 +44,29 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 25. Vice City districts La Perle, Tequesta, Tisha-Wocka and Peacock Bay: find a source URL before adding them to regions.
 
 ## Asked, not built
-- Visual design and site build (dark theme first, light available).
 - Map labels in `content/map.json` (blocked, see "Waiting on owner").
 - Map pins on the official Leonida map in pixel coordinates, from clips, cross-checked against Game Checklists (Chime). The fields, validator rules and workflow exist ([MAP.md](MAP.md)); 0 of 85 finds are pinned.
 - Collectible layer data for the 12 map layers: only categories and reference totals exist so far.
 - "Missables before Tourist Trap" spoiler-gated checklist guide.
 - Daily update pipeline from research/gta6-sources.md section 9.
-- Follow-up on the leads in research/x-bookmarks-gta-vi-build.md.
-- Deploy to thevicefiles.com (and rockstarworld.elvisobi.com).
+- Follow-up on leads from public community posts (X, GTAForums, YouTube).
+- Deploy the site to thevicefiles.com (the domain serves the PRD page today).
 
 ## Built, not pushed
 - Nothing.
 
 ## Pushed, not live
-- Branch `content-foundations`, PR #4 into `staging`. Nothing is deployed; there is no site yet.
-- Branch `map-base` into `staging`: official map tiles build locally (970 WebP tiles, zoom 0 to 5, 5.66 MiB, inside Cloudflare limits). Tiles are git-ignored and built from Rockstar's download, never committed.
+- `staging` has the content base, schemas and validator (#4), the map tile pipeline (#8), the Astro site (#7), the design system and home (#10), the map screen (#15) and the find, explainer and GTAverse pages (#16). The site is not deployed yet.
+- Official map tiles build locally (970 WebP tiles, zoom 0 to 5, 5.66 MiB, inside Cloudflare limits). Tiles are git-ignored and built from Rockstar's download, never committed.
 
 ## Resolved
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).
 - Branching: `staging` is ground truth; branch from it and target it (decision 16).
 - Takedown contact: takedown@thevicefiles.com (decision 20).
 - Domain: thevicefiles.com (decision 15).
+- Licences: MIT for code, CC BY-NC 4.0 for original content, holder "The Vice Files contributors" (decision OS1).
+- Personal data: removed from the current files; history is left as it is (decision OS3).
+- Takedown and credit requests: answered within 48 hours (decision OS5).
 
 ## Open questions
 1. **Display font.** Which licensed display face replaces GTAArtDeco?

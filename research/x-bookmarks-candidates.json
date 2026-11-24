@@ -1,0 +1,350 @@
+[
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "Kent Paul and the 1986 Malibu Club trip ('Life Is Passing Me By')",
+    "category": "rockstar-crossover",
+    "region": [
+      "Key Lento",
+      "Hamlet",
+      "Leonida"
+    ],
+    "location_description": "Starts at Donnie's Radio Tower in Key Lento (breaker switch and button turn on a 1986 Malibu Club ad on an old TV). Then 12 LPL substations around Leonida, whose graffiti spells LIFE IS PASSING ME BY; press the W, A, D and dot stickers in the order D, D, dot, A, dot, A, A, A, dot, W, D, W. An SMS reads 'U-235 REACTOR2 19-06': go to Reactor 2 at the T.H. Power Station east of Hamlet between 19:00 and 06:00. No fast travel or taxis during the chain, or it resets.",
+    "sources": [
+      {
+        "type": "article",
+        "url": "https://gtaforums.com/topic/1008037-gta-vi-easter-eggs-references/page/3/",
+        "creator": "pedro alduare (GTAForums)",
+        "published": "2026-11-22"
+      },
+      {
+        "type": "youtube",
+        "url": "https://www.youtube.com/watch?v=HYvJfNT4wDc",
+        "creator": "pedro alduare",
+        "published": null
+      },
+      {
+        "type": "x",
+        "url": "https://x.com/MemeioYT/status/2124773456231444900",
+        "creator": "@MemeioYT",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Forum post gives the full chain: the substation letters spell Vice City's speed-up-time cheat, the button order follows that PS2 cheat, and the reactor triggers a playable PS2-style Malibu Club scene with retro Jason and Kent Paul and the old square radar; afterwards Kent Paul phones the player. Memeio's video (9.3M views) shows it independently a day later. Replies confirm the first tower and lever are in Key Lento and that a call follows.",
+    "verification_suggestion": "multi-source. first_finder: pedro alduare (GTAForums, earliest public post found, 2026-11-22 21:09 UTC; url null unless a profile link is confirmed). Memeio claims he found it first but posted later and one reply says it was taken from the forum: note the dispute in notes. Link related_connections kent-paul-maccer. Replies say Kent Paul is voiced by his original actor: unconfirmed, leave out or write 'fans say'. The forum's substation map is an image hosted off-site: do not copy. GTAForums posts are typed 'article' (the schema has no forum type).",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "Free pink Growler behind a keypad garage (code 92665)",
+    "category": "vehicle",
+    "region": [
+      "Vice City"
+    ],
+    "location_description": "Chapter 3. In the apartment bedroom, flip the dog drawing on the vanity for '15'; the dog photo by the flamingo wall says 'Muffins'. Laptop password: Muffins, Queen, 15. An unknown message gives the code 92665. The garage keypad is by the pink bow wall in southern La Perle, next to Auntie's Place (another post says across from the 'Twa Ponya' tattoo shop).",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/dalvinthetruth/status/2124625767321469335",
+        "creator": "@dalvinthetruth",
+        "published": "2026-11-22"
+      },
+      {
+        "type": "x",
+        "url": "https://x.com/GTA6_Stars/status/2124659481011208496",
+        "creator": "@GTA6_Stars",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Viral post (5.4M views) gives the code and says it works with Lucia or Jason; replies stress the laptop must be unlocked first. GTA6_Stars posts the full step list with a video: the reward is a pink Growler you can register at Pay 'n' Spray or sell for $14,750. A reply mentions a second car in a nearby Scoop storage unit.",
+    "verification_suggestion": "single-source until a reviewer confirms the GTA6_Stars video shows it in their own game, then multi-source. 'La Perle' is not in content/regions.json: add it only with a source. chapter_gate: Chapter 3. Do not include the money and wall-clip glitches posted in the same thread.",
+    "spoiler": true,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "The woman from Trailer 1 as a cameo NPC",
+    "category": "npc",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Unknown. The clip does not name the place.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/GermanStrands/status/2124319362290950461",
+        "creator": "@GermanStrands",
+        "published": "2026-11-22"
+      }
+    ],
+    "evidence": "Clip (1.8M views) shows the beach woman from the first trailer, whom fans long mistook for Lucia, as an NPC. Several replies say she has unique dialogue and Lucia tells her she looks familiar.",
+    "verification_suggestion": "single-source. Replies claim she is played by Lucia's actress; Rockstar has not confirmed this, so write 'fans say' or leave it out. Needs a location from a second clip.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "Killer clown in an elevator",
+    "category": "paranormal",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Unknown building. A red balloon in the elevator is the tell.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/xGarbett/status/2124710910283657418",
+        "creator": "@xGarbett",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Clip (2.6M views) warns that using a certain elevator spawns a killer clown. Replies point out the red balloon, a nod to Stephen King's IT. No location is given in the post or replies.",
+    "verification_suggestion": "rumor (draft) until the building is named or a second creator shows it; then single-source or multi-source.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "The NPC who always wins a fist fight",
+    "category": "npc",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Random encounter; no fixed place reported.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/Yasshbhardwajj/status/2124564554051133575",
+        "creator": "@Yasshbhardwajj",
+        "published": "2026-11-22"
+      },
+      {
+        "type": "article",
+        "url": "https://gtaforums.com/topic/1008037-gta-vi-easter-eggs-references/page/3/",
+        "creator": "GhettoJesus (GTAForums)",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Clip (6M views): a pedestrian warns the player, dodges every punch, disarms him twice and taunts him. A GTAForums user separately reports two 'super NPCs' met at random, one of whom always dodges your punches and taunts you.",
+    "verification_suggestion": "single-source (the forum post describes it but shows nothing). Check whether the forum's second 'super NPC' is the existing immortal-sniper-npc; if so, cross-link in notes.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "NPC who sees the player through the screen",
+    "category": "npc",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Unknown.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/FlexZCoD/status/2124644405038432328",
+        "creator": "@FlexZCoD",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Clip (3.3M views): an NPC reacts in fright as if she can see the player controlling Jason, a fourth-wall gag. Replies tie it to the simulation-theory board in the Belville house.",
+    "verification_suggestion": "single-source. Needs a location. Mention the Belville simulation house only as a thematic link unless a source ties them.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "Retirement-home nudist resort",
+    "category": "secret-location",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Unknown. Players describe a multi-storey building with a top patio and security.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/wordofshekhawat/status/2124562906151080329",
+        "creator": "@wordofshekhawat",
+        "published": "2026-11-22"
+      }
+    ],
+    "evidence": "Clip (4M views) visits an adults-only spot. Replies describe naked older residents, a top patio and security; taking photos or drawing a weapon brings the police, and one player was mobbed by residents.",
+    "verification_suggestion": "rumor (draft) until the place is named; the clip is mostly driving. mature: true.",
+    "spoiler": false,
+    "mature": true
+  },
+  {
+    "type": "new-find",
+    "find_id": null,
+    "title": "Bug compilation from launch day",
+    "category": "glitch",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Various.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/ClipOverdose/status/2123067122901201286",
+        "creator": "@ClipOverdose",
+        "published": "2026-11-18"
+      },
+      {
+        "type": "official",
+        "url": "https://support.rockstargames.com/articles/sN5pEdFYZdlvijKXd6xpJ/grand-theft-auto-vi-launch-updates-ps5-xbox-series-x-or-s",
+        "creator": "Rockstar Games Support",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Viral compilation (5.1M views) of bugs seen in the first hours: players stuck in a cage, a plane hitting a building without exploding, NPCs walking into walls. Rockstar's 23 Nov update fixed weather not changing, autosave, phone calls not triggering, being unable to lose a wanted level, the gym deadlift bar and partners not handing over bags.",
+    "verification_suggestion": "Better as sources on the existing boat-stuck-on-bridge-glitch entry or a launch-bugs explainer than a new find. The compilation re-uploads other people's clips without credit: do not use it as the clip. Use the Rockstar page to mark fixed bugs as patched.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "add-source",
+    "find_id": "belville-simulation-house",
+    "title": "The 2021 'San Andreas photo' house and its simulation-theory garage",
+    "category": "secret-location",
+    "region": [
+      "Belville"
+    ],
+    "location_description": "Belville, Leonard County (unchanged).",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/IGN/status/2123966099104411914",
+        "creator": "@IGN",
+        "published": "2026-11-21"
+      }
+    ],
+    "evidence": "IGN video (2.6M views) on the house that revealed the setting five years ago hiding another secret; replies describe the NPC's conspiracy board about not being able to leave Leonida.",
+    "verification_suggestion": "Already multi-source; add IGN as a further outlet source (registered outlet id: ign).",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "add-source",
+    "find_id": "day-release-party-door",
+    "title": "Day Release party door horror",
+    "category": "paranormal",
+    "region": [
+      "Leonida"
+    ],
+    "location_description": "Chapter 1 mission 'Day Release' (unchanged).",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/comicyehu/status/2124337590035997003",
+        "creator": "@comicyehu",
+        "published": "2026-11-22"
+      }
+    ],
+    "evidence": "Player post (4.8M views) shares what they found behind the party door. Replies place it at the Chapter 1 party (the gold dress choice, the drug offered by Mattia), call it a satanic ritual and say they checked every room.",
+    "verification_suggestion": "With this second, independent player source the find can move from single-source to multi-source once a reviewer confirms the image matches. The post is an image (Rockstar imagery): do not analyse it with AI. spoiler stays true.",
+    "spoiler": true,
+    "mature": false
+  },
+  {
+    "type": "location-detail",
+    "find_id": "roadside-ghost-woman",
+    "title": "Roadside ghost woman on night roads",
+    "category": "paranormal",
+    "region": [
+      "Mount Kalaga National Park"
+    ],
+    "location_description": "A reply under the clip places one night-road encounter on Sassafras Road near Mount Kalaga National Park.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/xGarbett/status/2124549708861563372",
+        "creator": "@xGarbett",
+        "published": "2026-11-22"
+      },
+      {
+        "type": "x",
+        "url": "https://x.com/liftedtrucks21/status/2124634507969990732",
+        "creator": "@liftedtrucks21",
+        "published": "2026-11-22"
+      }
+    ],
+    "evidence": "xGarbett's clip (1.9M views) shows a random horror encounter while driving at night; the creator says the car stops and will not start. Asked where it was, a player answered Sassafras Road near Mount Kalaga National Park. Another player says they have seen four different versions.",
+    "verification_suggestion": "Confirm the clip shows the same apparition before linking (the post text does not describe it). If it matches, the find gains a video source and can leave rumor for single-source; add Sassafras Road to 'area' as a second reported spot alongside Emerald Springs.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "location-detail",
+    "find_id": "arthur-morgan-hat",
+    "title": "Arthur Morgan's hat at a yard sale",
+    "category": "rockstar-crossover",
+    "region": [
+      "Vice City"
+    ],
+    "location_description": "A reply says a thrift store in the same neighbourhood as the Growler garage (southern La Perle) sells 'Arthur's hat' for $5.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/kesike_8/status/2124915819306172454",
+        "creator": "@kesike_8",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Japanese-language reply with two images saying the hat can be bought for $5 at a nearby thrift store. Current entry places it at a Port Gellhorn yard sale from Chapter 2.",
+    "verification_suggestion": "Low confidence. Could be a second sale point or a different hat. A human should check in game; do not change the existing area until then.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "location-detail",
+    "find_id": null,
+    "title": "Meteorite spots missing from public collectible maps",
+    "category": "collectible",
+    "region": [
+      "Hyde Island",
+      "Little Hardin Island"
+    ],
+    "location_description": "Players report a meteorite on Hyde Island and one on the rocks on the north side of Little Hardin Island; one player says there are about 16 meteorites, not 11.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/Sksj002/status/2124675198209364423",
+        "creator": "@Sksj002 (reposting Game Checklists maps)",
+        "published": "2026-11-23"
+      }
+    ],
+    "evidence": "Replies under a post claiming '100% of collectibles discovered' dispute it: unmarked meteorites and cocaine flamingos. The maps themselves are Game Checklists' work.",
+    "verification_suggestion": "rumor. Use only to guide our own pin placement for the meteorites layer; never copy pins from the maps. Credit Game Checklists if their maps are used to cross-check.",
+    "spoiler": false,
+    "mature": false
+  },
+  {
+    "type": "location-detail",
+    "find_id": null,
+    "title": "Swimsuits on the second floor of Eris, Downtown",
+    "category": "shops",
+    "region": [
+      "Downtown",
+      "Capri"
+    ],
+    "location_description": "Second floor of the Eris store in downtown Vice City; the poster thinks similar swimsuits are sold in Capri stores.",
+    "sources": [
+      {
+        "type": "x",
+        "url": "https://x.com/usbdongle7/status/2123705360556892632",
+        "creator": "@usbdongle7",
+        "published": "2026-11-20"
+      }
+    ],
+    "evidence": "Asked where a viral outfit came from, the player named the store and floor.",
+    "verification_suggestion": "single-source, for the shops map layer only.",
+    "spoiler": false,
+    "mature": false
+  }
+]

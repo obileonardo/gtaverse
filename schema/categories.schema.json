@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/categories.schema.json",
+  "$id": "https://thevicefiles.com/schema/categories.schema.json",
   "title": "Categories",
   "description": "content/categories.json: find categories and collectible map layers. icon_key and color_token are placeholders resolved by the design system later; never hex values.",
   "type": "array",
