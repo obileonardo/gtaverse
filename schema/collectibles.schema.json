@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://rockstarworld.elvisobi.com/schema/collectibles.schema.json",
+  "$id": "https://thevicefiles.com/schema/collectibles.schema.json",
   "title": "Collectibles",
   "description": "content/collectibles.json: collectible locations transcribed from third-party maps under the owner's exception (docs/DECISIONS.md C1). Every item credits its source. Positions are pixels of the official map image (docs/MAP.md).",
   "type": "object",

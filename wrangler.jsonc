@@ -10,8 +10,7 @@
     "html_handling": "auto-trailing-slash"
   },
   "routes": [
-    { "pattern": "thevicefiles.com", "custom_domain": true },
-    { "pattern": "rockstarworld.elvisobi.com", "custom_domain": true }
+    { "pattern": "thevicefiles.com", "custom_domain": true }
   ],
   "workers_dev": false
 }
