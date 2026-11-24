@@ -27,7 +27,7 @@ What the game does (measured on 1080p frames):
 The five rules we took from it (the spec in five lines):
 1. A blip is a chunky dark silhouette on a light rounded-square plate with a dark keyline; live states use a round plate; stars and the player arrow have no plate, only the keyline.
 2. On the map the plate stands on a pointer whose tip is the exact spot.
-3. Plates are colour coded by layer, never by glyph colour: finds neutral, collectible layers amber, live states accent, verification by level.
+3. Plates are colour coded by layer, never by glyph colour: finds neutral, collectible layers coral, live states accent, verification by level.
 4. Detail is one to three cuts, at least 2 units wide for a hole and 1.75 for a line, because the glyph is drawn at 0.62 scale inside its plate.
 5. State changes the plate, not the glyph: selected turns the keyline accent, new and found add a corner badge, filtered out fades.
 
@@ -64,14 +64,14 @@ Colours are existing design tokens only; nothing new is introduced. Each blip co
 | Tone | Plate | Ink | Keyline | Glyphs |
 |---|---|---|---|---|
 | find | `--inverse-fill` | `--inverse-text` | `--bg` | the 12 find categories, single source |
-| layer | `--level-5` (amber) | `--inverse-text` | `--bg` | the 12 collectible layers |
+| collectible | `--blip-collectible` (GTA coral `#F76685`) | `--blip-collectible-ink` | `--blip-collectible-key` | the 12 collectible layers |
 | alert | `--accent` | `--on-accent` | `--bg` | heat, cops responding, suspect unknown |
 | verified | `--badge-verify-fill` | `--badge-verify-text` | `--bg` | multi-source |
 | muted | `--surface-3` | `--text-1` | `--bg` | rumour, debunked |
 | star | `--inverse-fill` | `--inverse-fill` | `--bg` | the wanted stars |
 | player, waypoint | none | `--inverse-fill`, `--accent` | `--bg` | locate, pin |
 
-The amber for collectible layers is a proposal from the existing level palette (the game uses gold for special places); the owner can swap it for another token in `TONES` in `gta.py`.
+Collectible-layer plates are GTA coral `#F76685` from the GTA VI sunset ramp (owner decision IC9, 24 Nov 2026), a named token in `src/styles/tokens.css` for both themes. Its glyph and keyline are navy `#0D0C1A` in both themes: the glyph is 6.6:1 on coral (AA), and the keyline stays navy instead of following the ground because coral on the cream light map is only 2.7:1; the navy edge is what separates the plate there. The hue never changes per theme.
 
 ### States
 

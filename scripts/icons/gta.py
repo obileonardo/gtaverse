@@ -35,7 +35,7 @@ HALO_SCALE = 0.8     # a plateless glyph, leaving room for its keyline
 # CSS variables cannot reach (canvas images, the 3D pin atlas).
 TONES = {
     "find": {"plate": ("--inverse-fill", "#f2f2f2"), "ink": ("--inverse-text", "#0d0c1a"), "key": ("--bg", "#0d0c1a")},
-    "layer": {"plate": ("--level-5", "#ffa948"), "ink": ("--inverse-text", "#0d0c1a"), "key": ("--bg", "#0d0c1a")},
+    "layer": {"plate": ("--blip-collectible", "#f76685"), "ink": ("--blip-collectible-ink", "#0d0c1a"), "key": ("--blip-collectible-key", "#0d0c1a")},
     "alert": {"plate": ("--accent", "#f976b0"), "ink": ("--on-accent", "#0d0c1a"), "key": ("--bg", "#0d0c1a")},
     "star": {"plate": ("--inverse-fill", "#f2f2f2"), "ink": ("--inverse-fill", "#f2f2f2"), "key": ("--bg", "#0d0c1a")},
     "verified": {"plate": ("--badge-verify-fill", "#fbc7e4"), "ink": ("--badge-verify-text", "#0d0c1a"), "key": ("--bg", "#0d0c1a")},
@@ -187,7 +187,7 @@ def drawings():
                      ("w", rpoly([(4.5, 2.25), (17.5, 2.25), (13.9, 6.9), (17.5, 11.5), (4.5, 11.5)], [.2, .9, .5, .9, .2]))]
     l["activity"] = sl(P((4, 2.75), (4, 17.25)), rpoly([(4, 3.25), (16.25, 3.25), (13.25, 7.25), (16.25, 11.25), (4, 11.25)], [0, .6, .4, .6, 0]))
 
-    # ================================================================ collectible layers (lavender plates)
+    # ================================================================ collectible layers (coral plates)
     back = rot([(2.75, 3), (10.25, 3), (10.25, 14), (2.75, 14)], -12, (6.5, 8.5))
     front = rot([(7.75, 5), (16.25, 5), (16.25, 17.25), (7.75, 17.25)], 8, (12, 11.1))
     s["card-sets"] = [("w", rpoly(back, 1.4)), gap(rpoly(front, 1.4), 3.5), ("w", rpoly(front, 1.4)), ("k", star4(12, 11.1, 3.6, .24))]
