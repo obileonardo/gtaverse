@@ -241,6 +241,14 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | IC6 | `/design/icons` is a noindex review page, excluded from the sitemap, the route list and the SEO check, with `X-Robots-Tag: noindex` on `/design/*`. | It is a design system page, not content. |
 | IC7 | No component is rewired in this slice. The migration plan is in `docs/ICONS.md`; whether the current menu item keeps switching to a filled icon or shows its state by colour alone is an owner decision. | The Motion pass is editing the same components. |
 
+## 2026-11-24: icon family round 2 (owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| IC8 | **Owner approved round 2, 24 Nov 2026.** Map blips follow GTA VI's blip and HUD language (spec in `docs/ICONS.md`): chunky silhouettes on keylined plates, pins on a pointer for the map, plateless halos for stars and the player arrow, states shown on the plate (`blipSvg()` in `src/icons/render.ts`). The language was learned from gameplay frames of clips our finds cite (owner exception, study only); every glyph is our own drawing. | The owner's verdict on round 1: the game's own icons look better and more premium. |
+| IC9 | **Owner decision, 24 Nov 2026.** Collectible-layer plates use GTA coral `#F76685` from the GTA VI sunset ramp, as the named token `--blip-collectible` in both themes, with `--blip-collectible-ink` and `--blip-collectible-key` navy `#0D0C1A` in both themes. Navy glyph on coral is 6.6:1 (AA); the keyline stays navy rather than following the ground because coral on the cream light map is 2.7:1. The hue is never adjusted per theme. | The owner's pick replaces the amber proposal; contrast is fixed by the keyline, not by changing the colour. |
+| IC10 | **Owner decision, answers IC7.** In the menu, items at rest show the Line drawing and the current item switches to the Solid drawing ("Switch to the solid icon"). Solid stays the default everywhere else. Applied when the components are rewired (migration plan, `docs/ICONS.md`). | Keeps the current item obvious without a second colour. |
+
 ## 2026-11-24: full screen menu with an art panel (owner decisions)
 
 | # | Decision | Why |
