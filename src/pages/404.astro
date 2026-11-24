@@ -1,7 +1,49 @@
 ---
+// Not found. "Wasted", the way the game says it (motion study item 15): the word arrives out of a blur, wide and a
+// little large, and settles sharp over --dur-moment; the line follows, then the way back. Once, under 1.2s, opacity,
+// transform and filter only. Reduced motion: one short fade.
 import Base from '../layouts/Base.astro';
+import Button from '../components/ui/Button.astro';
 ---
 <Base title="Not found" noindex>
-  <h1>Wasted</h1>
-  <p>That page does not exist. <a href="/map">Back to the map</a></p>
+  <div class="wasted">
+    <h1 class="wasted__word">Wasted</h1>
+    <p class="wasted__line">That page does not exist.</p>
+    <Button href="/map" variant="secondary" size="l" icon="map" class="wasted__go">Back to the map</Button>
+  </div>
 </Base>
+
+<style>
+  .wasted {
+    min-height: calc(100svh - var(--island-top) - var(--island-h) - var(--space-16) - var(--space-section) - 160px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    text-align: center;
+  }
+  .wasted__word {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-xl);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .wasted__line { color: var(--text-2); font-size: var(--text-body-l); }
+  .wasted__go { margin-top: var(--space-2); }
+
+  :global(html.js:not(.nav-back)) .wasted__word { animation: wasted-in var(--dur-moment) var(--ease-reveal) both; }
+  :global(html.js:not(.nav-back)) .wasted__line { animation: wasted-fade 300ms var(--ease-colour) 600ms both; }
+  :global(html.js:not(.nav-back)) .wasted :global(.wasted__go) { animation: wasted-fade 300ms var(--ease-colour) 780ms both; }
+  /* Wide tracking without animating letter-spacing: the word is stretched sideways and eased back. */
+  @keyframes wasted-in { from { opacity: 0; filter: blur(12px); transform: scale(1.06) scaleX(1.18); } }
+  @keyframes wasted-fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js:not(.nav-back)) .wasted__word { animation: wasted-fade 300ms var(--ease-colour) both; }
+    :global(html.js:not(.nav-back)) :is(.wasted__line, .wasted :global(.wasted__go)) { animation: wasted-fade 300ms var(--ease-colour) both; }
+  }
+</style>
