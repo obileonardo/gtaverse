@@ -1,32 +1,106 @@
 ---
 // The icon sheet: every glyph of the family (src/icons/family.ts) in both sets at 16, 20, 24 and 32 px, on this theme's
-// ground and on the other theme's (the inverse strip), with its name and the old names it replaces. A review page for
-// the design system, never for search: noindex, out of the sitemap and the route list. Rules: docs/ICONS.md.
+// ground and on the other theme's (the inverse strip), with its name and the old names it replaces. Map blips also show
+// their plate and pin forms, their states, and a stand-in map (our own blocks and roads, never game art).
+// A review page for the design system, never for search: noindex, out of the sitemap and the route list.
+// Rules and the GTA VI style spec: docs/ICONS.md.
 import Base from '../../layouts/Base.astro';
 import PageHead from '../../components/site/PageHead.astro';
 import { config, glyphs, legacySolid, type GlyphGroup, type GlyphName, type IconSet } from '../../icons/family';
-import { iconSvg } from '../../icons/render';
+import { blipSvg, iconSvg, type BlipState } from '../../icons/render';
 
 const groups: { id: GlyphGroup; title: string; note: string }[] = [
-  { id: 'blip', title: 'Map blips', note: 'One per find category in content/categories.json. Bold silhouettes that hold on a pin at 16 px.' },
-  { id: 'layer', title: 'Collectible layers', note: 'One per collectible layer on the map.' },
-  { id: 'wanted', title: 'Wanted and heat', note: 'The explainers’ wanted level states. Hollow and filled stars keep their state in both sets.' },
-  { id: 'verification', title: 'Verification', note: 'The four levels on every find and connection. Single source reuses the check.' },
-  { id: 'control', title: 'Navigation and controls', note: 'Universal marks reuse Capsa’s own drawings, so controls match the owner’s other products.' },
+  { id: 'blip', title: 'Map blips', note: 'One per find category in content/categories.json. A chunky silhouette with one to three bold cuts, on a plate that is the inverse of the ground, ringed by a keyline.' },
+  { id: 'layer', title: 'Collectible layers', note: 'One per collectible layer on the map. Same plate in GTA coral with a navy keyline in both themes, so layers read apart from finds at a glance.' },
+  { id: 'wanted', title: 'Wanted and heat', note: 'Stars wear a keyline and no plate, like a wanted meter. Live states sit on round accent plates.' },
+  { id: 'verification', title: 'Verification', note: 'The four levels on every find and connection, on round plates. Single source has its own glyph: one ring, one dot.' },
+  { id: 'control', title: 'Navigation and controls', note: 'The calm layer: universal marks reuse Capsa’s own drawings, so controls match the owner’s other products. Locate and pin are blips in the game too.' },
   { id: 'media', title: 'Media', note: 'Clips, art modes, sound and sources.' },
-  { id: 'site', title: 'Site sections', note: 'The menu, the footer and the trust pages.' },
+  { id: 'site', title: 'Site sections', note: 'The menu, the footer and the trust pages. In the menu the current item switches to Solid (IC7).' },
 ];
 const sizes = config.previewSizes;
 const sets: IconSet[] = ['solid', 'line'];
 const all = Object.entries(glyphs) as [GlyphName, (typeof glyphs)[GlyphName]][];
 const total = all.length;
 const legacy = Object.entries(legacySolid);
+const hasBlip = (v: unknown) => typeof (v as { blip?: string }).blip === 'string';
+const hasPin = (v: unknown) => typeof (v as { pin?: string }).pin === 'string';
+const blipNames = all.filter(([, v]) => hasBlip(v)).map(([n]) => n);
+const pinNames = all.filter(([, v]) => hasPin(v)).map(([n]) => n);
+const states: [BlipState, string][] = [['default', 'Default'], ['selected', 'Selected'], ['new', 'New'], ['found', 'Found'], ['dim', 'Filtered out']];
+// the stand-in map: where each pin sits (percent of the tile), which state it shows
+const spots: [GlyphName, number, number, BlipState][] = [
+  ['easter-egg', 12, 30, 'default'], ['weapon', 24, 58, 'default'], ['vehicle', 30, 24, 'default'], ['npc', 43, 46, 'selected'],
+  ['paranormal', 58, 22, 'default'], ['glitch', 70, 34, 'found'], ['secret-location', 84, 54, 'default'], ['memorial', 52, 72, 'default'],
+  ['cocaine-flamingo', 64, 66, 'new'], ['fishing', 18, 82, 'default'], ['card-sets', 38, 86, 'default'], ['tattoo-studio', 88, 84, 'default'],
+];
+const menu: [GlyphName, string][] = [['home', 'Home'], ['map', 'Map'], ['finds', 'Finds'], ['explainers', 'Explainers'], ['gtaverse', 'GTAverse']];
 ---
-<Base title="Icons" description="The Vice Files icon family: every glyph, solid and line, at every size." noindex>
+<Base title="Icons" description="The Vice Files icon family: every glyph, solid and line, and every map blip, at every size." noindex>
   <PageHead title="Icons" count={total}>
-    <p>One family of original glyphs in a GTA HUD and map blip spirit, drawn with the Capsa glyph method on a {config.grid} unit grid. Solid is the default set; Line is the setting. Each card shows both sets at {sizes.join(', ')} px on this theme, and at 16 and 24 px on the other theme below.</p>
-    <p>Switch the theme with the toggle in the header to check the other ground. Rules, sizes and the map from old names to new: docs/ICONS.md.</p>
+    <p>One family of original glyphs in GTA VI’s map blip and HUD language, drawn with the Capsa glyph method on a {config.grid} unit grid. Map blips sit on plates with a dark keyline so they hold over any map; controls stay calm. Solid is the default set; Line is the setting.</p>
+    <p>Switch the theme with the toggle in the header to check the other ground. Rules, the style spec and the map from old names to new: docs/ICONS.md.</p>
   </PageHead>
+
+  <section class="block" aria-labelledby="map-title">
+    <h2 id="map-title" class="h2">Blips on a map</h2>
+    <p class="sheet-note">A stand-in map drawn from the map tokens (blocks and roads, not game art) with pins at 32 px. The selected pin is 40 px with the accent keyline; one pin is new, one is found. The player arrow and the waypoint are plateless.</p>
+    <div class="mapmock" role="img" aria-label="Map blips on a stand-in map">
+      {spots.map(([name, x, y, state]) => (
+        <span class="mapmock__pin" style={`left:${x}%;top:${y}%`} set:html={blipSvg(name, { form: 'pin', state, size: state === 'selected' ? 40 : 32 })} />
+      ))}
+      <span class="mapmock__mark" style="left:47%;top:58%" set:html={blipSvg('locate', { size: 28 })} />
+      <span class="mapmock__mark" style="left:78%;top:20%" set:html={blipSvg('pin', { size: 32 })} />
+      <span class="mapmock__hud">
+        {[1, 1, 1, 0, 0].map((on) => <span class={on ? '' : 'mapmock__off'} set:html={blipSvg(on ? 'star-filled' : 'star', { size: 22 })} />)}
+      </span>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="states-title">
+    <h2 id="states-title" class="h2">Blip states</h2>
+    <p class="sheet-note">States change variables only: the keyline turns accent when selected, a corner badge marks new or found, and filtered-out blips fade.</p>
+    <ul class="states" role="list">
+      {states.map(([state, label]) => (
+        <li class="state">
+          <span class="state__row">
+            <span set:html={blipSvg('easter-egg', { state, size: 32 })} />
+            <span set:html={blipSvg('meteorite', { state, size: 32 })} />
+            <span set:html={blipSvg('weapon', { form: 'pin', state, size: 32 })} />
+          </span>
+          <span class="state__label">{label}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block" aria-labelledby="plates-title">
+    <h2 id="plates-title" class="h2">Plates and pins<sup class="sheet-count mono">{blipNames.length}</sup></h2>
+    <p class="sheet-note">Every blip on its plate at 20, 24 and 32 px, and on its pin at 32 px, on the map ground.</p>
+    <ul class="plates" role="list">
+      {blipNames.map((name) => (
+        <li class="plate">
+          <span class="plate__row">
+            {[20, 24, 32].map((px) => <span set:html={blipSvg(name, { size: px })} />)}
+            {pinNames.includes(name) && <span set:html={blipSvg(name, { form: 'pin', size: 32 })} />}
+          </span>
+          <span class="plate__name mono">{name}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block" aria-labelledby="menu-title">
+    <h2 id="menu-title" class="h2">Menu: the current item is Solid</h2>
+    <p class="sheet-note">Owner decision IC7: items at rest show the Line drawing; the current item switches to the Solid drawing and the primary colour.</p>
+    <ul class="menudemo" role="list">
+      {menu.map(([name, label], i) => (
+        <li class={i === 1 ? 'menudemo__item is-current' : 'menudemo__item'}>
+          <span set:html={iconSvg(name, { set: i === 1 ? 'solid' : 'line', size: 20 })} />{label}
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <section class="block sheet-key" aria-labelledby="key-title">
     <h2 id="key-title" class="h2">Colour hierarchy</h2>
@@ -65,6 +139,12 @@ const legacy = Object.entries(legacySolid);
                     {sizes.map((px) => <span class="glyph__cell" set:html={iconSvg(name, { set: st, size: px })} />)}
                   </div>
                 ))}
+                {hasBlip(v) && (
+                  <div class="glyph__row glyph__row--map">
+                    <span class="glyph__set">Blip</span>
+                    {[16, 20, 24, 32].map((px) => <span class="glyph__cell" set:html={blipSvg(name, { size: px })} />)}
+                  </div>
+                )}
                 <div class="glyph__row glyph__row--inverse">
                   <span class="glyph__set">Other theme</span>
                   {sets.flatMap((st) => [16, 24].map((px) => <span class="glyph__cell" set:html={iconSvg(name, { set: st, size: px })} />))}
@@ -90,10 +170,36 @@ const legacy = Object.entries(legacySolid);
   .glyph__label { text-align: right; }
   .glyph__row { display: grid; grid-template-columns: 88px repeat(4, 1fr); align-items: center; min-height: 40px; color: var(--text-1); }
   .glyph__row--inverse { margin-top: var(--space-1); padding-inline: var(--space-2); border-radius: var(--radius-m); background: var(--inverse-fill); color: var(--inverse-text); }
+  .glyph__row--map { padding-inline: var(--space-2); border-radius: var(--radius-m); background: var(--map-land); }
   .glyph__set { color: var(--text-2); font-size: var(--text-body-s); }
   .glyph__row--inverse .glyph__set { color: var(--inverse-text); }
   .glyph__cell { display: inline-flex; align-items: center; justify-content: center; }
-  .glyph__cell :global(svg) { display: block; flex: none; }
+  .glyph__cell :global(svg), .plate :global(svg), .state :global(svg), .mapmock :global(svg) { display: block; flex: none; }
+
+  /* the stand-in map: the map tokens as blocks and roads (our own drawing, not game art) */
+  .mapmock {
+    position: relative; height: 360px; margin-top: var(--space-5); overflow: hidden; border: 1px solid var(--border-1); border-radius: var(--radius-l);
+    background:
+      linear-gradient(90deg, transparent 0 31%, var(--map-road-major) 31% 32.2%, transparent 32.2% 66%, var(--map-road-major) 66% 67.2%, transparent 67.2%),
+      linear-gradient(0deg, transparent 0 44%, var(--map-road-major) 44% 46.5%, transparent 46.5%),
+      repeating-linear-gradient(90deg, transparent 0 46px, var(--map-road) 46px 50px),
+      repeating-linear-gradient(0deg, transparent 0 40px, var(--map-road) 40px 44px),
+      var(--map-land);
+  }
+  .mapmock__pin, .mapmock__mark { position: absolute; display: block; transform: translate(-50%, -100%); }
+  .mapmock__mark { transform: translate(-50%, -50%); }
+  .mapmock__hud { position: absolute; top: var(--space-3); right: var(--space-3); display: flex; gap: 2px; }
+  .mapmock__off { opacity: .4; }
+  .states, .plates { display: grid; gap: var(--space-3); margin-top: var(--space-5); }
+  .states { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .plates { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .state, .plate { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-l); background: var(--map-land); }
+  .state__row, .plate__row { display: flex; align-items: flex-end; gap: var(--space-3); min-height: 40px; }
+  .state__label, .plate__name { color: var(--text-2); font-size: var(--text-body-s); }
+  .menudemo { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+  .menudemo__item { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding-inline: var(--space-4); border-radius: var(--radius-full); color: var(--text-2); }
+  .menudemo__item.is-current { background: var(--glass-hover); color: var(--text-1); }
+  .menudemo__item :global(svg) { display: block; }
   .tones { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
   .tone { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); }
   .tone :global(svg) { display: block; }
