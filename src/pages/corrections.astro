@@ -1,0 +1,41 @@
+---
+// Corrections: how to report a mistake, what happens next, and where the public log lives (GitHub issues labelled
+// "correction" and the history of the content files). Nothing here is collected by the site itself.
+import Base from '../layouts/Base.astro';
+import DocPage from '../components/site/DocPage.astro';
+import Button from '../components/ui/Button.astro';
+import { webPage } from '../lib/seo';
+import { POLICIES_UPDATED } from '../lib/trust';
+import { staticRoutes } from '../lib/routes';
+import { site } from '../lib/site';
+import { correctionLink, correctionsLogLink } from '../lib/issues';
+
+const r = staticRoutes.find((x) => x.path === '/corrections')!;
+const history = `${site.repo}/commits/staging/content`;
+---
+<Base title={r.title} description={r.description} jsonLd={webPage('/corrections', r.title, r.description)} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Corrections', href: '/corrections' }]}>
+  <DocPage title={r.title} standfirst="If something on the site is wrong, out of date or missing its credit, tell us. Every fix happens in public, with the source that proves it." updated={POLICIES_UPDATED}>
+    <h2>How to tell us</h2>
+    <ol>
+      <li><strong>On GitHub</strong> (public): open a correction with the form below. Every find page has a "Suggest a correction" link that fills in the find for you.</li>
+      <li><strong>By email</strong> (private): <a href={`mailto:${site.takedownEmail}`}>{site.takedownEmail}</a>, if you would rather not post in public.</li>
+    </ol>
+    <p>Tell us which find, connection or explainer is wrong, what is right, and a link that shows it. For a missing credit, tell us who found it first and link their original post.</p>
+    <div class="doc__actions">
+      <Button href={correctionLink()} variant="primary" size="l" iconEnd="arrow-up-right">Suggest a correction</Button>
+      <Button href={correctionsLogLink()} variant="quiet" size="l" iconEnd="arrow-up-right">See all corrections</Button>
+    </div>
+
+    <h2>What happens next</h2>
+    <ul>
+      <li>We check the source you sent. A correction needs a link, just like the original fact did.</li>
+      <li>Credit corrections are made within {site.responseHours} hours, no questions.</li>
+      <li>Fact corrections are made as soon as they are checked. If the new source is single, the find is labelled single source until a second one arrives.</li>
+      <li>The fix is a public change to the content, linked to your report, and the find's "Updated" date moves to the day of the fix.</li>
+      <li>If a find turns out to be false, it is labelled debunked or removed. We say which.</li>
+    </ul>
+
+    <h2>The log</h2>
+    <p>Every correction is a public issue labelled "correction" on GitHub, open or closed, with the discussion and the fix linked from it. The full history of every content change, down to the line, is in <a href={history}>the content history</a>.</p>
+  </DocPage>
+</Base>

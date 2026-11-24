@@ -13,12 +13,19 @@ import { findStill } from '../../lib/media';
 import { gameIdsOfFind } from '../../lib/games';
 import ChapterControl from '../../components/ChapterControl.astro';
 import GameLens from '../../components/games/GameLens.astro';
+import { categoryHubs, regionHubs, findsInCategory, findsInRegion } from '../../lib/hubs';
+import { collectionPage } from '../../lib/seo';
 
 const used = categories.filter((c) => finds.some((f) => f.category === c.id));
 const count = (id: string) => finds.filter((f) => f.category === id).length;
 const spoilers = finds.filter((f) => f.spoiler).length;
+const description = `${finds.length} secrets found in GTA VI, each shown in the clip of the fan who found it.`;
+// Places to browse: counties and headline regions first (the top of the tree), then the rest, most finds first.
+const places = regionHubs
+  .map((r) => ({ r, n: findsInRegion(r.id).length, top: r.type === 'county' || r.type === 'region' }))
+  .sort((a, b) => Number(b.top) - Number(a.top) || b.n - a.n || a.r.name.localeCompare(b.r.name));
 ---
-<Base title="All finds" description={`${finds.length} secrets found in GTA VI, each shown in the clip of the fan who found it.`}>
+<Base title="All finds" description={description} jsonLd={collectionPage('/finds', 'All finds', description, finds.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }]}>
   <header class="head">
     <h1 class="head__title">Finds<sup class="head__count mono">{finds.length}</sup></h1>
     <p class="head__lede">Every secret in Leonida we can show you, each with the clip of the creator who found it. {spoilers} are spoilers: their art stays hidden until you open them, or until your chapter reaches them.</p>
@@ -54,6 +61,19 @@ const spoilers = finds.filter((f) => f.spoiler).length;
       );
     })}
   </ul>
+
+  <section class="browse" aria-labelledby="browse-cat">
+    <h2 id="browse-cat" class="browse__title h2">Browse by kind</h2>
+    <ul class="browse__list" role="list">
+      {categoryHubs.map((c) => <li><Chip href={`/categories/${c.id}`} touch count={findsInCategory(c.id).length}>{c.label}</Chip></li>)}
+    </ul>
+  </section>
+  <section class="browse" aria-labelledby="browse-place">
+    <h2 id="browse-place" class="browse__title h2">Browse by place</h2>
+    <ul class="browse__list" role="list">
+      {places.map(({ r, n }) => <li><Chip href={`/regions/${r.id}`} touch count={n}>{r.name}</Chip></li>)}
+    </ul>
+  </section>
 </Base>
 
 <script>
@@ -107,6 +127,10 @@ const spoilers = finds.filter((f) => f.spoiler).length;
 
   .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px var(--space-5); margin-top: var(--space-8); }
   .grid > li[hidden] { display: none; }
+
+  .browse { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-16); }
+  .browse + .browse { margin-top: var(--space-10); }
+  .browse__list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
   @media (min-width: 768px) and (max-width: 1199px) {
     .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

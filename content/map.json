@@ -22,10 +22,10 @@
     "attribution": "Map © Rockstar Games. Official Leonida map, used for non-commercial fan reference."
   },
   "tiles": {
-    "tile_size": 256,
+    "tile_size": 512,
     "format": "webp",
     "output": "public/map/tiles/{z}/{x}/{y}.webp",
-    "note": "Built by scripts/map/build-tiles.mjs. Max zoom is full resolution: image pixel (x, y) is Leaflet point (x, y) at max zoom."
+    "note": "Built by scripts/map/build-tiles.mjs. 512 px tiles, numbered on the 256 px reference so zoom 5 is full resolution: image pixel (x, y) is Leaflet point (x, y) at zoom 5. 2x screens show each tile at 256 CSS px one level deeper (docs/MAP.md, Sharpness)."
   },
   "grid": {
     "measured_by": "scripts/map/measure-grid.mjs (pixel analysis of grid lines and margin label glyphs), 2026-11-23",

@@ -17,7 +17,8 @@ dist/
 public/map/
 tools/map-harness/screenshots/
 
-# Official game logos: Rockstar and Take-Two trademarks, fetched at build, never committed (scripts/media/fetch-logos.mjs)
+# Official GTA VI trailer and key art for the home hero (docs/HERO.md) and official game logos
+# (scripts/media/fetch-logos.mjs): Rockstar and Take-Two material, fetched or built for a deploy, never committed
 public/media/
 
 # Private research (never committed)

@@ -8,7 +8,7 @@ import { explainerParts } from '../../lib/explainers';
 
 const items = await Promise.all(explainers.map(async (e) => ({ e, parts: await explainerParts(e) })));
 ---
-<Base title="Explainers" description="How GTA VI's systems work, from wanted levels to relationships, written from sources and labelled when unreviewed.">
+<Base title="Explainers" breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/explainers' }]} description="How GTA VI's systems work, from wanted levels to relationships, written from sources and labelled when unreviewed.">
   <header class="head">
     <h1 class="head__title">Explainers<sup class="head__count mono">{explainers.length}</sup></h1>
     <p class="head__lede">How the game's systems work, written from cited sources. Pages marked draft are still under review.</p>

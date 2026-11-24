@@ -845,7 +845,7 @@
   /* Tide Guide: navy glass menu with a check column */
   .popover {
     width: min(288px, calc(100vw - 32px));
-    max-height: calc(100dvh - var(--controls-top) - 2 * var(--ctrl-size) - var(--space-4) - var(--space-2) - var(--bottom-h) - 16px);
+    max-height: calc(100dvh - var(--controls-top) - 3 * var(--ctrl-size) - 2 * var(--space-4) - var(--space-2) - var(--bottom-h) - 16px); /* three controls: filters, 3D, basemap */
     padding: 6px 8px 8px;
     border-radius: var(--radius-xl);
     background: var(--glass-fill-strong);
@@ -913,4 +913,92 @@
 }
 @media (prefers-reduced-transparency: reduce) {
   .map-zoom, .map-credit, .toast, .map-toggle, .map-search, .map-grid-label { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ---------- 3D view, found tracker (docs/MAP-3D.md, docs/MAP.md) ---------- */
+/* The 3D view sits over the 2D map, which stays mounted (hidden) so switching back keeps its tiles and place. */
+.map-app[data-view='3d'] .map-canvas { visibility: hidden; }
+.map3d { position: absolute; inset: 0; z-index: 1; background: var(--bg); animation: fade-in var(--dur-popover-in) var(--ease-out); }
+.map3d__canvas { display: block; width: 100%; height: 100%; touch-action: none; outline-offset: -2px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.map3d__canvas:focus-visible { outline: 2px solid var(--accent); }
+.map3d--loading, .map3d--failed { display: grid; place-items: center; padding: var(--space-6); text-align: center; }
+.map3d__fail { max-width: 320px; font-size: var(--text-body-s); color: var(--text-2); }
+/* The honesty line for the relief: always on, beside the map credit. */
+.map3d__note {
+  position: absolute;
+  left: var(--map-inset);
+  top: 80px; /* top left, under the header island; the credit and the first-visit toast own the bottom */
+  z-index: 20;
+  max-width: calc(100% - 2 * var(--map-inset) - var(--ctrl-size) - 8px);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-2);
+  pointer-events: none;
+}
+/* Compass: the needle turns with the camera (direct, no easing); a tap turns back to north. */
+.map3d__compass {
+  position: absolute;
+  right: var(--map-inset);
+  bottom: calc(var(--map-inset) + 2 * var(--ctrl-size) + var(--space-2));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: var(--ctrl-size);
+  height: var(--ctrl-size);
+  border-radius: var(--radius-full);
+  background: var(--glass-fill);
+  border: var(--border-w) solid var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  color: var(--text-1);
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+}
+.map3d__compass:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) { .map3d__compass:hover { background: var(--glass-hover); } }
+.map3d__needle { position: relative; display: grid; place-items: center; width: 28px; height: 28px; }
+.map3d__needle::before { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 6px; margin-left: -1px; border-radius: 1px; background: var(--accent); }
+.map3d__n { font-size: 13px; font-weight: 700; line-height: 1; }
+.map-ctrl--3d { min-width: var(--ctrl-size); padding-inline: 0; font-weight: 700; letter-spacing: 0.02em; }
+.map-ctrl--3d[aria-pressed='true'] { background: var(--inverse-fill); color: var(--inverse-text); border-color: var(--inverse-fill); }
+
+/* Found tracker */
+.found-toggle[aria-pressed='true'] { background: var(--inverse-fill); color: var(--inverse-text); border-color: var(--inverse-fill); }
+.mgroup__sub { margin-left: 6px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.found-counts { display: grid; gap: 2px; margin: 4px 0 var(--space-2); padding: 0 8px; }
+.found-counts li { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: var(--text-body-s); color: var(--text-2); }
+.found-counts li.has-found { color: var(--text-1); }
+.found-counts__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.found-counts__n { font-size: var(--text-caption); }
+.found-code { display: grid; gap: var(--space-2); padding: 0 8px 4px; }
+.found-code__field input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  border: var(--border-w) solid var(--border-1);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 16px; /* 16px or iOS zooms the page on focus */
+}
+.found-code__field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.found-code__actions { display: flex; gap: var(--space-2); }
+.found-code__note { color: var(--text-2); overflow-wrap: anywhere; }
+
+@media (max-width: 767px) {
+  .map3d__note { top: calc(var(--controls-top) + 44px); left: var(--map-inset); max-width: calc(100% - 2 * var(--map-inset) - var(--ctrl-size) - 12px); }
+  .map-app:has(.map-credit--two) .map3d__note { top: calc(var(--controls-top) + 60px); } /* the credit has two lines */
+  .map3d__compass { top: calc(var(--controls-top) + 3 * var(--ctrl-size) + 3 * var(--space-4)); bottom: auto; }
+  .found-counts li { min-height: 32px; font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map3d { animation-name: fade-in; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .map3d__note, .map3d__compass { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

@@ -33,6 +33,7 @@ const data: MapFind[] = finds.map((f) => {
     pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null,
     summary: f.summary,
     where: f.location_description ?? null,
+    area: f.area ?? null,
     still: still ? still.thumb : null,
     clip: f.clip ? { platform: f.clip.platform, url: f.clip.url, creator: f.clip.creator ?? null, yt: f.clip.platform === 'youtube' ? youtubeId(f.clip.url) : null } : null,
     sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
@@ -63,6 +64,7 @@ const meta: MapMeta = {
   width: mapJson.image.width,
   height: mapJson.image.height,
   maxZoom: 5,
+  tileSize: mapJson.tiles.tile_size, // 512: see docs/MAP.md, "Sharpness"
   tileUrl: '/map/tiles/{z}/{x}/{y}.webp',
   attribution: 'Map © Rockstar Games',
   frame: mapJson.grid.frame,

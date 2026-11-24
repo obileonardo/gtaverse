@@ -1,0 +1,100 @@
+---
+// A region hub: the published finds in this place or anywhere inside it, the places inside it that have finds,
+// and the GTAverse connections those finds link to. Static; crawlable; no map link until finds carry pins (P1).
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/site/PageHead.astro';
+import FindGrid from '../../components/FindGrid.astro';
+import Card from '../../components/ui/Card.astro';
+import Chip from '../../components/ui/Chip.astro';
+import Icon from '../../components/ui/Icon.astro';
+import type { Region } from '../../lib/content';
+import { regionHubs, findsInRegion, childHubs, connectionsFor, regionTrail, hasRegionHub, regionTypeLabel } from '../../lib/hubs';
+import { confidenceLabel } from '../../lib/lore';
+import { collectionPage } from '../../lib/seo';
+import { regionRoutes } from '../../lib/routes';
+
+export function getStaticPaths() {
+  return regionHubs.map((r) => ({ params: { id: r.id }, props: { region: r } }));
+}
+const { region } = Astro.props as { region: Region };
+const list = findsInRegion(region.id);
+const direct = list.filter((f) => f.region_ids.includes(region.id)).length;
+const children = childHubs(region.id);
+const lore = connectionsFor(list);
+const route = regionRoutes.find((r) => r.path === `/regions/${region.id}`)!;
+const parents = regionTrail(region.id).filter((p) => p.parent !== null);
+const trail = [{ name: 'Finds', href: '/finds' }, ...parents.filter((p) => hasRegionHub(p.id)).map((p) => ({ name: p.name, href: `/regions/${p.id}` }))];
+const crumbs = [{ name: 'Home', href: '/' }, ...trail, { name: region.name, href: `/regions/${region.id}` }];
+const type = regionTypeLabel[region.type] ?? 'Place';
+const parentName = parents.at(-1)?.name ?? 'Leonida';
+const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+---
+<Base title={`${region.name}: finds`} description={route.description} jsonLd={collectionPage(route.path, `${region.name}: finds`, route.description, list.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
+  <PageHead title={region.name} count={list.length} trail={trail}>
+    <p>{type} in {parentName}. {list.length === 1 ? 'One find' : `${list.length} finds`} {children.length > 0 && direct < list.length ? `here and in the places inside it` : 'here'}, each with its sources and how sure we are.{region.real_world_analogue && ` Fans and press compare it to ${region.real_world_analogue}.`}</p>
+  </PageHead>
+
+  {children.length > 0 && (
+    <nav class="places" aria-label={`Places in ${region.name}`}>
+      {children.map((c) => <Chip href={`/regions/${c.region.id}`} touch count={c.count}>{c.region.name}</Chip>)}
+    </nav>
+  )}
+
+  <section class="hub" aria-labelledby="finds-title">
+    <h2 id="finds-title" class="sr-only">Finds in {region.name}</h2>
+    <FindGrid finds={list} eager={5} />
+  </section>
+
+  {lore.length > 0 && (
+    <section class="hub" aria-labelledby="lore-title">
+      <h2 id="lore-title" class="hub__title h2"><a href="/gtaverse">In the GTAverse <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
+      <ul class="hub__lore">
+        {lore.map(({ connection: c, count }) => (
+          <li><Card href={`/gtaverse/${c.slug}`} kicker="GTAverse" title={c.title} meta={`${confidenceLabel[c.confidence] ?? c.confidence} · ${count === 1 ? '1 find here' : `${count} finds here`}`} /></li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {(region.sources?.length ?? 0) > 0 && (
+    <section class="hub" aria-labelledby="sources-title">
+      <h2 id="sources-title" class="hub__sub">Where the place name comes from</h2>
+      <ul class="hub__sources">
+        {region.sources!.map((s) => <li><Chip href={s.url} touch target="_blank" rel="noopener" title={s.title ?? s.url}>{host(s.url)}</Chip></li>)}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<style>
+  .places { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-8); }
+  .hub { margin-top: var(--space-10); display: flex; flex-direction: column; gap: var(--space-4); }
+  .hub + .hub { margin-top: var(--space-16); }
+  .hub__title a { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; }
+  .hub__title a :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .hub__title a:hover :global(.icon) { transform: translateX(3px); }
+  }
+  .hub__lore { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8) var(--space-5); }
+  .hub__sub { color: var(--text-3); font-size: var(--text-body-s); font-weight: 400; }
+  .hub__sources { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .hub__lore { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .places {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      margin-inline: calc(var(--page-pad) * -1);
+      padding-inline: var(--page-pad);
+    }
+    .places > :global(*) { flex: none; }
+    .hub + .hub { margin-top: var(--space-12); }
+    .hub__lore { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-3); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hub__title a :global(.icon) { transition: none; }
+  }
+</style>

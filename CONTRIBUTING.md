@@ -61,8 +61,8 @@ Also:
 ## Files that must never be committed
 
 - **No images, fonts, video, audio or archives.** Not Rockstar media, not screenshots from other sites or design references, not font files. Fonts load from Google Fonts at build time; clips are embedded from their platforms.
-- **No map files or tiles.** `.cache/` and `public/map/` are git-ignored; keep them that way.
-- **No game logo files.** `public/media/` is git-ignored; logos are fetched at build from official URLs (decision GS2).
+- **No map files or tiles, no hero media.** `.cache/`, `public/map/` and `public/media/` are git-ignored; keep them that way (docs/MAP.md, docs/HERO.md).
+- **No game logo files.** They live in `public/media/logos/`, fetched at build from the official URLs in `content/games.json` (decision GS2).
 - **No secrets** (`.env` files are ignored).
 
 CI fails any pull request that adds an image, font, video, audio or archive file. If a change genuinely needs an original asset (for example a favicon drawn for the project), say so in the issue first; the maintainers decide and add it to the allowlist in `.github/workflows/ci.yml`.

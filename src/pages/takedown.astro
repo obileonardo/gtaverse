@@ -1,0 +1,44 @@
+---
+// Takedowns and credit requests: the published contact route docs/LEGAL.md asks for (takedown process, step 1).
+// The 48 hour promise is decision OS5.
+import Base from '../layouts/Base.astro';
+import DocPage from '../components/site/DocPage.astro';
+import Button from '../components/ui/Button.astro';
+import { webPage } from '../lib/seo';
+import { POLICIES_UPDATED } from '../lib/trust';
+import { staticRoutes } from '../lib/routes';
+import { site } from '../lib/site';
+import { takedownIssueLink } from '../lib/issues';
+
+const r = staticRoutes.find((x) => x.path === '/takedown')!;
+---
+<Base title={r.title} description={r.description} jsonLd={webPage('/takedown', r.title, r.description, 'ContactPage')} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Takedowns', href: '/takedown' }]}>
+  <DocPage title={r.title} standfirst={`Made a clip we feature, or hold rights in something on the site? Tell us what to remove or change. We answer within ${site.responseHours} hours.`} updated={POLICIES_UPDATED}>
+    <h2>Two ways to reach us</h2>
+    <ol>
+      <li><strong>Email</strong> (private, the main route): <a href={`mailto:${site.takedownEmail}`}>{site.takedownEmail}</a>.</li>
+      <li><strong>GitHub</strong> (public): the takedown or credit request form on our repository. Anything posted there is public.</li>
+    </ol>
+    <div class="doc__actions">
+      <Button href={`mailto:${site.takedownEmail}?subject=${encodeURIComponent('Takedown or credit request')}`} variant="primary" size="l" icon="chat">Email us</Button>
+      <Button href={takedownIssueLink()} variant="quiet" size="l" iconEnd="arrow-up-right">Use the GitHub form</Button>
+    </div>
+
+    <h2>What to include</h2>
+    <ul>
+      <li>The page on this site, or the find, and the clip, image or text concerned.</li>
+      <li>Your connection to it: you made the clip or post, or you represent the rights holder.</li>
+      <li>What you would like: remove it, change the credit (with the name and link to use), or something else.</li>
+    </ul>
+
+    <h2>What we do</h2>
+    <ul>
+      <li><strong>Creators</strong>: remove your clip or change your credit within {site.responseHours} hours, no questions asked.</li>
+      <li><strong>Rockstar Games, Take-Two or their agents</strong>: the item named is removed or disabled at once, before any discussion.</li>
+      <li>Everyone gets a reply within {site.responseHours} hours, saying what we changed.</li>
+    </ul>
+
+    <h2>Why this matters to us</h2>
+    <p>The Vice Files is a non-commercial fan project. Clips play from their creators' own posts and are never re-hosted, game material belongs to Rockstar Games, and the site only exists while the people whose work it points to are happy with it. Read <a href="/about">about the site</a> and our <a href="/editorial-policy">editorial policy</a>.</p>
+  </DocPage>
+</Base>

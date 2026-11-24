@@ -13,6 +13,10 @@ export type MapApi = {
   pointOf: (f: MapFind) => { x: number; y: number } | null;
   pointAt: (x: number, y: number) => { x: number; y: number } | null;
   pinElement: (slug: string) => HTMLElement | null;
+  // The view as image pixels at the centre and a Leaflet zoom, so the 3D view (three/Map3D.tsx) opens and closes
+  // on the same spot at the same scale.
+  getView: () => { x: number; y: number; zoom: number } | null;
+  setView: (v: { x: number; y: number; zoom: number }) => void;
 };
 
 type Props = {
@@ -31,6 +35,24 @@ type Props = {
   onMove: () => void;
   onReady: () => void;
 };
+
+/**
+ * Tile settings for this screen (docs/MAP.md, "Sharpness"). The tile pyramid has 512 px tiles numbered so zoom
+ * `meta.maxZoom` is full resolution. On a 1x screen a tile shows at 512 CSS px; at 1.5x and above it shows at 256 CSS px
+ * from one level deeper, so a CSS pixel gets two map pixels. Zoom is capped half a level past native detail.
+ */
+export function sharpTiles(meta: MapMeta, dpr = typeof devicePixelRatio === 'number' ? devicePixelRatio : 1) {
+  const size = meta.tileSize ?? 256;
+  const retina = dpr >= 1.5;
+  // Device pixels per map pixel reach 1 at zoom maxZoom - log2(dpr); never cap below one level under native.
+  const nativeZoom = meta.maxZoom - Math.min(1, Math.log2(Math.max(1, dpr)));
+  return {
+    tileSize: retina ? size / 2 : size,
+    zoomOffset: retina ? 1 : 0,
+    maxNativeZoom: retina ? meta.maxZoom - 1 : meta.maxZoom,
+    maxZoom: Math.round((nativeZoom + 0.5) * 4) / 4,
+  };
+}
 
 const svg = (name: keyof typeof icons, size: number) =>
   `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${(icons[name] as { line: string }).line}</svg>`;
@@ -81,7 +103,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       const m = map.current;
       if (!m || !f.pin) return;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || opts.instant;
-      const zoom = Math.max(m.getZoom(), props.meta.maxZoom - 1.5);
+      const zoom = Math.min(Math.max(m.getZoom(), props.meta.maxZoom - 1.5), m.getMaxZoom());
       // Centre the pin in the visible part of the map (above a sheet or beside the drawer).
       const target = m.project(toLatLng(f.pin.x, f.pin.y), zoom).add([opts.offsetX ?? 0, opts.offsetY ?? 0]);
       const centre = m.unproject(target, zoom);
@@ -102,6 +124,18 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       return { x: p.x, y: p.y };
     },
     pinElement: (slug) => box.current?.querySelector<HTMLElement>(`.pin[data-slug="${CSS.escape(slug)}"]`) ?? null,
+    getView: () => {
+      const m = map.current;
+      if (!m) return null;
+      const c = m.project(m.getCenter(), props.meta.maxZoom);
+      return { x: c.x, y: c.y, zoom: m.getZoom() };
+    },
+    setView: (v) => {
+      const m = map.current;
+      if (!m) return;
+      m.invalidateSize({ animate: false });
+      m.setView(toLatLng(v.x, v.y), Math.min(Math.max(v.zoom, m.getMinZoom()), m.getMaxZoom()), { animate: false });
+    },
   }));
 
   // Build the map once.
@@ -112,6 +146,11 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       if (cancelled || !box.current) return;
       L.current = lib;
       const { meta } = live.current;
+      // Sharpness (docs/MAP.md): one map pixel per device pixel. 512 px tiles show at 512 CSS px on a 1x screen;
+      // on a 2x screen they show at 256 CSS px one level deeper (zoomOffset 1), as Leaflet's detectRetina does,
+      // but with maxNativeZoom lowered by one so the deepest level is never asked for past full resolution.
+      // Zoom stops half a level past native detail: at most 1.41 device pixels per map pixel, soft rather than blocky.
+      const sharp = sharpTiles(meta);
       const m = lib.map(box.current, {
         crs: lib.CRS.Simple,
         zoomControl: false,
@@ -120,7 +159,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
         zoomDelta: 0.5,
         wheelPxPerZoomLevel: 120,
         minZoom: 0,
-        maxZoom: meta.maxZoom + 1,
+        maxZoom: sharp.maxZoom,
         maxBoundsViscosity: 0.8,
         keyboard: true,
         keyboardPanDelta: 120,
@@ -128,7 +167,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       });
       map.current = m;
       const image = lib.latLngBounds(m.unproject([0, meta.height], meta.maxZoom), m.unproject([meta.width, 0], meta.maxZoom));
-      lib.tileLayer(meta.tileUrl, { tileSize: 256, noWrap: true, bounds: image, minNativeZoom: 0, maxNativeZoom: meta.maxZoom, maxZoom: meta.maxZoom + 1, keepBuffer: 3, className: 'map-tiles' }).addTo(m);
+      lib.tileLayer(meta.tileUrl, { tileSize: sharp.tileSize, zoomOffset: sharp.zoomOffset, noWrap: true, bounds: image, minNativeZoom: 0, maxNativeZoom: sharp.maxNativeZoom, maxZoom: sharp.maxZoom, keepBuffer: 3, className: 'map-tiles' }).addTo(m);
       const frame = lib.latLngBounds(m.unproject([meta.frame.x0, meta.frame.y1], meta.maxZoom), m.unproject([meta.frame.x1, meta.frame.y0], meta.maxZoom));
       const p = live.current.fitPadding;
       m.fitBounds(frame, { paddingTopLeft: [p.left, p.top], paddingBottomRight: [p.right, p.bottom], animate: false });
@@ -156,7 +195,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     const { finds, phone, selected, hovered, meta } = live.current;
     layer.clearLayers();
     const zoom = m.getZoom();
-    const radius = zoom >= meta.maxZoom ? 0 : phone ? 40 : 56;
+    const radius = zoom >= m.getMaxZoom() - 0.5 ? 0 : phone ? 40 : 56; // groups split near the deepest zoom
     const pts = finds.filter((f) => f.pin).map((f) => ({ f, p: m.project(toLatLng(f.pin!.x, f.pin!.y), zoom) }));
     const used = new Set<number>();
     const groups: { members: typeof pts }[] = [];

@@ -69,6 +69,26 @@ check('categories.schema.json', categories, 'content/categories.json');
 check('sources.schema.json', sources, 'content/sources.json');
 check('games.schema.json', games, 'content/games.json');
 
+// Map extras (docs/MAP.md, docs/MAP-3D.md): our search words and our hand-drawn relief.
+const searchTerms = readJson('content/search-terms.json');
+const relief = readJson('content/relief.json');
+check('search-terms.schema.json', searchTerms, 'content/search-terms.json');
+check('relief.schema.json', relief, 'content/relief.json');
+if (searchTerms && categories && regions) {
+  const catIds = new Set(categories.map((c) => c.id));
+  const regIds = new Set(regions.map((r) => r.id));
+  for (const id of Object.keys(searchTerms.categories ?? {})) if (!catIds.has(id)) err('content/search-terms.json', `unknown category "${id}"`);
+  for (const id of Object.keys(searchTerms.regions ?? {})) if (!regIds.has(id)) err('content/search-terms.json', `unknown region "${id}"`);
+}
+if (relief?.features && map?.image) {
+  const seen = new Set();
+  for (const f of relief.features) {
+    if (seen.has(f.id)) err('content/relief.json', `duplicate feature id "${f.id}"`);
+    seen.add(f.id);
+    for (const [x, y] of f.points) if (x >= map.image.width || y >= map.image.height) err('content/relief.json', `${f.id}: point ${x}, ${y} is outside the map image`);
+  }
+}
+
 const connections = connDoc?.items ?? [];
 
 // ---------------------------------------------------------------- explainers (frontmatter subset parser)
@@ -230,6 +250,8 @@ for (const f of finds ?? []) {
     else if (!match.embeddable) err(w, 'clip source is not embeddable');
     if (!sourceIds.has(f.clip.source_id)) err(w, `clip source_id "${f.clip.source_id}" not in sources.json`);
   }
+  if (f.added_at && f.updated_at && f.added_at > f.updated_at) err(w, `added_at ${f.added_at} is after updated_at ${f.updated_at}`);
+  if (f.added_at && f.added_at > new Date().toISOString().slice(0, 10)) err(w, `added_at ${f.added_at} is in the future`);
   if (f.status === 'published' && (f.verification === 'rumor')) err(w, 'rumors must stay draft until a second independent source confirms them');
   if (f.spoiler && f.status === 'published' && f.clip) warn(w, 'spoiler find with a clip: the site must keep the embed behind the spoiler reveal');
   if (!f.spoiler && /(^|\s)Spoiler:\s/i.test(f.summary ?? '')) warn(w, 'summary has a Spoiler block without a chapter, write "Spoiler (Chapter N):"');

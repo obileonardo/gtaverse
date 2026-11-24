@@ -11,6 +11,7 @@ import LevelTable from '../../components/ui/LevelTable.astro';
 import { explainers } from '../../lib/content';
 import { explainerParts, sourceName, type Explainer } from '../../lib/explainers';
 import { formatDate } from '../../lib/finds';
+import { explainerArticle } from '../../lib/seo';
 
 export function getStaticPaths() {
   return explainers.map((e) => ({ params: { slug: e.frontmatter.slug }, props: { e } }));
@@ -20,8 +21,11 @@ const fm = e.frontmatter;
 const { standfirst, segments, headings, minutes } = await explainerParts(e);
 const updatedRaw = String(fm.updated_at).slice(0, 10);
 const updated = formatDate(updatedRaw);
+const summary = standfirst.replace(/<sup[\s\S]*?<\/sup>/g, '').replace(/<[^>]+>/g, '').trim();
+const ld = explainerArticle({ slug: fm.slug, title: fm.title, description: summary || fm.title, updated: updatedRaw, sources: fm.sources });
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/explainers' }, { name: fm.title, href: `/explainers/${fm.slug}` }];
 ---
-<Base title={fm.title} description={standfirst.replace(/<[^>]+>/g, '').slice(0, 160)}>
+<Base title={fm.title} description={standfirst.replace(/<[^>]+>/g, '').slice(0, 160)} ogType="article" jsonLd={ld} breadcrumbs={crumbs}>
   <div class="doc">
     <article class="doc__main">
       <header class="doc__head">

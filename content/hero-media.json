@@ -1,0 +1,194 @@
+{
+  "credit": "Trailer and art: Rockstar Games",
+  "sources": [
+    {
+      "id": "videos",
+      "title": "GTA VI videos (Rockstar Games downloads)",
+      "url": "https://media-rockstargames-com.akamaized.net/VI/downloads/videos/GTAVI_Videos.zip",
+      "page": "https://www.rockstargames.com/VI/downloads",
+      "zip_name": "GTAVI_Videos.zip",
+      "zip_bytes": 120851301,
+      "zip_sha256": "017b806729ae09d54180e9c83c31ef201ff4288751186f20d11ea2c513de7698",
+      "server_last_modified": "2026-08-28",
+      "retrieved": "2026-11-24"
+    },
+    {
+      "id": "wallpapers",
+      "title": "GTA VI artwork and wallpapers (Rockstar Games downloads)",
+      "url": "https://media-rockstargames-com.akamaized.net/VI/downloads/artwork_wallpapers/GTAVI_Artwork_Wallpapers.zip",
+      "page": "https://www.rockstargames.com/VI/downloads",
+      "zip_name": "GTAVI_Artwork_Wallpapers.zip",
+      "zip_bytes": 324144709,
+      "zip_sha256": "4e5ed7d67d963b2046ee281a1d8a5b4193a3552e6b5b05ceb9d27dc1f1c1a402",
+      "server_last_modified": "2026-11-18",
+      "retrieved": "2026-11-24"
+    }
+  ],
+  "trailer": {
+    "source": "videos",
+    "note": "The videos zip holds no full trailer: eight 1 to 1.5 s character shots (silent) and an animated cover-art video built on the GTA VI and Rockstar logos (never shown, decision 6). The hero trailer is the eight shots cut together in this order with hard cuts, as a trailer reel. Its sound is the music of the cover-art video, audio only, fetched when a visitor turns sound on.",
+    "width": 1920,
+    "height": 1080,
+    "portrait_width": 720,
+    "portrait_height": 1280,
+    "fps": 30,
+    "clips": [
+      {
+        "file": "Lucia_Caminos_Video_Clip.mp4",
+        "in": 0,
+        "out": 1.5,
+        "focus": {
+          "y": 0.5,
+          "x": 0.62
+        }
+      },
+      {
+        "file": "Cal_Hampton_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.32,
+          "x": 0.66
+        }
+      },
+      {
+        "file": "Boobie_Ike_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.45,
+          "x": 0.42
+        }
+      },
+      {
+        "file": "Brian_Heder_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.38,
+          "x": 0.56
+        }
+      },
+      {
+        "file": "Real_Dimez_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.4,
+          "x": 0.45
+        }
+      },
+      {
+        "file": "Raul_Bautista_Video_Clip.mp4",
+        "in": 0,
+        "out": 1.5,
+        "focus": {
+          "y": 0.38,
+          "x": 0.52
+        }
+      },
+      {
+        "file": "DreQuan_Priest_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.42,
+          "x": 0.56
+        }
+      },
+      {
+        "file": "Jason_Duval_Video_Clip.mp4",
+        "in": 0,
+        "out": 1,
+        "focus": {
+          "y": 0.5,
+          "x": 0.6
+        }
+      }
+    ],
+    "poster": {
+      "clip": 0,
+      "at": 0
+    },
+    "sound": {
+      "file": "GTAVI_Official_Cover_Art_Landscape.mp4",
+      "in": 4,
+      "out": 28,
+      "fade": 1.5,
+      "bitrate": "96k"
+    }
+  },
+  "keyart": [
+    {
+      "source": "wallpapers",
+      "landscape": "Jason_and_Lucia_01_landscape.jpg",
+      "portrait": "Jason_and_Lucia_01_phone.jpg",
+      "focus": {
+        "x": 0.55,
+        "y": 0.4
+      },
+      "portrait_focus": {
+        "x": 0.5,
+        "y": 0.3
+      },
+      "alt": "Jason and Lucia on the hood of a car under palm trees at sunset"
+    },
+    {
+      "source": "wallpapers",
+      "landscape": "Jason_and_Lucia_Beach_landscape.jpg",
+      "portrait": "Jason_and_Lucia_Beach_phone.jpg",
+      "focus": {
+        "x": 0.55,
+        "y": 0.4
+      },
+      "portrait_focus": {
+        "x": 0.5,
+        "y": 0.3
+      },
+      "alt": "Jason and Lucia in front of the Vice City skyline at dusk"
+    },
+    {
+      "source": "wallpapers",
+      "landscape": "Cal_Hampton_landscape.jpg",
+      "portrait": "Cal_Hampton_phone.jpg",
+      "focus": {
+        "x": 0.62,
+        "y": 0.4
+      },
+      "portrait_focus": {
+        "x": 0.55,
+        "y": 0.3
+      },
+      "alt": "Cal Hampton sitting on a boat under a highway bridge"
+    },
+    {
+      "source": "wallpapers",
+      "landscape": "Real_Dimez_landscape.jpg",
+      "portrait": "Real_Dimez_phone.jpg",
+      "focus": {
+        "x": 0.6,
+        "y": 0.4
+      },
+      "portrait_focus": {
+        "x": 0.5,
+        "y": 0.3
+      },
+      "alt": "Real Dimez posing outside an Ocean Drive hotel"
+    },
+    {
+      "source": "wallpapers",
+      "landscape": "Boobie_Ike_landscape.jpg",
+      "portrait": "Boobie_Ike_phone.jpg",
+      "focus": {
+        "x": 0.5,
+        "y": 0.4
+      },
+      "portrait_focus": {
+        "x": 0.5,
+        "y": 0.3
+      },
+      "alt": "Boobie Ike in his club holding a glass of champagne"
+    }
+  ],
+  "keyart_seconds": 8
+}

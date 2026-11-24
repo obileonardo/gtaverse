@@ -122,10 +122,8 @@ const path = Astro.url.pathname;
       scrim.hidden = false;
       openBtn.setAttribute('aria-expanded', 'true');
       if (phone.matches) document.documentElement.classList.add('is-locked');
-      requestAnimationFrame(() => {
-        header.dataset.menu = 'open';
-        if (phone.matches) (menu.querySelector<HTMLElement>('[aria-current="page"]') ?? menu.querySelector<HTMLElement>('a'))?.focus({ preventScroll: true });
-      });
+      if (phone.matches) (menu.querySelector<HTMLElement>('.menu__list [aria-current="page"]') ?? menu.querySelector<HTMLElement>('.menu__list a'))?.focus({ preventScroll: true });
+      requestAnimationFrame(() => { header.dataset.menu = 'open'; });
     };
     const close = (instant = false, restoreFocus = true) => {
       if (sheetOpen()) closeSheet(true, false);

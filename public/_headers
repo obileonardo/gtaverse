@@ -1,0 +1,27 @@
+# Response headers for Cloudflare Workers static assets (wrangler.jsonc serves ./dist).
+# The X-Robots-Tag on every page follows the launch switch: while site.indexable is false (src/lib/site.ts),
+# the build adds "X-Robots-Tag: noindex, nofollow" to the /* block below (the integration in astro.config.mjs).
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000
+
+# Hashed build assets (scripts, styles, fonts): their names change with their content.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Map tiles: rebuilt rarely, not hashed.
+/map/tiles/*
+  Cache-Control: public, max-age=604800
+
+# Open Graph cards: rebuilt with the content.
+/og/*
+  Cache-Control: public, max-age=86400
+
+# The PRD is never for search engines, whatever the launch switch says.
+/prd
+  X-Robots-Tag: noindex, nofollow

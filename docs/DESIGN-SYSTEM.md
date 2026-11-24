@@ -23,7 +23,10 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/styles/tokens.css` | Every token: colour (dark and light), type, spacing, sizes, radii, borders, motion, z layers |
 | `src/styles/base.css` | Reset, page ground, type role classes, `.container`, `.page`, `.sr-only`, skip link |
 | `src/styles/components.css` | The styles of every shared component (Icon, Button, Chip, Badge, Tabs), loaded on every page by `base.css`. The Astro components and the map's React island render the same classes, so each component has one look |
-| `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer. Props `title`, `description`, `layout` (`page` or `bare`), `sub` |
+| `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer, search and sharing tags. Props `title`, `description`, `layout` (`page` or `bare`), `sub`, and (optional) `jsonLd`, `breadcrumbs`, `ogType`, `noindex` |
+| `src/components/site/PageHead.astro` | List page head: display caps title, mono count, lede, optional breadcrumb trail (finders, region and category hubs) |
+| `src/components/site/DocPage.astro` | Policy page: the explainer's reading column with a rail of the policy pages (about, editorial policy, corrections, takedowns) |
+| `src/components/FindGrid.astro` | The finds index card grid as a component (hubs) |
 | `src/components/site/Header.astro` | The NEON island, the desktop popover menu and the phone overlay menu, the theme toggle, the sub bar |
 | `src/components/site/Footer.astro` | Footer with the legal disclaimer and takedown address (legal copy: keep word for word) |
 | `src/components/ui/Button.astro` | Pill button |
@@ -34,6 +37,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/components/ui/Tabs.astro` | Underline tabs |
 | `src/components/ui/LevelTable.astro` | The one table style (Fiverr level system) |
 | `src/components/Clip.astro` | A creator's clip: thumbnail first, player on tap, spoiler and mature gate |
+| `src/components/home/Hero.astro` | The home hero: three background modes (trailer, key art, line art) with ring timed circles, the A24 stack with its peek frame, the Apple TV slides (docs/HERO.md) |
 | `src/components/lore/Timeline.astro` | The GTAverse timeline (Grok on desktop, Queue on the phone) |
 | `src/components/ui/Icon.astro`, `icons.ts` | Icon wrapper and the icon set |
 | `src/lib/nav.ts` | Main navigation items and counts, `isCurrent()` |
@@ -151,7 +155,7 @@ Underline tabs: caps labels with 0.1em tracking, active at full text colour with
 
 ### Icon (`ui/Icon.astro`, `ui/icons.ts`)
 24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-down`, `check`, `question`, `cross`, `dot`, `filter`, `layers`, `plus`, `minus`, `share`, `link`, `search`, `grid`, `hand`, `clip`, `article`, `chat`, and one per find category (`egg`, `person`, `keyhole`, `globe`, `car`, `candle`, `crosshair`, `star`, `gem`, `flag`, `bolt`, `ghost`, mapped in `categoryIcon()`). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
-24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
+24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star), and for the home hero `image`, `wire`, `sound`, `sound-off`. Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
 
 ### LevelTable (`ui/LevelTable.astro`)
 Every table on the site. A sheet on `--surface-1` (radius 20, 24 padding, 1px edge), no cell borders, a 30% label column, rows striped full width (white 4% dark, `#f8f8f8` light), values centred when every cell in the column is 28 characters or fewer, a quiet footnote. A row can carry a level badge: the rounded hexagon in `--level-1` to `--level-5` with a glyph, and the label in the same colour (ink in light). On the phone a long value drops under the short one. Explainer markdown tables render through it automatically.
@@ -193,14 +197,25 @@ The map is a React island, and Astro components cannot render inside it. `ui.tsx
 - Pins: GetYourGuide photo and value pins (desktop), Rodeo round pins with a name (phone), Lyft pink count pills for finds close together. Selected is the inverse fill.
 - Collectible layers (decisions C1 to C7): off by default, switched in the basemap menu (`LayerRows` in `Menus.tsx`, also in the desktop Legend). Collectible pins (`.cpin`) are 12px quiet discs with a 2px `--text-1` edge on `--surface-1`, under the find pins, never grouped; zoomed in they grow to 24 high and show the checklist number in Geist Mono 12. Items sharing one spot sit on a small ring (`.cpin--ring`). Selected is the inverse fill with a pink ring. A tap opens the collectible card (`.ccard`): caps kicker with the layer, the label, "Number n of total in their checklist", any reading note, and "Location: Game Checklists" linking the source; it sits in the Airbnb popup slot on desktop and the Strava card slot on phone. While a layer is on, the map credit gains a second line, "Collectible locations: Game Checklists".
 - Every find opens from the list, so the map works with no pins. Filters (type chips; verification, clip, spoilers, mature and region in the menu) are remembered on the device (`vf-map-filters`); spoilers and mature are hidden by default. `/map?find=<slug>` opens a find.
+- 3D view (`map/three/`, docs/MAP-3D.md): a "3D" glass control between Filters and Basemap (pressed = inverse fill, as an open control), the compass (a glass circle with N and a pink tick that turns with the camera; tap for north), and the honesty line "Relief is approximate, drawn by The Vice Files." as a glass caption pill. 3D pins are the 2D pin colours as a disc on a stem; collectibles are the `.cpin` disc. The view fades in over the 2D map, which stays mounted.
+- Found tracker: the drawer's check icon button and the phone sheet's "Found" action are toggles (`aria-pressed`, pressed = inverse fill); the filter menu's Found group holds "Hide found", found counts per type and the export and import code field (a 16px input so iOS does not zoom).
 
 ### Page layouts
 - `layout="page"` (default): content sits in `.container.page`, below the floating island.
 - `layout="bare"`: full width (heroes, the map). Add your own `.container` for content that should line up.
 
+### Search and sharing (`Base.astro`, `src/lib/seo.ts`, `src/lib/routes.ts`)
+- Every page gets a canonical URL, Open Graph and Twitter tags and its own Open Graph card: a 1200 x 630 PNG drawn at build time (`src/lib/og.ts`) on the night navy ground with the sunrise glow, the kicker in pink caps, the title in Big Shoulders 900, one meta line in Inter and the wordmark. Text only: never Rockstar art or a YouTube still.
+- `src/lib/routes.ts` lists every public page; the sitemap, `llms.txt` and the cards are built from it. A new page type goes there.
+- Search engines are kept out by one switch, `site.indexable` in `src/lib/site.ts` (robots meta, `X-Robots-Tag` in `dist/_headers`, `robots.txt`).
+
+### Policy pages and credits
+- The footer carries a second row: the policy pages (`src/lib/trust.ts`), "Submit a find", "Suggest a correction" (prefilled GitHub issue links from `.github/ISSUE_TEMPLATE/*`, `src/lib/issues.ts`) and the RSS feed. The legal paragraphs stay word for word.
+- `/finders` rows reuse the find page's credit card (avatar initial on the pink tint, name, platform) with an outline "Profile" pill and a 44px ghost circle per original post.
+
 ## Art and stills
 
-The only art on open pages is the creator's own YouTube thumbnail (`findStill()`), served by YouTube, never re-hosted. Spoiler and mature finds never show art outside their reveal (`showcaseable()`). Shorts are skipped (portrait thumbnails). Anything without art gets `--glow-hero`.
+The home hero's background is the exception: Rockstar's official trailer clips and wallpapers, built at deploy and credited, and our own line art (docs/HERO.md, decisions H1 to H4). Everywhere else the only art on open pages is the creator's own YouTube thumbnail (`findStill()`), served by YouTube, never re-hosted. Spoiler and mature finds never show art outside their reveal (`showcaseable()`). Shorts are skipped (portrait thumbnails). Anything without art gets `--glow-hero`.
 
 ## Known decisions open to the owner
 
