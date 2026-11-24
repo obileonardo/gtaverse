@@ -121,8 +121,11 @@
   --space-16: 64px;
   --space-section: 96px;
 
-  --page-pad: 40px;          /* A24 left inset, the edge every page shares */
-  --container-max: 1360px;   /* 1440 minus the page pad on both sides */
+  /* The gutter (owner decision, 24 Nov 2026): the left and right edge every page shares, header-aligned content,
+     the hero and the footer. 128px at 1440 and wider, stepping down at 1280, 1024 and 768, 16px on the phone. */
+  --gutter: 128px;
+  --page-pad: var(--gutter); /* the name every component already uses for the shared edge */
+  --container-max: 1664px;   /* 1920 minus the gutter on both sides: wider screens keep 128px and centre the rest */
   --measure-short: 500px;
   --measure: 680px;
 
@@ -224,6 +227,11 @@
   --z-toast: 80;
 }
 
+/* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
+@media (max-width: 1439px) { :root { --gutter: 96px; } }
+@media (max-width: 1279px) { :root { --gutter: 64px; } }
+@media (max-width: 1023px) { :root { --gutter: 40px; } }
+
 /* Phone sizes: only where the Loves differ */
 @media (max-width: 767px) {
   :root {
@@ -236,7 +244,7 @@
     --text-body-s: 15px;
     --text-label: 15px;
     --text-mono: 17px;
-    --page-pad: 16px;
+    --gutter: 16px;
     --space-section: 64px;
     --island-top: 8px;
     --radius-xl: 28px;

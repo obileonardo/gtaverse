@@ -382,8 +382,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
     overflow: clip;
     outline-offset: -2px;
     /* The track fades out under the arrow pills and at the right edge. */
-    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
+    /* The track fades in after the arrow pills, which sit at the gutter. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--page-pad) + 128px), #000 calc(var(--page-pad) + 220px), #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--page-pad) + 128px), #000 calc(var(--page-pad) + 220px), #000 92%, transparent 100%);
   }
   .band__line { position: absolute; left: 22px; right: 22px; top: 76px; height: 1px; background: var(--border-1); }
   .band__track {

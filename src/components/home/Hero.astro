@@ -108,6 +108,11 @@ const thumb = (f: Find) => {
     <div class="stage__scrim"></div>
   </div>
 
+  <!-- What the site is, top left at the gutter, level with the island (owner decision, 24 Nov 2026). -->
+  <div class="hero__top container">
+    <p class="hero__intro"><span class="hero__intro-name">The Vice Files</span> is a fan-made field guide to GTA VI. Every secret in Leonida, shown in the clip of the fan who found it, labelled by how sure we are, and linked across the Rockstar universe.</p>
+  </div>
+
   <div class="hero__controls container">
     {modes.length > 1 && (
       <div class="modes" role="group" aria-label="Hero background" data-modes>
@@ -284,10 +289,11 @@ const thumb = (f: Find) => {
     inset: 0 0 auto 0;
     z-index: 2;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    padding-top: calc(var(--island-top) + 2px);
+    flex-direction: row-reverse; /* the circles sit at the right gutter, their caption just left of them */
+    align-items: center;
+    gap: 12px;
+    /* Centred on the island: its top plus half the difference between the island and a circle. */
+    padding-top: calc(var(--island-top) + (var(--island-h) - var(--ctrl-size)) / 2);
     pointer-events: none;
   }
   .modes { display: flex; gap: 8px; pointer-events: auto; }
@@ -329,9 +335,41 @@ const thumb = (f: Find) => {
     color: rgb(255 255 255 / 0.72);
     text-align: right;
   }
-  /* Desktop: never reach under the centred island and its sub bar. */
+  /* Desktop: never reach under the centred island and its sub bar (the circles take 148px of the room). */
   @media (min-width: 768px) {
+    .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 148px - 36px)); }
+  }
+  /* Narrower desktops: not enough room beside the circles, so the caption goes under them, as on the phone. */
+  @media (max-width: 1279px) {
+    .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
     .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 12px)); }
+  }
+
+  /* ---------- Intro (top left) ----------
+     Small body type, about 36 characters a line, text-2 with the name in text-1, no panel. A soft local scrim
+     under it keeps it at AA over the brightest trailer frame or key art (the stage's own scrim fades by 18%). */
+  .hero__top { position: absolute; inset: 0 0 auto 0; z-index: 2; padding-top: var(--island-top); pointer-events: none; }
+  .hero__intro {
+    position: relative;
+    max-width: min(37ch, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px));
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    line-height: 1.5;
+    pointer-events: auto;
+  }
+  .hero__intro::before {
+    content: '';
+    position: absolute;
+    inset: -48px -80px -56px calc(-1 * var(--page-pad));
+    z-index: -1;
+    background: radial-gradient(closest-side, rgb(13 12 26 / 0.62), rgb(13 12 26 / 0.38) 60%, rgb(13 12 26 / 0));
+    pointer-events: none;
+  }
+  .hero__intro-name { color: var(--text-1); font-weight: 500; }
+  /* Between the phone and 1024 the island leaves no room beside it; on the phone the Apple TV slides fill the art
+     from the bottom and the peek frame opens into that space, so the intro stays off (the page heading reads it). */
+  @media (max-width: 1023px) {
+    .hero__top { display: none; }
   }
 
   /* ---------- Sound toggle (bottom right, trailer only) ---------- */
@@ -367,26 +405,31 @@ const thumb = (f: Find) => {
   /* ---------- Desktop: A24 ---------- */
   .a24 { position: relative; height: 100svh; min-height: 640px; }
   .a24__inner { position: relative; height: 100%; display: flex; align-items: flex-end; padding-bottom: 52px; }
-  .a24__list { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
+  .a24__list { --a24-size: clamp(40px, 4vw, 72px); --a24-room: calc(var(--a24-size) * 0.2); position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
   .a24__item {
     display: inline-flex;
     align-items: flex-start;
     gap: 14px;
     max-width: 100%;
     color: #ffffff;
-    overflow: clip; /* the mask each line rises through; the link box itself never moves */
+    pointer-events: auto;
     transition: opacity 160ms var(--ease-colour);
   }
+  /* Each line rises through its own mask, the list item, which carries 0.2em of room above and below the line for
+     descenders and accents (cancelled by a negative margin, so the rhythm holds). It takes no pointer events, so the
+     room never steals hover or clicks from the lines beside it; the link box itself never moves. */
+  .a24__list li { overflow: clip; padding-block: var(--a24-room); margin-block: calc(-1 * var(--a24-room)); pointer-events: none; }
   .a24__title {
     font-family: var(--font-body);
     font-weight: 500;
-    font-size: clamp(40px, 4vw, 72px);
+    font-size: var(--a24-size);
     line-height: 0.94;
     letter-spacing: -0.035em;
     white-space: nowrap;
+    /* The ellipsis clips sideways only: descenders and accents above and below the tight line box stay whole. */
     overflow: hidden;
+    overflow: clip visible;
     text-overflow: ellipsis;
-    padding-bottom: 0.06em;
   }
   .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
   .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
@@ -401,13 +444,14 @@ const thumb = (f: Find) => {
   html.js:not(.nav-back) .a24__title,
   html.js:not(.nav-back) .a24__sup {
     animation: hero-line var(--dur-reveal) var(--ease-reveal) both;
-    animation-delay: calc(var(--i) * var(--stagger-hero) - var(--i) * var(--i) * 6ms);
+    animation-delay: calc(100ms + var(--i) * var(--stagger-hero) - var(--i) * var(--i) * 6ms);
   }
+  html.js:not(.nav-back) .hero__intro { animation: hero-rise 480ms var(--ease-reveal) both; }
   /* The label is small: it starts a whole title line lower, so it rises with its line, not inside it. */
   html.js:not(.nav-back) .a24__sup { animation-name: hero-line-sup; }
-  @keyframes hero-line-sup { from { translate: 0 calc(clamp(40px, 4vw, 72px) * 1.05); } }
+  @keyframes hero-line-sup { from { translate: 0 calc(var(--a24-size) * 1.45); } }
   html.js:not(.nav-back) :is(.hero__controls, .a24__down, .atv__dots) { animation: hero-fade 400ms var(--ease-colour) 300ms both; }
-  @keyframes hero-line { from { translate: 0 105%; } }
+  @keyframes hero-line { from { translate: 0 calc(105% + var(--a24-room, 0px)); } }
   @keyframes hero-fade { from { opacity: 0; } }
   @keyframes hero-rise { from { opacity: 0; translate: 0 8px; } }
 
@@ -532,7 +576,8 @@ const thumb = (f: Find) => {
       text-transform: uppercase;
       color: var(--accent-text);
     }
-    .atv__title a { display: inline-block; overflow: clip; vertical-align: top; }
+    /* The title's mask, with room for accents above the caps and anything below the line (never clips glyphs). */
+    .atv__title a { display: inline-block; overflow: clip; vertical-align: top; padding-block: 0.14em; margin-block: -0.14em; }
     .atv__title-in { display: block; }
     html.js:not(.nav-back) .atv__slide:first-child .atv__title-in { animation: hero-line var(--dur-reveal) var(--ease-reveal) both; }
     html.js:not(.nav-back) .atv__slide:first-child .atv__kicker { animation: hero-fade 400ms var(--ease-colour) both; }
@@ -577,7 +622,7 @@ const thumb = (f: Find) => {
 
   @media (prefers-reduced-motion: reduce) {
     /* The entrance is one 200ms fade of everything together. */
-    html.js:not(.nav-back) :is(.a24__title, .a24__sup, .hero__controls, .a24__down, .atv__dots, .atv__slide:first-child :is(.atv__title-in, .atv__kicker, .atv__meta, .atv__actions)) {
+    html.js:not(.nav-back) :is(.a24__title, .a24__sup, .hero__intro, .hero__controls, .a24__down, .atv__dots, .atv__slide:first-child :is(.atv__title-in, .atv__kicker, .atv__meta, .atv__actions)) {
       animation: hero-fade 200ms var(--ease-colour) both;
     }
     .stage__art.is-active img { animation: none; }
