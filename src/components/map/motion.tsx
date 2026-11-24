@@ -77,7 +77,9 @@ export function listFlip() {
         moved++;
         if (was) {
           const dy = was.top - r.top;
-          if (Math.abs(dy) > 0.5 && !still) li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 240, easing: glide });
+          // Long moves take a little longer (240 to 380ms), so a row crossing the list glides instead of lurching.
+          const duration = Math.round(Math.min(380, 240 + Math.abs(dy) * 0.2));
+          if (Math.abs(dy) > 0.5 && !still) li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration, easing: glide });
           before.delete(key(li));
         } else {
           li.animate(still ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: still ? 150 : 200, easing: arrive, fill: 'backwards' });
