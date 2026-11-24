@@ -17,5 +17,8 @@ dist/
 public/map/
 tools/map-harness/screenshots/
 
+# Official GTA VI trailer and key art for the home hero: Rockstar copyright, never committed (docs/HERO.md)
+public/media/
+
 # Private research (never committed)
 private/

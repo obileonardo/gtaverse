@@ -37,6 +37,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/components/ui/Tabs.astro` | Underline tabs |
 | `src/components/ui/LevelTable.astro` | The one table style (Fiverr level system) |
 | `src/components/Clip.astro` | A creator's clip: thumbnail first, player on tap, spoiler and mature gate |
+| `src/components/home/Hero.astro` | The home hero: three background modes (trailer, key art, line art) with ring timed circles, the A24 stack with its peek frame, the Apple TV slides (docs/HERO.md) |
 | `src/components/lore/Timeline.astro` | The GTAverse timeline (Grok on desktop, Queue on the phone) |
 | `src/components/ui/Icon.astro`, `icons.ts` | Icon wrapper and the icon set |
 | `src/lib/nav.ts` | Main navigation items and counts, `isCurrent()` |
@@ -148,7 +149,7 @@ Underline tabs: caps labels with 0.1em tracking, active at full text colour with
 
 ### Icon (`ui/Icon.astro`, `ui/icons.ts`)
 24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-down`, `check`, `question`, `cross`, `dot`, `filter`, `layers`, `plus`, `minus`, `share`, `link`, `search`, `grid`, `hand`, `clip`, `article`, `chat`, and one per find category (`egg`, `person`, `keyhole`, `globe`, `car`, `candle`, `crosshair`, `star`, `gem`, `flag`, `bolt`, `ghost`, mapped in `categoryIcon()`). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
-24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star). Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
+24 x 24 line glyphs, 1.5 stroke, round ends, `currentColor`. `size` `s` 16, `m` 20, `l` 24 or a number. `solid` gives the filled form for the current item. `label` only when the icon is the whole control. Icons: `menu`, `close`, `home`, `map`, `finds`, `explainers`, `lore`, `pin`, `play`, `sun`, `moon`, `arrow-right`, `arrow-down`, `arrow-up-right`, `chevron-right`, `chevron-left`, `chevron-down`, `arrow-left`, `check`, `question`, `cross`, `dot`, `share`, `info`, `link`, `film`, `alert`, `radio`, `flame` (solid too), `star` (line = hollow, solid = filled wanted star), `star-flash` (dashed, a flashing star), and for the home hero `image`, `wire`, `sound`, `sound-off`. Solid icons cut their inner detail with `--icon-cut`; set it to the ground the icon sits on. A diagonal arrow means "opens another site"; a chevron means "opens here".
 
 ### LevelTable (`ui/LevelTable.astro`)
 Every table on the site. A sheet on `--surface-1` (radius 20, 24 padding, 1px edge), no cell borders, a 30% label column, rows striped full width (white 4% dark, `#f8f8f8` light), values centred when every cell in the column is 28 characters or fewer, a quiet footnote. A row can carry a level badge: the rounded hexagon in `--level-1` to `--level-5` with a glyph, and the label in the same colour (ink in light). On the phone a long value drops under the short one. Explainer markdown tables render through it automatically.
@@ -194,7 +195,7 @@ The map is a React island, and Astro components cannot render inside it. `ui.tsx
 
 ## Art and stills
 
-The only art on open pages is the creator's own YouTube thumbnail (`findStill()`), served by YouTube, never re-hosted. Spoiler and mature finds never show art outside their reveal (`showcaseable()`). Shorts are skipped (portrait thumbnails). Anything without art gets `--glow-hero`.
+The home hero's background is the exception: Rockstar's official trailer clips and wallpapers, built at deploy and credited, and our own line art (docs/HERO.md, decisions H1 to H4). Everywhere else the only art on open pages is the creator's own YouTube thumbnail (`findStill()`), served by YouTube, never re-hosted. Spoiler and mature finds never show art outside their reveal (`showcaseable()`). Shorts are skipped (portrait thumbnails). Anything without art gets `--glow-hero`.
 
 ## Known decisions open to the owner
 

@@ -1,0 +1,566 @@
+---
+// The home hero. Behind the type sits a stage with three modes, switched by three circles at the top right:
+//   trailer  a short reel cut from Rockstar's official clips (muted, looping; sound on request)
+//   key art  Rockstar's official wallpapers
+//   line art our own wireframe drawings (line-art.ts)
+// The modes rotate on their own (the active circle's ring is the timer); choosing one stops the rotation.
+// Desktop keeps the A24 stack of finds: hovering a line shows that find's clip thumbnail in a small tilted frame
+// beside it (touch: first tap shows the frame, second tap opens). Phone keeps the Apple TV slides over the same stage.
+// Official media is built by `pnpm media:fetch && pnpm media:build` into the git-ignored public/media/hero/
+// (docs/HERO.md). Without it (CI, a fresh clone) the stage shows the line art only.
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import Verification from '../Verification.astro';
+import type { Find } from '../../lib/content';
+import { youtubeId, ytThumb, isShort } from '../../lib/clip';
+import { categoryLabel, regionLabel } from '../../lib/media';
+
+interface Props { featured: Find[] }
+const { featured } = Astro.props;
+
+type Manifest = {
+  credit: string;
+  trailer?: { seconds: number; landscape: Reel; portrait: Reel };
+  keyart?: { seconds: number; items: { alt: string; focus: Focus; portrait_focus: Focus; widths: number[]; portrait_widths: number[] }[] };
+  sound?: { file: string };
+};
+type Reel = { mp4: string; webm: string; webm_type: string; poster: { prefix: string; widths: number[] } };
+type Focus = { x: number; y: number };
+const dir = join(process.cwd(), 'public/media/hero');
+const manifest: Manifest | null = existsSync(join(dir, 'manifest.json')) ? JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) : null;
+const hasCoast = existsSync(join(dir, 'coast.json'));
+const base = '/media/hero/';
+const trailer = manifest?.trailer;
+const keyart = manifest?.keyart?.items.length ? manifest.keyart : null;
+const srcset = (prefix: string, widths: number[], ext: string) => widths.map((w) => `${base}${prefix}-${w}.${ext} ${w}w`).join(', ');
+const pct = (f: Focus) => `${Math.round(f.x * 100)}% ${Math.round(f.y * 100)}%`;
+
+const modes = [
+  trailer && { id: 'trailer', label: 'Play the trailer', icon: 'play' as const },
+  keyart && { id: 'keyart', label: 'Show the key art', icon: 'image' as const },
+  { id: 'line', label: 'Show the line art', icon: 'wire' as const },
+].filter(Boolean) as { id: string; label: string; icon: 'play' | 'image' | 'wire' }[];
+const credits = { trailer: 'Trailer and art: Rockstar Games', keyart: 'Trailer and art: Rockstar Games', line: 'Line art: The Vice Files' };
+
+// The peek frame shows the find's own YouTube thumbnail, loaded from YouTube. Never for spoiler or mature finds, never
+// for Shorts (portrait thumbnails); those show the sunrise glow instead.
+const thumb = (f: Find) => {
+  if (f.spoiler || f.mature || !f.clip || f.clip.platform !== 'youtube' || isShort(f.clip.url)) return undefined;
+  const id = youtubeId(f.clip.url);
+  return id ? ytThumb(id, 'hq') : undefined;
+};
+---
+<section class="hero" data-scheme="dark" data-hero aria-labelledby="home-title" data-mode={modes[0].id}>
+  <div class="container hero__label">
+    <h1 id="home-title" class="sr-only">The Vice Files: every secret in Leonida, shown in the clip of the fan who found it</h1>
+  </div>
+
+  <div
+    class="stage"
+    data-stage
+    aria-hidden="true"
+    data-trailer-seconds={trailer?.seconds}
+    data-keyart-seconds={keyart?.seconds}
+    data-coast={hasCoast ? `${base}coast.json` : undefined}
+    data-sound={manifest?.sound ? `${base}${manifest.sound.file}` : undefined}
+  >
+    {trailer && (
+      <div class:list={["stage__layer stage__trailer", { "is-active": modes[0].id === "trailer" }]} data-layer="trailer">
+        <picture>
+          <source media="(max-width: 767px)" type="image/avif" srcset={srcset(trailer.portrait.poster.prefix, trailer.portrait.poster.widths, 'avif')} sizes="100vw" />
+          <source media="(max-width: 767px)" type="image/webp" srcset={srcset(trailer.portrait.poster.prefix, trailer.portrait.poster.widths, 'webp')} sizes="100vw" />
+          <source type="image/avif" srcset={srcset(trailer.landscape.poster.prefix, trailer.landscape.poster.widths, 'avif')} sizes="100vw" />
+          <source type="image/webp" srcset={srcset(trailer.landscape.poster.prefix, trailer.landscape.poster.widths, 'webp')} sizes="100vw" />
+          <img class="stage__media" src={`${base}${trailer.landscape.poster.prefix}-1920.webp`} alt="" width="1920" height="1080" fetchpriority="high" decoding="async" elementtiming="hero-poster" />
+        </picture>
+        <video
+          class="stage__media stage__video"
+          data-video
+          muted
+          playsinline
+          loop
+          preload="none"
+          disablepictureinpicture
+          disableremoteplayback
+          data-landscape={JSON.stringify({ webm: base + trailer.landscape.webm, type: trailer.landscape.webm_type, mp4: base + trailer.landscape.mp4 })}
+          data-portrait={JSON.stringify({ webm: base + trailer.portrait.webm, type: trailer.portrait.webm_type, mp4: base + trailer.portrait.mp4 })}
+        ></video>
+      </div>
+    )}
+    {keyart && (
+      <div class:list={["stage__layer stage__keyart", { "is-active": modes[0].id === "keyart" }]} data-layer="keyart">
+        {keyart.items.map((k, i) => (
+          <picture class="stage__art" data-art={i} style={`--focus: ${pct(k.focus)}; --focus-portrait: ${pct(k.portrait_focus)}`}>
+            <source media="(max-width: 767px)" type="image/avif" data-srcset={srcset(`keyart-${i}-portrait`, k.portrait_widths, 'avif')} sizes="100vw" />
+            <source media="(max-width: 767px)" type="image/webp" data-srcset={srcset(`keyart-${i}-portrait`, k.portrait_widths, 'webp')} sizes="100vw" />
+            <source type="image/avif" data-srcset={srcset(`keyart-${i}`, k.widths, 'avif')} sizes="100vw" />
+            <source type="image/webp" data-srcset={srcset(`keyart-${i}`, k.widths, 'webp')} sizes="100vw" />
+            <img class="stage__media" data-src={`${base}keyart-${i}-1920.webp`} alt="" width="1920" height="1080" decoding="async" />
+          </picture>
+        ))}
+      </div>
+    )}
+    <div class:list={["stage__layer stage__line", { "is-active": modes[0].id === "line" }]} data-layer="line">
+      <canvas class="stage__canvas" data-line></canvas>
+    </div>
+    <div class="stage__scrim"></div>
+  </div>
+
+  <div class="hero__controls container">
+    {modes.length > 1 && (
+      <div class="modes" role="group" aria-label="Hero background" data-modes>
+        {modes.map((m, i) => (
+          <button type="button" class="modes__btn" data-mode-btn={m.id} aria-label={m.label} aria-pressed={i === 0 ? 'true' : 'false'}>
+            <svg class="modes__ring" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="modes__track" cx="22" cy="22" r="21" pathLength="1" />
+              <circle class="modes__progress" cx="22" cy="22" r="21" pathLength="1" data-ring />
+            </svg>
+            <Icon name={m.icon} size={18} />
+          </button>
+        ))}
+      </div>
+    )}
+    <p class="hero__credit" data-credit data-credits={JSON.stringify(credits)}>{credits[modes[0].id as keyof typeof credits]}</p>
+  </div>
+
+  {trailer && manifest?.sound && (
+    <button type="button" class="sound" data-sound-btn aria-pressed="false" aria-label="Turn the trailer sound on" hidden>
+      <span class="sound__icon sound__icon--off"><Icon name="sound-off" size={20} /></span>
+      <span class="sound__icon sound__icon--on"><Icon name="sound" size={20} /></span>
+    </button>
+  )}
+
+  <!-- Desktop: A24 -->
+  <div class="a24" data-a24>
+    <div class="container a24__inner" data-peek-root>
+      <ol class="a24__list" aria-label="Featured finds" data-a24-list>
+        {featured.map((f, i) => (
+          <li style={`--i: ${i}`}>
+            <a class="a24__item" href={`/finds/${f.slug}`} data-index={i} data-slug={f.slug} data-peek-thumb={thumb(f)}>
+              <span class="a24__title" data-peek-anchor>{f.title}</span>
+              <span class="a24__sup mono-caps">{categoryLabel(f)}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <div class="peek" data-peek aria-hidden="true">
+        <img class="peek__img" data-peek-img="0" alt="" decoding="async" />
+        <img class="peek__img" data-peek-img="1" alt="" decoding="async" />
+      </div>
+      <a class="a24__down" href="#more" aria-label="More finds below">
+        <svg width="16" height="46" viewBox="0 0 16 46" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8 0v45M1 38l7 7 7-7" /></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Phone: Apple TV -->
+  <div class="atv" data-atv>
+    <div class="atv__track" data-atv-track>
+      {featured.map((f, i) => {
+        const t = thumb(f);
+        return (
+          <article class="atv__slide" aria-roledescription="slide" aria-label={`${i + 1} of ${featured.length}`}>
+            <div class="atv__body">
+              <div class="atv__peek" aria-hidden="true">
+                {t ? <img data-src={t} alt="" decoding="async" /> : <span class="atv__peek-glow"></span>}
+              </div>
+              <p class="atv__kicker">{categoryLabel(f)}</p>
+              <h2 class="atv__title"><a href={`/finds/${f.slug}`} data-atv-link>{f.title}</a></h2>
+              <div class="atv__meta">
+                <span>{regionLabel(f)}</span>
+                <Verification level={f.verification} />
+              </div>
+              <div class="atv__actions">
+                <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon="play" class="atv__play">Play clip</Button>
+                <Button href="/map" variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+    <div class="atv__dots" data-atv-dots>
+      {featured.map((_, i) => (
+        <button type="button" class:list={['atv__dot', { 'is-active': i === 0 }]} aria-label={`Show find ${i + 1} of ${featured.length}`} aria-current={i === 0 ? 'true' : undefined} data-dot={i}><span></span></button>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initStage } from './hero-stage';
+  import { initPeek } from './hero-peek';
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero) {
+    initStage(hero);
+    initPeek(hero);
+  }
+
+  // The sub bar belongs to the hero: it steps away once the hero has scrolled off.
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  if (header && hero && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) delete header.dataset.subbar; else header.dataset.subbar = 'hidden';
+    }, { rootMargin: '-160px 0px 0px 0px' }).observe(hero);
+  }
+
+  // Phone: the slides scroll natively with snap; the dots follow and can be tapped.
+  const track = document.querySelector<HTMLElement>('[data-atv-track]');
+  const dots = [...document.querySelectorAll<HTMLButtonElement>('[data-dot]')];
+  if (track && dots.length) {
+    let frame = 0;
+    const sync = () => {
+      frame = 0;
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      dots.forEach((d, k) => {
+        d.classList.toggle('is-active', k === i);
+        if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
+      });
+    };
+    track.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(sync); }, { passive: true });
+    dots.forEach((d, k) => d.addEventListener('click', () => {
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      track.scrollTo({ left: k * track.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+    }));
+  }
+</script>
+
+<style>
+  .hero { position: relative; background: var(--bg); color: var(--text-1); }
+  .hero__label { position: absolute; inset: 0 0 auto 0; }
+  .hero__label h1 { margin: 0; }
+
+  /* ---------- Stage: the three modes ---------- */
+  .stage {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 100svh;
+    min-height: 640px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .stage__layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-crossfade) var(--ease-colour), visibility 0s linear var(--dur-crossfade);
+  }
+  .stage__layer.is-active { opacity: 1; visibility: visible; transition: opacity var(--dur-crossfade) var(--ease-colour), visibility 0s; }
+  .stage.is-instant .stage__layer { transition: none; }
+  .stage__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .stage__trailer { background: var(--glow-hero), var(--bg); }
+  .stage__video { opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
+  .stage__trailer.is-playing .stage__video { opacity: 1; }
+
+  .stage__art { position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
+  .stage__art img { object-position: var(--focus); }
+  .stage__art.is-active { opacity: 1; }
+  /* A slow push in while a key art image is up; transform only, so it stays on the compositor. */
+  .stage__art.is-active img { animation: art-push 9s cubic-bezier(0.33, 0, 0.67, 1) both; }
+  @keyframes art-push { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  .stage__line { background: var(--bg); }
+  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Dispersed, monochrome: keeps the white type at AA over any frame without reading as a band. */
+  .stage__scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to top, rgb(13 12 26 / 0.62) 0%, rgb(13 12 26 / 0.26) 34%, rgb(13 12 26 / 0) 58%),
+      linear-gradient(to right, rgb(13 12 26 / 0.35) 0%, rgb(13 12 26 / 0) 52%),
+      linear-gradient(to bottom, rgb(13 12 26 / 0.36) 0%, rgb(13 12 26 / 0) 18%),
+      radial-gradient(32% 22% at 100% 0%, rgb(13 12 26 / 0.5) 0%, rgb(13 12 26 / 0) 100%);
+  }
+
+  /* ---------- Mode circles and credit (top right) ---------- */
+  .hero__controls {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: calc(var(--island-top) + 2px);
+    pointer-events: none;
+  }
+  .modes { display: flex; gap: 8px; pointer-events: auto; }
+  .modes__btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--ctrl-size);
+    height: var(--ctrl-size);
+    border-radius: var(--radius-full);
+    color: #ffffff;
+    background: rgb(13 12 26 / 0.42);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .modes__btn:active { transform: scale(0.94); }
+  .modes__btn[aria-pressed='true'] { background: rgb(13 12 26 / 0.66); }
+  .modes__btn :global(.icon) { opacity: 0.72; transition: opacity var(--dur-colour) var(--ease-colour); }
+  .modes__btn[aria-pressed='true'] :global(.icon) { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    .modes__btn:hover { background: rgb(13 12 26 / 0.6); }
+    .modes__btn:hover :global(.icon) { opacity: 1; }
+  }
+  .modes__ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); fill: none; pointer-events: none; }
+  .modes__track { stroke: rgb(255 255 255 / 0.22); stroke-width: 1; }
+  .modes__progress { stroke: #ffffff; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+  .modes__btn[aria-pressed='true'] .modes__progress { opacity: 1; }
+  /* Chosen by the visitor: the rotation stops and the ring stays full. */
+  .modes[data-pinned] .modes__btn[aria-pressed='true'] .modes__progress { stroke-dashoffset: 0; }
+
+  .hero__credit {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.02em;
+    color: rgb(255 255 255 / 0.72);
+    text-align: right;
+  }
+  /* Desktop: never reach under the centred island and its sub bar. */
+  @media (min-width: 768px) {
+    .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 12px)); }
+  }
+
+  /* ---------- Sound toggle (bottom right, trailer only) ---------- */
+  .sound {
+    position: absolute;
+    z-index: 3;
+    /* Above the scroll arrow, in the column the stack leaves free. */
+    right: calc(var(--page-pad) - 14px);
+    bottom: 116px;
+    display: grid;
+    place-items: center;
+    width: var(--ctrl-size);
+    height: var(--ctrl-size);
+    border-radius: var(--radius-full);
+    color: #ffffff;
+    background: rgb(13 12 26 / 0.42);
+    border: var(--border-w) solid rgb(255 255 255 / 0.22);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    touch-action: manipulation;
+    transition: transform var(--dur-press) var(--ease-out), opacity var(--dur-colour) var(--ease-out);
+  }
+  .sound[hidden] { display: none; }
+  .sound:active { transform: scale(0.94); }
+  @starting-style { .sound { opacity: 0; } }
+  @media (hover: hover) and (pointer: fine) {
+    .sound:hover { background: rgb(13 12 26 / 0.6); }
+  }
+  .sound__icon { grid-area: 1 / 1; display: grid; }
+  .sound__icon--on, .sound[aria-pressed='true'] .sound__icon--off { display: none; }
+  .sound[aria-pressed='true'] .sound__icon--on { display: grid; }
+
+  /* ---------- Desktop: A24 ---------- */
+  .a24 { position: relative; height: 100svh; min-height: 640px; }
+  .a24__inner { position: relative; height: 100%; display: flex; align-items: flex-end; padding-bottom: 52px; }
+  .a24__list { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
+  .a24__item {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 14px;
+    max-width: 100%;
+    color: #ffffff;
+    transition: opacity var(--dur-colour) var(--ease-colour);
+  }
+  .a24__title {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(40px, 4vw, 72px);
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-bottom: 0.06em;
+  }
+  .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
+  .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
+  .a24__list[data-hot] .a24__item { opacity: 0.55; }
+  .a24__list[data-hot] .a24__item.is-hot { opacity: 1; }
+
+  .a24__list li {
+    animation: a24-rise 600ms var(--ease-out) both;
+    animation-delay: calc(var(--i) * 70ms - var(--i) * var(--i) * 6ms);
+  }
+  @keyframes a24-rise { from { opacity: 0; transform: translateY(14px); } }
+
+  .a24__down {
+    position: absolute;
+    z-index: 1;
+    right: var(--page-pad);
+    bottom: 52px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 56px;
+    margin-right: -14px;
+    color: #ffffff;
+    transition: transform var(--dur-colour) var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .a24__down:hover { transform: translateY(4px); }
+  }
+
+  /* The peek frame: the hovered find's clip, tilted, over the list beside its line. */
+  .peek {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width: clamp(200px, 17vw, 280px);
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-s);
+    overflow: hidden;
+    background: var(--glow-hero), var(--surface-1);
+    outline: 1px solid rgb(255 255 255 / 0.5);
+    outline-offset: -1px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(0.96);
+    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
+  }
+  .peek.is-open {
+    opacity: 1;
+    transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)) scale(1);
+    transition: opacity var(--dur-popover-in) var(--ease-out), transform 280ms var(--ease-out);
+  }
+  .peek.is-instant { transition: none; }
+  .peek__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-colour) var(--ease-colour); }
+  .peek__img.is-on { opacity: 1; }
+
+  /* ---------- Phone: Apple TV ---------- */
+  .atv { display: none; }
+
+  @media (max-width: 767px) {
+    .stage { height: 80svh; min-height: 0; }
+    .stage__art img { object-position: var(--focus-portrait); }
+    .stage__scrim {
+      background:
+        linear-gradient(to bottom, rgb(13 12 26 / 0) 40%, rgb(13 12 26 / 0.72) 70%, var(--bg) 100%),
+        linear-gradient(to bottom, rgb(13 12 26 / 0.45) 0%, rgb(13 12 26 / 0) 16%);
+    }
+    /* Under the island on the phone, so the two never meet. */
+    .hero__controls { padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
+    .sound { right: var(--page-pad); bottom: 0; }
+
+    .a24 { display: none; }
+    .atv { display: block; position: relative; padding-bottom: 28px; }
+    .atv__track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+    .atv__track::-webkit-scrollbar { display: none; }
+    .atv__slide {
+      position: relative;
+      flex: 0 0 100%;
+      min-height: 80svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+    .atv__body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 var(--page-pad) 0;
+    }
+    .atv__peek {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      width: 200px;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-s);
+      overflow: hidden;
+      background: var(--glow-hero), var(--surface-1);
+      outline: 1px solid rgb(255 255 255 / 0.5);
+      outline-offset: -1px;
+      opacity: 0;
+      transform: translateX(-50%) rotate(-3deg) scale(0.96);
+      transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
+      pointer-events: none;
+    }
+    .atv__slide.is-peek .atv__peek {
+      opacity: 1;
+      transform: translateX(-50%) rotate(-3deg) scale(1);
+      transition: opacity var(--dur-popover-in) var(--ease-out), transform var(--dur-popover-in) var(--ease-out);
+    }
+    .atv__peek img { width: 100%; height: 100%; object-fit: cover; }
+    .atv__peek-glow { display: block; width: 100%; height: 100%; }
+    .atv__kicker {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-text);
+    }
+    .atv__title {
+      margin-top: 8px;
+      font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
+      font-weight: 900;
+      font-size: 44px;
+      line-height: 0.92;
+      letter-spacing: -0.005em;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-wrap: balance;
+      overflow-wrap: anywhere;
+    }
+    .atv__meta {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+      font-size: 17px;
+      color: rgb(255 255 255 / 0.8);
+    }
+    .atv__actions { margin-top: 22px; display: flex; align-items: center; gap: 12px; }
+    .atv__actions :global(.atv__play) { min-width: 160px; font-size: 20px; }
+    .atv__dots { display: flex; justify-content: center; margin-top: 20px; }
+    /* 44px tall hit area around an 8px dot; the negative margin keeps the drawn spacing */
+    .atv__dot { display: grid; place-items: center; height: 44px; min-width: 24px; padding-inline: 8px; margin: -10px -3px; }
+    .atv__dot span {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: rgb(255 255 255 / 0.4);
+      transition: width var(--dur-colour) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+    }
+    .atv__dot.is-active span { width: 24px; background: #ffffff; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .a24__list li { animation-name: a24-fade; }
+    @keyframes a24-fade { from { opacity: 0; } }
+    .stage__art.is-active img { animation: none; }
+    .peek, .peek.is-open { transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--tilt, -3deg)); }
+    .atv__peek, .atv__slide.is-peek .atv__peek { transform: translateX(-50%) rotate(-3deg); }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .modes__btn, .sound { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+</style>
