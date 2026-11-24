@@ -594,7 +594,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
   }
   .pill__text { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
   .pill__title { font-weight: 500; }
-  .pill__sub { font-size: var(--text-body-s); opacity: 0.72; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill__sub { font-size: var(--text-body-s); opacity: 0.72; max-width: 22ch; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
 
   @media (prefers-reduced-motion: reduce) {
     .pill, .shot, .source, .find__trailer, .find__icons a, .find__icons button { transition: none; }
