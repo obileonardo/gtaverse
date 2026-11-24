@@ -14,6 +14,9 @@
     "build": "node scripts/validate.mjs && astro build",
     "preview": "astro preview",
     "validate": "node scripts/validate.mjs",
+    "test": "node --test scripts/test/*.test.ts",
+    "seo:check": "node scripts/check-seo.mjs",
+    "deploy": "pnpm map:fetch && pnpm map:tiles && pnpm build && pnpm dlx wrangler@4.159.0 deploy",
     "map:fetch": "node scripts/map/fetch-map.mjs",
     "map:tiles": "node scripts/map/build-tiles.mjs",
     "map:grid": "node scripts/map/measure-grid.mjs",
@@ -22,9 +25,11 @@
   },
   "devDependencies": {
     "@types/leaflet": "1.9.21",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "ajv": "^8.20.0",
+    "satori": "0.63.2",
     "sharp": "~0.35.5",
     "typescript": "^7.0.2"
   },

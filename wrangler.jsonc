@@ -1,0 +1,17 @@
+// The Vice Files on Cloudflare Workers static assets: no Worker script, only the built site in ./dist.
+// Deploy with `pnpm run deploy` (fetches the map, builds tiles, builds the site, then wrangler deploy).
+// Production deploys need the owner's go. Response headers live in public/_headers, redirects in public/_redirects.
+{
+  "name": "thevicefiles",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "routes": [
+    { "pattern": "thevicefiles.com", "custom_domain": true },
+    { "pattern": "rockstarworld.elvisobi.com", "custom_domain": true }
+  ],
+  "workers_dev": false
+}
