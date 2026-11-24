@@ -132,10 +132,69 @@ button, [role='button'], [role='tab'] { user-select: none; -webkit-user-select: 
 /* Lock page scroll under a full screen menu */
 html.is-locked { overflow: hidden; }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 1ms !important;
-    animation-delay: 0ms !important;
-    scroll-behavior: auto !important;
-  }
+/* ---------- Page transitions (motion study item 1) ----------
+   The browser's own cross-document view transitions: no router, real page loads. The old page fades out, then the
+   new one fades in and rises 8px; their fades overlap by 60ms so no frame is blank, and only the new page moves.
+   The island is its own layer (view-transition-name in Header.astro), the same pixels on both pages, so it never
+   redraws. Browsers without support navigate instantly. */
+@view-transition { navigation: auto; }
+::view-transition-group(root) { animation-duration: calc(var(--dur-page-out) + var(--dur-page-in)); }
+::view-transition-old(root) { animation: vt-out var(--dur-page-out) var(--ease-standard) both; }
+::view-transition-new(root) { animation: vt-in var(--dur-page-in) var(--ease-out) calc(var(--dur-page-out) - 60ms) both; }
+::view-transition-group(island) { animation-duration: var(--dur-page-out); }
+::view-transition-old(site-menu) { animation: vt-out var(--dur-page-out) var(--ease-standard) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes vt-fade-in { from { opacity: 0; } }
+
+/* Game hub to game hub (the switcher): the page leaves toward the side it came from and the next game arrives from
+   the side of the move. The old page finishes moving (at 70% of its fade) before the new one starts. */
+html:active-view-transition-type(game-next)::view-transition-old(root) { animation: vt-leave-l 140ms var(--ease-standard) both; }
+html:active-view-transition-type(game-prev)::view-transition-old(root) { animation: vt-leave-r 140ms var(--ease-standard) both; }
+html:active-view-transition-type(game-next)::view-transition-new(root) { animation: vt-arrive-r 260ms var(--ease-out) 100ms both; }
+html:active-view-transition-type(game-prev)::view-transition-new(root) { animation: vt-arrive-l 260ms var(--ease-out) 100ms both; }
+@keyframes vt-leave-l { 70% { transform: translateX(-12px); } to { opacity: 0; transform: translateX(-12px); } }
+@keyframes vt-leave-r { 70% { transform: translateX(12px); } to { opacity: 0; transform: translateX(12px); } }
+@keyframes vt-arrive-r { from { opacity: 0; transform: translateX(12px); } }
+@keyframes vt-arrive-l { from { opacity: 0; transform: translateX(-12px); } }
+
+/* The theme change runs its own same-page transition (Header.astro): the circle opens from the toggle. */
+html.vt-theme::view-transition-old(root),
+html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-old(root) { z-index: 0; }
+html.vt-theme::view-transition-new(root) { z-index: 1; }
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+
+/* ---------- Stills fade in once decoded (motion study item 2) ----------
+   The inline script in Base.astro marks each image data-in when it has decoded (data-instant when it was ready for
+   the first frame). Leaflet tiles, the hero stage and the peek frame handle their own fades. Opacity only. */
+@media screen {
+  html.js img:not([data-in], [data-nofade], .leaflet-tile, .leaflet-image-layer, .stage__media, .peek__img) { opacity: 0; }
+  html.js img[data-in]:not([data-instant]) { animation: img-in var(--dur-image-in) var(--ease-colour) both; }
 }
+@keyframes img-in { from { opacity: 0; } }
+
+/* ---------- One-shot reveal for card walls and list rows (motion study item 8) ----------
+   site-motion.ts marks each card or row data-rv="in" (with its --rv-delay) the first time it comes into view, or
+   "skip" on a back navigation. `translate`, not `transform`, so a card's press scale keeps working. */
+@media screen {
+  html.js:not(.rv-off) :is(main .card, [data-reveal] > li):not([data-rv], .moment *, [role='tabpanel'] *) { opacity: 0; translate: 0 12px; }
+}
+[data-rv='in'] { animation: rv-rise var(--dur-reveal-group) var(--ease-reveal) var(--rv-delay, 0ms) both; }
+@keyframes rv-rise { from { opacity: 0; translate: 0 12px; } }
+
+/* Reduced motion is decided per component: each animated component carries its own
+   prefers-reduced-motion rule that keeps a short opacity fade and drops the travel (docs/DESIGN-SYSTEM.md).
+   The one site-wide rule left: scrolling jumps instead of gliding. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  /* Pages crossfade, short, with no rise and no slide. */
+  ::view-transition-old(root),
+  html:active-view-transition-type(game-next, game-prev)::view-transition-old(root) { animation: vt-out var(--dur-fade-reduced) linear both; }
+  ::view-transition-new(root),
+  html:active-view-transition-type(game-next, game-prev)::view-transition-new(root) { animation: vt-fade-in var(--dur-fade-reduced) linear both; }
+  /* Cards and rows fade in together, in place. */
+  html.js:not(.rv-off) :is(main .card, [data-reveal] > li):not([data-rv], .moment *, [role='tabpanel'] *) { translate: none; }
+  [data-rv='in'] { animation: rv-fade var(--dur-fade-reduced) var(--ease-colour) both; }
+}
+@keyframes rv-fade { from { opacity: 0; } }
