@@ -3,7 +3,7 @@
 Status as of 2026-11-24. Update this file whenever something moves between states.
 
 ## Waiting on owner
-- **Pick a logo.** Chime made seven directions, on the Figma page linked from [LOGO.md](LOGO.md). Elvis and Chime choose one, or two to refine; #4 Unfolded is on probation.
+- Review the logo pull request (issue #59): Case File in the header island, the Open Graph cards, the favicons and `/design`; slice decisions LG7 to LG10.
 - Review the open-source readiness pull request (Stage B, issue #19): licences, contributor files, CI, Dependabot, and the GitHub settings to apply from [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md).
 - **Map labels and first-pass pins are blocked on a rule conflict.** The map agent was asked to read place labels by opening the map image, but LEGAL.md and CONTENT-GUIDE rule 5 forbid feeding the map into AI tools. It did not view the image, so `content/map.json` `labels` is empty and no find has a pin. Choose: a person (Chime) records labels with the harness picker, or the owner explicitly allows the agent to read the map.
 - Confirm or change the slice decisions S1 to S13 in [DECISIONS.md](DECISIONS.md).
@@ -61,6 +61,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Official map tiles build locally (970 WebP tiles, zoom 0 to 5, 5.66 MiB, inside Cloudflare limits). Tiles are git-ignored and built from Rockstar's download, never committed.
 
 ## Resolved
+- Pick a logo: done. Case File by Chime, implemented from Chime's SVGs (decisions LG5, LG6; [LOGO.md](LOGO.md)). Chime may polish it later.
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).
 - Branching: `staging` is ground truth; branch from it and target it (decision 16).
 - Takedown contact: takedown@thevicefiles.com (decision 20).

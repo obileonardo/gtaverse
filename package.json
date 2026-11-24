@@ -25,7 +25,8 @@
     "map:shots": "node tools/map-harness/screenshots.mjs",
     "media:fetch": "node scripts/media/fetch-media.mjs",
     "media:coast": "node scripts/media/build-coast.mjs",
-    "media:build": "node scripts/media/build-media.mjs && node scripts/media/build-coast.mjs"
+    "brand:icons": "node scripts/brand/build-favicons.mjs",
+    "media:build":"node scripts/media/build-media.mjs && node scripts/media/build-coast.mjs"
   },
   "devDependencies": {
     "@types/leaflet": "1.9.21",

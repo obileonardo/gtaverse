@@ -1,0 +1,134 @@
+---
+// Logo: Case File by Chime (decision LG5), rendered from the real component (src/components/ui/Logo.astro) and the
+// logo code (src/brand/logo.ts). The grounds are the tokens themselves: the dark panel wears data-scheme="dark", the
+// light panel the light block's own values, so both show whatever the theme toggle says. Rules: docs/LOGO.md.
+import Logo from '../ui/Logo.astro';
+import Specimen from './Specimen.astro';
+import { BRAND, CLEAR_SPACE, MIN_LOCKUP_PX, MIN_MARK_PX, SMALL_MARK_MAX } from '../../brand/logo';
+import { lightStyle } from './tokens';
+
+const grounds = [
+  { id: 'dark', label: 'Night navy ground (dark theme)', attrs: { 'data-scheme': 'dark' } },
+  { id: 'light', label: 'Cream ground (light theme)', attrs: { style: lightStyle } },
+];
+const markSizes = [180, 32, 16];
+const favicons = [
+  { src: '/favicon.svg', label: 'favicon.svg' },
+  { src: '/favicon-32.png', label: 'favicon-32.png' },
+];
+const rules: [string, string][] = [
+  ['Use the component', 'Every logo goes through Logo.astro (or the functions in src/brand/logo.ts for cards and files). Never retype the wordmark as live text and never export a .svg file (IC3).'],
+  ['Keep the clear space', `Leave at least half the folder’s height (${CLEAR_SPACE} x) clear on every side. In the header island the link’s own padding and the island’s edge give it that.`],
+  ['Respect the minimum sizes', `The one-line lockup is never drawn under ${MIN_LOCKUP_PX} px tall (caps of 12 px); the mark never under an ${MIN_MARK_PX} px folder (the 16 px favicon). At ${SMALL_MARK_MAX} px and under the mark switches to Chime’s small drawing, whose VF is a little wider.`],
+  ['Token colours only', 'Pink --accent and navy --on-accent, the same in both themes, with the wordmark in the text colour. On a pink ground use the on-pink colourway (navy folder, pink VF). Blush is not approved (LG4); no other colour, gradient, outline or glow.'],
+  ['Do not change the drawing', 'No stretching, rotating, re-spacing, outlining, shadows or effects; no other font for the wordmark; the folder and the VF stay together. Changes come from Chime, as new paths in src/brand/logo.ts.'],
+  ['Never beside Rockstar marks as one', 'The logo never sits in a lockup with a game logo, the Rockstar logo, GTAArtDeco or Pricedown, and never reads as official (decisions 6, GS1).'],
+];
+---
+<Specimen id="c-logo" name="Logo" file="src/components/ui/Logo.astro" props={/interface Props \{/} note="Designed by Chime. The paths are Chime’s own outlines (src/brand/logo.ts), so the logo never waits for a font. Rules: docs/LOGO.md.">
+  <div class="ds-row"><Logo height={24} /></div>
+</Specimen>
+
+<div class="ds-block" id="logo-lockups">
+  <h3 class="ds-h3">Lockups</h3>
+  <div class="lg-grounds">
+    {grounds.map((g) => (
+      <div class="lg-ground" {...g.attrs}>
+        <p class="ds-cap">{g.label}</p>
+        <div class="lg-cell"><Logo height={18} /><span class="ds-cap">One line, 18 px: the header island</span></div>
+        <div class="lg-cell"><Logo height={36} small={false} /><span class="ds-cap">One line, 36 px: the Open Graph cards</span></div>
+        <div class="lg-cell"><Logo variant="stacked" height={96} /><span class="ds-cap">Stacked, 96 px</span></div>
+      </div>
+    ))}
+  </div>
+  <div class="lg-pink">
+    <Logo variant="stacked" height={110} tone="on-pink" label="The Vice Files" />
+    <p class="lg-pink__cap">On pink: Chime’s logo panel, tone="on-pink"</p>
+  </div>
+</div>
+
+<div class="ds-block" id="logo-mark">
+  <h3 class="ds-h3">Mark and minimum sizes</h3>
+  <div class="lg-grounds">
+    {grounds.map((g) => (
+      <div class="lg-ground" {...g.attrs}>
+        <p class="ds-cap">{g.label}</p>
+        <div class="lg-marks">
+          {markSizes.map((s) => {
+            const folder = (s * 22) / 32;
+            return <div class="lg-cell"><Logo variant="mark" height={folder} /><span class="ds-cap">{s} px{s <= 32 ? ', small drawing' : ''}</span></div>;
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="ds-note">As on Chime’s mark sheet: the folder sits in a square with a margin of 3/32 at the sides and 5/32 above and below, so a 32 px mark is a 26 x 22 folder and a 16 px mark a 13 x 11 one. The lockup’s smallest size is {MIN_LOCKUP_PX} px tall.</p>
+</div>
+
+<div class="ds-block" id="logo-space">
+  <h3 class="ds-h3">Clear space</h3>
+  <div class="lg-space" aria-hidden="true">
+    <span class="lg-space__zone"><Logo height={48} small={false} /></span>
+  </div>
+  <p class="ds-note">The dashed box is the clear space: half the folder’s height on every side. Nothing else (text, controls, art, edges) enters it.</p>
+</div>
+
+<div class="ds-block" id="logo-colour">
+  <h3 class="ds-h3">Colours</h3>
+  <div class="ds-grid">
+    <div class="ds-tile"><span class="lg-chip" style="background: var(--accent)"></span><p class="ds-tile__t">Folder: <code class="ds-tok">--accent</code></p><p class="ds-tile__d">GTA pink {BRAND.pink}, the same in both themes.</p></div>
+    <div class="ds-tile"><span class="lg-chip" style="background: var(--on-accent)"></span><p class="ds-tile__t">VF: <code class="ds-tok">--on-accent</code></p><p class="ds-tile__d">Night navy {BRAND.navy} on pink, 6.6:1, the same in both themes.</p></div>
+    <div class="ds-tile"><span class="lg-chip" style="background: var(--text-1)"></span><p class="ds-tile__t">Wordmark: <code class="ds-tok">--text-1</code></p><p class="ds-tile__d">The text colour of the ground (currentColor): white on navy, ink on cream, navy on pink.</p></div>
+  </div>
+  <p class="ds-note">A logo is exempt from the contrast rules, but the VF and the wordmark pass anyway. The pink folder on the cream ground is 2.35:1, as on Chime’s mark sheet; the navy VF keeps the mark readable there.</p>
+</div>
+
+<div class="ds-block" id="logo-favicon">
+  <h3 class="ds-h3">Favicon and app icons</h3>
+  <div class="lg-grounds">
+    {grounds.map((g) => (
+      <div class="lg-ground" {...g.attrs}>
+        <p class="ds-cap">{g.label}</p>
+        <div class="lg-marks">
+          {favicons.map((f) => [16, 32].map((s) => <div class="lg-cell"><img src={f.src} width={s} height={s} alt="" /><span class="ds-cap">{f.label} at {s}</span></div>))}
+          <div class="lg-cell"><img src="/apple-touch-icon.png" width="60" height="60" alt="" class="lg-app" /><span class="ds-cap">apple-touch-icon.png</span></div>
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="ds-note">Drawn by <code>pnpm brand:icons</code> from the logo code into <code>public/</code> (SVG, 32 px PNG, 180 px touch icon, 512 px manifest icon) and allowed by exact path in the CI asset guard (LG6). <code>pnpm test</code> fails if they drift from the logo.</p>
+</div>
+
+<div class="ds-block" id="logo-rules">
+  <h3 class="ds-h3">Do and don’t</h3>
+  <ol class="ds-list">
+    {rules.map(([t, d], i) => (
+      <li>
+        <span class="ds-list__n tabular">{String(i + 1).padStart(2, '0')}</span>
+        <div><p class="ds-list__t">{t}</p><p class="ds-list__d">{d}</p></div>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .lg-grounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .lg-ground { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-8); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--bg); color: var(--text-1); min-width: 0; }
+  .lg-cell { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+  .lg-cell :global(.logo) { display: block; max-width: 100%; height: auto; }
+  .lg-marks { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-8); }
+  .lg-pink { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-6); padding: var(--space-16) var(--space-8); border-radius: var(--radius-xl); background: var(--accent); }
+  .lg-pink :global(.logo) { display: block; max-width: 100%; height: auto; }
+  .lg-pink__cap { color: var(--on-accent); font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.02em; }
+  .lg-space { display: flex; padding: var(--space-8); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--bg); color: var(--text-1); overflow-x: auto; }
+  /* 24 px = half the 48 px folder: the clear space, drawn as a dashed box around the logo. */
+  .lg-space__zone { display: inline-flex; padding: 24px; outline: var(--border-w) dashed var(--text-3); outline-offset: 0; }
+  .lg-space__zone :global(.logo) { display: block; flex-shrink: 0; }
+  .lg-chip { display: block; width: 44px; height: 28px; border-radius: var(--radius-s); border: var(--border-w) solid var(--border-1); }
+  .lg-app { border-radius: 22%; }
+  @media (max-width: 767px) {
+    .lg-grounds { grid-template-columns: minmax(0, 1fr); }
+    .lg-ground, .lg-space { padding: var(--space-4); }
+    .lg-pink { padding: var(--space-10) var(--space-4); }
+  }
+</style>

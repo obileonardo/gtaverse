@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button.astro';
 import Verification from '../../components/Verification.astro';
 import Section from '../../components/design/Section.astro';
 import ColourSection from '../../components/design/ColourSection.astro';
+import LogoSection from '../../components/design/LogoSection.astro';
 import TypeSection from '../../components/design/TypeSection.astro';
 import LayoutSection from '../../components/design/LayoutSection.astro';
 import MotionSection from '../../components/design/MotionSection.astro';
@@ -22,6 +23,7 @@ import '../../components/design/design.css';
 
 const sections = [
   { id: 'principles', label: 'Principles' },
+  { id: 'logo', label: 'Logo' },
   { id: 'colour', label: 'Colour' },
   { id: 'type', label: 'Type' },
   { id: 'layout', label: 'Layout' },
@@ -41,7 +43,7 @@ const principles: [string, string, string][] = [
   ['Text never clips', 'A box that clips holds every glyph whole: descenders (g, j, p, q, y) and accented capitals (É, Ñ), also mid-animation. Clip sideways only, or move the clip to a padded wrapper.', 'Decision L4'],
   ['One implementation per component', 'One button, chip, badge, card, tab, table and rail. A page that needs something new adds it to the system first. The map’s React twins render the same classes.', 'Owner house style'],
   ['Never by colour alone', 'Every state carries a word or an icon too. Text is 12 px or more; touch targets are 44 px or more on the phone.', 'Design system rules'],
-  ['Our own marks', 'No Rockstar logo, no GTAArtDeco or Pricedown, no game logo as our brand. Icons are our own drawings.', 'Decisions 6, 7, GS1'],
+  ['Our own marks', 'No Rockstar logo, no GTAArtDeco or Pricedown, no game logo as our brand. Icons are our own drawings; the logo is Chime’s Case File.', 'Decisions 6, 7, GS1, LG5'],
 ];
 
 const blipPreview: GlyphName[] = (Object.keys(glyphs) as GlyphName[]).filter((n) => glyphs[n].group === 'blip').slice(0, 6);
@@ -73,23 +75,27 @@ const tokenCount = colours.length;
         </ol>
       </Section>
 
-      <Section id="colour" n={2} title="Colour" lede="GTA night navy, GTA pink and the sunrise glow, with three greys of text. Colour is the exception: hierarchy comes from type, weight, space and the greys.">
+      <Section id="logo" n={2} title="Logo" lede="Case File, by Chime: a folder with VF cut in it, beside THE VICE FILES. Every find is a file: sourced, credited, filed.">
+        <LogoSection />
+      </Section>
+
+      <Section id="colour" n={3} title="Colour" lede="GTA night navy, GTA pink and the sunrise glow, with three greys of text. Colour is the exception: hierarchy comes from type, weight, space and the greys.">
         <ColourSection />
       </Section>
 
-      <Section id="type" n={3} title="Type" lede="Big Shoulders for caps titles, Inter for everything you read, Geist Mono for numbers that line up, Newsreader for lore only.">
+      <Section id="type" n={4} title="Type" lede="Big Shoulders for caps titles, Inter for everything you read, Geist Mono for numbers that line up, Newsreader for lore only.">
         <TypeSection />
       </Section>
 
-      <Section id="layout" n={4} title="Layout" lede="One container, one gutter, a 4 px spacing base, and the floating header island.">
+      <Section id="layout" n={5} title="Layout" lede="One container, one gutter, a 4 px spacing base, and the floating header island.">
         <LayoutSection />
       </Section>
 
-      <Section id="motion" n={5} title="Motion" lede="Motion explains where things come from and where they go. Every demo below runs on the real tokens; press a button to play it.">
+      <Section id="motion" n={6} title="Motion" lede="Motion explains where things come from and where they go. Every demo below runs on the real tokens; press a button to play it.">
         <MotionSection />
       </Section>
 
-      <Section id="icons" n={6} title="Icons" lede={`One family of ${glyphCount} original glyphs drawn with the Capsa glyph method, in GTA VI’s map blip and HUD language. Solid is the default set; Line is the setting.`}>
+      <Section id="icons" n={7} title="Icons" lede={`One family of ${glyphCount} original glyphs drawn with the Capsa glyph method, in GTA VI’s map blip and HUD language. Solid is the default set; Line is the setting.`}>
         <div class="ds-grid ds-grid--wide">
           <div class="ds-tile">
             <p class="ds-tile__t">Blips and collectible layers</p>
@@ -119,11 +125,11 @@ const tokenCount = colours.length;
         </div>
       </Section>
 
-      <Section id="components" n={7} title="Components" lede="Every shared component, live, in its states. One instance each, from the real component; props and notes are read from its source.">
+      <Section id="components" n={8} title="Components" lede="Every shared component, live, in its states. One instance each, from the real component; props and notes are read from its source.">
         <ComponentsSection />
       </Section>
 
-      <Section id="imagery" n={8} title="Line art and imagery" lede="What may appear as a picture on the site, and how it is credited.">
+      <Section id="imagery" n={9} title="Line art and imagery" lede="What may appear as a picture on the site, and how it is credited.">
         <ol class="ds-list">
           <li><span class="ds-list__n">01</span><div><p class="ds-list__t">Official Rockstar media, inside content, with a credit</p><p class="ds-list__d">The home hero’s trailer clips and key art are Rockstar’s official downloads, re-encoded at deploy, never committed, credited “Trailer and art: Rockstar Games”. The Leonida map is the official map, credited “Map © Rockstar Games”. <span class="ds-dim">(Decisions 5, H2)</span></p></div></li>
           <li><span class="ds-list__n">02</span><div><p class="ds-list__t">No AI on Rockstar images</p><p class="ds-list__d">No AI processing of Rockstar content: no upscaling, style transfer, derived art, tracing or colour sampling. The narrow exceptions are written down: viewing the official clips and wallpapers only to choose loops and crops (H3), viewing official game logos only to size them (GS2), and code-only pixel counts for the map (M3D4). <span class="ds-dim">(OS7, docs/LEGAL.md)</span></p></div></li>
@@ -134,7 +140,7 @@ const tokenCount = colours.length;
         </ol>
       </Section>
 
-      <Section id="content" n={9} title="Content rules" lede="Trust is the product. Every fact has a source, every finder gets credit, and nothing gives the story away unasked.">
+      <Section id="content" n={10} title="Content rules" lede="Trust is the product. Every fact has a source, every finder gets credit, and nothing gives the story away unasked.">
         <div class="ds-grid ds-grid--wide">
           <div class="ds-tile">
             <p class="ds-tile__t">Verification levels</p>

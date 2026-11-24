@@ -29,9 +29,14 @@ jobs:
       - name: Asset guard (no images, fonts, video, audio, archives or map files)
         shell: bash
         run: |
-          # Paths that may hold an approved original asset, one per line (exact path).
-          # Empty today: nothing binary is committed. Add a path only with a maintainer's approval.
-          ALLOWLIST=''
+          # Paths that may hold an approved original asset, one per line (exact path, never a pattern).
+          # Add a path only with a maintainer's approval.
+          # The favicon and app icons of the Case File logo: owner decision of 24 Nov 2026 (docs/DECISIONS.md LG6).
+          # Drawn by `pnpm brand:icons` from src/brand/logo.ts, so they only change with the logo.
+          ALLOWLIST='public/favicon.svg
+          public/favicon-32.png
+          public/apple-touch-icon.png
+          public/icon-512.png'
 
           blocked_ext='\.(png|jpe?g|gif|webp|avif|bmp|tiff?|ico|svg|heic|heif|psd|ai|eps|woff2?|ttf|otf|eot|mp4|m4v|mov|webm|mkv|avi|mp3|wav|ogg|m4a|flac|aac|zip|tar|gz|tgz|bz2|xz|7z|rar|pdf)$'
           blocked_dir='^(public/map/|public/media/|\.cache/)'

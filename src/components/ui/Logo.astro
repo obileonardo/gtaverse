@@ -1,0 +1,15 @@
+---
+// The logo: Case File by Chime (decision LG5). Every logo on the site goes through this component; the drawing and
+// its rules live in src/brand/logo.ts and docs/LOGO.md.
+// variant: 'lockup' (default) the mark and THE VICE FILES on one line; 'stacked' Chime's two-line panel; 'mark' alone.
+// height: in px. For 'lockup' and 'mark' it is the folder's height; for 'stacked' the wordmark's. The width follows.
+// tone: 'site' (default) pink folder, navy VF, wordmark in the text colour, on any ground in either theme;
+//       'on-pink' Chime's panel colourway for a pink ground: navy folder, pink VF, navy wordmark.
+// label: give one only when the logo is not inside a labelled link; otherwise it is hidden from readers.
+import { lockupSvg, markSvg, stackedSvg, type LogoTone } from '../../brand/logo';
+interface Props { variant?: 'lockup' | 'stacked' | 'mark'; height?: number; tone?: LogoTone; small?: boolean; label?: string; class?: string }
+const { variant = 'lockup', height = 18, tone = 'site', small, label, class: className } = Astro.props;
+const draw = { lockup: lockupSvg, stacked: stackedSvg, mark: markSvg }[variant];
+const markup = draw({ height, tone, small, label, class: ['logo', `logo--${variant}`, className].filter(Boolean).join(' ') });
+---
+<Fragment set:html={markup} />

@@ -12,6 +12,7 @@
 // returns to the menu button. The page behind is inert.
 // Optional sub bar (NEON "GET TICKETS" row): pass `sub` from a page with a hero; desktop only.
 import Icon from '../ui/Icon.astro';
+import Logo from '../ui/Logo.astro';
 import GamePlate from '../games/GamePlate.astro';
 import ChapterControl from '../ChapterControl.astro';
 import { nav, isCurrent } from '../../lib/nav';
@@ -164,7 +165,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         <!-- The two lines meet and turn into a cross while the menu is open (drawn here so each line can move). -->
         <svg class="icon burger" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path class="burger__l burger__l1" d="M4 9.25h16" /><path class="burger__l burger__l2" d="M4 14.75h16" /></svg>
       </button>
-      <a class="island__mark" href="/" aria-label="The Vice Files, home">The Vice Files</a>
+      <a class="island__mark" href="/" aria-label="The Vice Files, home"><Logo height={18} class="island__logo" /></a>
       <div class="island__actions">
         <a class="island__btn" href="/map" aria-label="Map" aria-current={isCurrent(path, '/map') ? 'page' : undefined}>
           <Icon name="map" size={20} solid={isCurrent(path, '/map')} />
@@ -471,17 +472,18 @@ const pad = (n: number) => String(n).padStart(2, '0');
   :global([data-menu='open']) .burger__l1 { translate: 0 2.75px; rotate: 45deg; }
   :global([data-menu='open']) .burger__l2 { translate: 0 -2.75px; rotate: -45deg; }
   :global([data-motion='none']) .burger__l { transition: none; }
+  /* The logo (Case File, LG5): Chime's one-line lockup, an 18 px folder with the wordmark's caps at 16. The link keeps
+     a 44 px tall target; the logo itself never shrinks or wraps. */
   .island__mark {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: 44px;
     margin-left: 10px;
-    font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
-    font-weight: 900;
-    font-size: 19px;
-    line-height: 1;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    padding-block: 12px;
+    padding-inline: 2px;
+    color: var(--text-1);
   }
+  .island__mark :global(.island__logo) { display: block; height: 18px; width: auto; flex-shrink: 0; }
   .island__actions { margin-left: auto; display: flex; align-items: center; }
   @media (hover: hover) and (pointer: fine) {
     .island__btn:hover { background: var(--glass-hover); }
@@ -838,7 +840,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     .island { padding-inline: 4px 4px; }
     .island__btn { width: 44px; height: 44px; }
     .island__menu { width: 44px; }
-    .island__mark { margin-left: 4px; font-size: 18px; padding-block: 13px; }
+    .island__mark { margin-left: 4px; }
     .subbar { display: none; }
     .menu { --top: calc(env(safe-area-inset-top, 0px) + var(--island-top) + var(--island-h) + 32px); }
   }
