@@ -292,7 +292,12 @@ if (games) {
     }
     if (g.logo && (!g.logo.sha256 || !g.logo.width || !g.logo.height)) warn(`game ${g.id}`, 'logo has no recorded checksum or size yet: run pnpm logos:fetch --record');
     if (!g.logo && !g.logo_note) err(`game ${g.id}`, 'a game without a logo needs a logo_note saying why');
+    if (g.art && (!g.art.sha256 || !g.art.width || !g.art.height)) warn(`game ${g.id}`, 'art has no recorded checksum or size yet: run pnpm logos:fetch --record');
+    if (g.art?.crop && g.art.width && (g.art.crop.left + g.art.crop.width > g.art.width || g.art.crop.top + g.art.crop.height > g.art.height)) err(`game ${g.id}`, 'art crop runs outside the recorded image size');
   }
+  // fetch-logos.mjs finds each file's block by its name, so logo and art file names never repeat.
+  const files = (games.items ?? []).flatMap((g) => [g.logo?.file, g.art?.file].filter(Boolean));
+  for (const f of new Set(files)) if (files.filter((x) => x === f).length > 1) err(where, `file name "${f}" is used twice`);
   for (const c of connections) for (const name of c.games ?? []) if (!gameByAlias.has(name)) err(`connection ${c.id}`, `game "${name}" does not match any alias in games.json`);
   for (const f of finds ?? []) for (const name of f.crossover_games ?? []) if (!gameByAlias.has(name)) err(`find ${f.id}`, `crossover game "${name}" does not match any alias in games.json`);
 }

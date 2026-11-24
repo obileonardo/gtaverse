@@ -27,7 +27,7 @@ pnpm build      # validate, then build the static site
 
 The map base layer is optional for most work: `pnpm map:fetch` then `pnpm map:tiles` build it locally from Rockstar's download (needs `unzip`). See [docs/MAP.md](docs/MAP.md).
 
-Game logos work the same way: `pnpm logos:fetch` downloads them from the official URLs recorded in `content/games.json` and checks each checksum. Without them the game switcher shows text plates. A deploy runs `pnpm logos:fetch` before `pnpm build`, like the map tiles (decision GS2).
+Game logos work the same way: `pnpm logos:fetch` downloads them from the official URLs recorded in `content/games.json` and checks each checksum. Without them the game switcher shows text plates. A deploy runs `pnpm logos:fetch` before `pnpm build`, like the map tiles (decision GS2). The same command fetches each game's official cover art for the header menu (checked the same way, sized into `public/media/menu/`); without it the menu's art panel shows the sunrise glow.
 
 ## Branches and pull requests
 
