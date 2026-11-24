@@ -1,14 +1,21 @@
 // Traces the Leonida coastline from the official map for the hero's line art.
 // Run with: pnpm media:coast (after pnpm map:fetch). Part of pnpm media:build.
 //
-// The map is read as numbers only, by code: every pixel inside the printed frame is
-// classed as water or land by its colour (water is the map's cyan: low red, blue at
-// least as strong as green), the mask is cleaned, the land outlines are traced and
-// simplified to a few hundred points. No person or AI tool looks at the map here
-// (docs/MAP.md, decision OS7). The outline is a derived shape of Rockstar's map, so
-// it is written to the git-ignored public/media/hero/coast.json, never committed.
+// The map is read as numbers only, by code (docs/MAP.md, decisions OS7 and M3D4): no person or AI tool
+// looks at the map here. The outline is a derived shape of Rockstar's map, so it is written to the
+// git-ignored public/media/hero/coast.json, never committed.
+//
+// 1. Classify every pixel inside the printed frame as sea (the map's saturated cyan), land (the greens and
+//    greys of the ground) or unsure (print: labels, roads, grid lines, light shallows), by colour.
+// 2. Give each unsure pixel the class of the nearest sure pixel, so print on land is land and print on the
+//    sea is sea.
+// 3. Clean with a morphological close then open (removes rivers, canals and lettering on land, and specks
+//    in the sea), keep only water that reaches the frame as sea (lakes are filled), drop small islands.
+// 4. Trace each island's outer edge as one closed loop, smooth it with a Gaussian, simplify it
+//    (Douglas-Peucker) to a point budget, and resample nothing else: the result is a few continuous outlines.
 //
 // MAP_IMAGE overrides the source path (default .cache/map/<image_name> from content/map.json).
+// --preview prints a coarse text picture of the final land mask (our mask, not the map).
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -24,7 +31,7 @@ if (!existsSync(src)) {
   process.exit(0);
 }
 
-const SCALE = 8; // work at 1/8 of the poster: 722 x 988
+const SCALE = 4; // work at 1/4 of the poster: 1444 x 1975
 const { data, info } = await sharp(src)
   .toColourspace('srgb')
   .resize({ width: Math.round(map.image.width / SCALE) })
@@ -32,44 +39,93 @@ const { data, info } = await sharp(src)
   .raw()
   .toBuffer({ resolveWithObject: true });
 const { width: W, height: H, channels: C } = info;
+const N = W * H;
 const s = W / map.image.width;
 const fr = map.grid.frame;
-const fx0 = Math.ceil(fr.x0 * s) + 2, fx1 = Math.floor(fr.x1 * s) - 2;
-const fy0 = Math.ceil(fr.y0 * s) + 2, fy1 = Math.floor(fr.y1 * s) - 2;
+const fx0 = Math.ceil(fr.x0 * s) + 3, fx1 = Math.floor(fr.x1 * s) - 3;
+const fy0 = Math.ceil(fr.y0 * s) + 3, fy1 = Math.floor(fr.y1 * s) - 3;
+const inFrame = (x, y) => x >= fx0 && x < fx1 && y >= fy0 && y < fy1;
 
-// 1. Classify: 1 = land, 0 = water. Outside the frame counts as water.
-let land = new Uint8Array(W * H);
-for (let y = fy0; y < fy1; y++) {
-  for (let x = fx0; x < fx1; x++) {
-    const i = (y * W + x) * C;
+// 1. Classify. 0 = sea, 1 = land, 2 = unsure. Outside the frame is sea.
+// Sea is a saturated cyan: almost no red, strong green and blue. Ground is green or grey: red well above
+// zero and blue not far above red. Everything else (white print, light or dark teal edges) is unsure.
+const SEA = 0, LAND = 1, UNSURE = 2;
+const cls = new Uint8Array(N);
+let counts = [0, 0, 0];
+for (let y = 0; y < H; y++) {
+  for (let x = 0; x < W; x++) {
+    const p = y * W + x;
+    if (!inFrame(x, y)) {
+      cls[p] = SEA;
+      continue;
+    }
+    const i = p * C;
     const r = data[i], g = data[i + 1], b = data[i + 2];
-    const water = r < 120 && b > 140 && b >= g - 6;
-    // Near white is print, not ground: legend boxes, labels, the compass.
-    const paper = r > 200 && g > 200 && b > 200;
-    land[y * W + x] = water || paper ? 0 : 1;
+    let c = UNSURE;
+    if (r < 70 && b > 150 && g > 140) c = SEA;
+    else if (r > 50 && r < 200 && b - r < 50 && !(r > 200 && g > 200 && b > 200)) c = LAND;
+    cls[p] = c;
+    counts[c]++;
   }
 }
 
-// 2. Clean: a 5 x 5 majority filter, twice, removes grid lines and lettering.
-const majority = (m) => {
-  const out = new Uint8Array(W * H);
-  for (let y = 2; y < H - 2; y++) {
-    for (let x = 2; x < W - 2; x++) {
-      let sum = 0;
-      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) sum += m[(y + dy) * W + x + dx];
-      out[y * W + x] = sum >= 13 ? 1 : 0;
+// 2. Unsure pixels take the class of the nearest sure pixel (breadth first from every sure pixel at once).
+{
+  let frontier = [];
+  for (let p = 0; p < N; p++) if (cls[p] !== UNSURE) frontier.push(p);
+  while (frontier.length) {
+    const next = [];
+    for (const p of frontier) {
+      const x = p % W, y = (p - x) / W;
+      for (const n of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, y > 0 ? p - W : -1, y < H - 1 ? p + W : -1]) {
+        if (n >= 0 && cls[n] === UNSURE) {
+          cls[n] = cls[p];
+          next.push(n);
+        }
+      }
+    }
+    frontier = next;
+  }
+}
+let land = new Uint8Array(N);
+for (let p = 0; p < N; p++) land[p] = cls[p] === LAND ? 1 : 0;
+
+// 3. Clean. Square erosion and dilation through running sums (separable, so cheap at any radius).
+const morph = (m, r, grow) => {
+  // grow: a pixel is set when any pixel in the (2r+1) square is set; otherwise only when all are.
+  const tmp = new Uint8Array(N), out = new Uint8Array(N);
+  const need = grow ? 1 : 2 * r + 1;
+  for (let y = 0; y < H; y++) {
+    let sum = 0;
+    const row = y * W;
+    for (let x = -r; x < W + r; x++) {
+      if (x + r < W && x + r >= 0) sum += m[row + x + r];
+      else if (x + r >= W && !grow) sum += 0;
+      if (x - r - 1 >= 0) sum -= m[row + x - r - 1];
+      if (x >= 0 && x < W) tmp[row + x] = sum >= need ? 1 : 0;
+    }
+  }
+  for (let x = 0; x < W; x++) {
+    let sum = 0;
+    for (let y = -r; y < H + r; y++) {
+      if (y + r < H && y + r >= 0) sum += tmp[(y + r) * W + x];
+      if (y - r - 1 >= 0) sum -= tmp[(y - r - 1) * W + x];
+      if (y >= 0 && y < H) out[y * W + x] = sum >= need ? 1 : 0;
     }
   }
   return out;
 };
-land = majority(majority(land));
+const CLOSE = 4; // px at 1/4: channels narrower than about 9 px (36 px on the poster) close up
+const OPEN = 5; // land thinner than about 11 px (bridges, causeways, piers) goes
+land = morph(morph(land, CLOSE, true), CLOSE, false);
+land = morph(morph(land, OPEN, false), OPEN, true);
 
-// 3. Components (4-connected). Keep land masses and lakes above a minimum area.
+// Components, 4-connected.
 const label = (m, value) => {
-  const lab = new Int32Array(W * H).fill(-1);
+  const lab = new Int32Array(N).fill(-1);
   const areas = [];
   const stack = [];
-  for (let p = 0; p < W * H; p++) {
+  for (let p = 0; p < N; p++) {
     if (m[p] !== value || lab[p] !== -1) continue;
     const id = areas.length;
     let area = 0;
@@ -79,69 +135,78 @@ const label = (m, value) => {
       const q = stack.pop();
       area += 1;
       const x = q % W, y = (q - x) / W;
-      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
-        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        const n = ny * W + nx;
-        if (m[n] === value && lab[n] === -1) {
-          lab[n] = id;
-          stack.push(n);
-        }
-      }
+      if (x > 0 && m[q - 1] === value && lab[q - 1] === -1) (lab[q - 1] = id), stack.push(q - 1);
+      if (x < W - 1 && m[q + 1] === value && lab[q + 1] === -1) (lab[q + 1] = id), stack.push(q + 1);
+      if (y > 0 && m[q - W] === value && lab[q - W] === -1) (lab[q - W] = id), stack.push(q - W);
+      if (y < H - 1 && m[q + W] === value && lab[q + W] === -1) (lab[q + W] = id), stack.push(q + W);
     }
     areas.push(area);
   }
   return { lab, areas };
 };
-const MIN_LAND = 60; // px at 1/8 scale: the larger keys survive, specks do not
-const MIN_LAKE = 400;
+
+// Only water connected to the edge of the image is sea; every enclosed lake or river is filled.
 {
-  const { lab, areas } = label(land, 1);
-  for (let p = 0; p < W * H; p++) if (land[p] && areas[lab[p]] < MIN_LAND) land[p] = 0;
   const water = label(land, 0);
-  // Water touching the image edge is the sea; enclosed water below MIN_LAKE is filled in.
-  const sea = new Set();
-  for (let x = 0; x < W; x++) sea.add(water.lab[x]).add(water.lab[(H - 1) * W + x]);
-  for (let y = 0; y < H; y++) sea.add(water.lab[y * W]).add(water.lab[y * W + W - 1]);
-  for (let p = 0; p < W * H; p++) {
-    const id = water.lab[p];
-    if (!land[p] && !sea.has(id) && water.areas[id] < MIN_LAKE) land[p] = 1;
-  }
+  const sea = water.lab[0];
+  for (let p = 0; p < N; p++) if (!land[p] && water.lab[p] !== sea) land[p] = 1;
 }
 
-// 4. Trace every boundary between land and water with marching squares, as closed loops.
-const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : land[y * W + x]);
-const edges = new Map(); // "x,y" -> next "x,y" corners on the boundary (two where loops touch at a corner)
-const addEdge = (a, b) => (edges.has(a) ? edges.get(a).push(b) : edges.set(a, [b]));
-for (let y = -1; y < H; y++) {
-  for (let x = -1; x < W; x++) {
-    // Each land pixel contributes its edges that face water, oriented with land on the left.
-    if (!at(x, y)) continue;
-    if (!at(x, y - 1)) addEdge(`${x + 1},${y}`, `${x},${y}`);
-    if (!at(x, y + 1)) addEdge(`${x},${y + 1}`, `${x + 1},${y + 1}`);
-    if (!at(x - 1, y)) addEdge(`${x},${y}`, `${x},${y + 1}`);
-    if (!at(x + 1, y)) addEdge(`${x + 1},${y + 1}`, `${x + 1},${y}`);
-  }
-}
-const loops = [];
-while (edges.size) {
-  const [start] = edges.keys();
-  const loop = [];
-  let k = start;
-  while (edges.has(k)) {
-    const list = edges.get(k);
-    const next = list.pop();
-    if (!list.length) edges.delete(k);
-    loop.push(k.split(',').map(Number));
-    k = next;
-  }
-  if (loop.length > 8) loops.push(loop);
-}
+// Keep the main island and the major islands: at least MIN_SHARE of the main island's area, at most MAX_ISLANDS.
+const MIN_SHARE = 0.004;
+const MAX_ISLANDS = 12;
+const comps = label(land, 1);
+const ranked = comps.areas.map((a, id) => ({ id, a })).sort((p, q) => q.a - p.a);
+const mainArea = ranked[0]?.a ?? 0;
+const keep = new Set(ranked.filter((c) => c.a >= mainArea * MIN_SHARE).slice(0, MAX_ISLANDS + 1).map((c) => c.id));
 
-// 5. Simplify (Douglas-Peucker) and drop loops that become tiny.
+// 4. Trace the outer edge of each kept island (Moore neighbour tracing on its pixels).
+const DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+const traceOuter = (id) => {
+  // Start at the island's top-most, then left-most pixel: its west and north neighbours are outside.
+  let start = -1;
+  for (let p = 0; p < N && start < 0; p++) if (comps.lab[p] === id) start = p;
+  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H && comps.lab[y * W + x] === id;
+  const sx = start % W, sy = (start - sx) / W;
+  const pts = [[sx, sy]];
+  let x = sx, y = sy, back = 4; // we arrived from the west
+  for (let guard = 0; guard < N; guard++) {
+    let found = false;
+    for (let k = 1; k <= 8; k++) {
+      const d = (back + k) % 8;
+      const nx = x + DIRS[d][0], ny = y + DIRS[d][1];
+      if (inside(nx, ny)) {
+        x = nx;
+        y = ny;
+        back = (d + 4) % 8;
+        found = true;
+        break;
+      }
+    }
+    if (!found || (x === sx && y === sy)) break;
+    pts.push([x, y]);
+  }
+  return pts;
+};
+
+const smooth = (pts, sigma) => {
+  const n = pts.length, k = Math.ceil(sigma * 3);
+  const wts = Array.from({ length: 2 * k + 1 }, (_, i) => Math.exp(-((i - k) ** 2) / (2 * sigma * sigma)));
+  const tot = wts.reduce((a, b) => a + b, 0);
+  return pts.map((_, i) => {
+    let sx = 0, sy = 0;
+    for (let j = -k; j <= k; j++) {
+      const q = pts[(((i + j) % n) + n) % n];
+      sx += q[0] * wts[j + k];
+      sy += q[1] * wts[j + k];
+    }
+    return [sx / tot, sy / tot];
+  });
+};
 const simplify = (pts, eps) => {
   if (pts.length < 3) return pts;
-  const keep = new Uint8Array(pts.length);
-  keep[0] = keep[pts.length - 1] = 1;
+  const keepPt = new Uint8Array(pts.length);
+  keepPt[0] = keepPt[pts.length - 1] = 1;
   const stack = [[0, pts.length - 1]];
   while (stack.length) {
     const [a, b] = stack.pop();
@@ -153,78 +218,63 @@ const simplify = (pts, eps) => {
       if (d > dmax) (dmax = d), (far = i);
     }
     if (dmax > eps && far > 0) {
-      keep[far] = 1;
+      keepPt[far] = 1;
       stack.push([a, far], [far, b]);
     }
   }
-  return pts.filter((_, i) => keep[i]);
+  return pts.filter((_, i) => keepPt[i]);
 };
-const loopArea = (pts) => Math.abs(pts.reduce((s2, [x, y], i) => {
+// A closed loop simplified from two opposite anchors, so both halves keep their shape.
+const simplifyLoop = (pts, eps) => {
+  const mid = Math.floor(pts.length / 2);
+  const a = simplify(pts.slice(0, mid + 1), eps), b = simplify([...pts.slice(mid), pts[0]], eps);
+  return [...a, ...b.slice(1, -1)];
+};
+const loopArea = (pts) => Math.abs(pts.reduce((acc, [x, y], i) => {
   const [nx, ny] = pts[(i + 1) % pts.length];
-  return s2 + x * ny - nx * y;
+  return acc + x * ny - nx * y;
 }, 0) / 2);
 
-// Printed boxes (legend, scale bar) trace as long filled rectangles: drop them.
-const boxy = (pts) => {
-  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-  const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
-  return loopArea(pts) / (w * h || 1) > 0.8 && Math.max(w / (h || 1), h / (w || 1)) > 3;
-};
-
-const BUDGET = 480;
-let eps = 1.8;
+const SIGMA = 6.5; // px at 1/4: the Gaussian that turns the pixel edge into a drawn line
+const BUDGET = 640;
+const raw = ranked.filter((c) => keep.has(c.id)).map((c) => smooth(traceOuter(c.id), SIGMA));
+let eps = 0.9;
 let paths = [];
-for (let tries = 0; tries < 12; tries++) {
-  paths = loops
-    .filter((l) => loopArea(l) >= MIN_LAND && !boxy(l))
-    .map((l) => {
-      // Smooth the pixel staircase with a circular moving average, then simplify.
-      const n = l.length, k = Math.min(7, Math.floor(n / 4));
-      l = l.map((_, i) => {
-        let sx = 0, sy = 0;
-        for (let j = -k; j <= k; j++) {
-          const q = l[(i + j + n) % n];
-          sx += q[0];
-          sy += q[1];
-        }
-        return [sx / (2 * k + 1), sy / (2 * k + 1)];
-      });
-      // Split the loop in two so DP keeps both halves.
-      const mid = Math.floor(l.length / 2);
-      const a = simplify(l.slice(0, mid + 1), eps), b = simplify(l.slice(mid), eps);
-      return [...a, ...b.slice(1, -1)];
-    })
-    .filter((p) => p.length >= 4);
-  const total = paths.reduce((n, p) => n + p.length, 0);
-  if (total <= BUDGET) break;
-  eps *= 1.25;
+for (let tries = 0; tries < 16; tries++) {
+  paths = raw.map((l) => simplifyLoop(l, eps)).filter((p) => p.length >= 6);
+  if (paths.reduce((n, p) => n + p.length, 0) <= BUDGET) break;
+  eps *= 1.15;
 }
 paths.sort((a, b) => loopArea(b) - loopArea(a));
 const points = paths.reduce((n, p) => n + p.length, 0);
+const rawPoints = raw.reduce((n, p) => n + p.length, 0);
 
 // Normalise to the printed frame: 0..1 across its width, y in the same unit.
 const fw = (fr.x1 - fr.x0) * s;
 const ox = fr.x0 * s, oy = fr.y0 * s;
-const norm = (v) => Math.round(v * 1000) / 1000;
+const q = (v) => Math.round(v * 1000) / 1000;
 const out = {
   note: 'Leonida outline traced by code from the official map (Rockstar Games). Not committed. Units: the width of the printed frame is 1.',
-  aspect: norm(((fr.y1 - fr.y0) * s) / fw),
+  aspect: q(((fr.y1 - fr.y0) * s) / fw),
   points,
-  paths: paths.map((p) => p.map(([x, y]) => [norm((x - ox) / fw), norm((y - oy) / fw)])),
+  paths: paths.map((p) => p.map(([x, y]) => [q((x - ox) / fw), q((y - oy) / fw)])),
 };
 mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, 'coast.json'), JSON.stringify(out));
-console.log(`coast   ${paths.length} outlines, ${points} points (epsilon ${eps.toFixed(2)} px at 1/${SCALE}), ${JSON.stringify(out).length} bytes`);
+const json = JSON.stringify(out);
+writeFileSync(join(outDir, 'coast.json'), json);
+const frameN = (fx1 - fx0) * (fy1 - fy0);
+console.log(`coast   classes: sea ${(counts[0] / frameN * 100).toFixed(1)}%, land ${(counts[1] / frameN * 100).toFixed(1)}%, unsure ${(counts[2] / frameN * 100).toFixed(1)}%`);
+console.log(`coast   ${comps.areas.length} land masses after cleaning, kept ${keep.size}; traced ${rawPoints} edge points`);
+console.log(`coast   ${paths.length} outlines, ${points} points (epsilon ${eps.toFixed(2)} px at 1/${SCALE}), ${json.length} bytes; per outline ${paths.map((p) => p.length).join(', ')}`);
 
-// A coarse text preview of the land mask for checking the trace without opening the map.
+// A coarse text picture of the final land mask (our cleaned mask, not the map).
 if (process.argv.includes('--preview')) {
-  const fine = process.argv.includes('--fine');
-  const cw = fine ? 4 : 8, ch = fine ? 8 : 16;
+  const cw = 12, ch = 24;
   for (let y = 0; y < H; y += ch) {
     let line = '';
     for (let x = 0; x < W; x += cw) {
       let sum = 0;
-      for (let dy = 0; dy < ch; dy++) for (let dx = 0; dx < cw; dx++) sum += at(x + dx, y + dy);
+      for (let dy = 0; dy < ch && y + dy < H; dy++) for (let dx = 0; dx < cw && x + dx < W; dx++) sum += keep.has(comps.lab[(y + dy) * W + x + dx]) ? 1 : 0;
       line += sum > (cw * ch) / 2 ? '#' : sum > 0 ? '+' : '.';
     }
     console.log(line);

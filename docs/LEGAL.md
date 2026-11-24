@@ -12,6 +12,7 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 - **Rockstar owns every capture.** Player screenshots and clips belong to Rockstar under its terms; crediting creators is courtesy, not a licence. That is why we embed, never re-host.
 - **No AI processing of Rockstar content.** Rockstar's terms explicitly prohibit using its content with generative AI tools. The project applies this to analysis too: no AI reading of Rockstar images, including sampling colours from official art (decision OS7).
   - One narrow owner exception (decision GS2, 24 Nov 2026): an agent may download official game logos from Rockstar or Take-Two pages and view them only to size and fit them in the game switcher. No edits, recolouring, tracing or AI processing of the logos, ever.
+  - A second narrow owner exception (decision M3, 24 Nov 2026): an agent may download each game's official cover art from Rockstar's own pages and view it only to size and crop it for the header menu's art panel. No edits, recolouring, tracing or AI processing beyond that.
 
 ## What we use and how
 
@@ -19,6 +20,7 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 |---|---|
 | Official Leonida map, key art, screenshots | Allowed inside content with a credit line. Keep the map pipeline swappable for an original fallback map. |
 | Rockstar Games logo | Never. |
+| Official cover art (one per game in the switcher) | Only in the header menu's art panel, scaled and cropped, never otherwise altered, credited "Art: Rockstar Games" under the panel. Files come only from Rockstar's own game pages, are fetched at deploy by `scripts/media/fetch-logos.mjs`, checked against the sha256 in `content/games.json`, and never committed (decisions M2, M3). |
 | Official game logos (GTA VI and the other games) | Only to identify a game: in the game switcher, on game hubs and in "Also in" chips, unaltered, at a fixed small size, next to the game's name in text, with the visible line "Game logos are trademarks of Rockstar Games and Take-Two Interactive". Never as our branding (wordmark, favicon, social cards, hero). Files come only from official Rockstar or Take-Two pages, are never committed, and are fetched at build (`pnpm logos:fetch`, decisions GS1 and GS2). A takedown of a logo means removing its record's `logo` (the game falls back to a text plate). |
 | GTAArtDeco font | Never. Display type is an original lookalike with a proper licence. |
 | HUD and blip icons | Original icons, never copied files. |

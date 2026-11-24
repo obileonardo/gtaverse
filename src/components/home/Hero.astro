@@ -279,7 +279,10 @@ const thumb = (f: Find) => {
   @keyframes art-push { from { transform: scale(1); } to { transform: scale(1.06); } }
 
   .stage__line { background: var(--bg); }
-  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* The free band for the line art (line-art.ts reads these in px): below the island, its sub bar, the intro and the
+     caption, so a drawing never runs under them. Phone: the island, the circles and a two line caption. */
+  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; --line-top: 150px; --line-bottom: 0px; }
+  @media (max-width: 767px) { .stage__canvas { --line-top: 176px; } }
 
   /* Dispersed, monochrome: keeps the white type at AA over any frame without reading as a band. */
   .stage__scrim {
@@ -344,15 +347,18 @@ const thumb = (f: Find) => {
     letter-spacing: 0.02em;
     color: rgb(255 255 255 / 0.72);
     text-align: right;
+    white-space: pre-line; /* a credit may carry its own line break (the coastline's) */
   }
-  /* Desktop: never reach under the centred island and its sub bar (the circles take 148px of the room). */
-  @media (min-width: 768px) {
-    .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 148px - 36px)); }
+  /* The caption never reaches under the centred island and its sub bar: it keeps 24px clear of the island's right
+     edge. Beside the circles it also clears the buttons (three circles and the sound toggle's kept place, 206px);
+     that leaves room for the longest credit line (284px) only from 1680px. */
+  @media (min-width: 1680px) {
+    .hero__credit { max-width: min(320px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 206px - 12px - 24px)); }
   }
-  /* Narrower desktops: not enough room beside the circles, so the caption goes under them, as on the phone. */
-  @media (min-width: 768px) and (max-width: 1279px) {
+  /* Below that the caption goes under the circles, right aligned, as on the phone. */
+  @media (min-width: 768px) and (max-width: 1679px) {
     .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
-    .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 12px)); }
+    .hero__credit { max-width: min(300px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px)); }
   }
 
   /* ---------- Intro (top left) ----------
