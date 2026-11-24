@@ -33,6 +33,7 @@ export function createBlipCanvas(lib: typeof Leaflet, opts: BlipCanvasOptions) {
   let grid = new Map<string, number[]>(); // "cx,cy" -> indexes into placed
   let placed: { id: string; x: number; y: number; r: number }[] = []; // plate centres in layer px
   let frame = 0;
+  let fontOn = ''; // the font the context holds (resizing the canvas resets it)
   const widths = new Map<string, number>(); // number tag text widths (the font never changes)
 
   const sprite = (layer: string, sel: boolean) => {
@@ -54,6 +55,23 @@ export function createBlipCanvas(lib: typeof Leaflet, opts: BlipCanvasOptions) {
     return null;
   };
 
+  // The tag colours and font, read once per theme: reading computed style at the end of a move forced a style pass
+  // over everything the move had just changed (4 ms at 4x CPU throttling).
+  let theme: { key: string; tagFill: string; tagInk: string; tagKey: string; font: string } | null = null;
+  const tokens = () => {
+    const key = document.documentElement.dataset.theme ?? '';
+    if (theme?.key === key) return theme;
+    const css = getComputedStyle(document.documentElement);
+    theme = {
+      key,
+      tagFill: css.getPropertyValue('--inverse-fill').trim() || '#f2f2f2',
+      tagInk: css.getPropertyValue('--inverse-text').trim() || '#0d0c1a',
+      tagKey: css.getPropertyValue('--bg').trim() || '#0d0c1a',
+      font: `600 12px ${css.getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'}`,
+    };
+    return theme;
+  };
+
   const schedule = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; redraw(); }); };
 
   /** Layout and draw at the current view. Called when a move or zoom ends, and when the items change. */
@@ -69,18 +87,17 @@ export function createBlipCanvas(lib: typeof Leaflet, opts: BlipCanvasOptions) {
     lib.DomUtil.setPosition(canvas, min); // also clears the scale a zoom animation left
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); fontOn = ''; }
     ctx.setTransform(dpr, 0, 0, dpr, -min.x * dpr, -min.y * dpr);
     ctx.clearRect(min.x, min.y, w, h);
     const k = 2 ** (zoom - opts.maxZoom);
     const origin = map.getPixelOrigin();
     const numbers = zoom >= opts.numbersFrom;
-    const css = getComputedStyle(document.documentElement);
-    const tagFill = css.getPropertyValue('--inverse-fill').trim() || '#f2f2f2';
-    const tagInk = css.getPropertyValue('--inverse-text').trim() || '#0d0c1a';
-    const tagKey = css.getPropertyValue('--bg').trim() || '#0d0c1a';
-    ctx.font = `600 12px ${css.getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'}`;
-    ctx.textBaseline = 'middle';
+    const t = tokens();
+    // Setting ctx.font resolves it against the canvas's computed style, which forced a style pass over the whole map
+    // at the end of every zoom (8 ms at 4x CPU throttling). The context keeps its font, so set it only when numbers
+    // show and it does not hold it yet.
+    if (numbers && fontOn !== t.font) { ctx.font = t.font; ctx.textBaseline = 'middle'; fontOn = t.font; }
     placed = [];
     grid = new Map();
     const order = [...items].sort((a, b) => Number(a.id === selected) - Number(b.id === selected)); // selected on top
@@ -102,9 +119,9 @@ export function createBlipCanvas(lib: typeof Leaflet, opts: BlipCanvasOptions) {
         let lw = widths.get(label);
         if (lw === undefined) { lw = ctx.measureText(label).width; widths.set(label, lw); }
         const tw = lw + 10, th = 18, tx = x + s * 0.3875 + 3, ty = cy - th / 2;
-        ctx.fillStyle = tagKey; ctx.beginPath(); ctx.roundRect(tx - 1, ty - 1, tw + 2, th + 2, 5); ctx.fill();
-        ctx.fillStyle = tagFill; ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 4); ctx.fill();
-        ctx.fillStyle = tagInk; ctx.fillText(label, tx + 5, cy + 0.5);
+        ctx.fillStyle = t.tagKey; ctx.beginPath(); ctx.roundRect(tx - 1, ty - 1, tw + 2, th + 2, 5); ctx.fill();
+        ctx.fillStyle = t.tagFill; ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 4); ctx.fill();
+        ctx.fillStyle = t.tagInk; ctx.fillText(label, tx + 5, cy + 0.5);
       }
       const i = placed.push({ id: c.id, x, y: cy, r: sel ? HIT + 4 : HIT }) - 1;
       const key = `${Math.floor(x / CELL)},${Math.floor(cy / CELL)}`;
@@ -146,7 +163,9 @@ export function createBlipCanvas(lib: typeof Leaflet, opts: BlipCanvasOptions) {
     getEvents() {
       return {
         viewreset: redraw,
-        moveend: redraw,
+        // At the next animation frame, not in the move end itself: a flight ends inside its own last frame, and redrawing
+        // there put the canvas and the flight's last step in one long frame. Until then the canvas keeps following the map.
+        moveend: schedule,
         zoom: () => map && follow(map.getCenter(), map.getZoom()),
         zoomanim: (e: Leaflet.ZoomAnimEvent) => follow(e.center, e.zoom),
         click: (e: Leaflet.LeafletMouseEvent) => {

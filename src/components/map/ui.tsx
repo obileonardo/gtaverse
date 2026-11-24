@@ -100,6 +100,7 @@ export function Tabs({ id, tabs, selected, onSelect, label = 'Sections', childre
   const listRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
   const instant = useRef(true);
+  const placed = useRef(false);
   useIsoLayoutEffect(() => {
     const list = listRef.current, bar = barRef.current;
     if (!list || !bar) return;
@@ -108,9 +109,16 @@ export function Tabs({ id, tabs, selected, onSelect, label = 'Sections', childre
       if (tab) bar.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`;
     };
     if (instant.current) bar.classList.add('is-instant');
-    place();
-    const raf = requestAnimationFrame(() => { bar.classList.remove('is-instant'); instant.current = false; });
-    const ro = new ResizeObserver(place);
+    let raf = 0;
+    const settle = () => { raf = requestAnimationFrame(() => { bar.classList.remove('is-instant'); instant.current = false; }); };
+    // First mount: the observer's first callback places the underline after the browser's own layout and before
+    // paint, so mounting a panel (the map's find detail) does not force a second, synchronous layout. Later tab
+    // changes place it at once.
+    const mounting = !placed.current;
+    placed.current = true;
+    if (!mounting) { place(); settle(); }
+    let first = mounting;
+    const ro = new ResizeObserver(() => { place(); if (first) { first = false; settle(); } });
     ro.observe(list);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, [selected]);

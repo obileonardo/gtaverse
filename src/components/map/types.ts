@@ -112,11 +112,16 @@ export const showArt = (f: MapFind, chapter: ChapterSetting = 'none') => !!f.sti
 
 export const findUrl = (slug: string) => `/finds/${slug}`;
 
+// One formatter for every date, made once: building it loads the locale data, which took 32 ms at 4x CPU throttling
+// when the first find opened (toLocaleDateString builds a new one on every call). warmDates() makes it while idle.
+let dates: Intl.DateTimeFormat | null = null;
+export const warmDates = () => (dates ??= new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }));
+
 export const formatDate = (iso: string | null) => {
   if (!iso) return null;
   const d = new Date(`${iso}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  return warmDates().format(d);
 };
 
 /** The printed grid cell (row letter, column number) a pin sits in, for example F5. */

@@ -198,7 +198,7 @@ These round-trip, so a view can be shared and survives a reload (`src/components
 
 ## Performance (round 2)
 
-Collectible pins (up to 892 with every layer on) are drawn on one canvas (`src/components/map/blipCanvas.ts`), not one DOM marker each. It works like Leaflet's canvas renderer: the canvas covers the view plus a 15% margin, redraws when a move or zoom ends, and follows a zoom while it animates with one CSS transform, so the pins stay on screen and travel with the map. Sprites are the same blip SVG as everywhere else, rasterised once per layer and state at the device pixel ratio. Clicks and hovers are hit-tested against a 32 px grid index built with each draw (a 30 px target, 44 on touch). The canvas is `aria-hidden`; the list and the detail panel are the accessible path, and a picked collectible opens the same card. Find pins stay DOM buttons (focusable, with tags); their clusters are computed once per zoom level and cached, and on zoom end the markers are rebuilt only when the grouping changed, one frame after the canvas redraw.
+Collectible pins (up to 892 with every layer on) are drawn on one canvas (`src/components/map/blipCanvas.ts`), not one DOM marker each. It works like Leaflet's canvas renderer: the canvas covers the view plus a 15% margin, redraws at the animation frame after a move or zoom ends, and follows a zoom while it animates with one CSS transform, so the pins stay on screen and travel with the map. Sprites are the same blip SVG as everywhere else, rasterised once per layer and state at the device pixel ratio. Clicks and hovers are hit-tested against a 32 px grid index built with each draw (a 30 px target, 44 on touch). The canvas is `aria-hidden`; the list and the detail panel are the accessible path, and a picked collectible opens the same card. Find pins stay DOM buttons (focusable, with tags); their clusters are computed once per zoom level and cached, and on zoom end, one frame after the canvas redraw, only the pins and clusters whose grouping or state changed are rebuilt (see "Long frames at 4x CPU" below).
 
 Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4, 1440 x 900 at 2x, flat placeholder tiles, a temporary fixture of 70 pinned finds and all 12 layers on. Frame interval in ms, median / 95th percentile / longest:
 
@@ -212,3 +212,32 @@ Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Te
 | 3D (four zoom steps) | 16.7 / 16.7 / 16.8 | 16.7 / 16.8 / 33.3 | 16.7 / 16.8 / 100 | 16.7 / 16.8 / 116.7 |
 
 The longest frames left at 4x are not the collectibles: with no layer on at all, the same runs at 4x peak at 83 (zoom flight), 67 (zoom buttons) and 133 ms (open a find), from new tiles arriving and the detail panel mounting. CPU throttling does not model a weaker GPU: measure on a real mid laptop and phone before launch.
+
+### Long frames at 4x CPU (issue #57)
+
+Profiled 24 Nov 2026 with Chrome DevTools Protocol performance traces (main-thread tasks, JS samples and the stack of every forced style or layout pass), same setup as above. The tiles and the detail panel were not the cause. What was, at 4x:
+
+| Where | Cause in the trace | Fix |
+|---|---|---|
+| Every zoom end that regrouped pins, every selection (`MapCanvas.tsx`, `draw`) | All 70 find markers cleared and rebuilt: their SVG parsed again through `innerHTML` (`createIcon` 13 to 16 ms, ParseHTML 8 ms), then a style pass over all of them (10 ms) | Markers are kept by a key made from what they show and only moved; only pins and clusters that changed are rebuilt |
+| Same frame (`placeTags`) | `clientWidth` read right after the rebuild forced a synchronous style and layout pass (11 + 4.5 ms) | The size comes from Leaflet (`getSize()`), reads come before writes, unchanged data attributes are not rewritten |
+| Cluster splits and merges | `element.animate()` once per marker: 18 ms of script for one regroup | CSS animations (`.pin--split`, `.cluster--merge`, same keyframes, duration and easing), started by a class in the markup |
+| Clusters | Each carried its hidden member list (six more SVGs), parsed on every regroup | The list is filled on the first hover or focus, before the popover shows |
+| End of every zoom (`blipCanvas.ts`) | `getComputedStyle` and setting `ctx.font` on every redraw forced a style pass (5 to 8.5 ms) | Tag colours read once per theme; the font is set only when the context does not hold it; the redraw runs at the next animation frame, so a flight's last frame does not carry it; the find pins follow a frame later |
+| Opening a find (`ui.tsx`, `Tabs`) | The underline measured `offsetLeft` in a layout effect as the panel mounted: a synchronous style and layout pass of the new panel (12 + 25 ms) | On mount the ResizeObserver's first callback places it, after the browser's own layout and before paint |
+| Opening a find (`types.ts`, `formatDate`) | `toLocaleDateString` built a new formatter each call; loading its locale data took 32 ms on the first open | One `Intl.DateTimeFormat`, made while the browser is idle (`requestIdleCallback`) |
+| Opening a find (`MapApp.tsx`, `motion.tsx`) | `usePresence` stored the value from an effect, so the whole screen rendered twice in the click; all 68 list rows re-rendered on every selection and pin hover | The kept value is a ref; rows are memoised with stable handlers; "In view" keeps its set when the same finds are in view |
+| Opening a find (`MapApp.tsx`, `openFind`) | The flight's first steps (new tile levels, 15 to 20 ms) and `focus()` (a forced style pass of the new panel) ran in the frame the panel mounted in | Focus moves and the flight starts one frame later |
+
+Not causes, from the same traces: image decoding (all 96 tile decodes in a zoom-button run ran on raster worker threads, none on the main thread, so `decoding="async"` would change nothing) and the frosted panel's backdrop filter (layerising is 4 to 8 ms a frame at 4x, from about 250 composited layers: Leaflet's tiles and markers).
+
+Before and after, three rounds of each run alternating between the two builds (the machine was shared, load average 40 to 210, so single runs swing by a frame or two). Frame interval in ms, median of the rounds' medians / median of their 95th percentiles / longest frame in any round (frames over 50 ms, summed over the rounds):
+
+| Action | Before, 1x | After, 1x | Before, 4x | After, 4x |
+|---|---|---|---|---|
+| Zoom buttons (three in, three out) | 16.7 / 16.8 / 33.4 (0) | 16.7 / 16.8 / 33.3 (0) | 16.7 / 16.8 / 116.7 (8) | 16.7 / 16.8 / 33.4 (0) |
+| Open a find (three, each flies to its pin) | 16.7 / 16.8 / 200 (3) | 16.7 / 16.8 / 33.3 (0) | 16.7 / 33.3 / 116.7 (18) | 16.7 / 16.8 / 50.1 (2) |
+| Pan (four 0.6 s pans) | 16.7 / 16.7 / 16.8 (0) | 16.7 / 16.7 / 16.8 (0) | 16.7 / 16.8 / 50 (0) | 16.7 / 16.8 / 50 (0) |
+| Zoom flight (two levels in and back) | 16.7 / 16.8 / 99.9 (1) | 16.7 / 16.7 / 16.8 (0) | 16.7 / 16.8 / 83.3 (4) | 16.7 / 16.8 / 66.7 (1) |
+
+What is left at 4x: opening a find is the panel's own render and its first style and layout pass (about 20 ms each at 4x), three frames at most; a zoom flight's end is Leaflet's tile and marker update. Fewer composited layers (the 96 grid ticks are Leaflet markers) would be the next step, but drawing them in SVG or on the canvas would make them scale during a zoom, so they stay.
