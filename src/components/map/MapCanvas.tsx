@@ -74,25 +74,30 @@ const TAG_MAX = 12;
 // A find pin: the blip on its pointer, 32 px (40 selected), its tip on the spot. The button is the 44 px hit target
 // centred on the plate (map.css places it from --s). The name is a tag beside the plate that wraps to two lines and
 // is never inside an overflow box, so no glyph is ever cut.
-function pinHtml(f: MapFind, st: { selected: boolean; hovered: boolean; found: boolean; flip: boolean }) {
+// `split`: the pin arrives from its old cluster's point (map.css .pin--split). A CSS animation, so starting 30 of
+// them costs no script; starting them with element.animate() took 18 ms at 4x CPU throttling.
+function pinHtml(f: MapFind, st: { selected: boolean; hovered: boolean; found: boolean; flip: boolean }, split?: { dx: number; dy: number }) {
   const size = st.selected ? 40 : 32;
   const blip = blipSvg(glyphOf(f.category), { form: 'pin', size, state: st.selected ? 'selected' : st.found ? 'found' : 'default' });
-  const cls = ['pin', st.selected && 'is-selected', st.hovered && 'is-hovered', st.flip && 'pin--flip'].filter(Boolean).join(' ');
+  const cls = ['pin', st.selected && 'is-selected', st.hovered && 'is-hovered', st.flip && 'pin--flip', split && 'pin--split'].filter(Boolean).join(' ');
   const halo = st.selected ? '<span class="pin__glow" aria-hidden="true"></span><span class="pin__ring" aria-hidden="true"></span>' : '';
-  return `<button type="button" class="${cls}" style="--s:${size}" aria-label="${esc(f.title)}${st.found ? ', found' : ''}" data-slug="${esc(f.slug)}">${halo}<span class="pin__plate">${blip}</span><span class="pin__tag">${esc(f.title)}</span></button>`;
+  return `<button type="button" class="${cls}" style="--s:${size}${split ? `;--dx:${split.dx}px;--dy:${split.dy}px` : ''}" aria-label="${esc(f.title)}${st.found ? ', found' : ''}" data-slug="${esc(f.slug)}">${halo}<span class="pin__plate">${blip}</span><span class="pin__tag">${esc(f.title)}</span></button>`;
 }
 
 // A cluster: up to three member plates stacked 6 px apart (the most common type on top) and an accent count badge,
 // one 44 px target. Hovering or focusing it lists the members (at most 6, then "and N more").
-function groupHtml(members: MapFind[]) {
+function groupHtml(members: MapFind[], merge = false) {
   const byCat = new Map<string, number>();
   for (const f of members) byCat.set(f.category, (byCat.get(f.category) ?? 0) + 1);
   const cats = [...byCat.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c).slice(0, 3);
   const stack = cats.map((c, i) => `<span class="cpl" style="--i:${i}">${blipSvg(glyphOf(c), { size: 28 })}</span>`).reverse().join('');
-  const list = members.slice(0, 6).map((f) => `<li>${blipSvg(glyphOf(f.category), { size: 20 })}<span>${esc(f.title)}</span></li>`).join('')
-    + (members.length > 6 ? `<li class="cluster__more">and ${members.length - 6} more</li>` : '');
-  return `<button type="button" class="cluster" style="--n:${cats.length}" aria-label="${members.length} finds close together. Zoom in"><span class="cluster__stack">${stack}</span><span class="cluster__count tabular" aria-hidden="true">${members.length}</span><span class="cluster__pop" aria-hidden="true"><ul>${list}</ul></span></button>`;
+  // The member list is filled in on the first hover or focus (groupListHtml): until then it is never seen, and
+  // parsing its six blips for every cluster on every regroup was most of a cluster's cost.
+  return `<button type="button" class="cluster${merge ? ' cluster--merge' : ''}" style="--n:${cats.length}" aria-label="${members.length} finds close together. Zoom in"><span class="cluster__stack">${stack}</span><span class="cluster__count tabular" aria-hidden="true">${members.length}</span><span class="cluster__pop" aria-hidden="true"><ul></ul></span></button>`;
 }
+const groupListHtml = (members: MapFind[]) =>
+  members.slice(0, 6).map((f) => `<li>${blipSvg(glyphOf(f.category), { size: 20 })}<span>${esc(f.title)}</span></li>`).join('')
+  + (members.length > 6 ? `<li class="cluster__more">and ${members.length - 6} more</li>` : '');
 
 export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref) {
   const box = useRef<HTMLDivElement>(null);
@@ -101,7 +106,8 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const pins = useRef<Leaflet.LayerGroup | null>(null);
   const grid = useRef<Leaflet.LayerGroup | null>(null);
   const links = useRef<Leaflet.LayerGroup | null>(null);
-  const markers = useRef(new Map<string, Leaflet.Marker>()); // single find pins by slug, rebuilt with every draw
+  const markers = useRef(new Map<string, Leaflet.Marker>()); // single find pins by slug, from the last draw
+  const drawn = useRef(new Map<string, Leaflet.Marker>()); // every pin and cluster marker on the map, by what it shows
   const inCluster = useRef(new Map<string, Leaflet.LatLng>()); // slug -> its cluster's point, from the last draw
   const ccanvas = useRef<ReturnType<typeof createBlipCanvas> | null>(null); // the collectible canvas layer
   const lastSig = useRef(''); // the grouping on screen (draw)
@@ -226,10 +232,12 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       ccanvas.current.layer.addTo(m);
       (box.current as HTMLDivElement & { __vfc?: unknown }).__vfc = ccanvas.current; // read by the verification scripts
       pins.current = lib.layerGroup().addTo(m);
-      // Zoom end: the collectible canvas redraws in this frame (its own moveend); the find pins follow in the next one,
-      // and only if the grouping changed, so no single frame carries all of it.
+      // Zoom end: the collectible canvas redraws at the next animation frame (its own moveend); the find pins follow a
+      // frame after that, and only if the grouping changed, so no single frame carries all of it. Two animation
+      // frames: a zoom from the buttons ends in a timer task, and one requestAnimationFrame from there still lands in
+      // the frame the canvas redraws in.
       let next = 0;
-      m.on('zoomend', () => { gridLabels(); cancelAnimationFrame(next); next = requestAnimationFrame(() => draw(true)); });
+      m.on('zoomend', () => { gridLabels(); cancelAnimationFrame(next); next = requestAnimationFrame(() => { next = requestAnimationFrame(() => draw(true)); }); });
       m.on('moveend', () => { placeTags(); });
       m.on('move zoom', () => live.current.onMove());
       drawGrid();
@@ -245,7 +253,9 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const placeTags = () => {
     const m = map.current, el = box.current;
     if (!m || !el) return;
-    const w = el.clientWidth;
+    // The map's size from Leaflet (kept up to date on resize), not clientWidth: reading the box here, right after
+    // markers changed, forced a synchronous style and layout pass (17 ms at 4x CPU throttling).
+    const { x: w, y: h } = m.getSize();
     const limit = w - live.current.covered.right - TAG_ROOM;
     let inView = 0;
     for (const mk of markers.current.values()) {
@@ -253,21 +263,21 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       if (!pin) continue;
       const pt = m.latLngToContainerPoint(mk.getLatLng());
       pin.classList.toggle('pin--flip', pt.x > limit);
-      if (pt.x > 0 && pt.x < w && pt.y > 0 && pt.y < el.clientHeight) inView++;
+      if (pt.x > 0 && pt.x < w && pt.y > 0 && pt.y < h) inView++;
     }
     const on = m.getZoom() >= TAG_ZOOM && inView > 0 && inView <= TAG_MAX;
-    el.dataset.tags = String(on);
+    if (el.dataset.tags !== String(on)) el.dataset.tags = String(on);
     // Tags never sit on each other: the selected and hovered pins keep theirs, then the rest top to bottom; a tag
     // that would overlap one already shown stays hidden until its pin is hovered or focused.
     const pinsNow = [...el.querySelectorAll<HTMLElement>('.pin')];
-    pinsNow.forEach((p) => p.classList.remove('pin--hidetag'));
-    if (!on) return;
+    if (!on) { pinsNow.forEach((p) => p.classList.remove('pin--hidetag')); return; }
     const kept: DOMRect[] = [];
     const order = pinsNow.map((p) => ({ p, r: p.querySelector('.pin__tag')!.getBoundingClientRect(), first: p.matches('.is-selected, .is-hovered') }))
       .sort((a, b) => Number(b.first) - Number(a.first) || a.r.top - b.r.top);
     for (const { p, r } of order) {
       const hit = kept.some((k) => r.left < k.right + 4 && r.right > k.left - 4 && r.top < k.bottom + 4 && r.bottom > k.top - 4);
-      if (hit) p.classList.add('pin--hidetag'); else kept.push(r);
+      p.classList.toggle('pin--hidetag', hit); // reads first, then the writes (opacity only, so no new layout)
+      if (!hit) kept.push(r);
     }
   };
 
@@ -303,7 +313,20 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     const sig = `${selected ?? ''}|${hovered ?? ''}|${found.size}|${groups.map((g) => g.members.map((x) => x.f.slug).join(',')).join(';')}`;
     if (animate && sig === lastSig.current) { placeTags(); return; }
     lastSig.current = sig;
-    layer.clearLayers();
+    // Markers whose markup is unchanged are kept and only moved; only the pins and clusters that changed are rebuilt.
+    // Rebuilding all of them (70 pins: their SVG parsed again, then a style and layout pass over all of it) on every
+    // zoom step that regrouped and every selection was the longest task left at 4x CPU throttling.
+    const prev = drawn.current;
+    const next = new Map<string, Leaflet.Marker>();
+    const keep = (key: string, at: Leaflet.LatLng, z: number) => {
+      const mk = prev.get(key);
+      if (!mk) return null;
+      prev.delete(key);
+      if (!mk.getLatLng().equals(at, 0)) mk.setLatLng(at);
+      if (mk.options.zIndexOffset !== z) mk.setZIndexOffset(z);
+      next.set(key, mk);
+      return mk;
+    };
     markers.current.clear();
     // Finds on the very same spot fan out on a small ring at the deepest zoom, so each can be picked.
     const spots = new Map<string, number>();
@@ -311,40 +334,55 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     for (const g of groups) {
       if (g.members.length === 1) {
         const f = g.members[0].f;
-        const key = `${f.pin!.x},${f.pin!.y}`;
-        const twin = spots.get(key) ?? 0;
-        spots.set(key, twin + 1);
+        const spot = `${f.pin!.x},${f.pin!.y}`;
+        const twin = spots.get(spot) ?? 0;
+        spots.set(spot, twin + 1);
         const at = twin ? m.unproject(g.members[0].p.add([Math.cos(twin * 2.1) * 26, Math.sin(twin * 2.1) * 26]), zoom) : toLatLng(f.pin!.x, f.pin!.y);
         const isSel = f.slug === selected;
-        const icon = lib.divIcon({ className: 'map-marker', html: pinHtml(f, { selected: isSel, hovered: f.slug === hovered, found: found.has(f.slug), flip: false }), iconSize: [0, 0] });
-        const mk = lib.marker(at, { icon, keyboard: false, zIndexOffset: isSel ? 1000 : f.slug === hovered ? 500 : 0 });
+        const st = { selected: isSel, hovered: f.slug === hovered, found: found.has(f.slug), flip: false };
+        // The key holds everything the markup is made from (the markup itself carries fresh SVG ids every time).
+        const key = `p|${f.slug}|${f.category}|${f.title}|${st.selected}|${st.hovered}|${st.found}`;
+        const z = isSel ? 1000 : f.slug === hovered ? 500 : 0;
+        const kept = keep(key, at, z);
+        if (kept) { markers.current.set(f.slug, kept); continue; }
+        const from = move ? before.get(f.slug) : undefined;
+        let split: { dx: number; dy: number } | undefined;
+        if (from) { const a = m.latLngToContainerPoint(from), b = m.latLngToContainerPoint(at); split = { dx: a.x - b.x, dy: a.y - b.y }; }
+        const icon = lib.divIcon({ className: 'map-marker', html: pinHtml(f, st, split), iconSize: [0, 0] });
+        const mk = lib.marker(at, { icon, keyboard: false, zIndexOffset: z });
         mk.on('click', () => { const el = mk.getElement()?.querySelector<HTMLElement>('.pin'); if (el) live.current.onPin(f.slug, el); });
         mk.on('mouseover', () => live.current.onPinHover(f.slug));
         mk.on('mouseout', () => live.current.onPinHover(null));
         layer.addLayer(mk);
+        next.set(key, mk);
         markers.current.set(f.slug, mk);
-        const from = before.get(f.slug);
-        if (move && from) {
-          const a = m.latLngToContainerPoint(from), b = m.latLngToContainerPoint(at);
-          mk.getElement()?.querySelector<HTMLElement>('.pin')?.animate([{ translate: `${a.x - b.x}px ${a.y - b.y}px`, opacity: 0.4 }, { translate: '0 0', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' });
-        }
       } else {
         const ms = g.members.map((x) => x.f);
         const sum = g.members.reduce((s, x) => s.add(x.p), lib.point(0, 0)).divideBy(g.members.length);
         const at = m.unproject(sum, zoom);
-        const icon = lib.divIcon({ className: 'map-marker', html: groupHtml(ms), iconSize: [0, 0] });
+        for (const f of ms) now.set(f.slug, at);
+        const key = `c|${ms.map((f) => `${f.slug}:${f.category}:${f.title}`).join('|')}`;
+        if (keep(key, at, 200)) continue;
+        // Merging is the reverse of a split, faster: the stack fades in where its members were (.cluster--merge).
+        const icon = lib.divIcon({ className: 'map-marker', html: groupHtml(ms, move && ms.some((f) => !before.has(f.slug))), iconSize: [0, 0] });
         const mk = lib.marker(at, { icon, keyboard: false, zIndexOffset: 200 });
+        next.set(key, mk);
         mk.on('click', () => {
           const b = lib.latLngBounds(ms.map((f) => toLatLng(f.pin!.x, f.pin!.y)));
           const pad = live.current.fitPadding;
           m.flyToBounds(b, { paddingTopLeft: [pad.left + 48, pad.top + 48], paddingBottomRight: [pad.right + 48, pad.bottom + 48], maxZoom: meta.maxZoom, duration: reduced() ? 0 : 0.6, animate: !reduced() });
         });
         layer.addLayer(mk);
-        for (const f of ms) now.set(f.slug, at);
-        // Merging is the reverse of a split, faster: the stack fades in where its members were.
-        if (move && ms.some((f) => !before.has(f.slug))) mk.getElement()?.querySelector<HTMLElement>('.cluster')?.animate([{ opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1 }], { duration: 220, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        const el = mk.getElement()?.querySelector<HTMLElement>('.cluster');
+        // The member list, on the first hover or focus (pointerenter and focusin come before the :hover or
+        // :focus-visible style, so the popover still grows in with its rows).
+        const fill = () => { const ul = el?.querySelector('.cluster__pop ul'); if (ul && !ul.childElementCount) ul.innerHTML = groupListHtml(ms); };
+        el?.addEventListener('pointerenter', fill, { once: true });
+        el?.addEventListener('focusin', fill, { once: true });
       }
     }
+    for (const mk of prev.values()) layer.removeLayer(mk);
+    drawn.current = next;
     inCluster.current = now;
     drawLinks();
     placeTags();
@@ -380,7 +418,8 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const drawCollectibles = () => { ccanvas.current?.set(live.current.collectibles, live.current.selectedCollectible); };
   const gridLabels = () => {
     const m = map.current;
-    if (m && box.current) box.current.dataset.cells = String(m.getZoom() >= 3);
+    const on = String(!!m && m.getZoom() >= 3);
+    if (m && box.current && box.current.dataset.cells !== on) box.current.dataset.cells = on;
   };
 
   // The printed grid (rows A to M, columns 1 to 9, content/map.json), drawn as Jeff christy C12 draws his: solid

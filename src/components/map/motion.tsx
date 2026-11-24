@@ -14,14 +14,18 @@ const token = (name: string, fallback: string) => getComputedStyle(document.docu
  * transitions retarget), so a quick reopen never jumps.
  */
 export function usePresence<T>(value: T | null | undefined, exitMs: number): { item: T | null; closing: boolean } {
-  const [kept, setKept] = useState<T | null>(value ?? null);
+  // The last value lives in a ref, not state: storing it in an effect re-rendered the whole map screen a second
+  // time in the same task as opening a find. Only the end of an exit re-renders.
+  const kept = useRef<T | null>(value ?? null);
+  const [, setGone] = useState(0);
+  if (value != null) kept.current = value;
   useEffect(() => {
-    if (value != null) { setKept(value); return; }
-    const t = window.setTimeout(() => setKept(null), reduce() ? 150 : exitMs);
+    if (value != null || kept.current == null) return;
+    const t = window.setTimeout(() => { kept.current = null; setGone((n) => n + 1); }, reduce() ? 150 : exitMs);
     return () => clearTimeout(t);
   }, [value, exitMs]);
   if (value != null) return { item: value, closing: false };
-  return { item: kept, closing: kept != null };
+  return { item: kept.current, closing: kept.current != null };
 }
 
 /** A count that rolls to its new value; only the digits that change move. */

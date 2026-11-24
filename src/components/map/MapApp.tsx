@@ -5,7 +5,7 @@
 // Phone: Corner's clean full-bleed map with round corner buttons, a pills row and an edge-to-edge category rail over
 //   the bar (list toggle and search); a tapped pin brings Hypelist's card carousel; Tide Guide's glass menus and hint.
 // Every find opens from the list, so the screen works before any pin is placed. Styles: ./map.css.
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MapCanvas, type MapApi } from './MapCanvas';
 import type { Map3DApi } from './three/Map3D';
 import { useFound } from './found';
@@ -17,7 +17,7 @@ import { BasemapMenu, FilterMenu, menuAt, type MenuAt } from './Menus';
 import { Button, Icon, Tabs, Verification } from './ui';
 import { Blip } from './blip';
 import { RollNumber, listFlip, usePresence } from './motion';
-import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, showArt, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
+import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, showArt, warmDates, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
 import { onChapterChange, readChapter, type ChapterSetting } from '../../lib/chapter';
 import './map.css';
 
@@ -50,8 +50,11 @@ function Media({ find, chapter }: { find: MapFind; chapter: ChapterSetting }) {
   );
 }
 
-/** A List row (Sweatpals): still, kicker, two-line title, region; the Found check sits where Sweatpals puts its star. */
-function Row({ find, selected, lit, found, chapter, onOpen, onHover, onFound }: { find: MapFind; selected: boolean; lit: boolean; found: boolean; chapter: ChapterSetting; onOpen: (f: MapFind, el: HTMLElement) => void; onHover: (slug: string | null) => void; onFound: (slug: string) => void }) {
+/**
+ * A List row (Sweatpals): still, kicker, two-line title, region; the Found check sits where Sweatpals puts its star.
+ * Memoised with stable handlers, so opening a find or hovering a pin re-renders two rows, not the whole list.
+ */
+const Row = memo(function Row({ find, selected, lit, found, chapter, onOpen, onHover, onFound }: { find: MapFind; selected: boolean; lit: boolean; found: boolean; chapter: ChapterSetting; onOpen: (f: MapFind, el: HTMLElement) => void; onHover: (slug: string | null) => void; onFound: (slug: string) => void }) {
   return (
     <li className={`frow-item${lit ? ' is-lit' : ''}`} data-key={find.slug}>
       <a
@@ -75,7 +78,7 @@ function Row({ find, selected, lit, found, chapter, onOpen, onHover, onFound }: 
       </button>
     </li>
   );
-}
+});
 
 /** A collectible's card: our label, its number against the source's total, any reading note, and the credit. */
 function CollectibleCard({ item, layer, onClose }: { item: MapCollectible; layer: MapLayer | undefined; onClose: () => void }) {
@@ -226,6 +229,13 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     if (!t.persist) toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
 
+  // Idle work the first opened find would otherwise pay for: the date formatter's locale data (types.ts).
+  useEffect(() => {
+    if (typeof requestIdleCallback !== 'function') { const t = window.setTimeout(warmDates, 1500); return () => clearTimeout(t); }
+    const id = requestIdleCallback(() => warmDates(), { timeout: 4000 });
+    return () => cancelIdleCallback(id);
+  }, []);
+
   // First visit hint (Tide Guide toast), once per device. With no pins yet it says so and offers the collectibles,
   // so the map is not empty.
   useEffect(() => {
@@ -281,8 +291,13 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     setPicked(null);
     setSelected(f.slug);
     setFindSnap('full');
-    fly(f);
-    if (!phone) requestAnimationFrame(() => drawerRef.current?.focus({ preventScroll: true }));
+    // The panel mounts and lays out in this frame; focus moves and the flight starts in the next one. Together they
+    // made one 50 to 70 ms frame at 4x CPU throttling (the flight's first steps and a focus() that forced a style
+    // pass over the new panel); one frame apart, focus() finds the styles clean and each frame stays short.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!phone) drawerRef.current?.focus({ preventScroll: true });
+      fly(f);
+    }));
   };
   const closeFind = () => {
     const keys = keyboard.current;
@@ -399,7 +414,8 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     if (!a || !pinned.length) { setInView(null); return; }
     const w = innerWidth, h = innerHeight, c = covered();
     const set = new Set(pinned.filter((f) => { const p = a.pointOf(f); return p && p.x > c.left && p.x < w - c.right && p.y > 0 && p.y < h; }).map((f) => f.slug));
-    setInView(set);
+    // Same finds in view: keep the old set, so nothing re-renders (this runs while a find's flight is still moving).
+    setInView((old) => (old && old.size === set.size && [...set].every((s) => old.has(s)) ? old : set));
   }, [pinned, mode, phone, selected, picked]);
   useEffect(() => {
     if (!pinned.length) return;
@@ -456,7 +472,11 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     </div>
   );
 
-  const rows = (list: MapFind[]) => list.map((f) => <Row key={f.slug} find={f} selected={f.slug === selected} lit={f.slug === pinHover} found={found.has(f.slug)} chapter={chapter} onOpen={openFind} onHover={setHovered} onFound={toggleFoundFlip} />);
+  const rowActs = useRef({ openFind, toggleFoundFlip });
+  rowActs.current = { openFind, toggleFoundFlip };
+  const onRowOpen = useCallback((f: MapFind, el: HTMLElement) => rowActs.current.openFind(f, el), []);
+  const onRowFound = useCallback((slug: string) => rowActs.current.toggleFoundFlip(slug), []);
+  const rows = (list: MapFind[]) => list.map((f) => <Row key={f.slug} find={f} selected={f.slug === selected} lit={f.slug === pinHover} found={found.has(f.slug)} chapter={chapter} onOpen={onRowOpen} onHover={setHovered} onFound={onRowFound} />);
   const onMapRows = listed.filter((f) => f.pin);
   const offMapRows = listed.filter((f) => !f.pin);
   const list = (
