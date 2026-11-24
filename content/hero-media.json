@@ -22,100 +22,175 @@
       "zip_sha256": "4e5ed7d67d963b2046ee281a1d8a5b4193a3552e6b5b05ceb9d27dc1f1c1a402",
       "server_last_modified": "2026-11-18",
       "retrieved": "2026-11-24"
+    },
+    {
+      "id": "launch",
+      "kind": "video",
+      "title": "GTA VI Launch Trailer (Rockstar Games media)",
+      "url": "https://media-rockstargames-com.akamaized.net/VI/downloads/videos/GTAVI_Launch_Trailer/GTAVI_Launch_Trailer.mp4",
+      "page": "https://www.rockstargames.com/VI/media/videos",
+      "file_name": "GTAVI_Launch_Trailer.mp4",
+      "bytes": 781762562,
+      "sha256": "3302818c25e9749c3e55a605f72926eff1be05eb4d60b4ee5d48fc2c415b2dea",
+      "server_last_modified": "2026-11-12",
+      "retrieved": "2026-11-24"
     }
   ],
   "trailer": {
-    "source": "videos",
-    "note": "The videos zip holds no full trailer: eight 1 to 1.5 s character shots (silent) and an animated cover-art video built on the GTA VI and Rockstar logos (never shown, decision 6). The hero trailer is the eight shots cut together in this order with hard cuts, as a trailer reel. Its sound is the music of the cover-art video, audio only, fetched when a visitor turns sound on.",
+    "use": "launch",
+    "credit": "Trailer: Rockstar Games",
     "width": 1920,
     "height": 1080,
     "portrait_width": 720,
     "portrait_height": 1280,
-    "fps": 30,
-    "clips": [
-      {
-        "file": "Lucia_Caminos_Video_Clip.mp4",
-        "in": 0,
-        "out": 1.5,
-        "focus": {
-          "y": 0.5,
-          "x": 0.62
-        }
+    "launch": {
+      "source": "launch",
+      "file": "GTAVI_Launch_Trailer.mp4",
+      "in": 5.033,
+      "out": 15.167,
+      "why": "The trailer's opening run in the Keys, 5.033 to 15.167 s (frames 151 to 454 at 30 fps): an aerial of the marina, a man polishing a boat, the boatyard, the same man on the phone, a man watching a seaplane on the water. It is the only calm, establishing stretch in a fast-cut trailer, with no title card, no logo, no subtitles or overlaid text and no story beat (no crime, no reveal). It ends on a hard cut to the ROCKSTAR GAMES PRESENTS card and starts on the hard cut after the WELCOME TO THE KEYS sign, so both neighbours stay out. The loop restarts on a shot change, seaplane to marina, both bright daytime water shots, so the restart reads as one more of the trailer's own cuts and needs no crossfade; a crossfade would need frames from the title card or the sign shot. Only in-world signage is readable, on the roof of the marina in the first 1.9 s (BRIAN'S MARINA, RENT A RACK); the phone crop is placed to leave it out. The strictly sign-free run is 6.967 to 15.167 s (8.2 s), under the 10 s minimum. No single shot in the trailer is longer than 8.2 s.",
+      "fps": 30,
+      "active": {
+        "w": 3840,
+        "h": 1920,
+        "x": 0,
+        "y": 120
       },
-      {
-        "file": "Cal_Hampton_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.32,
-          "x": 0.66
+      "shots": [
+        {
+          "in": 5.033333,
+          "out": 6.966667,
+          "focus": {
+            "x": 0.74,
+            "y": 0.5
+          },
+          "what": "aerial of the marina and the bay"
+        },
+        {
+          "in": 6.966667,
+          "out": 9.966667,
+          "focus": {
+            "x": 0.66,
+            "y": 0.5
+          },
+          "what": "a man polishing a boat hull"
+        },
+        {
+          "in": 9.966667,
+          "out": 11.9,
+          "focus": {
+            "x": 0.6,
+            "y": 0.5
+          },
+          "what": "the boatyard, the man on a ladder"
+        },
+        {
+          "in": 11.9,
+          "out": 14.2,
+          "focus": {
+            "x": 0.65,
+            "y": 0.5
+          },
+          "what": "the man on the phone in the yard"
+        },
+        {
+          "in": 14.2,
+          "out": 15.166667,
+          "focus": {
+            "x": 0.36,
+            "y": 0.5
+          },
+          "what": "a man watching a seaplane on the water"
         }
-      },
-      {
-        "file": "Boobie_Ike_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.45,
-          "x": 0.42
+      ]
+    },
+    "reel": {
+      "source": "videos",
+      "note": "Fallback (set trailer.use to \"reel\"). The videos zip holds no full trailer: eight 1 to 1.5 s character shots (silent) and an animated cover-art video built on the GTA VI and Rockstar logos (never shown, decision 6). The hero trailer is the eight shots cut together in this order with hard cuts, as a trailer reel. Its sound is the music of the cover-art video, audio only, fetched when a visitor turns sound on.",
+      "fps": 30,
+      "clips": [
+        {
+          "file": "Lucia_Caminos_Video_Clip.mp4",
+          "in": 0,
+          "out": 1.5,
+          "focus": {
+            "y": 0.5,
+            "x": 0.62
+          }
+        },
+        {
+          "file": "Cal_Hampton_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.32,
+            "x": 0.66
+          }
+        },
+        {
+          "file": "Boobie_Ike_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.45,
+            "x": 0.42
+          }
+        },
+        {
+          "file": "Brian_Heder_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.38,
+            "x": 0.56
+          }
+        },
+        {
+          "file": "Real_Dimez_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.4,
+            "x": 0.45
+          }
+        },
+        {
+          "file": "Raul_Bautista_Video_Clip.mp4",
+          "in": 0,
+          "out": 1.5,
+          "focus": {
+            "y": 0.38,
+            "x": 0.52
+          }
+        },
+        {
+          "file": "DreQuan_Priest_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.42,
+            "x": 0.56
+          }
+        },
+        {
+          "file": "Jason_Duval_Video_Clip.mp4",
+          "in": 0,
+          "out": 1,
+          "focus": {
+            "y": 0.5,
+            "x": 0.6
+          }
         }
-      },
-      {
-        "file": "Brian_Heder_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.38,
-          "x": 0.56
-        }
-      },
-      {
-        "file": "Real_Dimez_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.4,
-          "x": 0.45
-        }
-      },
-      {
-        "file": "Raul_Bautista_Video_Clip.mp4",
-        "in": 0,
-        "out": 1.5,
-        "focus": {
-          "y": 0.38,
-          "x": 0.52
-        }
-      },
-      {
-        "file": "DreQuan_Priest_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.42,
-          "x": 0.56
-        }
-      },
-      {
-        "file": "Jason_Duval_Video_Clip.mp4",
-        "in": 0,
-        "out": 1,
-        "focus": {
-          "y": 0.5,
-          "x": 0.6
-        }
-      }
-    ],
-    "poster": {
-      "clip": 0,
-      "at": 0
+      ]
     },
     "sound": {
+      "source": "videos",
       "file": "GTAVI_Official_Cover_Art_Landscape.mp4",
       "in": 4,
       "out": 28,
       "fade": 1.5,
-      "bitrate": "96k"
+      "bitrate": "96k",
+      "note": "Kept on the cover-art music, which the owner approved. The Launch Trailer's own audio under the chosen shots is a continuous music bed that may carry dialogue (it was not checked by ear), and the sound toggle plays a separate looping file that is not synced to the video, so a 10 s cut of the trailer's music would repeat audibly out of step with the picture."
     }
   },
   "keyart": [

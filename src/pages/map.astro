@@ -67,7 +67,8 @@ const meta: MapMeta = {
   height: mapJson.image.height,
   maxZoom: 5,
   tileSize: mapJson.tiles.tile_size, // 512: see docs/MAP.md, "Sharpness"
-  tileUrl: '/map/tiles/{z}/{x}/{y}.webp',
+  // Versioned by tile size: tiles are cached for a week, so a format change must change the URL.
+  tileUrl: `/map/tiles/{z}/{x}/{y}.webp?v=${mapJson.tiles.tile_size}`,
   // A small blurred picture of the whole map, under the tiles, so the map never shows an empty frame while they
   // load (scripts/map/build-tiles.mjs writes it with the tiles; without it the map works as before).
   base: existsSync(join(process.cwd(), 'public/map/base.webp')) ? '/map/base.webp' : undefined,
