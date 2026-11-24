@@ -64,7 +64,10 @@
 .map-list__handle, .map-list__scroll { display: contents; }
 .map-list__handle .grabber, .map-list__count { display: none; }
 
-.frows { display: flex; flex-direction: column; }
+.frows { position: relative; display: flex; flex-direction: column; }
+/* A row that left the list fades where it was while the others close the gap (motion.tsx, listFlip). */
+.frow-ghost { position: absolute; left: 0; right: 0; pointer-events: none; }
+.frow-ghost > .frow { border-top-color: transparent; }
 .frow-item + .frow-item { border-top: var(--border-w) solid var(--border-1); }
 .frow {
   display: grid;
@@ -175,9 +178,9 @@
 .map-canvas { position: absolute; inset: 0; z-index: 0; }
 .map-canvas.leaflet-container { background: var(--map-land); font: inherit; outline-offset: -2px; }
 .map-canvas.leaflet-container:focus-visible { outline: 2px solid var(--accent); }
-.map-canvas[data-basemap='muted'] .map-tiles { filter: saturate(0.2) brightness(0.62); }
+.map-canvas[data-basemap='muted'] :is(.map-tiles, .map-base) { filter: saturate(0.2) brightness(0.62); }
 [data-theme='light'] .map-stage, [data-theme='light'] .map-canvas.leaflet-container { background: var(--surface-3); }
-[data-theme='light'] .map-canvas[data-basemap='muted'] .map-tiles { filter: saturate(0.2) brightness(1.08) contrast(0.9); }
+[data-theme='light'] .map-canvas[data-basemap='muted'] :is(.map-tiles, .map-base) { filter: saturate(0.2) brightness(1.08) contrast(0.9); }
 
 .map-controls {
   position: absolute;
@@ -275,10 +278,27 @@
   background: var(--surface-1);
   border: var(--border-w) solid var(--border-1);
   transform: translate(-50%, calc(-100% - 8px));
-  transition: scale var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour), border-color var(--dur-colour) var(--ease-colour);
+  transform-origin: 0 0; /* the pin's point on the map: it presses and rises from its tip */
+  transition: scale 160ms var(--ease-out), background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour), border-color var(--dur-colour) var(--ease-colour);
   cursor: pointer;
 }
 .pin:active { scale: 0.97; }
+/* Hovering its row in the list raises the pin (motion study item 10). */
+.pin.is-hovered { scale: 1.12; }
+/* "Here it is": one ring from the chosen pin once the map has landed. */
+.pin-ping {
+  position: absolute;
+  left: -20px;
+  top: -20px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  animation: pin-ping var(--dur-ping) var(--ease-out) both;
+}
+@keyframes pin-ping { from { opacity: 0.5; scale: 1; } to { opacity: 0; scale: 2.4; } }
+@keyframes pin-ping-still { from { opacity: 0.5; } to { opacity: 0; } }
 .pin::after {
   content: '';
   position: absolute;
@@ -507,10 +527,11 @@
   width: 320px;
   transform: translate(-50%, calc(-100% - 60px));
   transform-origin: 50% 100%;
-  animation: popup-in var(--dur-popover-in) var(--ease-out);
+  /* scale, not transform: the popup's transform holds its offset from the pin (and translate follows the map) */
+  transition: opacity var(--dur-popover-in) var(--ease-out), scale var(--dur-popover-in) var(--ease-out);
 }
-/* scale, not transform: the popup's transform holds its offset from the pin */
-@keyframes popup-in { from { opacity: 0; scale: 0.96; } }
+@starting-style { .popup { opacity: 0; scale: 0.96; } }
+.popup[data-state='closing'] { opacity: 0; scale: 0.96; pointer-events: none; transition-duration: 120ms; transition-timing-function: var(--ease-standard); }
 .popup[data-below='true'] { transform: translate(-50%, 16px); transform-origin: 50% 0; }
 .popup__card {
   display: flex;
@@ -544,13 +565,18 @@
   border: var(--border-w) solid var(--border-1);
   scrollbar-width: thin;
   scrollbar-color: var(--border-2) transparent;
-  animation: drawer-in var(--dur-peek-in) var(--ease-drawer);
+  /* Arrives from the right and leaves to the right, faster (motion study item 7). A transition, so closing and
+     opening again within a moment reverses from where it is. */
+  transition: opacity var(--dur-peek-in) var(--ease-drawer), transform var(--dur-peek-in) var(--ease-drawer);
 }
+@starting-style { .drawer { opacity: 0; transform: translateX(12px); } }
+.drawer[data-state='closing'] { opacity: 0; transform: translateX(12px); pointer-events: none; transition-duration: var(--dur-morph-out); transition-timing-function: var(--ease-standard); }
 .drawer:focus { outline: none; }
 .drawer:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.drawer[data-instant] { animation: none; }
-@keyframes drawer-in { from { opacity: 0; transform: translateX(12px); } }
-.drawer__content { animation: fade-in 160ms var(--ease-colour); }
+.drawer[data-instant] { transition: none; }
+/* Another find in the open drawer: the frame keeps its size, the new content arrives through a 2px blur. */
+.drawer__content { animation: content-in 160ms var(--ease-colour); }
+@keyframes content-in { from { opacity: 0; filter: blur(2px); } }
 @keyframes fade-in { from { opacity: 0; } }
 .drawer__body { padding: var(--space-4) var(--space-4) var(--space-5); }
 .drawer__head { display: flex; align-items: flex-start; gap: var(--space-2); }
@@ -674,9 +700,11 @@
   font-size: 15px;
   line-height: 20px;
   transform: translateX(-50%);
-  animation: toast-in var(--dur-peek-in) var(--ease-out);
+  /* Rises from the bottom edge and leaves back through it (Sonner's 400ms ease in, 260ms out). */
+  transition: opacity 400ms ease, transform 400ms ease;
 }
-@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@starting-style { .toast { opacity: 0; transform: translate(-50%, 100%); } }
+.toast[data-state='closing'] { opacity: 0; transform: translate(-50%, 100%); pointer-events: none; transition-duration: 260ms; transition-timing-function: var(--ease-standard); }
 .toast__text { flex: 1; }
 .toast__close { position: relative; display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: var(--radius-full); color: var(--text-1); }
 .toast__close::before { content: ''; position: absolute; inset: -4px; }
@@ -821,9 +849,10 @@
     z-index: 36;
     display: block;
     height: 122px;
-    animation: card-in var(--dur-peek-in) var(--ease-out);
+    transition: opacity var(--dur-peek-in) var(--ease-out), transform var(--dur-peek-in) var(--ease-out);
   }
-  @keyframes card-in { from { opacity: 0; transform: translateY(12px); } }
+  @starting-style { .pcard { opacity: 0; transform: translateY(12px); } }
+  .pcard[data-state='closing'] { opacity: 0; transform: translateY(12px); pointer-events: none; transition-duration: 180ms; transition-timing-function: var(--ease-standard); }
   .pcard__open {
     display: flex;
     width: 100%;
@@ -908,8 +937,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer, .popup, .popover, .toast, .pcard { animation-name: fade-in; }
+  /* Every surface fades in and out in place, 150ms. */
+  .popover { animation-name: fade-in; }
+  .drawer, .toast, .pcard, .popup { transition: opacity var(--dur-fade-reduced) var(--ease-colour); }
+  .drawer, .drawer[data-state='closing'], .pcard, .pcard[data-state='closing'] { transform: none; }
+  .toast, .toast[data-state='closing'] { transform: translateX(-50%); }
+  .popup, .popup[data-state='closing'] { scale: 1; }
+  @starting-style {
+    .drawer, .pcard { opacity: 0; transform: none; }
+    .toast { opacity: 0; transform: translateX(-50%); }
+    .popup { opacity: 0; scale: 1; }
+  }
+  .drawer__content { animation-name: fade-in; }
   .media img { transition: none; }
+  .pin, .pin.is-hovered { scale: 1; }
+  .pin-ping { animation: pin-ping-still 400ms linear both; scale: 1.6; }
 }
 @media (prefers-reduced-transparency: reduce) {
   .map-zoom, .map-credit, .toast, .map-toggle, .map-search, .map-grid-label { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; }

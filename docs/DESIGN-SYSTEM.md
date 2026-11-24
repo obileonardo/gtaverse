@@ -12,6 +12,8 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 - Buttons, chips and pills are fully rounded.
 - No box shadows. Elevation is a surface step plus a 1px `--border-1`.
 - No bounce easing. Exits are faster than entrances. Only `transform` and `opacity` animate (plus `clip-path` for reveals). Keyboard actions never animate.
+- Motion (owner rules for the motion pass, 24 Nov 2026): no bounce or overshoot, no twitching; arriving and leaving use different curves and leaving takes 60 to 75% of the entrance; an exit and an entrance never slide at the same time (fades may overlap briefly); no letter-by-letter motion on reading text, no loops, no cursor effects, no scroll-jacking (scrolling stays native). See "Motion".
+- Text containers never clip glyphs. An element that clips (`overflow` other than `visible`) and holds text gives every line box room for the full glyph: clip sideways only (`overflow: clip visible` for an ellipsis), or move the clip to a non-interactive wrapper that carries `padding-block` (about 0.14 to 0.2em) cancelled by a matching negative margin. Descenders (g, j, p, q, y) and accented capitals (É, Ñ) are never cut, also mid-animation.
 - No em or en dashes in copy or code comments.
 - No Rockstar logo, GTAArtDeco or Pricedown, and no game logo as our brand. Official game logos appear only as game identifiers through `GamePlate` (switcher, hubs, "Also in" chips), unaltered, beside the game's name, with the trademark line (decisions GS1 to GS6). Icons are our own drawings.
 - Text never under 12px. Touch targets 44px or more on phone.
@@ -37,7 +39,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/components/ui/Tabs.astro` | Underline tabs |
 | `src/components/ui/LevelTable.astro` | The one table style (Fiverr level system) |
 | `src/components/Clip.astro` | A creator's clip: thumbnail first, player on tap, spoiler and mature gate |
-| `src/components/home/Hero.astro` | The home hero: three background modes (trailer, key art, line art) with ring timed circles, the A24 stack with its peek frame, the Apple TV slides (docs/HERO.md) |
+| `src/components/home/Hero.astro` | The home hero: three background modes (trailer, key art, line art) with ring timed circles, the A24 stack with its peek frame, the Apple TV slides (docs/HERO.md). Intro (owner decision, 24 Nov 2026): a small text block top left at the gutter, level with the island, text-2 with the name in text-1, over a soft local scrim; hidden below 1024. The mode circles and their caption sit top right at the gutter, centred on the island; the finds list starts at the left gutter |
 | `src/components/lore/Timeline.astro` | The GTAverse timeline (Grok on desktop, Queue on the phone) |
 | `src/components/ui/Icon.astro`, `icons.ts` | Icon wrapper and the icon set |
 | `src/lib/nav.ts` | Main navigation items and counts, `isCurrent()` |
@@ -100,7 +102,7 @@ Scale tokens (desktop / phone): `--text-display-xl` 144 clamp / 64, `--text-disp
 ## Spacing, sizes, radii
 
 - Spacing on a 4px base: `--space-1` 4, `-2` 8, `-3` 12, `-4` 16, `-5` 20, `-6` 24, `-8` 32, `-10` 40, `-12` 48, `-16` 64, `--space-section` 96 desktop / 64 phone.
-- The page edge: `--page-pad` 40 desktop / 16 phone; `--container-max` 1360. Use `.container` for anything that should line up with the header and footer.
+- The gutter (owner decision, 24 Nov 2026): `--gutter` is 128 at 1440 and wider, 96 from 1280, 64 from 1024, 40 from 768 and 16 on the phone. `--page-pad` is the same value under the name every component already uses; `--container-max` is 1664 (1920 minus the gutter twice), so wider screens keep a 128 gutter and centre the rest. Use `.container` for anything that should line up with the header and footer: page content, the home hero (its intro, the finds list, the mode circles, the scroll arrow) and the footer all share this edge.
 - Sizes: `--chip-h` 34, `--chip-h-touch` 40, `--btn-h-s/m/l/xl` 32/40/48/56, `--ctrl-size-s/-/l/xl` 32/44/48/52, `--island-w` 336, `--island-h` 48, `--island-sub-h` 44, `--tab-underline` 3, `--icon-s/m/l` 16/20/24.
 - Radii: `--radius-xs` 4 (badges, island), `-s` 8, `-m` 12 (card media), `-l` 16 (framed cards), `-xl` 20 desktop / 28 phone (menus), `--radius-sheet` 32, `--radius-full` (buttons, chips, pills).
 
@@ -115,7 +117,32 @@ Scale tokens (desktop / phone): `--text-display-xl` 144 clamp / 64, `--text-disp
 | `--ease-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | exits |
 | `--dur-press` 140, `--dur-colour` 200, `--dur-popover-in/out` 180/140, `--dur-overlay-in/out` 220/160, `--dur-peek-in/out` 260/200, `--dur-drawer-in/out` 420/300, `--dur-fly` 600, `--dur-crossfade` 500, `--dur-card-lift` 500, `--stagger` 40 | ms | |
 
-Press feedback is `scale(0.97)` on `:active`. Hover styles live inside `@media (hover: hover) and (pointer: fine)`. Every animated component has a `prefers-reduced-motion` rule that keeps opacity and drops movement.
+Motion, part 2 (the motion study's tokens, 24 Nov 2026):
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--ease-reveal` | `cubic-bezier(0.22, 1, 0.36, 1)` | arrivals of 480ms and longer: title lines, card walls, the 404 |
+| `--ease-crit` | `linear(...)`, a critically damped spring from rest | CSS indicators that should feel like the springs (contents marker) |
+| `--dur-page-out` / `--dur-page-in` | 160 / 280ms | page transitions: the old page fades, the new one rises 8px, fades overlap by 60ms |
+| `--dur-morph` / `--dur-morph-out` | 280 / 180ms | one surface changing shape (menu from the island, chip check, copy button), and most exits |
+| `--dur-roll` | 280ms | a digit or word rolling to a new value |
+| `--dur-reveal` / `--dur-reveal-group` | 640 / 480ms | title lines once per page; cards and rows on first view |
+| `--dur-image-in` | 240ms | a still fading in once decoded |
+| `--dur-theme` | 520ms | the theme circle |
+| `--dur-ping` | 700ms | the map's one "here it is" ring |
+| `--dur-moment` | 900ms | rare moments only (404) |
+| `--dur-fade-reduced` | 150ms | reduced motion: a movement becomes this fade |
+| `--stagger-group`, `--stagger-hero`, `--stagger-cap` | 50ms, 70ms, 6 | first-view groups (each gap 10% shorter, capped at the sixth), hero lines |
+| `--spring-sheet`, `--spring-travel`, `--spring-lead`, `--spring-trail` | 0.4, 0.3, 0.2, 0.34 (seconds of response, damping ratio 1) | read by `src/scripts/motion/spring.ts` |
+
+Press feedback is `scale(0.97)` on `:active`. Hover styles live inside `@media (hover: hover) and (pointer: fine)`. Every animated component has its own `prefers-reduced-motion` rule that keeps a short opacity fade and drops movement; there is no site-wide rule that cuts animations to nothing (only `scroll-behavior` is reset globally).
+
+Where motion lives:
+- Page transitions: the browser's cross-document view transitions (`@view-transition` in `base.css`), no router. The island is its own layer (`view-transition-name: island`, set only while a transition runs, because a named element is a backdrop root and would stop the glass from blurring the page) so it never redraws; an open menu is part of the island's snapshot and fades out with it. Between game hubs the page slides from the side of the move (`game-next`, `game-prev` types, set by `src/scripts/site-motion.ts` and read in `pagereveal` in `Base.astro`).
+- Before first paint (inline script in `Base.astro`): `html.js` (hidden start states only exist under it), `html.nav-back` (entrances never replay on back navigation), the image fade (every image fades in once decoded, at once if it was ready for the first frame; opt out with `data-nofade`, used for an LCP still).
+- `src/scripts/site-motion.ts`: card walls and `[data-reveal] > li` rows reveal once on first view (stagger capped at the sixth, never on back navigation).
+- `src/scripts/motion/`: `spring.ts` (the one critically damped spring: retargets with its velocity, never passes its target), `roll.ts` (rolling numbers, only changed digits move), `pill.ts` (the travelling hover pill with lead and trail edges).
+- `src/components/map/motion.tsx`: `usePresence` (exits for the drawer, toast, popup and phone cards), `RollNumber`, `listFlip` (rows keep their place when filters change).
 
 ## Z layers
 
@@ -168,7 +195,7 @@ Every table on the site. A sheet on `--surface-1` (radius 20, 24 padding, 1px ed
 16:9 frame (`ratio` to change it) with the creator's thumbnail and a glass play circle; the player (youtube-nocookie) loads on tap. `spoiler` or `mature` show a gate on the glow with a reveal pill, and no thumbnail loads until it is revealed. `caption={false}` drops the credit line when the page credits the creator elsewhere.
 
 ### Timeline (`lore/Timeline.astro`)
-One selected moment at a time. Desktop: Grok hairline across the page, mono year labels on 1px ticks, V7 ruler ticks hanging under the line, event ticks in pink, a square marker; the moment's date, serif title and description under the marker with Queue's polaroid to the right; V7 outline arrow pills, arrow keys, Home and End (keyboard moves never animate). Phone: Queue sheet with a scrubbing year ruler (native scroll and snap) under a fixed centre tick, the serif headline with a quote mark, the polaroid, "Watch the clip", the serif body; swipe to move. The track moves with `--ease-in-out` 500ms; the moment swap is direction aware (out 160ms, in 280ms, 40ms overlap). Reduced motion: fades only.
+One selected moment at a time. Desktop: Grok hairline across the page, mono year labels on 1px ticks, V7 ruler ticks hanging under the line, event ticks in pink, a square marker; the moment's date, serif title and description under the marker with Queue's polaroid to the right; V7 outline arrow pills, arrow keys, Home and End (keyboard moves never animate). Phone: Queue sheet with a scrubbing year ruler (native scroll and snap) under a fixed centre tick, the serif headline with a quote mark, the polaroid, "Watch the clip", the serif body; swipe to move. The track moves with `--ease-in-out` 500ms; the moment swap is direction aware: the old moment stops moving at 120ms and fades by 160ms, the new one moves in from 120ms over 280ms (never two slides at once). The polaroid settles into its tilt as it arrives, the phone ruler's year rolls, and thin accent arcs join the moment to the nearest moments that share its first game, drawn after the band has landed. Reduced motion: fades only.
 
 ### Header (`site/Header.astro`)
 - Desktop: island 336 x 48, centred, 32 from the top, glass, radius 4. Left: hamburger and wordmark. Right: Map and the theme toggle. The hamburger opens the glass popover (Apple Sports): icon + label rows 48 high, 4 apart, current item in a pill with a solid icon, counts as mono superscripts. The page behind dims; the header stays clear. Escape closes instantly.

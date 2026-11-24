@@ -7,11 +7,14 @@ import { logoOf, type Game } from '../../lib/games';
 interface Props { game: Game; size?: 'rail' | 'sheet' | 'chip' | 'hub'; alt?: string; class?: string }
 const { game, size = 'rail', alt = '', class: className } = Astro.props;
 const logo = logoOf(game);
+// A text plate wraps to two lines; a name long enough to need a third holds to one line with an ellipsis instead
+// (the full name is always written beside the plate), so no glyph is ever cut by the plate's edge.
+const long = !logo && game.short_name.length > 22;
 ---
 <span class:list={['gplate', `gplate--${size}`, { 'gplate--textual': !logo }, className]} aria-hidden={alt ? undefined : 'true'}>
   {logo ? (
     <img src={logo.src} width={logo.width} height={logo.height} alt={alt} loading={size === 'hub' ? 'eager' : 'lazy'} decoding="async" />
   ) : (
-    <span class="gplate__text" role={alt ? 'img' : undefined} aria-label={alt || undefined}>{game.short_name}</span>
+    <span class:list={['gplate__text', { 'gplate__text--one': long }]} role={alt ? 'img' : undefined} aria-label={alt || undefined}>{game.short_name}</span>
   )}
 </span>

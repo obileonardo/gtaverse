@@ -11,17 +11,21 @@
 import Icon from '../ui/Icon.astro';
 import GamePlate from '../games/GamePlate.astro';
 import { nav, isCurrent } from '../../lib/nav';
-import { switcherGroups, connectionCount, TRADEMARK_LINE } from '../../lib/games';
+import { switcherGroups, connectionCount, games as allGames, TRADEMARK_LINE } from '../../lib/games';
 export interface SubBar { href: string; label: string; image?: string | null }
 interface Props { sub?: SubBar }
 const { sub } = Astro.props;
 const path = Astro.url.pathname;
+// Switcher order, then the games outside it: a move between hubs slides the way this list runs (site-motion.ts).
+const switcherIds = switcherGroups.flatMap((g) => g.games.map((x) => x.id));
+const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !switcherIds.includes(id))];
 ---
-<header class="site-header" data-header>
+<header class="site-header" data-header data-game-order={JSON.stringify(gameOrder)}>
   <div class="island-wrap">
     <nav class="island" aria-label="Main">
       <button class="island__btn island__menu" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Menu" data-menu-open>
-        <Icon name="menu" size={24} />
+        <!-- The two lines meet and turn into a cross while the menu is open (drawn here so each line can move). -->
+        <svg class="icon burger" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path class="burger__l burger__l1" d="M4 9.25h16" /><path class="burger__l burger__l2" d="M4 14.75h16" /></svg>
       </button>
       <a class="island__mark" href="/" aria-label="The Vice Files, home">The Vice Files</a>
       <div class="island__actions">
@@ -56,9 +60,9 @@ const path = Astro.url.pathname;
                     const n = connectionCount(g.id);
                     return (
                       <li>
-                        <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} data-game-row>
+                        <a class:list={['games__row', { 'is-current': current }]} href={href} aria-current={current ? 'page' : undefined} title={g.name} data-game-row>
                           <GamePlate game={g} size="rail" class="games__plate" />
-                          <span class="games__name">{g.short_name}<sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
+                          <span class="games__name"><span class="games__label">{g.short_name}</span><sup class="games__count tabular">{n}<span class="sr-only"> {n === 1 ? 'connection' : 'connections'}</span></sup></span>
                         </a>
                       </li>
                     );
@@ -107,6 +111,7 @@ const path = Astro.url.pathname;
 </header>
 
 <script>
+  import { travellingPill } from '../../scripts/motion/pill';
   const header = document.querySelector<HTMLElement>('[data-header]');
   if (header) {
     const openBtn = header.querySelector<HTMLButtonElement>('[data-menu-open]')!;
@@ -130,12 +135,18 @@ const path = Astro.url.pathname;
       header.dataset.menu = instant ? 'instant' : 'closing';
       openBtn.setAttribute('aria-expanded', 'false');
       document.documentElement.classList.remove('is-locked');
-      const done = () => { menu.hidden = true; scrim.hidden = true; delete header.dataset.menu; };
-      if (instant) done(); else closeTimer = window.setTimeout(done, 180);
+      const done = () => { menu.hidden = true; scrim.hidden = true; delete header.dataset.menu; pills.forEach((p) => p.reset()); };
+      // Desktop: the menu folds back into the island (--dur-morph-out). Phone: the rows fade, then the overlay.
+      if (instant) done(); else closeTimer = window.setTimeout(done, phone.matches ? 240 : 200);
       if (restoreFocus) openBtn.focus({ preventScroll: true });
     };
     const isOpen = () => openBtn.getAttribute('aria-expanded') === 'true';
     const island = header.querySelector<HTMLElement>('.island')!;
+    // One highlight glides between the rows under the pointer (site rows, and the Games rail on desktop).
+    const pills = [
+      travellingPill(menu.querySelector<HTMLElement>('.menu__list')!, '.menu__link', 'menu__hl'),
+      travellingPill(header.querySelector<HTMLElement>('[data-games-scroll]')!, '.games__row', 'games__hl'),
+    ];
 
     // ---------- Games switcher. Desktop: a rail inside the popover. Phone: a bottom sheet over the overlay menu,
     // dragged 1:1, released into a critically damped spring seeded with the finger's speed (the map sheet's
@@ -335,12 +346,34 @@ const path = Astro.url.pathname;
       toggle.setAttribute('aria-label', t === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
     };
     label();
-    toggle.addEventListener('click', () => {
-      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    const setTheme = (next: 'light' | 'dark') => {
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem('vf-theme', next); } catch { /* private mode: the choice lasts for this page only */ }
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f9f5f0' : '#0d0c1a');
       label();
+    };
+    // The new theme opens as a circle from the toggle (motion study item 5): a same-page view transition whose new
+    // snapshot is revealed by a growing circle, while the old one stays still underneath. Keyboard and reduced
+    // motion keep the plain 200ms colour change.
+    toggle.addEventListener('click', (e) => {
+      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> } };
+      if (!doc.startViewTransition || fromKeys(e) || reduced()) { setTheme(next); return; }
+      const r = toggle.getBoundingClientRect();
+      const x = Math.round(r.left + r.width / 2), y = Math.round(r.top + r.height / 2);
+      const end = Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)));
+      const root = document.documentElement;
+      const css = getComputedStyle(root);
+      root.classList.add('vt-theme');
+      const vt = doc.startViewTransition(() => setTheme(next));
+      vt.ready.then(() => {
+        root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`] }, {
+          duration: parseFloat(css.getPropertyValue('--dur-theme')) || 520,
+          easing: css.getPropertyValue('--ease-in-out').trim() || 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)',
+        });
+      }, () => {});
+      vt.finished.finally(() => root.classList.remove('vt-theme'));
     });
   }
 </script>
@@ -375,6 +408,11 @@ const path = Astro.url.pathname;
     border-radius: var(--radius-xs);
     isolation: isolate;
   }
+  /* Its own layer in page transitions, so it never redraws. Named only while a transition runs (the old page names
+     it in pageswap, site-motion.ts): a named element is a backdrop root, and a permanent name would stop the island
+     and its menu from blurring the page behind them. The theme circle reveals the island with everything else. */
+  :global(html:active-view-transition) .island { view-transition-name: island; }
+  :global(html.vt-theme) .island { view-transition-name: none; }
   .island::before {
     content: '';
     position: absolute;
@@ -395,6 +433,16 @@ const path = Astro.url.pathname;
   }
   .island__btn:active { transform: scale(0.94); }
   .island__menu { width: 40px; }
+  /* Burger to cross: the lines meet in the middle, then turn (two steps, never together). Closing reverses at 0.75x. */
+  .burger__l {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: rotate 120ms var(--ease-standard), translate 90ms var(--ease-in-out) 120ms;
+  }
+  :global([data-menu='open']) .burger__l { transition: translate 120ms var(--ease-in-out), rotate 160ms var(--ease-out) 120ms; }
+  :global([data-menu='open']) .burger__l1 { translate: 0 2.75px; rotate: 45deg; }
+  :global([data-menu='open']) .burger__l2 { translate: 0 -2.75px; rotate: -45deg; }
+  :global([data-menu='instant']) .burger__l { transition: none; }
   .island__mark {
     margin-left: 10px;
     font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
@@ -469,19 +517,26 @@ const path = Astro.url.pathname;
     border: var(--border-w) solid var(--glass-border);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
-    transform-origin: calc(-1 * var(--menu-left) + 20px) 0;
-    opacity: 0;
-    transform: scale(0.96);
-    transition: opacity var(--dur-popover-out) var(--ease-standard), transform var(--dur-popover-out) var(--ease-standard);
     z-index: 2;
+    /* Grows out of the island as one surface (motion study item 4): closed, it is clipped to the island's own
+       footprint just under it; open, the clip widens and drops to the whole menu. The rows are already in place
+       and fade in behind the clip; closing, the words leave first and the surface folds back faster. */
+    clip-path: inset(0 calc(var(--menu-w) + var(--menu-left) - var(--island-w)) calc(100% - var(--island-h)) calc(-1 * var(--menu-left)) round var(--radius-xs));
+    opacity: 0;
+    transition: clip-path var(--dur-morph-out) var(--ease-standard), opacity 100ms var(--ease-standard) 80ms;
   }
   :global([data-menu='open']) .menu {
+    clip-path: inset(0 0 0 0 round var(--radius-xl));
     opacity: 1;
-    transform: none;
-    transition: opacity var(--dur-popover-in) var(--ease-out), transform var(--dur-popover-in) var(--ease-out);
+    transition: clip-path var(--dur-morph) var(--ease-out), opacity 120ms var(--ease-out);
   }
-  :global([data-menu='instant']) .menu { transition: none; }
-  .menu__list { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 4px; }
+  .menu > :is(.games, .menu__list) { opacity: 0; transition: opacity 100ms var(--ease-standard); }
+  :global([data-menu='open']) .menu > :is(.games, .menu__list) { opacity: 1; transition: opacity 160ms var(--ease-out) 80ms; }
+  :global([data-menu='instant']) .menu, :global([data-menu='instant']) .menu > * { transition: none; }
+  .menu__list { position: relative; grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 4px; }
+  /* The travelling pill (scripts/motion/pill.ts) sits under the rows. */
+  .menu__link, .games__row { position: relative; }
+  :global(.menu__hl), :global(.games__hl) { background: var(--glass-hover-soft); }
   .menu__games-item, .games-scrim, .games__handle, .games__close { display: none; }
 
   /* Games rail (desktop): group labels in a left column, rows 36 high, 4 apart, 10 between groups. */
@@ -506,9 +561,9 @@ const path = Astro.url.pathname;
     font-size: 13px;
     transition: background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour);
   }
-  .games__scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; }
+  .games__scroll { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; }
   .games__group { display: grid; grid-template-columns: 84px minmax(0, 1fr); }
-  .games__glabel { padding: 11px 8px 0 10px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
+  .games__glabel { hyphens: auto; -webkit-hyphens: auto; padding: 11px 4px 0 10px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
   .games__list { display: flex; flex-direction: column; gap: 4px; }
   .games__row {
     display: flex;
@@ -522,11 +577,14 @@ const path = Astro.url.pathname;
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .games__row.is-current { background: var(--glass-hover); }
-  .games__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .games__count { margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); vertical-align: super; line-height: 0; }
+  .games__name { display: flex; align-items: baseline; min-width: 0; }
+  /* A long name truncates on its own; the count beside it always stays. The ellipsis clips sideways only. */
+  .games__label { min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .games__count { flex: none; position: relative; top: -0.5em; margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); line-height: 1; }
   .games__tm { padding: 6px 10px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
   @media (hover: hover) and (pointer: fine) {
     .games__row:not(.is-current):hover, .games__all:hover { background: var(--glass-hover-soft); }
+    :global(.has-pill) .games__row:not(.is-current):hover { background: none; }
     .games__all:hover { color: var(--text-1); }
   }
   .menu__link {
@@ -544,6 +602,7 @@ const path = Astro.url.pathname;
   .menu__link.is-current { background: var(--glass-hover); }
   @media (hover: hover) and (pointer: fine) {
     .menu__link:not(.is-current):hover { background: var(--glass-hover-soft); }
+    :global(.has-pill) > li > .menu__link:not(.is-current):hover { background: none; }
   }
   .menu__count {
     margin-left: 3px;
@@ -589,8 +648,9 @@ const path = Astro.url.pathname;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transform: none;
-      transition: opacity var(--dur-overlay-out) var(--ease-standard);
+      clip-path: none;
+      /* Closing: the rows fade first, then the overlay follows (words leave first). */
+      transition: opacity var(--dur-overlay-out) var(--ease-standard) 80ms;
       overscroll-behavior: contain;
       z-index: 3;
     }
@@ -602,7 +662,12 @@ const path = Astro.url.pathname;
       background: linear-gradient(to bottom, transparent, var(--bg));
       pointer-events: none;
     }
-    :global([data-menu='open']) .menu { transform: none; transition: opacity var(--dur-overlay-in) var(--ease-out); }
+    :global([data-menu='open']) .menu { clip-path: none; transition: opacity var(--dur-overlay-in) var(--ease-out); }
+    /* One entrance for the whole column: it rises 12px with the overlay (a frequent menu: rows never stagger).
+       Closing, it fades first in place; the overlay follows. The games sheet moves on its own spring. */
+    .menu > .menu__list { transform: translateY(12px); transition: opacity 120ms var(--ease-standard), transform 0s linear 120ms; }
+    :global([data-menu='open']) .menu > .menu__list { transform: none; transition: opacity var(--dur-overlay-in) var(--ease-out), transform var(--dur-overlay-in) var(--ease-out); }
+    .menu > .games, :global([data-menu='open']) .menu > .games { opacity: 1; transition: none; }
     .menu__list { gap: 0; width: 100%; padding-left: 32%; }
     .menu__games-item { display: list-item; }
     .menu__games { width: 100%; text-align: left; font: inherit; font-size: var(--text-menu); font-weight: 600; }
@@ -687,7 +752,15 @@ const path = Astro.url.pathname;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .menu, :global([data-menu='open']) .menu { transform: none; }
+    /* No growing and no turning: the menu and the cross fade. */
+    .menu, :global([data-menu='open']) .menu { clip-path: none; }
+    .menu { transition: opacity var(--dur-fade-reduced) var(--ease-standard); }
+    :global([data-menu='open']) .menu { transition: opacity var(--dur-fade-reduced) var(--ease-out); }
+    .menu > :is(.games, .menu__list), :global([data-menu='open']) .menu > :is(.games, .menu__list) { transition: none; }
+    .menu > .menu__list, :global([data-menu='open']) .menu > .menu__list { transform: none; transition: none; }
+    .burger__l, :global([data-menu='open']) .burger__l { transition: none; }
+    :global([data-menu='open']) .burger, :global([data-menu='closing']) .burger { animation: burger-fade 120ms linear; }
+    @keyframes burger-fade { from { opacity: 0; } }
   }
   @media (prefers-reduced-transparency: reduce) {
     .island, .menu { background: var(--surface-1); }

@@ -32,7 +32,7 @@ GTA VI still uses six wanted stars, but the stars now carry states that tell you
 
 Red heat icons under the stars show what police can identify: your appearance, vehicle, outfit, a visible weapon, your partner, CCTV and cloud CCTV [1].
 
-Local CCTV footage can be destroyed. Cloud CCTV cannot, and eventually raises an alarm [1].
+Local CCTV footage can be destroyed. <mark data-draw>Cloud CCTV cannot</mark>, and eventually raises an alarm [1].
 
 Bloodstains and exploded dye packs also make you recognisable [1].
 

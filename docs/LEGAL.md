@@ -34,7 +34,7 @@ Short summary of [research/legal-fan-site.md](../research/legal-fan-site.md) (re
 
 On the site, "(c)" is rendered as the copyright symbol.
 
-Pending for the footer's owner: once game logos ship (decision GS1), extend the marks sentence with "and their logos" ("...and related marks and their logos are trademarks of Take-Two Interactive Software, Inc."). Until then the switcher, hubs and chips carry their own trademark line.
+Game logos shipped (decision GS1), so the site footer's marks sentence now names them: "Grand Theft Auto, GTA and related names, images, materials and their logos are trademarks and copyrights of their respective owners" (24 Nov 2026). The switcher, hubs and chips keep their own trademark line.
 
 Site: thevicefiles.com. Contact: takedown@thevicefiles.com (forwarding being set up).
 

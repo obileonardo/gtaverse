@@ -100,6 +100,22 @@
     backdrop-filter: var(--glass-blur);
   }
   .chip.is-selected { background: var(--inverse-fill); color: var(--inverse-text); border-color: var(--inverse-fill); }
+  /* Toggle chips: selecting one opens a check at its end and the chip widens smoothly to hold it (motion study
+     item 9). The check lives in a grid cell that opens from 0fr to 1fr, the one width change on the chip. */
+  .chip__check {
+    display: grid;
+    grid-template-columns: 0fr;
+    margin-left: -6px; /* the chip's gap is inside the cell, so a closed cell takes no room */
+    transition: grid-template-columns var(--dur-morph-out) var(--ease-standard);
+  }
+  .chip__check > span { display: flex; min-width: 0; overflow: hidden; padding-left: 6px; }
+  .chip__check .icon { opacity: 0; scale: 0.8; transition: opacity 120ms var(--ease-standard), scale 120ms var(--ease-standard); }
+  .chip.is-selected .chip__check { grid-template-columns: 1fr; transition: grid-template-columns 200ms var(--ease-out); }
+  .chip.is-selected .chip__check .icon { opacity: 1; scale: 1; transition: opacity 200ms var(--ease-out), scale 200ms var(--ease-out); }
+  @media (prefers-reduced-motion: reduce) {
+    .chip__check, .chip.is-selected .chip__check { transition: none; }
+    .chip__check .icon { scale: 1; }
+  }
   .chip__count { color: var(--text-3); font-size: 12px; }
   .chip.is-selected .chip__count { color: inherit; opacity: 0.7; }
   @media (hover: hover) and (pointer: fine) {
@@ -210,6 +226,8 @@
     text-align: center;
     color: rgb(255 255 255 / 0.86);
   }
+  /* A long name (GamePlate decides): one line, the ellipsis clipping sideways only, so its glyphs stay whole. */
+  .gplate__text--one { min-width: 0; white-space: nowrap; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; }
   .gplate--sheet { --plate-w: 120px; --plate-h: 36px; }
   .gplate--chip { --plate-w: 64px; --plate-h: 22px; padding: 2px 4px; border-radius: var(--radius-xs); }
   .gplate--hub { --plate-w: 280px; --plate-h: 64px; padding: 10px 14px; border-radius: var(--radius-m); }
@@ -233,3 +251,47 @@
   .spoiler[open] .spoiler__hint { color: var(--text-2); }
   .spoiler__body { padding: 0 var(--space-4) var(--space-4); }
   .spoiler__body > :last-child { margin-bottom: 0; }
+
+/* ---------- Travelling pill (scripts/motion/pill.ts): one highlight that glides between rows ---------- */
+  .pill-hl {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius-full);
+    transform-origin: 0 0;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform;
+    transition: opacity 120ms var(--ease-colour);
+  }
+  .pill-hl.is-on { opacity: 1; }
+  .pill-hl.is-instant { transition: none; }
+
+/* ---------- Rolling number (scripts/motion/roll.ts): only the digits that change roll ---------- */
+  .roll { display: inline-flex; font-variant-numeric: tabular-nums; }
+  .roll__cells { display: inline-flex; }
+  .roll__cell { display: inline-grid; overflow: hidden; overflow: clip; }
+  .roll__glyph { grid-area: 1 / 1; }
+
+/* ---------- Copy link (motion study item 11): the link turns into a check, the label rolls to "Copied" ---------- */
+  /* Markup: .copy > .copy__icons (.copy__from, .copy__to) and, with a label, .copy__label (.copy__l--from,
+     .copy__l--to). Both labels share one grid cell, so the button is always as wide as the longer one: the width
+     never jumps and nothing clips. [data-copied] holds for 1.6s (the script), then everything turns back. */
+  .copy__icons, .copy__label { display: inline-grid; }
+  .copy__icons > *, .copy__label > * { grid-area: 1 / 1; }
+  .copy__label { overflow: hidden; overflow: clip; }
+  .copy__from, .copy__to, .copy__l { transition: opacity var(--dur-morph-out) var(--ease-standard), rotate var(--dur-morph-out) var(--ease-standard), scale var(--dur-morph-out) var(--ease-standard), translate var(--dur-morph-out) var(--ease-standard); }
+  .copy__to { opacity: 0; scale: 0.8; }
+  .copy__l--to { translate: 0 100%; }
+  [data-copied] .copy__from, [data-copied] .copy__to, [data-copied] .copy__l { transition-duration: 200ms, 200ms, 200ms, var(--dur-roll); transition-timing-function: var(--ease-out); }
+  [data-copied] .copy__from { opacity: 0; rotate: -45deg; }
+  [data-copied] .copy__to { opacity: 1; scale: 1; }
+  [data-copied] .copy__l--from { translate: 0 -100%; }
+  [data-copied] .copy__l--to { translate: 0 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .copy__from, .copy__to, .copy__l, [data-copied] .copy__from, [data-copied] .copy__to, [data-copied] .copy__l { transition: none; }
+    [data-copied] .copy__from { rotate: none; }
+    .copy__to { scale: 1; }
+    .copy__l--to, [data-copied] .copy__l--from { translate: none; opacity: 0; }
+    [data-copied] .copy__l--to { opacity: 1; }
+  }

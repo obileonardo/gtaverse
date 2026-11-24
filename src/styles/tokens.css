@@ -121,8 +121,11 @@
   --space-16: 64px;
   --space-section: 96px;
 
-  --page-pad: 40px;          /* A24 left inset, the edge every page shares */
-  --container-max: 1360px;   /* 1440 minus the page pad on both sides */
+  /* The gutter (owner decision, 24 Nov 2026): the left and right edge every page shares, header-aligned content,
+     the hero and the footer. 128px at 1440 and wider, stepping down at 1280, 1024 and 768, 16px on the phone. */
+  --gutter: 128px;
+  --page-pad: var(--gutter); /* the name every component already uses for the shared edge */
+  --container-max: 1664px;   /* 1920 minus the gutter on both sides: wider screens keep 128px and centre the rest */
   --measure-short: 500px;
   --measure: 680px;
 
@@ -183,6 +186,34 @@
   --dur-card-lift: 500ms;
   --stagger: 40ms;
 
+  /* ---------- Motion, part 2 (motion study, 24 Nov 2026) ---------- */
+  /* Curves */
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);   /* long once-per-visit reveals: titles, card walls, 404. Softer tail than --ease-out */
+  --ease-crit: linear(0, 0.036 4%, 0.120 8%, 0.224 12%, 0.360 17%, 0.486 22%, 0.615 28%, 0.733 35%, 0.828 43%, 0.898 52%, 0.944 62%, 0.973 74%, 0.988 87%, 1);
+                                                     /* a critically damped spring from rest, for CSS-only indicators; no overshoot */
+  /* Durations */
+  --dur-page-out: 160ms;     /* view transition: old page fades */
+  --dur-page-in: 280ms;      /* view transition: new page rises 8px and fades in, after the old one */
+  --dur-morph: 280ms;        /* one surface changing shape: island to menu, chip widening, copy button */
+  --dur-morph-out: 180ms;
+  --dur-roll: 280ms;         /* a digit or word rolling to a new value */
+  --dur-reveal: 640ms;       /* title lines, once per page */
+  --dur-reveal-group: 480ms; /* cards and rows the first time they enter view */
+  --dur-image-in: 240ms;     /* a still fading in when it has decoded */
+  --dur-theme: 520ms;        /* light or dark: the circle from the toggle */
+  --dur-ping: 700ms;         /* the map's one-off "here it is" ring */
+  --dur-moment: 900ms;       /* rare moments only (404) */
+  --dur-fade-reduced: 150ms; /* reduced motion: every movement becomes an opacity fade this long */
+  /* Stagger */
+  --stagger-group: 50ms;     /* cards and rows on first view; shrink each gap by 10% */
+  --stagger-hero: 70ms;      /* hero lines; existing formula i*70 - i*i*6 */
+  --stagger-cap: 6;          /* items after the sixth arrive with the sixth */
+  /* Springs (JS reads these; seconds of response, damping ratio always 1) */
+  --spring-sheet: 0.4;       /* sheets, drawer drag (matches Sheet.tsx) */
+  --spring-travel: 0.3;      /* one element travelling between targets: peek frame, menu hover pill */
+  --spring-lead: 0.2;        /* the edge of an indicator facing the move */
+  --spring-trail: 0.34;      /* the edge that lags: this makes the stretch */
+
   /* ---------- Z layers ---------- */
   --z-map: 0;
   --z-pins: 10;
@@ -196,6 +227,11 @@
   --z-toast: 80;
 }
 
+/* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
+@media (max-width: 1439px) { :root { --gutter: 96px; } }
+@media (max-width: 1279px) { :root { --gutter: 64px; } }
+@media (max-width: 1023px) { :root { --gutter: 40px; } }
+
 /* Phone sizes: only where the Loves differ */
 @media (max-width: 767px) {
   :root {
@@ -208,7 +244,7 @@
     --text-body-s: 15px;
     --text-label: 15px;
     --text-mono: 17px;
-    --page-pad: 16px;
+    --gutter: 16px;
     --space-section: 64px;
     --island-top: 8px;
     --radius-xl: 28px;

@@ -93,9 +93,11 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const pins = useRef<Leaflet.LayerGroup | null>(null);
   const grid = useRef<Leaflet.LayerGroup | null>(null);
   const cpins = useRef<Leaflet.LayerGroup | null>(null);
+  const markers = useRef(new Map<string, Leaflet.Marker>()); // single find pins by slug, rebuilt with every draw
   const live = useRef(props);
   live.current = props;
 
+  const pingAfter = useRef<() => void>(() => {});
   const toLatLng = (x: number, y: number) => map.current!.unproject([x, y] as Leaflet.PointExpression, props.meta.maxZoom);
 
   useImperativeHandle(ref, () => ({
@@ -107,8 +109,20 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       // Centre the pin in the visible part of the map (above a sheet or beside the drawer).
       const target = m.project(toLatLng(f.pin.x, f.pin.y), zoom).add([opts.offsetX ?? 0, opts.offsetY ?? 0]);
       const centre = m.unproject(target, zoom);
-      if (reduce) m.setView(centre, zoom, { animate: false });
-      else m.flyTo(centre, zoom, { duration: 0.6 });
+      // "Here it is": one ring from the pin once the map has landed, never during the fly (motion study item 10).
+      const ping = () => {
+        const el = markers.current.get(f.slug)?.getElement();
+        if (!el) return;
+        el.querySelector('.pin-ping')?.remove();
+        const ring = document.createElement('span');
+        ring.className = 'pin-ping';
+        ring.setAttribute('aria-hidden', 'true');
+        ring.addEventListener('animationend', () => ring.remove());
+        el.append(ring);
+      };
+      m.off('moveend', pingAfter.current);
+      if (reduce) { m.setView(centre, zoom, { animate: false }); if (!opts.instant) requestAnimationFrame(ping); }
+      else { pingAfter.current = ping; m.once('moveend', ping); m.flyTo(centre, zoom, { duration: 0.6 }); }
     },
     zoomBy: (d) => map.current?.setZoom(map.current.getZoom() + d),
     pointOf: (f) => {
@@ -167,6 +181,13 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       });
       map.current = m;
       const image = lib.latLngBounds(m.unproject([0, meta.height], meta.maxZoom), m.unproject([meta.width, 0], meta.maxZoom));
+      // The blurred base (motion study item 2): one small picture of the whole map in a pane under the tiles,
+      // which fade in over it as they arrive, so the first frame and every pan show the map, never an empty frame.
+      if (meta.base) {
+        const pane = m.createPane('vf-base');
+        pane.style.zIndex = '150'; // Leaflet's tile pane is 200
+        lib.imageOverlay(meta.base, image, { pane: 'vf-base', className: 'map-base', interactive: false }).addTo(m);
+      }
       lib.tileLayer(meta.tileUrl, { tileSize: sharp.tileSize, zoomOffset: sharp.zoomOffset, noWrap: true, bounds: image, minNativeZoom: 0, maxNativeZoom: sharp.maxNativeZoom, maxZoom: sharp.maxZoom, keepBuffer: 3, className: 'map-tiles' }).addTo(m);
       const frame = lib.latLngBounds(m.unproject([meta.frame.x0, meta.frame.y1], meta.maxZoom), m.unproject([meta.frame.x1, meta.frame.y0], meta.maxZoom));
       const p = live.current.fitPadding;
@@ -194,6 +215,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     if (!lib || !m || !layer) return;
     const { finds, phone, selected, hovered, meta } = live.current;
     layer.clearLayers();
+    markers.current.clear();
     const zoom = m.getZoom();
     const radius = zoom >= m.getMaxZoom() - 0.5 ? 0 : phone ? 40 : 56; // groups split near the deepest zoom
     const pts = finds.filter((f) => f.pin).map((f) => ({ f, p: m.project(toLatLng(f.pin!.x, f.pin!.y), zoom) }));
@@ -214,6 +236,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
         const mk = lib.marker(toLatLng(f.pin!.x, f.pin!.y), { icon, keyboard: false, riseOnHover: true, zIndexOffset: state === 'is-selected' ? 1000 : state ? 500 : 0 });
         mk.on('click', () => { const el = mk.getElement()?.querySelector<HTMLElement>('.pin'); if (el) live.current.onPin(f.slug, el); });
         layer.addLayer(mk);
+        markers.current.set(f.slug, mk);
       } else {
         const ms = g.members.map((x) => x.f);
         const sum = g.members.reduce((s, x) => s.add(x.p), lib.point(0, 0)).divideBy(g.members.length);
@@ -268,7 +291,21 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     for (const c of meta.columns) layer.addLayer(label(c.id, (c.x0 + c.x1) / 2, f.y0 + 60));
   };
 
-  useEffect(() => { draw(); }, [props.finds, props.selected, props.hovered, props.phone]);
+  useEffect(() => { draw(); }, [props.finds, props.selected, props.phone]);
+  // Hovering a list row raises its pin (motion study item 10). The pin is updated in place, not redrawn, so the
+  // rise can animate (map.css: .pin.is-hovered); a selected pin keeps its own look.
+  const raised = useRef<string | null>(null);
+  useEffect(() => {
+    const setRaised = (slug: string | null, on: boolean) => {
+      if (!slug || slug === live.current.selected) return;
+      const mk = markers.current.get(slug);
+      mk?.getElement()?.querySelector('.pin')?.classList.toggle('is-hovered', on);
+      mk?.setZIndexOffset(on ? 500 : 0);
+    };
+    setRaised(raised.current, false);
+    setRaised(props.hovered, true);
+    raised.current = props.hovered;
+  }, [props.hovered]);
   useEffect(() => { drawCollectibles(); }, [props.collectibles, props.selectedCollectible]);
   useEffect(() => {
     const m = map.current, g = grid.current;

@@ -29,7 +29,7 @@ Leonida's roads and streets throw up scripted encounters that you can join, igno
 
 - A shady lawyer who lives in a dumpster gives legal advice and takes payment in pills [[find:dumpster-lawyer]] [1].
 - A truck driver sets his own legs on fire to build a lawsuit against his employer and pays you through BuckMe to witness it [[find:lawsuit-burning-driver]] [1].
-- A polar bear escapes a truck bound for the zoo. If you met the hunter earlier, he will buy the dead bear, so the outcome changes with your earlier choices [[find:escaped-polar-bear]] [1] [2].
+- A polar bear escapes a truck bound for the zoo. If you met the hunter earlier, he will buy the dead bear, so <mark data-draw>the outcome changes with your earlier choices</mark> [[find:escaped-polar-bear]] [1] [2].
 - Operation Furball: give a fox-suited fugitive a ride, lose the police and deliver him for a cash or weapon reward [[find:operation-furball]] [1].
 - A hitman who sounds like the lead of the film Collateral gets into your back seat and forces you to drive [[find:collateral-hitman]] [1].
 - Jimmy the Drunk Sailor tries to mug you with a speargun; play along and you earn it [[find:jimmy-the-drunk-sailor]] [1].

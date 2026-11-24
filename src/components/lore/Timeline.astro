@@ -56,6 +56,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
     <div class="band__viewport" role="group" aria-label="Timeline: use the arrow keys to move between moments" tabindex="0" data-band-viewport>
       <div class="band__track" style={`width: ${width}px; --x: ${momentX[selected]}`} data-track>
         <div class="band__ruler" aria-hidden="true"></div>
+        <svg class="band__links" width={width} height="132" viewBox={`0 0 ${width} 132`} aria-hidden="true" focusable="false" data-links></svg>
         {years.map((y) => (
           <span class:list={['band__year', { 'is-empty': !usedYears.includes(y) }]} style={`left: ${yearX[y]}px`} aria-hidden="true"><span class="mono-caps">{y}</span></span>
         ))}
@@ -98,7 +99,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
         const c = conf[m.confidence] ?? conf.strong;
         const cf = m.clipFind;
         return (
-          <article class="moment" data-panel={m.index} data-slug={m.slug} data-title={m.title} data-year={m.year} data-games={gamesOf(m.games).map((g) => g.id).join(' ')} hidden={m.index !== selected} aria-labelledby={`moment-${m.slug}`}>
+          <article class="moment" data-panel={m.index} data-slug={m.slug} data-title={m.title} data-year={m.year} data-first={m.firstGame} data-games={gamesOf(m.games).map((g) => g.id).join(' ')} hidden={m.index !== selected} aria-labelledby={`moment-${m.slug}`}>
             <p class="moment__date mono-caps">{m.year} · {m.firstGame}</p>
             <h2 class="moment__title" id={`moment-${m.slug}`}>
               {m.title}
@@ -157,7 +158,8 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
 </section>
 
 <script>
-  const ease = { out: 'cubic-bezier(0.23, 1, 0.32, 1)', exit: 'cubic-bezier(0.4, 0, 0.2, 1)' };
+  import { roll } from '../../scripts/motion/roll';
+  const ease = { out: 'cubic-bezier(0.23, 1, 0.32, 1)', exit: 'cubic-bezier(0.4, 0, 0.2, 1)', inOut: 'cubic-bezier(0.77, 0, 0.175, 1)' };
   document.querySelectorAll<HTMLElement>('[data-lore]').forEach((root) => {
     const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
     const dots = [...root.querySelectorAll<HTMLButtonElement>('.band__dot')];
@@ -183,10 +185,11 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
       return list[0] ?? from;
     };
 
-    const setYears = (i: number) => {
+    // The year on the phone ruler rolls to the new one, digit by digit: later years roll up (motion study item 14).
+    const setYears = (i: number, instant = false) => {
       const y = Number(panels[i].dataset.year);
       const k = years.indexOf(y);
-      yearNow.textContent = String(y);
+      roll(yearNow, String(y), { instant: instant || reduce.matches });
       yearPrev.textContent = years[k - 1] ? String(years[k - 1]) : '';
       yearNext.textContent = years[k + 1] ? String(years[k + 1]) : '';
     };
@@ -198,6 +201,32 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
       const left = t.offsetLeft + t.offsetWidth / 2 - scroller.clientWidth / 2;
       scroller.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' });
       window.setTimeout(() => { rulerLock = false; }, smooth ? 450 : 50);
+    };
+
+    // Links: when a moment shares its first game with others, thin arcs join it to the nearest of them on the band.
+    // They are drawn only after the band has stopped moving (stroke-dashoffset, 500ms), and fade as it starts again.
+    const links = root.querySelector<SVGSVGElement>('[data-links]')!;
+    const ns = 'http://www.w3.org/2000/svg';
+    let linkTimer = 0;
+    const drawLinks = (i: number, still: boolean) => {
+      clearTimeout(linkTimer);
+      const old = [...links.children] as SVGElement[];
+      old.forEach((p) => p.animate([{ opacity: 1 }, { opacity: 0 }], { duration: still ? 0 : 120, easing: ease.exit, fill: 'forwards' }).finished.then(() => p.remove(), () => p.remove()));
+      const first = panels[i].dataset.first;
+      const near = allowed
+        .filter((k) => k !== i && panels[k].dataset.first === first)
+        .sort((a, b) => Math.abs(xs[a] - xs[i]) - Math.abs(xs[b] - xs[i]))
+        .slice(0, 5);
+      const draw = () => near.forEach((k) => {
+        const a = xs[i], b = xs[k];
+        const h = Math.min(40, 14 + Math.abs(b - a) * 0.06);
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', `M${a} 76 Q${(a + b) / 2} ${76 - h * 2} ${b} 76`);
+        path.setAttribute('pathLength', '1');
+        links.append(path);
+        if (!still) path.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 500, easing: ease.inOut, fill: 'backwards' });
+      });
+      if (still) draw(); else linkTimer = window.setTimeout(draw, 500); // the band's move (500ms) lands first
     };
 
     // instant: keyboard and first paint never animate (design system rule).
@@ -216,20 +245,28 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
       // Set on the track itself: a variable on the root would restyle every panel.
       track.style.setProperty('--x', String(xs[i]));
       dots.forEach((d, k) => { d.classList.toggle('is-selected', k === i); d.setAttribute('aria-pressed', String(k === i)); });
-      setYears(i);
+      setYears(i, instant);
       if (!fromRuler) centreRuler(i, !still);
+      drawLinks(i, still);
 
       next.hidden = false;
       if (still) {
         prev.hidden = true;
         if (!instant) next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: ease.out });
       } else {
-        // The old moment leaves the layout at once (siblings do not wait) and fades the way it is going.
+        // The old moment leaves the layout at once (siblings do not wait) and fades the way it is going. It stops
+        // moving at 120ms (75% of its fade); only then does the new one start to move in, so the two never slide
+        // together; their fades overlap for the last 40ms.
         const shift = phone.matches ? 24 : 12;
         prev.classList.add('is-leaving');
-        prev.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-shift * dir}px)` }], { duration: 160, easing: ease.exit, fill: 'forwards' })
+        prev.animate([{ opacity: 1, transform: 'none' }, { opacity: 0.25, transform: `translateX(${-shift * dir}px)`, offset: 0.75 }, { opacity: 0, transform: `translateX(${-shift * dir}px)` }], { duration: 160, easing: ease.exit, fill: 'forwards' })
           .finished.then(() => { prev.hidden = true; prev.classList.remove('is-leaving'); prev.getAnimations().forEach((a) => a.cancel()); }, () => {});
-        next.animate([{ opacity: 0, transform: `translateX(${(shift + 4) * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 40, easing: ease.out, fill: 'backwards' });
+        next.animate([{ opacity: 0, transform: `translateX(${(shift + 4) * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 120, easing: ease.out, fill: 'backwards' });
+        // The polaroid settles into its tilt as the moment arrives; the card behind follows 40ms later, moving less.
+        const frame = next.querySelector<HTMLElement>('.polaroid__frame');
+        const backCard = next.querySelector<HTMLElement>('.polaroid__back');
+        frame?.animate([{ transform: 'translateY(8px) rotate(0deg)' }, { transform: 'rotate(1.5deg)' }], { duration: 320, delay: 120, easing: ease.out, fill: 'backwards' });
+        backCard?.animate([{ transform: 'translateY(4px) rotate(0deg)' }, { transform: 'rotate(-2deg)' }], { duration: 320, delay: 160, easing: ease.out, fill: 'backwards' });
       }
       current = i;
       root.dataset.selected = String(i);
@@ -316,6 +353,8 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
 
     // First paint: centre the ruler on the selected moment, no motion.
     requestAnimationFrame(() => { track.classList.add('is-instant'); centreRuler(current, false); requestAnimationFrame(() => track.classList.remove('is-instant')); });
+    setYears(current, true);
+    drawLinks(current, true);
   });
 </script>
 
@@ -343,8 +382,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
     overflow: clip;
     outline-offset: -2px;
     /* The track fades out under the arrow pills and at the right edge. */
-    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0, transparent 168px, #000 260px, #000 92%, transparent 100%);
+    /* The track fades in after the arrow pills, which sit at the gutter. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--page-pad) + 128px), #000 calc(var(--page-pad) + 220px), #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--page-pad) + 128px), #000 calc(var(--page-pad) + 220px), #000 92%, transparent 100%);
   }
   .band__line { position: absolute; left: 22px; right: 22px; top: 76px; height: 1px; background: var(--border-1); }
   .band__track {
@@ -366,6 +406,8 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
     background: repeating-linear-gradient(to right, var(--border-1) 0 1px, transparent 1px 20px);
     opacity: 0.8;
   }
+  .band__links { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
+  .band__links :global(path) { fill: none; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 1; opacity: 0.7; }
   .band__year { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-3); }
   .band__year::after { content: ''; width: 1px; height: 47px; background: var(--border-1); }
   .band__year.is-empty { opacity: 0.45; }

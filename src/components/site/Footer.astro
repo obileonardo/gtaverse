@@ -1,6 +1,6 @@
 ---
 // The site footer. The disclaimer and takedown lines are legal copy: keep them word for word.
-// Below the main navigation: the policy pages (src/lib/trust.ts), the two GitHub forms and the new finds feed.
+// Below the main navigation: the policy pages (src/lib/trust.ts), the two GitHub forms, the open data and the feed.
 import { nav } from '../../lib/nav';
 import { trustPages } from '../../lib/trust';
 import { submitFindLink, correctionLink } from '../../lib/issues';
@@ -20,11 +20,12 @@ import { submitFindLink, correctionLink } from '../../lib/issues';
       <ul class="footer__links" role="list">
         <li><a href={submitFindLink()}>Submit a find</a></li>
         <li><a href={correctionLink()}>Suggest a correction</a></li>
+        <li><a href="/data">Open data</a></li>
         <li><a href="/rss.xml">New finds (RSS)</a></li>
       </ul>
     </nav>
     <div class="footer__legal">
-      <p>The Vice Files is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names, images and materials are trademarks and copyrights of their respective owners. Clips play from their creators' own posts.</p>
+      <p>The Vice Files is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA and related names, images, materials and their logos are trademarks and copyrights of their respective owners. Clips play from their creators' own posts.</p>
       <p>Takedowns and credit corrections: <a class="link" href="mailto:takedown@thevicefiles.com">takedown@thevicefiles.com</a></p>
     </div>
   </div>
