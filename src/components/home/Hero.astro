@@ -1,6 +1,6 @@
 ---
 // The home hero. Behind the type sits a stage with three modes, switched by three circles at the top right:
-//   trailer  a short reel cut from Rockstar's official clips (muted, looping; sound on request)
+//   trailer  a short loop cut from Rockstar's official Launch Trailer (muted, looping; sound on request)
 //   key art  Rockstar's official wallpapers
 //   line art our own wireframe drawings (line-art.ts)
 // The modes rotate on their own (the active circle's ring is the timer); choosing one stops the rotation.
@@ -22,7 +22,7 @@ const { featured } = Astro.props;
 
 type Manifest = {
   credit: string;
-  trailer?: { seconds: number; landscape: Reel; portrait: Reel };
+  trailer?: { seconds: number; credit?: string; landscape: Reel; portrait: Reel };
   keyart?: { seconds: number; items: { alt: string; focus: Focus; portrait_focus: Focus; widths: number[]; portrait_widths: number[] }[] };
   sound?: { file: string };
 };
@@ -42,7 +42,7 @@ const modes = [
   keyart && { id: 'keyart', label: 'Show the key art', icon: 'image' as const },
   { id: 'line', label: 'Show the line art', icon: 'wire' as const },
 ].filter(Boolean) as { id: string; label: string; icon: 'play' | 'image' | 'wire' }[];
-const credits = { trailer: 'Trailer and art: Rockstar Games', keyart: 'Trailer and art: Rockstar Games', line: 'Line art: The Vice Files' };
+const credits = { trailer: trailer?.credit ?? 'Trailer: Rockstar Games', keyart: 'Art: Rockstar Games', line: 'Line art: The Vice Files' };
 
 // The peek frame shows the find's own YouTube thumbnail, loaded from YouTube. Never for spoiler or mature finds, never
 // for Shorts (portrait thumbnails); those show the sunrise glow instead.
