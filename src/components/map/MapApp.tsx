@@ -1,6 +1,10 @@
-// The map screen. Desktop is GetYourGuide's list beside the map; phone is Rodeo's full map with chips above a
-// bottom search pill. Every find opens from the list, so the screen works before any pin is placed.
-// Spec: the taste board's analysis/direction-map.md. Styles: ./map.css.
+// The map screen, round 2 (owner decision Q4 A; spec: the round-2 board's analysis/direction-map-r2.md).
+// Desktop: the map fills the screen and everything floats over it. Felt's Legend | List panel on the left, headed by
+//   Jeff christy C12's HUD (region title, objective chip, the Found checklist); the find detail as Jeff christy C08's
+//   frosted panel on the right; C12's hint row along the bottom (filters, 2D | 3D, layers, zoom, credit, fit, zoom).
+// Phone: Corner's clean full-bleed map with round corner buttons, a pills row and an edge-to-edge category rail over
+//   the bar (list toggle and search); a tapped pin brings Hypelist's card carousel; Tide Guide's glass menus and hint.
+// Every find opens from the list, so the screen works before any pin is placed. Styles: ./map.css.
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MapCanvas, type MapApi } from './MapCanvas';
 import type { Map3DApi } from './three/Map3D';
@@ -9,10 +13,12 @@ import { readUrl, writeUrl, type MapView } from './url';
 import { searchRank } from './search';
 import { Sheet, type SnapPoint } from './Sheet';
 import { DrawerContent, SheetContent } from './FindDetail';
-import { BasemapMenu, FilterMenu, LayerRows } from './Menus';
-import { Button, Chip, Icon, Tabs, Verification } from './ui';
+import { BasemapMenu, FilterMenu, menuAt, type MenuAt } from './Menus';
+import { Button, Icon, Tabs, Verification } from './ui';
+import { Blip } from './blip';
 import { RollNumber, listFlip, usePresence } from './motion';
-import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
+import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, showArt, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
+import { onChapterChange, readChapter, type ChapterSetting } from '../../lib/chapter';
 import './map.css';
 
 // The 3D view (docs/MAP-3D.md) and Three.js load only when the visitor opens 3D: a separate chunk.
@@ -20,29 +26,34 @@ const Map3D = lazy(() => import('./three/Map3D'));
 
 type Props = { finds: MapFind[]; categories: MapCategory[]; regions: MapRegion[]; meta: MapMeta; layers: MapLayer[]; collectiblesUrl: string };
 type View = { basemap: 'official' | 'muted'; grid: boolean; layers: string[] };
-const defaultView: View = { basemap: 'official', grid: false, layers: [] };
-type Toast = { id: number; icon: 'hand' | 'link' | 'check'; text: string; persist?: boolean } | null;
+type Sort = 'newest' | 'az';
+const defaultView: View = { basemap: 'official', grid: true, layers: [] };
+type Toast = { id: number; icon: 'hand' | 'link' | 'check'; text: string; persist?: boolean; action?: { label: string; run: () => void } } | null;
 
 const PHONE = '(max-width: 767px)';
 const VIEW_STORE = 'vf-map-view';
 const HINT_STORE = 'vf-map-hint';
+const NONE_SHOWN = '__none'; // the Legend's "None": a type list no find matches
 const readJson = <T,>(key: string, fallback: T): T => { try { const v = localStorage.getItem(key); return v ? { ...fallback, ...JSON.parse(v) } : fallback; } catch { return fallback; } };
 const writeJson = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* storage blocked: lasts for this page only */ } };
-
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const headerBottom = () => (typeof document !== 'undefined' ? document.querySelector('.island')?.getBoundingClientRect().bottom ?? 56 : 56);
+// The floating panels' widths (tokens --map-panel-w and --map-detail-w), for fitting and centring the map between them.
+const panelW = () => Math.min(400, Math.max(320, innerWidth * 0.185));
+const detailW = () => Math.min(400, Math.max(320, innerWidth * 0.21));
 
-function Media({ find, size }: { find: MapFind; size: 'row' | 'card' | 'popup' }) {
-  const art = find.still && !find.spoiler && !find.mature;
+function Media({ find, chapter }: { find: MapFind; chapter: ChapterSetting }) {
   return (
-    <span className={`media media--${size}`} aria-hidden="true">
-      {art ? <img src={find.still!} alt="" loading="lazy" decoding="async" /> : <span className="media__glow"><span className="media__kind">{find.categoryLabel}</span></span>}
+    <span className="media" aria-hidden="true">
+      {showArt(find, chapter) ? <img src={find.still!} alt="" loading="lazy" decoding="async" /> : <span className="media__glow"><span className="media__kind">{find.categoryLabel}</span></span>}
     </span>
   );
 }
 
-function Row({ find, selected, onOpen, onHover }: { find: MapFind; selected: boolean; onOpen: (f: MapFind, el: HTMLElement) => void; onHover: (slug: string | null) => void }) {
+/** A List row (Sweatpals): still, kicker, two-line title, region; the Found check sits where Sweatpals puts its star. */
+function Row({ find, selected, lit, found, chapter, onOpen, onHover, onFound }: { find: MapFind; selected: boolean; lit: boolean; found: boolean; chapter: ChapterSetting; onOpen: (f: MapFind, el: HTMLElement) => void; onHover: (slug: string | null) => void; onFound: (slug: string) => void }) {
   return (
-    <li className="frow-item" data-key={find.slug}>
+    <li className={`frow-item${lit ? ' is-lit' : ''}`} data-key={find.slug}>
       <a
         className="frow"
         href={findUrl(find.slug)}
@@ -52,37 +63,32 @@ function Row({ find, selected, onOpen, onHover }: { find: MapFind; selected: boo
         onPointerEnter={(e) => e.pointerType === 'mouse' && onHover(find.slug)}
         onPointerLeave={(e) => e.pointerType === 'mouse' && onHover(null)}
       >
-        <Media find={find} size="row" />
+        <Media find={find} chapter={chapter} />
         <span className="frow__text">
-          <span className="frow__kicker">{find.regionLabel}</span>
-          <h2 className="frow__title">{find.title}</h2>
-          <span className="frow__meta">
-            <Icon name={find.icon} size={16} />
-            {find.categoryLabel}
-            {find.clip && <><span aria-hidden="true">·</span><Icon name="clip" size={16} />Clip</>}
-          </span>
-          <span className="frow__foot">
-            <Verification level={find.verification} />
-            {find.pin && <span className="frow__pinned"><Icon name="pin" size={16} />On the map</span>}
-          </span>
+          <span className="frow__kicker"><Blip category={find.category} size={20} />{find.categoryLabel}</span>
+          <span className="frow__title">{find.title}</span>
+          <span className="frow__meta">{find.regionLabel}{find.pin ? ' · on the map' : ''}</span>
         </span>
       </a>
+      <button type="button" className="frow__found" aria-pressed={found} aria-label={found ? `Found: ${find.title}. Mark as not found` : `Mark ${find.title} as found`} title={found ? 'Found' : 'Mark as found'} onClick={() => onFound(find.slug)}>
+        <Icon name="check" size={18} stroke={2} />
+      </button>
     </li>
   );
 }
 
 /** A collectible's card: our label, its number against the source's total, any reading note, and the credit. */
-function CollectibleCard({ item, layer, onClose, close }: { item: MapCollectible; layer: MapLayer | undefined; onClose: () => void; close: 'glass' | 'quiet' }) {
+function CollectibleCard({ item, layer, onClose }: { item: MapCollectible; layer: MapLayer | undefined; onClose: () => void }) {
   return (
     <div className="ccard" role="dialog" aria-labelledby={`cc-${item.id}`}>
-      <span className="ccard__kicker">{layer?.label ?? item.layer}</span>
+      <span className="ccard__kicker"><Blip category={item.layer} size={20} />{layer?.label ?? item.layer}</span>
       <h2 className="ccard__title" id={`cc-${item.id}`}>{item.label}</h2>
       <span className="ccard__line tabular">{item.number !== null && layer ? `Number ${item.number} of ${layer.total} in their checklist` : 'Checklist number not readable'}</span>
       {item.note && <span className="ccard__note">{item.note}</span>}
       <a className="ccard__credit" href={item.url} target="_blank" rel="noopener noreferrer">
         Location: Game Checklists<Icon name="arrow-up-right" size={16} />
       </a>
-      <Button variant={close} size="s" icon="close" iconOnly label="Close" className="ccard__close" onClick={onClose} />
+      <Button variant="ghost" size="m" icon="close" iconOnly label="Close" className="ccard__close" onClick={onClose} />
     </div>
   );
 }
@@ -91,11 +97,16 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const [phone, setPhone] = useState(false);
   const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<Sort>('newest');
   const [selected, setSelected] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
-  const [tab, setTab] = useState('list');
-  const [menu, setMenu] = useState<'filters' | 'basemap' | null>(null);
+  const [preview, setPreview] = useState<string | null>(null); // phone: the pin whose card shows in the carousel
+  const [hovered, setHovered] = useState<string | null>(null); // a list row under the pointer: its pin rises
+  const [pinHover, setPinHover] = useState<string | null>(null); // a pin under the pointer: its row lights up
+  const pinnedTotal = useMemo(() => finds.filter((f) => f.pin).length, [finds]);
+  const [tab, setTab] = useState(pinnedTotal ? 'legend' : 'list'); // List first while nothing is pinned (MP1)
+  const [menu, setMenu] = useState<'filters' | 'basemap' | 'sort' | null>(null);
+  const [menuPos, setMenuPos] = useState<MenuAt | null>(null);
+  const menuOpener = useRef<HTMLElement | null>(null);
   const [view, setView] = useState<View>(defaultView);
   const [picked, setPicked] = useState<string | null>(null); // the open collectible
   const [collectibles, setCollectibles] = useState<MapCollectible[]>([]); // fetched once, when a layer is first turned on
@@ -108,6 +119,9 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const [mode, setMode] = useState<MapView>('2d'); // 2D or 3D (?view=3d)
   const [start3d, setStart3d] = useState<{ x: number; y: number; zoom: number } | null>(null);
   const [open3dInstant, setOpen3dInstant] = useState(false); // opened from the keyboard: no tilt-in animation
+  const [chapter, setChapter] = useState<ChapterSetting>('none');
+  const [onlyInView, setOnlyInView] = useState(false);
+  const [inView, setInView] = useState<Set<string> | null>(null);
   const { found, toggle: toggleFound, merge: mergeFound } = useFound();
 
   const api = useRef<MapApi>(null);
@@ -115,37 +129,51 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const mapApi = (): MapApi | null => (mode === '3d' ? api3.current : api.current);
   const opener = useRef<HTMLElement | null>(null);
   const keyboard = useRef(false);
-  const controls = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
-  const chipsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const zoomRef = useRef<HTMLSpanElement>(null);
+  const scaleRef = useRef<HTMLSpanElement>(null);
   const toastTimer = useRef(0);
 
-  // Platform, saved filters and view, the deep link. All after hydration so the static HTML matches.
+  // Platform, saved filters and view, the deep link, the chapter setting. After hydration so the static HTML matches.
   useEffect(() => {
     const mq = matchMedia(PHONE);
     const on = () => setPhone(mq.matches);
     on();
     mq.addEventListener('change', on);
     // A link with ?q, ?category or ?region shows exactly that view (from the defaults, so spoilers stay hidden);
-    // otherwise the filters saved on this device apply (url.ts).
-    const url = readUrl({ categories: new Set(categories.map((c) => c.id)), regions: new Set(regions.map((r) => r.id)), finds: new Set(finds.map((f) => f.slug)) });
+    // otherwise the filters saved on this device apply (url.ts). ?layer turns those collectible layers on.
+    const known = new Set(layers.map((l) => l.id));
+    const url = readUrl({ categories: new Set(categories.map((c) => c.id)), regions: new Set(regions.map((r) => r.id)), finds: new Set(finds.map((f) => f.slug)), layers: known });
     if (url.hasFilters) { setFiltersState({ ...defaultFilters, categories: url.categories, region: url.region }); setSearch(url.q); }
     else setFiltersState(loadFilters());
     const v = readJson(VIEW_STORE, defaultView);
-    const known = new Set(layers.map((l) => l.id));
-    setView({ ...v, layers: Array.isArray(v.layers) ? v.layers.filter((id) => known.has(id)) : [] });
+    const saved = Array.isArray(v.layers) ? v.layers.filter((id) => known.has(id)) : [];
+    setView({ ...v, layers: url.hasLayers ? url.layers : saved });
     if (url.find) { setSelected(url.find); setFindSnap('full'); }
     if (url.view === '3d') setMode('3d');
-    const kd = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') keyboard.current = true; };
+    setChapter(readChapter());
+    onChapterChange(setChapter);
+    const kd = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') keyboard.current = true;
+      // "/" focuses the search (no animation: a keyboard action).
+      if (e.key === '/' && !(e.target as HTMLElement).closest('input, textarea, [contenteditable]')) { e.preventDefault(); searchRef.current?.focus(); }
+    };
     const pd = () => { keyboard.current = false; };
     addEventListener('keydown', kd, true);
     addEventListener('pointerdown', pd, true);
     return () => { mq.removeEventListener('change', on); removeEventListener('keydown', kd, true); removeEventListener('pointerdown', pd, true); };
   }, []);
 
-  const setFilters = (f: Filters) => { flip.capture(listRef.current); setFiltersState(f); saveFilters(f); };
-  const setSearchFlip = (q: string) => { flip.capture(listRef.current); setSearch(q); };
+  const setFilters = (f: Filters) => {
+    flip.capture(listRef.current);
+    // Every type on is the same as no type filter.
+    const all = categories.every((c) => f.categories.includes(c.id));
+    const next = all ? { ...f, categories: [] } : f;
+    setFiltersState(next);
+    saveFilters(next);
+  };
+  const setSearchFlip = (q: string) => { flip.capture(listRef.current); setSearch(q); if (q && !phone) setTab('list'); };
   const setViewSaved = (v: View) => { setView(v); writeJson(VIEW_STORE, v); };
   const setLayersOn = (ids: string[]) => {
     setViewSaved({ ...view, layers: ids });
@@ -166,29 +194,31 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const toggleFoundFlip = (slug: string) => { if (filters.hideFound) flip.capture(listRef.current); toggleFound(slug); };
 
   const visible = useMemo(() => {
-    const list = finds.filter((f) => passes(f, filters, search, null, found));
-    if (!search.trim()) return list;
-    const rank = new Map(list.map((f) => [f.slug, searchRank(f, search)]));
-    return [...list].sort((x, y) => rank.get(y.slug)! - rank.get(x.slug)!); // best matches first (search.ts), stable
-  }, [finds, filters, search, found]);
+    const list = finds.filter((f) => passes(f, filters, search, null, found, chapter));
+    const rank = search.trim() ? new Map(list.map((f) => [f.slug, searchRank(f, search)])) : null;
+    const byNew = (a: MapFind, b: MapFind) => (b.added ?? '').localeCompare(a.added ?? '');
+    const sorted = [...list].sort((x, y) =>
+      (rank ? rank.get(y.slug)! - rank.get(x.slug)! : 0) // best matches first (search.ts)
+      || (sort === 'az' ? x.title.localeCompare(y.title) : byNew(x, y)));
+    return sorted;
+  }, [finds, filters, search, found, chapter, sort]);
   const pinned = useMemo(() => visible.filter((f) => f.pin), [visible]);
-  const pinnedTotal = useMemo(() => finds.filter((f) => f.pin).length, [finds]);
+  const listed = useMemo(() => (onlyInView && inView ? visible.filter((f) => f.pin && inView.has(f.slug)) : visible), [visible, onlyInView, inView]);
   const current = selected ? finds.find((f) => f.slug === selected) ?? null : null;
   const lastFind = useRef<MapFind | null>(null);
   if (current) lastFind.current = current;
   const previewFind = preview ? finds.find((f) => f.slug === preview) ?? null : null;
-  // Exits (motion study item 7): each surface stays mounted while it leaves the way it came in, at 60 to 75% of
-  // its entrance (map.css: [data-state='closing']), and reverses from where it is if it is opened again.
+  // Exits: each surface stays mounted while it leaves the way it came in, at 60 to 75% of its entrance
+  // (map.css: [data-state='closing']), and reverses from where it is if it is opened again.
   const drawerP = usePresence(!phone ? current : null, 180);
-  const popupP = usePresence(!phone ? previewFind : null, 120);
-  const cpopupP = usePresence(!phone ? pickedItem : null, 120);
-  const cardP = usePresence(phone && previewFind && !selected ? previewFind : null, 180);
+  const cdrawerP = usePresence(!phone && !current ? pickedItem : null, 180);
+  const carouselP = usePresence(phone && previewFind && !selected ? previewFind : null, 180);
   const ccardP = usePresence(phone && pickedItem && !selected ? pickedItem : null, 180);
   const toastP = usePresence(toast, 260);
-  // Filters (motion study item 9): rows keep their place while the list changes.
+  // Filters: rows keep their place while the list changes.
   const listRef = useRef<HTMLUListElement>(null);
   const flip = useRef(listFlip()).current;
-  useLayoutEffect(() => { flip.play(listRef.current, keyboard.current); }, [visible]);
+  useLayoutEffect(() => { flip.play(listRef.current, keyboard.current); }, [listed]);
 
   const showToast = useCallback((t: NonNullable<Toast>, ms = 2600) => {
     clearTimeout(toastTimer.current);
@@ -196,26 +226,30 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     if (!t.persist) toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
 
-  // First visit hint (Tide Guide toast). With no pins yet it says so and points at the list.
+  // First visit hint (Tide Guide toast), once per device. With no pins yet it says so and offers the collectibles,
+  // so the map is not empty.
   useEffect(() => {
     let seen = false;
     try { seen = localStorage.getItem(HINT_STORE) === '1'; } catch { /* no storage: show it this visit */ }
     if (seen) return;
-    const t = window.setTimeout(() => showToast({ id: 1, icon: 'hand', text: pinnedTotal ? 'Tap a pin to open a find, or pick one from the list.' : 'Pins are going on by hand. Every find is in the list.', persist: true }), 900);
+    const t = window.setTimeout(() => showToast(pinnedTotal
+      ? { id: 1, icon: 'hand', text: 'Tap a pin to open a find, or pick one from the list.', persist: true }
+      : { id: 1, icon: 'hand', text: 'Pins are placed by hand from each clip. Every find opens from the list for now.', persist: true, action: layers.length ? { label: 'Show collectibles', run: () => setLayersOnRef.current([layers[0].id]) } : undefined }), 900);
     return () => clearTimeout(t);
   }, []);
+  const setLayersOnRef = useRef(setLayersOn);
+  setLayersOnRef.current = setLayersOn;
   const dismissToast = () => {
     if (toast?.id === 1) { try { localStorage.setItem(HINT_STORE, '1'); } catch { /* ignore */ } }
     setToast(null);
   };
 
-  // Keep the URL in step with the view, so it can be shared and survives a reload (url.ts): q, category, region,
-  // view and find. Skipped until the first read so the static page never wipes an incoming link.
+  // Keep the URL in step with the view, so it can be shared and survives a reload (url.ts).
   const urlReady = useRef(false);
   useEffect(() => {
     if (!urlReady.current) { urlReady.current = true; return; }
-    writeUrl({ q: search, categories: filters.categories, region: filters.region, view: mode, find: selected });
-  }, [search, filters.categories, filters.region, mode, selected]);
+    writeUrl({ q: search, categories: filters.categories.filter((c) => c !== NONE_SHOWN), region: filters.region, view: mode, find: selected, layers: view.layers });
+  }, [search, filters.categories, filters.region, mode, selected, view.layers]);
 
   // 2D and 3D: 3D opens on the spot and scale the 2D map shows, and hands its spot back when it closes.
   const switchMode = (next: MapView) => {
@@ -231,12 +265,13 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     if (back && !keyboard.current) back.close(finish); else finish();
   };
 
-  const fly = (f: MapFind, sheetOpen: boolean) => {
+  // Room the floating parts take, so the map centres a pin in the free area between them.
+  const covered = () => phone ? { left: 0, right: 0, top: 120, bottom: 300 } : { left: panelW() + 32, right: selected || picked ? detailW() + 32 : 16, top: 96, bottom: 116 };
+  const fly = (f: MapFind) => {
     if (!f.pin) return;
-    const stage = document.querySelector('.map-stage');
-    const h = stage?.clientHeight ?? 800;
-    if (phone) mapApi()?.flyTo(f, { offsetY: sheetOpen ? h * 0.22 : 0 });
-    else mapApi()?.flyTo(f, { offsetX: 188 });
+    const c = covered();
+    if (phone) mapApi()?.flyTo(f, { offsetY: (c.bottom - c.top) / 2 });
+    else mapApi()?.flyTo(f, { offsetX: (detailW() + 32 - c.left) / 2 });
   };
 
   const openFind = (f: MapFind, from?: HTMLElement | null) => {
@@ -246,7 +281,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     setPicked(null);
     setSelected(f.slug);
     setFindSnap('full');
-    fly(f, true);
+    fly(f);
     if (!phone) requestAnimationFrame(() => drawerRef.current?.focus({ preventScroll: true }));
   };
   const closeFind = () => {
@@ -255,11 +290,11 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     setSelected(null);
     setFindSnap('closed');
     const back = opener.current;
-    // Focus goes back to the row after the drawer has left (at once from the keyboard, which never animates).
+    // Focus goes back to the row or pin that opened it, after the panel has left (at once from the keyboard).
     if (back && back.isConnected) window.setTimeout(() => requestAnimationFrame(() => back.focus({ preventScroll: true })), keys || phone ? 0 : 180);
   };
 
-  // Escape: the open menu first (handled by the menu), then the find, then the preview.
+  // Escape: the open menu first (handled by the menu), then the collectible, then the find, then the phone card.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || menu) return;
@@ -272,22 +307,34 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     return () => removeEventListener('keydown', onKey);
   });
 
+  // A pin: on desktop it opens the detail panel; on phone its card comes up in the carousel (Hypelist).
   const onPin = (slug: string, el: HTMLElement) => {
     const f = finds.find((x) => x.slug === slug);
     if (!f) return;
     opener.current = el;
+    if (!phone) { openFind(f, el); return; }
     if (selected === slug) return;
     setPicked(null);
     setSelected(null);
     setFindSnap('closed');
     setPreview(slug);
+    fly(f); // the pin sits above the card that comes up
   };
-  // A collectible pin: its card replaces any find preview; an open find stays open on desktop.
   const onCollectible = (id: string, el: HTMLElement) => {
     opener.current = el;
     setPreview(null);
-    if (phone && selected) closeFind();
+    if (selected) { setSelected(null); setFindSnap('closed'); }
     setPicked(id);
+  };
+  // Pin hovered: light its row and scroll it into view only if it is out of view (no jump otherwise).
+  const onPinHover = (slug: string | null) => {
+    setPinHover(slug);
+    if (!slug) return;
+    const row = listRef.current?.querySelector<HTMLElement>(`[data-key="${CSS.escape(slug)}"]`);
+    const box = row?.closest('.mpanel__scroll');
+    if (!row || !box) return;
+    const r = row.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top < b.top || r.bottom > b.bottom) row.scrollIntoView({ block: 'nearest', behavior: reduce() ? 'auto' : 'smooth' });
   };
 
   // quiet: the copy button shows (and announces) "Copied" itself, so no toast.
@@ -303,14 +350,67 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   };
   const showOnMap = (f: MapFind) => {
     if (!f.pin) return;
-    if (phone) { setFindSnap('medium'); fly(f, true); }
-    else fly(f, true);
+    if (phone) setFindSnap('medium');
+    fly(f);
   };
 
-  const toggleCategory = (id: string) => {
-    const has = filters.categories.includes(id);
-    setFilters({ ...filters, categories: has ? filters.categories.filter((c) => c !== id) : [...filters.categories, id] });
+  // Types. The Legend rows hide or show one type each (Felt's layer toggles); the phone rail picks types (Corner).
+  const shownTypes = new Set(filters.categories.length ? filters.categories : categories.map((c) => c.id));
+  const legendToggle = (id: string) => {
+    const now = new Set(shownTypes);
+    if (now.has(id)) now.delete(id); else now.add(id);
+    now.delete(NONE_SHOWN);
+    setFilters({ ...filters, categories: now.size ? [...now] : [NONE_SHOWN] });
   };
+  const railToggle = (id: string) => {
+    const has = filters.categories.includes(id);
+    setFilters({ ...filters, categories: has ? filters.categories.filter((c) => c !== id) : [...filters.categories.filter((c) => c !== NONE_SHOWN), id] });
+  };
+  const typeCount = filters.categories.filter((c) => c !== NONE_SHOWN).length;
+  const oneType = typeCount === 1 ? categories.find((c) => c.id === filters.categories[0]) : null;
+  const typeLabel = filters.categories.includes(NONE_SHOWN) ? 'No types' : !typeCount ? 'All types' : oneType ? oneType.label : `${typeCount} types`;
+  const filterCount = activeFilterCount({ ...filters, categories: filters.categories.filter((c) => c !== NONE_SHOWN) });
+  const otherFilters = activeFilterCount({ ...filters, categories: [] });
+
+  // Menus open from whichever control asked, placed beside it (Menus.tsx, menuAt).
+  const openMenu = (which: 'filters' | 'basemap' | 'sort', e: React.MouseEvent<HTMLElement>) => {
+    if (menu === which) { setMenu(null); return; }
+    menuOpener.current = e.currentTarget;
+    setMenuPos(menuAt(e.currentTarget));
+    setMenu(which);
+  };
+  const closeMenu = (restore: boolean) => { setMenu(null); if (restore) menuOpener.current?.focus(); };
+  const openFoundCode = (e: React.MouseEvent<HTMLElement>) => {
+    openMenu('filters', e);
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('map-found')?.scrollIntoView({ block: 'start' })));
+  };
+
+  // The HUD's zoom level and scale bar (one printed grid cell), written straight to the page as the map moves.
+  const cellPx = (zoom: number) => 600 * 2 ** (zoom - meta.maxZoom);
+  const onMove = () => {
+    const z = mapApi()?.zoom?.() ?? null;
+    if (z === null) return;
+    if (zoomRef.current) zoomRef.current.textContent = `${z.toFixed(1)}z`;
+    if (scaleRef.current) scaleRef.current.style.width = `${Math.round(Math.min(160, Math.max(12, cellPx(z))))}px`;
+  };
+  // "In view" (Sweatpals' heading): which pinned finds are on screen, after each move ends.
+  const measureInView = useCallback(() => {
+    const a = mapApi();
+    if (!a || !pinned.length) { setInView(null); return; }
+    const w = innerWidth, h = innerHeight, c = covered();
+    const set = new Set(pinned.filter((f) => { const p = a.pointOf(f); return p && p.x > c.left && p.x < w - c.right && p.y > 0 && p.y < h; }).map((f) => f.slug));
+    setInView(set);
+  }, [pinned, mode, phone, selected, picked]);
+  useEffect(() => {
+    if (!pinned.length) return;
+    let t = 0;
+    const tick = () => { clearTimeout(t); t = window.setTimeout(measureInView, 160); };
+    const el = document.querySelector('.map-stage');
+    el?.addEventListener('pointerup', tick);
+    el?.addEventListener('wheel', tick, { passive: true });
+    tick();
+    return () => { clearTimeout(t); el?.removeEventListener('pointerup', tick); el?.removeEventListener('wheel', tick); };
+  }, [measureInView]);
 
   // Sheets (phone). Snap tops are measured from the map's top edge; the top snap sits just under the header.
   const listSnaps = useMemo<SnapPoint[]>(() => [
@@ -325,39 +425,27 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   ], []);
   const onFindSnap = (id: string) => { setFindSnap(id); if (id === 'closed') closeFind(); };
 
-  // Desktop popup position at the pin (Airbnb), recomputed as the map moves.
-  const popupAt = popupP.item ? mapApi()?.pointOf(popupP.item) ?? null : null;
-  const cpopupAt = cpopupP.item ? mapApi()?.pointAt(cpopupP.item.x, cpopupP.item.y) ?? null : null;
-  useLayoutEffect(() => { placePopup(popupRef.current, popupAt, 320); placePopup(cpopupRef.current, cpopupAt, 220); });
-  // Keep a popup on its pin while the map moves (2D or 3D): written straight to the element, no re-render per frame.
-  const popupRef = useRef<HTMLDivElement>(null);
-  const cpopupRef = useRef<HTMLDivElement>(null);
-  const placePopup = (el: HTMLDivElement | null, pt: { x: number; y: number } | null, room: number) => {
-    if (!el || !pt) return;
-    const w = document.querySelector('.map-stage')?.clientWidth ?? 0;
-    const x = Math.min(Math.max(pt.x, 176), Math.max(176, w - 176));
-    el.style.translate = `${x}px ${pt.y}px`;
-    el.dataset.below = String(pt.y < room);
-  };
-  const onMove = () => {
-    if (phone) return;
-    if (popupP.item) placePopup(popupRef.current, mapApi()?.pointOf(popupP.item) ?? null, 320);
-    if (cpopupP.item) placePopup(cpopupRef.current, mapApi()?.pointAt(cpopupP.item.x, cpopupP.item.y) ?? null, 220);
+  // Phone carousel (Hypelist): the tapped find and the other pinned finds near it; swiping pans the map to each.
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const carousel = useMemo(() => {
+    const f = carouselP.item;
+    if (!f?.pin) return f ? [f] : [];
+    const near = pinned.filter((x) => x.slug !== f.slug).sort((a, b) => Math.hypot(a.pin!.x - f.pin!.x, a.pin!.y - f.pin!.y) - Math.hypot(b.pin!.x - f.pin!.x, b.pin!.y - f.pin!.y)).slice(0, 7);
+    return [f, ...near];
+  }, [carouselP.item?.slug, pinned]);
+  const onCarouselScroll = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const i = Math.round(el.scrollLeft / Math.max(1, el.clientWidth - 24));
+    const f = carousel[i];
+    if (f && f.slug !== preview) { setPreview(f.slug); fly(f); }
   };
 
-  const filterCount = activeFilterCount({ ...filters, categories: [] });
-  const fitPadding = phone ? { top: 130, right: 16, bottom: 150, left: 16 } : { top: 72, right: 16, bottom: 16, left: 16 };
+  const fitPadding = phone ? { top: 130, right: 16, bottom: 240, left: 16 } : { top: 96, right: 16, bottom: 116, left: Math.round((typeof innerWidth === 'number' ? panelW() : 320) + 32) };
   const shown = lastFind.current;
-  const countText = <><RollNumber value={visible.length} instant={keyboard.current} /> {visible.length === 1 ? 'find' : 'finds'}</>;
-  const pinText = pinned.length ? `${pinned.length} on the map` : 'none pinned yet';
-
-  const chipRow = (touch: boolean) => (
-    <div className={`chips${touch ? ' chips--touch' : ''}`} ref={touch ? undefined : chipsRef} role="group" aria-label="Find types">
-      {categories.map((c) => (
-        <Chip key={c.id} icon={c.icon} glass={touch} touch={touch} selected={filters.categories.includes(c.id)} onClick={() => toggleCategory(c.id)}>{c.label}</Chip>
-      ))}
-    </div>
-  );
+  const countText = <><RollNumber value={listed.length} instant={keyboard.current} /> {listed.length === 1 ? 'find' : 'finds'}</>;
+  const layersOn = view.layers.length;
+  const credit = `${meta.attribution}.`;
 
   const empty = (
     <div className="map-empty">
@@ -368,183 +456,353 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     </div>
   );
 
+  const rows = (list: MapFind[]) => list.map((f) => <Row key={f.slug} find={f} selected={f.slug === selected} lit={f.slug === pinHover} found={found.has(f.slug)} chapter={chapter} onOpen={openFind} onHover={setHovered} onFound={toggleFoundFlip} />);
+  const onMapRows = listed.filter((f) => f.pin);
+  const offMapRows = listed.filter((f) => !f.pin);
   const list = (
     <ul className="frows" role="list" ref={listRef}>
-      {visible.map((f) => <Row key={f.slug} find={f} selected={f.slug === selected} onOpen={openFind} onHover={setHovered} />)}
+      {pinnedTotal > 0 && onMapRows.length > 0 ? (
+        <>
+          {rows(onMapRows)}
+          {offMapRows.length > 0 && <li className="frows__group" aria-hidden="true">Not on the map yet</li>}
+          {rows(offMapRows)}
+        </>
+      ) : rows(listed)}
     </ul>
   );
 
-  const legend = (
-    <div className="legend">
-      <p className="legend__about">The official map of Leonida with every find we have checked. Pins go on by hand from each find's clip, so {pinnedTotal ? `${pinnedTotal} of ${finds.length}` : `none of the ${finds.length}`} finds {pinnedTotal === 1 ? 'is' : 'are'} pinned so far. Every find is in the list.</p>
-      <h3 className="legend__h">Pins</h3>
-      <ul className="legend__rows" role="list">
-        <li><span className="legend__key"><span className="pin pin--photo pin--key"><span className="pin__thumb" /></span></span>A find with a clip</li>
-        <li><span className="legend__key"><span className="pin pin--value pin--key"><Icon name="egg" size={14} /></span></span>A find</li>
-        <li><span className="legend__key"><span className="pin pin--group pin--key"><span className="pin__seg"><span className="pin__segicon"><Icon name="egg" size={12} /></span><b>3</b></span></span></span>Finds close together, by type</li>
-      </ul>
-      <h3 className="legend__h">Types</h3>
-      <ul className="legend__rows" role="list">
-        {categories.map((c) => <li key={c.id}><span className="legend__key"><Icon name={c.icon} size={20} /></span>{c.label}<span className="legend__count tabular">{c.count}</span></li>)}
-      </ul>
-      {layers.length > 0 && (
-        <>
-          <h3 className="legend__h">Collectible layers</h3>
-          <p className="legend__about">Locations transcribed from Game Checklists' maps, with their checklist numbers. Off until you turn a layer on. Numbers are theirs; some are hard to read on their image and say so.</p>
-          <fieldset className="mgroup legend__layers">
-            <legend className="sr-only">Collectible layers</legend>
-            <LayerRows layers={layers} on={view.layers} setOn={setLayersOn} />
-          </fieldset>
-          <ul className="legend__rows" role="list">
-            <li><span className="legend__key"><span className="cpin cpin--key" aria-hidden="true" /></span>A collectible (its number shows when you zoom in)</li>
-          </ul>
-        </>
+  const sortControl = (
+    <span className="msort">
+      <button type="button" className="msort__btn" aria-haspopup="true" aria-expanded={menu === 'sort'} aria-controls="map-sort" onClick={(e) => openMenu('sort', e)}>
+        Sort: {sort === 'newest' ? 'Newest' : 'A to Z'}<Icon name="chevron-down" size={16} className="msort__chev" />
+      </button>
+    </span>
+  );
+
+  const listTab = (
+    <>
+      <div className="mlist__head">
+        <h3 className="mlist__h" aria-live="polite">
+          {countText} {onlyInView ? 'in view' : 'in Leonida'}
+        </h3>
+        {sortControl}
+      </div>
+      {pinnedTotal > 0 && (
+        <label className="mswitch mlist__inview">
+          <input type="checkbox" role="switch" checked={onlyInView} onChange={() => setOnlyInView(!onlyInView)} />
+          <span className="mswitch__track" aria-hidden="true" />
+          Only in view{inView ? ` (${inView.size})` : ''}
+        </label>
       )}
+      {listed.length ? list : empty}
+    </>
+  );
+
+  const legendTab = (
+    <div className="legend">
+      <section className="lgroup" aria-labelledby="lg-finds">
+        <h3 className="lgroup__h" id="lg-finds"><Icon name="finds" size={20} />Finds
+          <span className="lgroup__acts">
+            <button type="button" onClick={() => setFilters({ ...filters, categories: [] })}>All</button>
+            <button type="button" onClick={() => setFilters({ ...filters, categories: [NONE_SHOWN] })}>None</button>
+          </span>
+        </h3>
+        <p className="lgroup__about">Placed by hand from each clip. {pinnedTotal} of {finds.length} pinned so far.</p>
+        <ul className="lrows" role="list">
+          {categories.map((c) => {
+            const on = shownTypes.has(c.id);
+            return (
+              <li key={c.id}>
+                <button type="button" className="lrow" aria-pressed={on} onClick={() => legendToggle(c.id)}>
+                  <Blip category={c.id} size={24} state={on ? 'default' : 'dim'} />
+                  <span className="lrow__label">{c.label}</span>
+                  <span className="lrow__count tabular">{c.count}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+      {layers.length > 0 && (
+        <section className="lgroup lgroup--layers" aria-labelledby="lg-layers">
+          <h3 className="lgroup__h" id="lg-layers">Collectible layers</h3>
+          <p className="lgroup__about">Off until you turn one on. Numbers are their checklist numbers.</p>
+          <ul className="lrows" role="list">
+            {layers.map((l) => {
+              const on = view.layers.includes(l.id);
+              return (
+                <li key={l.id}>
+                  <label className="lrow mswitch">
+                    <Blip category={l.id} size={24} />
+                    <span className="lrow__label">{l.label}</span>
+                    <span className="lrow__count tabular" title={`${l.count} on the map, ${l.total} in their checklist`}>{l.count}/{l.total}</span>
+                    <input type="checkbox" role="switch" checked={on} onChange={() => setLayersOn(on ? view.layers.filter((x) => x !== l.id) : [...view.layers, l.id])} aria-label={`${l.label}: ${l.count} on the map of ${l.total}`} />
+                    <span className="mswitch__track" aria-hidden="true" />
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="lgroup__credit">Collectible locations: <a href={layers[0].url} target="_blank" rel="noopener noreferrer">Game Checklists<Icon name="arrow-up-right" size={16} /></a></p>
+        </section>
+      )}
+      <section className="lgroup lgroup--last" aria-label="Verification">
+        <p className="lgroup__dotrow"><span className="ldot" aria-hidden="true" />Verification</p>
+        <p className="lgroup__badges">
+          <Verification level="multi-source" /><Verification level="single-source" /><Verification level="rumor" /><Verification level="debunked" />
+        </p>
+      </section>
     </div>
   );
 
+  const segView = (
+    <div className="seg" role="group" aria-label="Map view">
+      <button type="button" className="seg__btn" aria-pressed={mode === '2d'} onClick={() => switchMode('2d')}>2D</button>
+      <button type="button" className="seg__btn" aria-pressed={mode === '3d'} onClick={() => switchMode('3d')}>3D</button>
+    </div>
+  );
+  const fitBtn = <Button variant="glass" size="m" icon="map" iconOnly label={pinnedTotal ? 'Fit every pin' : 'Show all of Leonida'} className="map-ctrl" onClick={() => { const c = covered(); mapApi()?.fit({ top: c.top, right: c.right, bottom: c.bottom, left: c.left }); }} />;
+  const foundTotal = finds.filter((f) => found.has(f.slug)).length;
+
   return (
-    <section className={`map-app vf-map${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} data-view={mode} aria-label="Map of Leonida">
+    <section className={`map-app vf-map${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} data-view={mode} data-carousel={carouselP.item && !carouselP.closing ? 'open' : undefined} aria-label="Map of Leonida">
       <h1 className="sr-only map-h1">Map of Leonida</h1>
 
-      {/* The list: GetYourGuide's column on desktop, a sheet on phone. */}
-      <Sheet snaps={listSnaps} snap={listSnap} onSnap={setListSnap} closedId="closed" enabled={phone} inert={phone && listSnap === 'closed'} className="map-list" label="Finds">
-        {phone ? (
-          <>
-            <div className="map-list__handle" data-sheet-handle>
-              <span className="grabber" aria-hidden="true" />
-              <p className="map-list__count" aria-live="polite">{countText}</p>
-            </div>
-            <div className="map-list__scroll">{visible.length ? list : empty}</div>
-          </>
-        ) : (
-          <Tabs id="maplist" label="Map panel" selected={tab} onSelect={setTab} tabs={[{ id: 'list', label: 'List' }, { id: 'legend', label: 'Legend' }]}>
-            {(t) => t === 'list' ? (
-              <>
-                <div className="chips-wrap">
-                  {chipRow(false)}
-                  <Button variant="quiet" size="s" icon="chevron-right" iconOnly label="More types" className="chips-more" onClick={() => { const c = chipsRef.current; if (!c) return; const end = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4; c.scrollTo({ left: end ? 0 : c.scrollLeft + 240, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }} />
-                </div>
-                <p className="map-list__summary caption" aria-live="polite">{countText}, {pinText}</p>
-                {visible.length ? list : empty}
-              </>
-            ) : legend}
-          </Tabs>
-        )}
-      </Sheet>
-
-      {/* The map */}
+      {/* The map, full bleed under everything */}
       <div className="map-stage">
-        <MapCanvas ref={api} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} phone={phone} basemap={view.basemap} grid={view.grid} fitPadding={fitPadding} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
+        <MapCanvas ref={api} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} found={found} basemap={view.basemap} grid={view.grid} fitPadding={fitPadding} covered={{ left: 0, right: !phone && (selected || picked) ? detailW() + 32 : 16 }} onPin={onPin} onPinHover={onPinHover} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => {
+          setTick((t) => t + 1);
+          onMove();
+          // A shared link to a find lands on its pin (no flight: it is the page arriving, not an action).
+          const f = selected ? finds.find((x) => x.slug === selected) : null;
+          if (f?.pin) { const c = covered(); api.current?.flyTo(f, phone ? { instant: true, offsetY: (c.bottom - c.top) / 2 } : { instant: true, offsetX: (detailW() + 32 - c.left) / 2 }); }
+        }} />
         {mode === '3d' && (
           <Suspense fallback={<div className="map3d map3d--loading" role="status"><p className="map3d__fail">Loading the 3D map</p></div>}>
             <Map3D ref={api3} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} basemap={view.basemap} start={start3d} instant={open3dInstant} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
           </Suspense>
         )}
-
-        <div className="map-controls" ref={controls}>
-          <span className="map-ctrl-wrap">
-            <Button variant="glass" size="m" icon="filter" iconOnly label={filterCount ? `Filters, ${filterCount} on` : 'Filters'} aria-expanded={menu === 'filters'} aria-controls="map-filters" className="map-ctrl" onClick={() => setMenu(menu === 'filters' ? null : 'filters')} data-ref="filters" />
-            {filterCount > 0 && <span className="map-ctrl__badge tabular" aria-hidden="true">{filterCount}</span>}
-          </span>
-          <Button variant="glass" size="m" className="map-ctrl map-ctrl--3d" aria-pressed={mode === '3d'} aria-label="3D view" title="3D view" onClick={() => switchMode(mode === '3d' ? '2d' : '3d')}>3D</Button>
-          <Button variant="glass" size="m" icon="layers" iconOnly label="Basemap" aria-expanded={menu === 'basemap'} aria-controls="map-basemap" className="map-ctrl" onClick={() => setMenu(menu === 'basemap' ? null : 'basemap')} data-ref="basemap" />
-          <FilterMenu open={menu === 'filters'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="filters"]')?.focus(); }} anchor={controls} finds={finds} filters={filters} setFilters={setFilters} regions={regions} search={search} onReset={resetFilters} categories={categories} found={found} onImport={mergeFound} />
-          <BasemapMenu open={menu === 'basemap'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="basemap"]')?.focus(); }} anchor={controls} basemap={view.basemap} setBasemap={(b) => setViewSaved({ ...view, basemap: b })} grid={view.grid} setGrid={(g) => setViewSaved({ ...view, grid: g })} layers={layers} layersOn={view.layers} setLayersOn={setLayersOn} />
-        </div>
-
-        <div className="map-zoom" role="group" aria-label="Zoom">
-          <button type="button" className="map-zoom__btn" aria-label="Zoom in" onClick={() => mapApi()?.zoomBy(0.5)}><Icon name="plus" size={18} /></button>
-          <button type="button" className="map-zoom__btn" aria-label="Zoom out" onClick={() => mapApi()?.zoomBy(-0.5)}><Icon name="minus" size={18} /></button>
-        </div>
-
-        <p className={`map-credit${view.layers.length ? ' map-credit--two' : ''}`}>
-          {meta.attribution}
-          {view.layers.length > 0 && <span className="map-credit__extra">Collectible locations: Game Checklists</span>}
-        </p>
-
-        {/* Desktop: the open collectible's card at its pin */}
-        {cpopupP.item && cpopupAt && (
-          <div className="popup popup--c" ref={cpopupRef} data-state={cpopupP.closing ? 'closing' : undefined} inert={cpopupP.closing}>
-            <CollectibleCard item={cpopupP.item} layer={layers.find((l) => l.id === cpopupP.item!.layer)} onClose={closePicked} close="glass" />
-          </div>
-        )}
-
-        {/* Desktop: Airbnb popup anchored to the pin */}
-        {popupP.item && popupAt && (() => { const pf = popupP.item; return (
-          <div className="popup" ref={popupRef} data-state={popupP.closing ? 'closing' : undefined} inert={popupP.closing}>
-            <button type="button" className="popup__card" onClick={() => openFind(pf, opener.current)} aria-label={`Open ${pf.title}`}>
-              <Media find={pf} size="popup" />
-              <span className="popup__text">
-                <span className="popup__title">{pf.title}</span>
-                <span className="popup__line">{pf.categoryLabel} · {pf.regionLabel}</span>
-                <span className="popup__line"><b>{pf.verification === 'multi-source' ? 'Multi-source' : pf.verification === 'single-source' ? 'Single source' : pf.verification}</b> · {pf.sources.length} sources</span>
-              </span>
-            </button>
-            <Button variant="glass" size="s" icon="close" iconOnly label="Close" className="popup__close" onClick={() => { setPreview(null); opener.current?.focus({ preventScroll: true }); }} />
-          </div>
-        ); })()}
-
-        {/* Desktop: Felt inspector */}
-        {drawerP.item && (() => { const df = drawerP.item; return (
-          <article ref={drawerRef} className="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" tabIndex={-1} data-instant={instant || undefined} data-state={drawerP.closing ? 'closing' : undefined} inert={drawerP.closing}>
-            <div className="drawer__content" key={df.slug}>
-              <DrawerContent find={df} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(df)} onCopy={() => copyLink(df, true)} onShare={() => share(df)} found={found.has(df.slug)} onToggleFound={() => toggleFoundFlip(df.slug)} />
-            </div>
-          </article>
-        ); })()}
-
-        {toastP.item && (
-          <div className="toast" role="status" key={toastP.item.id} data-state={toastP.closing ? 'closing' : undefined}>
-            <Icon name={toastP.item.icon} size={22} />
-            <span className="toast__text">{toastP.item.text}</span>
-            <button type="button" className="toast__close" aria-label="Dismiss" onClick={dismissToast} tabIndex={toastP.closing ? -1 : undefined}><Icon name="close" size={18} /></button>
-          </div>
-        )}
+        <span className="map-vignette" aria-hidden="true" />
       </div>
 
-      {/* Phone: the open collectible's card, in the Strava card's place */}
-      {ccardP.item && (
-        <div className="pcard pcard--c" data-state={ccardP.closing ? 'closing' : undefined} inert={ccardP.closing}>
-          <CollectibleCard item={ccardP.item} layer={layers.find((l) => l.id === ccardP.item!.layer)} onClose={closePicked} close="quiet" />
+      {/* Desktop: Felt's Legend | List panel, headed by Jeff christy C12's HUD */}
+      {!phone && (
+        <aside className="mpanel" aria-label="Finds">
+          <div className="mpanel__scroll">
+            <header className="mhud">
+              <p className="mhud__title"><span className="mhud__region">Leonida</span> <span className="mhud__count"><RollNumber value={visible.length} instant={keyboard.current} /></span></p>
+              <span className="mhud__rule" aria-hidden="true" />
+              <button type="button" className="mobj" aria-expanded={menu === 'filters'} aria-controls="map-filters" onClick={(e) => openMenu('filters', e)}>
+                <span className="mobj__plate">{oneType ? <Blip category={oneType.id} size={32} /> : <span className="mobj__glyph"><Icon name="filter" size={18} /></span>}</span>
+                <span className="mobj__label">{typeLabel}{otherFilters ? ` + ${otherFilters}` : ''}</span>
+                <Icon name="chevron-down" size={16} className="mobj__chev" />
+              </button>
+              <ol className="mcheck">
+                <li className={foundTotal ? 'is-done' : undefined}><span className="mcheck__dot" aria-hidden="true" /><span className="mcheck__text">Found <span className="tabular">{foundTotal}</span> of <span className="tabular">{finds.length}</span></span></li>
+                <li className={filters.hideFound ? 'is-done' : undefined}><span className="mcheck__dot" aria-hidden="true" /><button type="button" className="mcheck__btn" aria-pressed={filters.hideFound} onClick={() => setFilters({ ...filters, hideFound: !filters.hideFound })}>Hide found</button></li>
+                <li><span className="mcheck__dot" aria-hidden="true" /><button type="button" className="mcheck__btn" aria-controls="map-filters" onClick={openFoundCode}>Export or import</button></li>
+              </ol>
+            </header>
+            <label className="msearch">
+              <Icon name="search" size={20} />
+              <span className="sr-only">Search finds</span>
+              <input ref={searchRef} type="search" placeholder="Search finds, places, finders" value={search} enterKeyHint="search" autoComplete="off" onChange={(e) => setSearchFlip(e.target.value)} />
+              {search && <button type="button" className="msearch__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
+            </label>
+            <Tabs id="mappanel" label="Map panel" selected={tab} onSelect={setTab} tabs={[{ id: 'legend', label: 'Legend' }, { id: 'list', label: 'List' }]}>
+              {(t) => (t === 'list' ? listTab : legendTab)}
+            </Tabs>
+          </div>
+        </aside>
+      )}
+
+      {/* Desktop: Jeff christy C12's hint row along the bottom, Felt's bottom corners */}
+      {!phone && (
+        <div className="mbar">
+          <div className="mbar__left">
+            <div className="mbar__hints">
+              <button type="button" className="hint" aria-expanded={menu === 'filters'} aria-controls="map-filters" onClick={(e) => openMenu('filters', e)}>
+                <span className="hint__glyph"><Icon name="filter" size={16} /></span>Filters: {filterCount ? `${filterCount} on` : 'All'}
+              </button>
+              {segView}
+              <button type="button" className="hint" aria-expanded={menu === 'basemap'} aria-controls="map-basemap" onClick={(e) => openMenu('basemap', e)}>
+                <span className="hint__glyph"><Icon name="layers" size={16} /></span>Layers: {layersOn ? `${layersOn} on` : 'Off'}
+              </button>
+            </div>
+            <p className="mbar__meta">
+              <span className="mbar__zoom tabular" ref={zoomRef}>0.0z</span>
+              <span className="mbar__scale"><span className="mbar__bar" ref={scaleRef} aria-hidden="true" />1 cell</span>
+              <span className="mbar__credit">{credit}{layersOn > 0 && <> Collectible locations: <a href={layers[0].url} target="_blank" rel="noopener noreferrer">Game Checklists</a>.</>}</span>
+            </p>
+          </div>
+          <div className="mbar__right" role="group" aria-label="Map controls">
+            {fitBtn}
+            <Button variant="glass" size="m" icon="minus" iconOnly label="Zoom out" className="map-ctrl" onClick={() => mapApi()?.zoomBy(-0.5)} />
+            <Button variant="glass" size="m" icon="plus" iconOnly label="Zoom in" className="map-ctrl" onClick={() => mapApi()?.zoomBy(0.5)} />
+          </div>
         </div>
       )}
 
-      {/* Phone: Strava selected card, Rodeo chips, toggle and search */}
-      {cardP.item && (() => { const cf = cardP.item; return (
-        <div className="pcard" data-state={cardP.closing ? 'closing' : undefined} inert={cardP.closing}>
-          <button type="button" className="pcard__open" onClick={() => openFind(cf, opener.current)} aria-label={`Open ${cf.title}`}>
-            <Media find={cf} size="card" />
-            <span className="pcard__text">
-              <span className="pcard__title">{cf.title}</span>
-              <span className="pcard__meta"><Icon name={cf.icon} size={20} /><Verification level={cf.verification} /></span>
-              <span className="pcard__place"><Icon name="pin" size={20} />{cf.regionLabel}</span>
-            </span>
-          </button>
-          <Button variant="quiet" size="s" icon="close" iconOnly label="Close" className="pcard__close" onClick={() => setPreview(null)} />
-        </div>
-      ); })()}
-
-      <div className="map-bottom">
-        {chipRow(true)}
-        <div className="map-bar">
-          <div className="map-toggle" role="group" aria-label="View">
-            <button type="button" className="map-toggle__btn" aria-pressed={listSnap !== 'closed'} aria-label="List" onClick={() => setListSnap('full')}><Icon name="grid" size={22} solid={listSnap !== 'closed'} /></button>
-            <button type="button" className="map-toggle__btn" aria-pressed={listSnap === 'closed'} aria-label="Map" onClick={() => { setListSnap('closed'); searchRef.current?.blur(); }}><Icon name="map" size={22} solid={listSnap === 'closed'} /></button>
+      {/* Desktop: the find, as Jeff christy C08's frosted panel (Felt's inspector place) */}
+      {drawerP.item && (() => { const df = drawerP.item; return (
+        <article ref={drawerRef} className="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" tabIndex={-1} data-instant={instant || undefined} data-state={drawerP.closing ? 'closing' : undefined} inert={drawerP.closing}>
+          <div className="drawer__content" key={df.slug}>
+            <DrawerContent find={df} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(df)} onCopy={() => copyLink(df, true)} onShare={() => share(df)} found={found.has(df.slug)} onToggleFound={() => toggleFoundFlip(df.slug)} chapter={chapter} />
           </div>
-          <label className="map-search">
-            <Icon name="search" size={22} />
-            <span className="sr-only">Search finds</span>
-            <input ref={searchRef} type="search" placeholder="Search" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
-            {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
-          </label>
+        </article>
+      ); })()}
+      {/* Desktop: a collectible's card in the same slot */}
+      {cdrawerP.item && (
+        <div className="drawer drawer--c" data-state={cdrawerP.closing ? 'closing' : undefined} inert={cdrawerP.closing}>
+          <CollectibleCard item={cdrawerP.item} layer={layers.find((l) => l.id === cdrawerP.item!.layer)} onClose={closePicked} />
         </div>
-      </div>
+      )}
+
+      {/* Phone: Corner's round buttons in the top corners, under the island */}
+      {phone && (
+        <>
+          <Button variant="glass" size="m" icon="layers" iconOnly label={layersOn ? `Basemap and layers, ${layersOn} on` : 'Basemap and layers'} aria-expanded={menu === 'basemap'} aria-controls="map-basemap" className="mcorner mcorner--left" onClick={(e) => openMenu('basemap', e)} />
+          <span className="mcorner mcorner--right">
+            <Button variant="glass" size="m" icon="filter" iconOnly label={otherFilters ? `Filters, ${otherFilters} on` : 'Filters'} aria-expanded={menu === 'filters'} aria-controls="map-filters" className="map-ctrl" onClick={(e) => openMenu('filters', e)} />
+            {otherFilters > 0 && <span className="mcorner__badge tabular" aria-hidden="true">{otherFilters}</span>}
+          </span>
+          {otherFilters + typeCount > 0 && (
+            <div className="mtoprow" role="group" aria-label="Active filters">
+              {filters.categories.filter((c) => c !== NONE_SHOWN).map((id) => { const c = categories.find((x) => x.id === id); return c ? <button key={id} type="button" className="mchip" onClick={() => railToggle(id)} aria-label={`Remove ${c.label}`}><Blip category={id} size={20} />{c.label}<Icon name="close" size={16} /></button> : null; })}
+              {filters.verification !== 'all' && <button type="button" className="mchip" onClick={() => setFilters({ ...filters, verification: 'all' })}>{filters.verification === 'multi-source' ? 'Multi-source' : filters.verification}<Icon name="close" size={16} /></button>}
+              {filters.region !== 'all' && <button type="button" className="mchip" onClick={() => setFilters({ ...filters, region: 'all' })}>{regions.find((r) => r.id === filters.region)?.name}<Icon name="close" size={16} /></button>}
+              {filters.hasClip && <button type="button" className="mchip" onClick={() => setFilters({ ...filters, hasClip: false })}>With a clip<Icon name="close" size={16} /></button>}
+              {filters.spoilers && <button type="button" className="mchip" onClick={() => setFilters({ ...filters, spoilers: false })}>Spoilers<Icon name="close" size={16} /></button>}
+              {filters.mature && <button type="button" className="mchip" onClick={() => setFilters({ ...filters, mature: false })}>Mature<Icon name="close" size={16} /></button>}
+            </div>
+          )}
+        </>
+      )}
+
+      <FilterMenu open={menu === 'filters'} onClose={closeMenu} at={menuPos} finds={finds} filters={filters} setFilters={setFilters} regions={regions} search={search} onReset={resetFilters} categories={categories} found={found} onImport={mergeFound} chapter={chapter} />
+      <BasemapMenu open={menu === 'basemap'} onClose={closeMenu} at={menuPos} basemap={view.basemap} setBasemap={(b) => setViewSaved({ ...view, basemap: b })} grid={view.grid} setGrid={(g) => setViewSaved({ ...view, grid: g })} layers={layers} layersOn={view.layers} setLayersOn={setLayersOn} />
+      {menu === 'sort' && <SortMenu at={menuPos} sort={sort} onPick={(s) => { setSort(s); closeMenu(true); }} onClose={closeMenu} />}
+
+      {/* Tide Guide's hint toast, above the bottom controls */}
+      {toastP.item && (
+        <div className="toast" role="status" key={toastP.item.id} data-state={toastP.closing ? 'closing' : undefined}>
+          <Icon name={toastP.item.icon} size={22} />
+          <span className="toast__text">{toastP.item.text}</span>
+          {toastP.item.action && <button type="button" className="toast__action" onClick={() => { toastP.item!.action!.run(); dismissToast(); }}>{toastP.item.action.label}</button>}
+          <button type="button" className="toast__close" aria-label="Dismiss" onClick={dismissToast} tabIndex={toastP.closing ? -1 : undefined}><Icon name="close" size={18} /></button>
+        </div>
+      )}
+
+      {/* Phone: the list sheet */}
+      {phone && (
+        <Sheet snaps={listSnaps} snap={listSnap} onSnap={setListSnap} closedId="closed" enabled inert={listSnap === 'closed'} className="map-list" label="Finds">
+          <div className="map-list__handle" data-sheet-handle>
+            <span className="grabber" aria-hidden="true" />
+            <p className="map-list__count" aria-live="polite">{countText}</p>
+          </div>
+          <div className="map-list__scroll">
+            <div className="mlist__head mlist__head--phone">{sortControl}</div>
+            {listed.length ? list : empty}
+          </div>
+        </Sheet>
+      )}
+
+      {/* Phone: the collectible's card in the carousel's place */}
+      {ccardP.item && (
+        <div className="pcard pcard--c" data-state={ccardP.closing ? 'closing' : undefined} inert={ccardP.closing}>
+          <CollectibleCard item={ccardP.item} layer={layers.find((l) => l.id === ccardP.item!.layer)} onClose={closePicked} />
+        </div>
+      )}
+
+      {/* Phone: Hypelist's card carousel replaces the rail while a pin is chosen */}
+      {carouselP.item && (
+        <div className="pcarousel" data-state={carouselP.closing ? 'closing' : undefined} inert={carouselP.closing}>
+          <div className="pcarousel__track" ref={carouselRef} onScroll={onCarouselScroll} role="group" aria-label="Finds near this pin">
+            {carousel.map((cf) => (
+              <div className="pcard2" key={cf.slug}>
+                <button type="button" className="pcard2__open" onClick={(e) => openFind(cf, e.currentTarget)} aria-label={`Open ${cf.title}`}>
+                  <span className="pcard2__art" aria-hidden="true">{showArt(cf, chapter) ? <img src={cf.still!} alt="" loading="lazy" decoding="async" /> : <span className="media__glow" />}</span>
+                  <span className="pcard2__thumb" aria-hidden="true"><Blip category={cf.category} size={32} /></span>
+                  <span className="pcard2__text">
+                    {/* Two lines at most: a long title is shortened in text (a clamp would leave hidden lines in the card) */}
+                    <span className="pcard2__title">{cf.title.length > 54 ? `${cf.title.slice(0, 52).trimEnd()}…` : cf.title}</span>
+                    <span className="pcard2__meta">{cf.categoryLabel} · {cf.regionLabel}</span>
+                    <span className="pcard2__credit">{cf.finder ? <><span className="pcard2__avatar" aria-hidden="true">{cf.finder.handle.replace(/^[@u/]+/, '').slice(0, 1).toUpperCase()}</span>Found by {cf.finder.handle}</> : 'First finder not known yet'}</span>
+                  </span>
+                </button>
+                <button type="button" className="pcard2__found" aria-pressed={found.has(cf.slug)} aria-label={found.has(cf.slug) ? 'Found. Mark as not found' : 'Mark as found'} onClick={() => toggleFoundFlip(cf.slug)}><Icon name="check" size={20} stroke={2} /></button>
+              </div>
+            ))}
+          </div>
+          <Button variant="glass" size="m" icon="close" iconOnly label="Close" className="pcarousel__close" onClick={() => { setPreview(null); opener.current?.focus({ preventScroll: true }); }} />
+        </div>
+      )}
+
+      {/* Phone: Corner's bottom stack: the pills row, the category rail, then the bar (list toggle and search) */}
+      {phone && (
+        <div className="map-bottom">
+          <div className="mpills">
+            <button type="button" className="mpill" aria-pressed={filters.hideFound} onClick={() => setFilters({ ...filters, hideFound: !filters.hideFound })} aria-label={`Found ${foundTotal} of ${finds.length}. ${filters.hideFound ? 'Show' : 'Hide'} found finds`}>
+              <Icon name="check" size={16} stroke={2} />Found <span className="tabular">{foundTotal}/{finds.length}</span>
+            </button>
+            {segView}
+            <span className="mpills__fit">{fitBtn}</span>
+          </div>
+          <div className="mrail" role="group" aria-label="Find types">
+            <button type="button" className="mrail__item" aria-pressed={!typeCount} onClick={() => setFilters({ ...filters, categories: [] })}>
+              <span className="mrail__all" aria-hidden="true"><Icon name="grid" size={18} /></span><span className="mrail__label">All</span>
+            </button>
+            {categories.map((c) => (
+              <button key={c.id} type="button" className="mrail__item" aria-pressed={filters.categories.includes(c.id)} onClick={() => railToggle(c.id)}>
+                <Blip category={c.id} size={32} state={filters.categories.includes(c.id) ? 'selected' : 'default'} /><span className="mrail__label">{c.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="map-bar">
+            <div className="map-toggle" role="group" aria-label="View">
+              <button type="button" className="map-toggle__btn" aria-pressed={listSnap !== 'closed'} aria-label="List" onClick={() => setListSnap('full')}><Icon name="grid" size={22} solid={listSnap !== 'closed'} /></button>
+              <button type="button" className="map-toggle__btn" aria-pressed={listSnap === 'closed'} aria-label="Map" onClick={() => { setListSnap('closed'); searchRef.current?.blur(); }}><Icon name="map" size={22} solid={listSnap === 'closed'} /></button>
+            </div>
+            <label className="map-search">
+              <Icon name="search" size={22} />
+              <span className="sr-only">Search finds</span>
+              <input ref={searchRef} type="search" placeholder="Search finds" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
+              {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
+            </label>
+          </div>
+          <p className="map-credit">{credit}{layersOn > 0 && ' Collectible locations: Game Checklists.'}</p>
+        </div>
+      )}
 
       {/* Phone: Apple Maps sheet, clip at the top */}
-      <Sheet snaps={findSnaps} snap={phone ? findSnap : 'closed'} onSnap={onFindSnap} closedId="closed" enabled={phone} inert={!phone || !selected} className="fsheet" label={shown ? shown.title : 'Find'} role="dialog">
-        {phone && shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} found={found.has(shown.slug)} onToggleFound={() => toggleFoundFlip(shown.slug)} />}
-      </Sheet>
+      {phone && (
+        <Sheet snaps={findSnaps} snap={findSnap} onSnap={onFindSnap} closedId="closed" enabled inert={!selected} className="fsheet" label={shown ? shown.title : 'Find'} role="dialog">
+          {shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} found={found.has(shown.slug)} onToggleFound={() => toggleFoundFlip(shown.slug)} chapter={chapter} />}
+        </Sheet>
+      )}
     </section>
+  );
+}
+
+/** Hypelist's sort popover: two rows, the option left and its glyph right, growing out of its trigger. */
+function SortMenu({ at, sort, onPick, onClose }: { at: MenuAt | null; sort: Sort; onPick: (s: Sort) => void; onClose: (restore: boolean) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => { const t = e.target as Element; if (!box.current?.contains(t) && !t.closest?.('[aria-controls="map-sort"]')) onClose(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(true); } };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    requestAnimationFrame(() => box.current?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true }));
+    return () => { document.removeEventListener('pointerdown', onDown, true); document.removeEventListener('keydown', onKey, true); };
+  }, []);
+  const opts: { id: Sort; label: string; icon: 'arrow-down' | 'grid' }[] = [{ id: 'newest', label: 'Newest', icon: 'arrow-down' }, { id: 'az', label: 'A to Z', icon: 'grid' }];
+  return (
+    <div ref={box} id="map-sort" className="popover popover--sort" role="menu" aria-label="Sort finds" data-up={at?.up || undefined} data-right={at?.right || undefined} style={at ? ({ '--mx': `${at.x}px`, '--my': `${at.y}px` } as React.CSSProperties) : undefined}>
+      {opts.map((o) => (
+        <button key={o.id} type="button" role="menuitemradio" aria-checked={sort === o.id} className="msortrow" onClick={() => onPick(o.id)}>
+          <span>{o.label}</span><Icon name={o.icon} size={18} />
+        </button>
+      ))}
+    </div>
   );
 }

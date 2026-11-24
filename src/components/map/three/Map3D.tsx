@@ -56,6 +56,8 @@ const Map3D = forwardRef<Map3DApi, Props>(function Map3D(props, ref) {
     pinElement: () => canvas.current,
     getView: () => scene.current?.view() ?? null,
     setView: () => { /* 3D opens from the 2D view; it does not take one later */ },
+    fit: () => scene.current?.resetNorth(), // Fit in 3D: back to north at the opening tilt, over the same spot
+    zoom: () => scene.current?.view().zoom ?? null,
     close: (done) => { if (scene.current) scene.current.close(done); else done(); },
   }));
 
@@ -95,11 +97,11 @@ const Map3D = forwardRef<Map3DApi, Props>(function Map3D(props, ref) {
   }, []);
 
   useEffect(() => {
-    scene.current?.setPins(props.finds.filter((f) => f.pin).map((f) => ({ slug: f.slug, x: f.pin!.x, y: f.pin!.y, icon: f.icon, title: f.title })));
+    scene.current?.setPins(props.finds.filter((f) => f.pin).map((f) => ({ slug: f.slug, x: f.pin!.x, y: f.pin!.y, category: f.category, title: f.title })));
   }, [props.finds]);
   useEffect(() => { scene.current?.setSelected(props.selected); }, [props.selected]);
   useEffect(() => {
-    scene.current?.setCollectibles(props.collectibles.map((c) => ({ id: c.id, x: c.x, y: c.y })), props.selectedCollectible);
+    scene.current?.setCollectibles(props.collectibles.map((c) => ({ id: c.id, x: c.x, y: c.y, layer: c.layer })), props.selectedCollectible);
   }, [props.collectibles, props.selectedCollectible]);
   useEffect(() => { scene.current?.setListHover(props.hovered); }, [props.hovered]);
   useEffect(() => { scene.current?.setTheme(readTheme(props.basemap)); }, [props.basemap]);

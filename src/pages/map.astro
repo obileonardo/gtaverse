@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Base from '../layouts/Base.astro';
 import MapApp from '../components/map/MapApp';
-import { finds, regionById, categories as allCategories } from '../lib/content';
+import { finds, regionById, connections, categories as allCategories } from '../lib/content';
 import { findStill, regionLabel, categoryIcon, categoryChipLabel, categorySingular } from '../lib/media';
 import { youtubeId } from '../lib/clip';
 import mapJson from '../../content/map.json';
@@ -16,6 +16,13 @@ const ancestors = (id: string): string[] => {
   const out: string[] = [];
   for (let r = regionById(id); r; r = r.parent ? regionById(r.parent) : undefined) out.push(r.id);
   return out;
+};
+
+// Finds that share a GTAverse connection with this one, for the selected pin's connection lines (at most 6).
+const relatedOf = (slug: string, ids: string[]) => {
+  const out = new Set<string>();
+  for (const id of ids) for (const r of connections.find((c) => c.id === id)?.related_finds ?? []) if (r !== slug) out.add(r);
+  return [...out].filter((s) => finds.some((f) => f.slug === s)).slice(0, 6);
 };
 
 const data: MapFind[] = finds.map((f) => {
@@ -41,6 +48,11 @@ const data: MapFind[] = finds.map((f) => {
     sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
     finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
     updated: f.updated_at ?? null,
+    added: (f as { added_at?: string | null }).added_at ?? null,
+    chapterGate: f.chapter_gate ?? null,
+    connections: (f.related_connections ?? []).length,
+    games: (f.crossover_games ?? []).length,
+    related: relatedOf(f.slug, f.related_connections ?? []),
   };
 });
 
@@ -60,6 +72,7 @@ const layers: MapLayer[] = collectiblesJson.layers.map((l) => ({
   marked: l.marked,
   total: l.total,
   source: 'Game Checklists',
+  url: l.source_image.replace(/\/photo\/\d+$/, ''), // the post their map came from, for the credit link
 }));
 
 const meta: MapMeta = {

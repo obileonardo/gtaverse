@@ -5,12 +5,14 @@ import { useEffect, useState } from 'react';
 import { ytThumb, ytEmbed } from '../../lib/clip';
 import { Icon } from './ui';
 import { platformLabel, type MapFind } from './types';
+import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
 
-export function ClipPlayer({ find, variant }: { find: MapFind; variant: 'drawer' | 'sheet' }) {
-  const hidden = find.spoiler || find.mature;
+export function ClipPlayer({ find, variant, chapter = 'none' }: { find: MapFind; variant: 'drawer' | 'sheet'; chapter?: ChapterSetting }) {
+  // A spoiler clip opens by itself once the visitor's chapter setting reaches its chapter (src/lib/chapter.ts).
+  const hidden = find.mature || (find.spoiler && !isUnlocked(find.chapterGate, chapter));
   const [revealed, setRevealed] = useState(!hidden);
   const [playing, setPlaying] = useState(false);
-  useEffect(() => { setRevealed(!hidden); setPlaying(false); }, [find.slug]);
+  useEffect(() => { setRevealed(!hidden); setPlaying(false); }, [find.slug, hidden]);
 
   const yt = find.clip?.yt ?? null;
   const reason = find.spoiler ? 'spoiler' : 'mature';

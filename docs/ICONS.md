@@ -183,7 +183,7 @@ New glyphs with no old name: the 12 collectible layers, `rockstar-crossover`, `s
 
 ## Migration plan (after the Motion pull request merges)
 
-Not done in this change: no component reads the family yet. In order, one small pull request each:
+Status (24 Nov 2026): step 2 and step 6 are done for the map. The map island draws every pin, cluster plate, legend row and rail item with the blips, from a generated subset (`src/icons/blips-map.ts`, written by `build.py` beside `family.ts`, rendered by `src/components/map/blip.tsx`), and the 3D view draws the same pins into its atlas. `pnpm test` checks the subset against the family. The other steps are still open. In order, one small pull request each:
 
 1. **Swap the two renderers.** `ui/Icon.astro` and `Icon` in `map/ui.tsx` render through `render.ts`: `viewBox 0 0 20 20`, `fill="currentColor"`, no stroke attributes, `name` typed as `IconRef` so old names keep compiling. The `solid` prop maps through `legacySolid` (so `star` + `solid` draws `star-filled`) and is otherwise ignored; the `stroke` prop goes (weights are part of the drawing). React passes `useId()` as the mask id.
 2. **Map pins become blips.** `svg()` in `map/MapCanvas.tsx` (Leaflet pins) calls `blipSvg(glyph, { form: 'pin', state })` with the icon anchor at the bottom centre; the selected pin passes `state: 'selected'` at 40 px, found finds `found`, filtered-out ones `dim`. `iconImage()` in `map/three/scene.ts` (the 3D pin atlas) uses the same pins. `src/lib/explainers.ts` (the wanted level table) uses `blipSvg('star-filled')` and the live state blips.

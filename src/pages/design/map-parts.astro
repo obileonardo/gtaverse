@@ -29,6 +29,8 @@ const toMapFind = (f: Find): MapFind => {
     sources: f.sources.map((x) => ({ type: x.type, url: x.url, creator: x.creator ?? null })),
     finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
     updated: f.updated_at ?? null,
+    added: (f as { added_at?: string | null }).added_at ?? null, chapterGate: f.chapter_gate ?? null,
+    connections: (f.related_connections ?? []).length, games: (f.crossover_games ?? []).length, related: [],
   };
 };
 const meta: MapMeta = {

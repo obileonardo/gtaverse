@@ -168,11 +168,11 @@ To rerun: put the 12 images as `m01.jpg` to `m12.jpg` in an empty folder outside
 
 ## The map screen
 
-`/map` is a React island (`src/components/map/`, documented in `docs/DESIGN-SYSTEM.md`). It reads `public/map/tiles/` at `/map/tiles/{z}/{x}/{y}.webp` with Leaflet 1.9.4 (`L.CRS.Simple`, 512 px tiles, see "Sharpness") and `content/map.json` for the frame and the grid. A deployment without built tiles still works: the map shows its ground colour and every find opens from the list. A pin appears as soon as a find has `pin` set, with no other change. The 3D view is in `docs/MAP-3D.md`.
+`/map` is a React island (`src/components/map/`, documented in `docs/DESIGN-SYSTEM.md`). Round 2 (owner decision Q4 A, 24 Nov 2026; spec in the round-2 taste board's `analysis/direction-map-r2.md`): the map fills the screen and everything floats over it. Desktop: Felt's Legend | List panel on the left, headed by Jeff christy C12's HUD (region title, the type filter summary, the Found checklist), whose Legend rows are the type filters; the find detail as Jeff christy C08's frosted panel on the right; C12's hint row along the bottom (filters, 2D | 3D, layers, zoom level, scale in grid cells, credit, Fit and zoom). Phone: Corner's round corner buttons, a pills row (Found, 2D | 3D, Fit) and an edge-to-edge category rail over the bar; a tapped pin brings Hypelist's card carousel (swiping pans the map); Tide Guide's glass menus and hint toast. Pins are the round-2 blips (`docs/ICONS.md`), anchored at the pointer's tip, with label tags that wrap instead of clipping, a glow ring on the selected find, connection lines to related pinned finds, and clusters drawn as stacked plates with a count. Spoilers open by themselves once the visitor's chapter setting reaches them (`src/lib/chapter.ts`); mature content never does. It reads `public/map/tiles/` at `/map/tiles/{z}/{x}/{y}.webp` with Leaflet 1.9.4 (`L.CRS.Simple`, 512 px tiles, see "Sharpness") and `content/map.json` for the frame and the grid. A deployment without built tiles still works: the map shows its ground colour and every find opens from the list. A pin appears as soon as a find has `pin` set, with no other change. The 3D view is in `docs/MAP-3D.md`.
 
 ### Links
 
-These round-trip, so a view can be shared and survives a reload (`src/components/map/url.ts`): `?q=` (search), `?category=a,b` (type chips), `?region=` (region filter), `?view=3d` (the 3D view; 2D is left out), `?find=` (the open find). Defaults are left out of the URL and unknown values are ignored. A link with `q`, `category` or `region` shows exactly that view from the default filters (spoilers and mature stay hidden); without them, the filters saved on the device apply.
+These round-trip, so a view can be shared and survives a reload (`src/components/map/url.ts`): `?q=` (search), `?category=a,b` (type chips), `?region=` (region filter), `?view=3d` (the 3D view; 2D is left out), `?find=` (the open find), `?layer=a,b` (collectible layers that are on, so a page can link straight to a layer). Defaults are left out of the URL and unknown values are ignored. A link with `q`, `category` or `region` shows exactly that view from the default filters (spoilers and mature stay hidden); without them, the filters saved on the device apply.
 
 ### Search
 
@@ -195,3 +195,17 @@ These round-trip, so a view can be shared and survives a reload (`src/components
 | `content/search-terms.json` | Our own search words per type and region. |
 | `content/relief.json` | Our hand-drawn relief for the 3D view (`docs/MAP-3D.md`). |
 | `tools/map-harness/` | Unstyled Leaflet harness, its local server and the screenshot script. Verification only, not the product. |
+
+## Performance (round 2)
+
+Measured 24 Nov 2026 on the built site (`astro preview`), headless Chrome for Testing 1252 on an Apple M4, 1440 x 900 at 2x, flat placeholder tiles, a temporary fixture of 70 pinned finds and all 12 collectible layers on (892 collectible pins). Frame interval in ms, median / 95th percentile / longest:
+
+| Action | CPU 1x | CPU 4x |
+|---|---|---|
+| Pan (four 0.6 s pans) | 16.7 / 16.7 / 33.3 | 33.3 / 66.6 / 83.4 |
+| Zoom (fly in two levels and back) | 16.7 / 16.8 / 166.7 | 16.7 / 33.4 / 616.6 |
+| Filter (six Legend toggles) | 16.7 / 16.7 / 33.4 | 16.7 / 50 / 83.4 |
+| Open a find (three, each flies to its pin) | 16.7 / 33.3 / 166.5 | 16.7 / 166.6 / 516.7 |
+| 3D (four zoom steps) | 16.7 / 16.7 / 16.8 | 16.7 / 16.8 / 66.7 |
+
+What it took: with 892 collectible markers on, Leaflet moved every marker on every frame of a zoom flight (zoom median 100 ms, opening a find 50 to 67 ms). The collectible group now steps off the map while a zoom is in flight and comes back when it lands (`MapCanvas.tsx`), so flights run at the frame rate; the cost left is the one long frame when the 892 pins come back (the "longest" column) and, at 4x CPU, panning 892 composited markers. With no layer on, every action is 16.7 ms median. Next step if layers become a default: draw collectibles on a canvas layer with its own hit test. CPU throttling does not model a weaker GPU: measure on a real mid laptop and phone before launch.

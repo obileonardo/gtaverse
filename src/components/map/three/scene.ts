@@ -11,10 +11,10 @@
 import * as THREE from 'three';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { heightAt, maxHeight } from './relief';
-import { icons, type IconName } from '../../ui/icons';
+import { blipSvg, glyphOf, type BlipState } from '../blip';
 import type { MapMeta } from '../types';
 
-export type Pin3D = { slug: string; x: number; y: number; icon: IconName; title: string };
+export type Pin3D = { slug: string; x: number; y: number; category: string; title: string };
 export type Theme3D = { background: string; ground: string; accent: string; onAccent: string; inverseFill: string; inverseText: string; muted: boolean };
 export type View2D = { x: number; y: number; zoom: number };
 
@@ -24,7 +24,9 @@ const FOV = 35;
 const TILT_MAX = THREE.MathUtils.degToRad(62); // steepest view, from straight down
 const TILT_OPEN = THREE.MathUtils.degToRad(50); // the tilt 3D opens at
 const MAX_TEXTURES = 72; // cached tile textures (about 1.4 MB of GPU memory each with mipmaps)
-const PIN_PX = 40; // pin sprite height in CSS px (head 30 + stem)
+const PIN_W = 32; // pin sprite width in CSS px: the 2D map's 32 px blip pin
+const PIN_PX = 44; // pin sprite height in CSS px: the blip pin (its tip 31 px down) on a short stem
+const C_PX = 20; // collectible blip pin, as in 2D (28 when selected)
 
 // --ease-in-out from src/styles/tokens.css, cubic-bezier(0.77, 0, 0.175, 1): movement on screen (map fly).
 function bezier(x1: number, y1: number, x2: number, y2: number) {
@@ -132,7 +134,7 @@ export type SceneOptions = {
   onChange: () => void;
 };
 
-export type Collectible3D = { id: string; x: number; y: number };
+export type Collectible3D = { id: string; x: number; y: number; layer: string };
 
 export class MapScene {
   readonly renderer: THREE.WebGLRenderer;
@@ -148,7 +150,7 @@ export class MapScene {
   private pins = new THREE.Group();
   // Collectible layers (content/collectibles.json): one Points draw for all items, plus one for the selected item.
   private cItems: (Collectible3D & { wx: number; wz: number })[] = [];
-  private cPoints: THREE.Points | null = null;
+  private cPoints: THREE.Points[] = [];
   private cSelected: THREE.Points | null = null;
   private cSelectedId: string | null = null;
   // Find pins: instanced screen-facing quads, one draw for the pins at rest and one for the hovered and selected pins
@@ -160,7 +162,7 @@ export class MapScene {
   private pinRestSlugs: string[] = [];
   private atlas: { tex: THREE.CanvasTexture; cells: Map<string, number>; cols: number; rows: number } | null = null;
   private pinMaterial: THREE.ShaderMaterial | null = null;
-  private iconImages = new Map<string, HTMLImageElement>();
+  private blipImages = new Map<string, HTMLImageElement>();
   private selected: string | null = null;
   private hovered: string | null = null;
   private uniforms: { ground: THREE.Color; fogColor: THREE.Color; muted: number };
@@ -512,53 +514,54 @@ export class MapScene {
 
   // ---------------------------------------------------------------- pins
 
-  private iconImage(name: IconName, colour: string) {
-    const key = `${name}|${colour}`;
-    let img = this.iconImages.get(key);
+  /**
+   * The 2D map's blip as an image (docs/ICONS.md: canvas images cannot read CSS variables, so the theme's colours are
+   * set as variables on the SVG itself, which the blip's var() fallbacks then read). Loaded once per category, form
+   * and state; onload redraws whatever uses it.
+   */
+  private blipImage(category: string, form: 'pin' | 'plate', state: BlipState, px: number, onload: () => void) {
+    const t = this.theme;
+    const key = `${category}|${form}|${state}|${px}|${t.inverseFill}|${t.background}`;
+    let img = this.blipImages.get(key);
     if (img) return img;
-    const def = icons[name] as { line: string };
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${colour}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${def.line}</svg>`;
+    const vars = `--inverse-fill:${t.inverseFill};--inverse-text:${t.inverseText};--bg:${t.background};--accent:${t.accent};--on-accent:${t.onAccent};--blip-collectible:#f76685;--blip-collectible-ink:#0d0c1a;--blip-collectible-key:#0d0c1a`;
+    const svg = blipSvg(glyphOf(category), { form, state, size: px, uid: `b3-${category}-${state}` })
+      .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" `)
+      .replace(/ style="([^"]*)"/, ` style="${vars};$1"`)
+      .replace(/<svg ([^>]*?)>/, (m, a) => (a.includes('style="') ? m : `<svg ${a} style="${vars}">`));
     img = new Image();
     img.decoding = 'async';
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    img.onload = () => { this.drawAtlas(); this.invalidate(); };
-    this.iconImages.set(key, img);
+    img.onload = onload;
+    this.blipImages.set(key, img);
     return img;
   }
 
-  /** One pin image (30 x 40 CSS px, drawn at 4x) into an atlas cell: stem, then a disc with the type icon. */
-  private drawPin(g: CanvasRenderingContext2D, ox: number, oy: number, icon: IconName, state: 'rest' | 'hover' | 'selected') {
+  /** One pin image (32 x 44 CSS px, drawn at 4x) into an atlas cell: the blip pin, then its stem to the ground. */
+  private drawPin(g: CanvasRenderingContext2D, ox: number, oy: number, category: string, state: 'rest' | 'hover' | 'selected') {
     const t = this.theme;
     const s = 4;
-    const W = 30 * s, H = PIN_PX * s;
-    const fill = state === 'selected' ? t.inverseFill : t.accent;
-    const ink = state === 'selected' ? t.inverseText : t.onAccent;
-    const img = this.iconImage(icon, ink);
+    const W = PIN_W * s, H = PIN_PX * s;
+    const img = this.blipImage(category, 'pin', state === 'selected' ? 'selected' : 'default', W, () => { this.drawAtlas(); this.invalidate(); });
     g.save();
     g.translate(ox, oy);
     g.clearRect(0, 0, W, H);
-    g.fillStyle = state === 'selected' ? t.accent : fill;
-    g.fillRect(W / 2 - (1.5 * s) / 2, 26 * s, 1.5 * s, H - 26 * s);
+    // The stem: from the pointer's tip down to the spot, in the plate's colour (accent when selected).
+    g.fillStyle = state === 'selected' ? t.accent : t.inverseFill;
+    g.fillRect(W / 2 - (1.5 * s) / 2, 30 * s, 1.5 * s, H - 31 * s);
     g.beginPath();
     g.arc(W / 2, H - 1.5 * s, 2.5 * s, 0, Math.PI * 2);
     g.fill();
-    g.beginPath();
-    g.arc(W / 2, 14 * s, 13.5 * s, 0, Math.PI * 2);
-    g.fillStyle = fill;
-    g.fill();
-    g.lineWidth = 2 * s;
-    g.strokeStyle = state === 'selected' ? t.accent : state === 'hover' ? t.inverseFill : 'rgba(13,12,26,0.35)';
-    g.stroke();
-    if (img.complete && img.naturalWidth) g.drawImage(img, W / 2 - 8 * s, 6 * s, 16 * s, 16 * s);
+    if (img.complete && img.naturalWidth) g.drawImage(img, 0, 0, W, W);
     g.restore();
   }
 
   /** The atlas: every icon in use, in the three states. Redrawn when icons load or the theme changes. */
   private drawAtlas() {
-    const used = [...new Set(this.pinList.map((p) => p.icon))].sort();
-    const keys = used.flatMap((icon) => (['rest', 'hover', 'selected'] as const).map((st) => `${icon}|${st}`));
+    const used = [...new Set(this.pinList.map((p) => p.category))].sort();
+    const keys = used.flatMap((cat) => (['rest', 'hover', 'selected'] as const).map((st) => `${cat}|${st}`));
     if (!keys.length) return;
-    const CW = 120, CH = 160, cols = Math.min(8, keys.length), rows = Math.ceil(keys.length / cols);
+    const CW = PIN_W * 4, CH = PIN_PX * 4, cols = Math.min(8, keys.length), rows = Math.ceil(keys.length / cols);
     const old = this.atlas;
     const canvas = old && (old.tex.image as HTMLCanvasElement).width === cols * CW && (old.tex.image as HTMLCanvasElement).height === rows * CH ? (old.tex.image as HTMLCanvasElement) : document.createElement('canvas');
     canvas.width = cols * CW;
@@ -566,8 +569,8 @@ export class MapScene {
     const g = canvas.getContext('2d')!;
     const cells = new Map<string, number>();
     keys.forEach((k, n) => {
-      const [icon, st] = k.split('|') as [IconName, 'rest' | 'hover' | 'selected'];
-      this.drawPin(g, (n % cols) * CW, Math.floor(n / cols) * CH, icon, st);
+      const [cat, st] = k.split('|') as [string, 'rest' | 'hover' | 'selected'];
+      this.drawPin(g, (n % cols) * CW, Math.floor(n / cols) * CH, cat, st);
       cells.set(k, n);
     });
     let tex = old?.tex;
@@ -589,7 +592,7 @@ export class MapScene {
       transparent: true,
       depthTest: false, // pins stay visible over hills, like the game's map blips
       depthWrite: false,
-      uniforms: { atlas: { value: this.atlas?.tex ?? null }, viewport: { value: new THREE.Vector2(c.clientWidth || 1, c.clientHeight || 1) }, sizePx: { value: new THREE.Vector2(30, PIN_PX) } },
+      uniforms: { atlas: { value: this.atlas?.tex ?? null }, viewport: { value: new THREE.Vector2(c.clientWidth || 1, c.clientHeight || 1) }, sizePx: { value: new THREE.Vector2(PIN_W, PIN_PX) } },
       vertexShader: /* glsl */ `
         attribute vec4 aCell;
         attribute float aScale;
@@ -625,7 +628,7 @@ export class MapScene {
     const mesh = new THREE.InstancedMesh(geo, this.material3dPins(), Math.max(1, list.length));
     list.forEach((p, n) => {
       const state = p.slug === this.selected ? 'selected' : p.slug === this.hovered ? 'hover' : 'rest';
-      const k = at.cells.get(`${p.icon}|${state}`) ?? 0;
+      const k = at.cells.get(`${p.category}|${state}`) ?? 0;
       const col = k % at.cols, row = Math.floor(k / at.cols);
       cell.set([col / at.cols, 1 - (row + 1) / at.rows, 1 / at.cols, 1 / at.rows], n * 4);
       mesh.setMatrixAt(n, m.makeTranslation(p.x, heightAt(p.x, p.y), p.y));
@@ -642,7 +645,7 @@ export class MapScene {
     for (const mesh of [this.pinRest, this.pinTop]) if (mesh) { this.pins.remove(mesh); mesh.geometry.dispose(); mesh.dispose(); }
     this.pinRest = this.pinTop = null;
     if (!this.pinList.length) { this.invalidate(); return; }
-    if (!this.atlas || [...new Set(this.pinList.map((p) => p.icon))].some((ic) => !this.atlas!.cells.has(`${ic}|rest`))) this.drawAtlas();
+    if (!this.atlas || [...new Set(this.pinList.map((p) => p.category))].some((c) => !this.atlas!.cells.has(`${c}|rest`))) this.drawAtlas();
     const top = this.pinList.filter((p) => p.slug === this.selected || p.slug === this.hovered).sort((a) => (a.slug === this.selected ? 1 : -1));
     const rest = this.pinList.filter((p) => !top.includes(p));
     this.pinRestSlugs = rest.map((p) => p.slug);
@@ -667,43 +670,47 @@ export class MapScene {
   }
 
   /** Draw calls the pins and collectibles take, for the performance check. */
-  markerDraws() { return [this.pinRest, this.pinTop, this.cPoints, this.cSelected].filter(Boolean).length; }
+  markerDraws() { return [this.pinRest, this.pinTop, ...this.cPoints, this.cSelected].filter(Boolean).length; }
 
   /** Where a pin's disc centre is on screen, in CSS px, or null. Used by the verification scripts. */
   pinHead(slug: string) {
     const p = this.pinList.find((q) => q.slug === slug);
     const at = p && this.project(p.x, p.y);
-    return at ? { x: at.x, y: at.y - (PIN_PX - 14) } : null;
+    return at ? { x: at.x, y: at.y - (PIN_PX - 30) } : null; // the plate's centre, 30 px above the foot
   }
 
   setSelected(slug: string | null) { this.setState(slug, this.hovered); }
 
   // ---------------------------------------------------------------- collectibles
 
-  /** A small disc texture, drawn like the 2D `.cpin`: surface fill, text-coloured ring (selected: inverse fill, pink ring). */
-  private discTexture(selected: boolean) {
-    const css = (n: string, f: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+  /**
+   * A collectible's sprite: the layer's coral blip pin, as in 2D, drawn into the top half of a square so the point
+   * sprite's centre is the pointer's tip (the spot). Redrawn when the image arrives.
+   */
+  private blipTexture(layer: string, selected: boolean) {
     const c = document.createElement('canvas');
-    c.width = c.height = 64;
-    const g = c.getContext('2d')!;
-    g.beginPath();
-    g.arc(32, 32, 26, 0, Math.PI * 2);
-    g.fillStyle = selected ? this.theme.inverseFill : css('--surface-1', '#1a1a2e');
-    g.fill();
-    g.lineWidth = 10;
-    g.strokeStyle = selected ? this.theme.accent : css('--text-1', '#f2f2f2');
-    g.stroke();
+    c.width = c.height = 128;
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
+    const draw = () => {
+      const g = c.getContext('2d')!;
+      g.clearRect(0, 0, 128, 128);
+      if (img.complete && img.naturalWidth) g.drawImage(img, 32, 1, 64, 64);
+      t.needsUpdate = true;
+      this.invalidate();
+    };
+    const img = this.blipImage(layer, 'pin', selected ? 'selected' : 'default', 64, () => draw());
+    draw();
     return t;
   }
 
-  private pointsOf(items: { wx: number; wz: number; x: number; y: number }[], sizeCss: number, selected: boolean) {
+  private pointsOf(items: { wx: number; wz: number; x: number; y: number; layer: string }[], sizeCss: number, selected: boolean) {
     const pos = new Float32Array(items.length * 3);
     items.forEach((c, i) => pos.set([c.wx, heightAt(c.x, c.y) + 1, c.wz], i * 3));
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ size: sizeCss * this.renderer.getPixelRatio(), sizeAttenuation: false, map: this.discTexture(selected), transparent: true, depthTest: false, depthWrite: false, alphaTest: 0.05 });
+    // The sprite is twice the pin's size: the pin fills its top half, so the centre is the tip.
+    const mat = new THREE.PointsMaterial({ size: sizeCss * 2 * this.renderer.getPixelRatio(), sizeAttenuation: false, map: this.blipTexture(items[0].layer, selected), transparent: true, depthTest: false, depthWrite: false, alphaTest: 0.05 });
     const pts = new THREE.Points(geo, mat);
     pts.renderOrder = selected ? 2 : 0; // under the find pins, as in 2D
     pts.frustumCulled = false;
@@ -730,13 +737,16 @@ export class MapScene {
       return { ...c, wx: c.x + Math.cos(a) * r, wz: c.y + Math.sin(a) * r };
     });
     this.cSelectedId = selected;
-    this.disposePoints(this.cPoints);
+    for (const p of this.cPoints) this.disposePoints(p);
     this.disposePoints(this.cSelected);
-    this.cPoints = this.cSelected = null;
-    const rest = this.cItems.filter((c) => c.id !== selected);
-    if (rest.length) { this.cPoints = this.pointsOf(rest, 12, false); this.scene.add(this.cPoints); }
+    this.cPoints = [];
+    this.cSelected = null;
+    // One Points draw per layer that is on (each layer has its own glyph), plus one for the selected item.
+    const byLayer = new Map<string, typeof this.cItems>();
+    for (const c of this.cItems) if (c.id !== selected) byLayer.set(c.layer, [...(byLayer.get(c.layer) ?? []), c]);
+    for (const items of byLayer.values()) { const p = this.pointsOf(items, C_PX, false); this.cPoints.push(p); this.scene.add(p); }
     const sel = this.cItems.find((c) => c.id === selected);
-    if (sel) { this.cSelected = this.pointsOf([sel], 16, true); this.scene.add(this.cSelected); }
+    if (sel) { this.cSelected = this.pointsOf([sel], 28, true); this.scene.add(this.cSelected); }
     this.invalidate();
   }
 
@@ -760,7 +770,8 @@ export class MapScene {
     for (const c of this.cItems) {
       v.set(c.wx, heightAt(c.x, c.y), c.wz).project(this.camera);
       if (v.z > 1) continue;
-      const d = Math.hypot(((v.x + 1) / 2) * r.width - px, ((1 - v.y) / 2) * r.height - py);
+      // The plate sits about 12 px above the spot (the sprite's centre is the pointer's tip).
+      const d = Math.hypot(((v.x + 1) / 2) * r.width - px, ((1 - v.y) / 2) * r.height - 12 - py);
       if (d <= 18 && (!best || d < best.d)) best = { id: c.id, d };
     }
     return best?.id ?? null;
@@ -775,7 +786,8 @@ export class MapScene {
     for (const n of this.nodes.values()) if (n.mesh) n.mesh.material.uniforms.muted.value = this.uniforms.muted;
     this.drawAtlas();
     this.rebuildPins();
-    if (this.cItems.length) this.setCollectibles(this.cItems.map(({ id, x, y }) => ({ id, x, y })), this.cSelectedId);
+    this.blipImages.clear(); // the blips carry the theme's colours
+    if (this.cItems.length) this.setCollectibles(this.cItems.map(({ id, x, y, layer }) => ({ id, x, y, layer })), this.cSelectedId);
     this.invalidate();
   }
 
@@ -925,7 +937,7 @@ export class MapScene {
     for (const mesh of [this.pinRest, this.pinTop]) if (mesh) { mesh.geometry.dispose(); mesh.dispose(); }
     this.pinMaterial?.dispose();
     this.atlas?.tex.dispose();
-    this.disposePoints(this.cPoints);
+    for (const p of this.cPoints) this.disposePoints(p);
     this.disposePoints(this.cSelected);
     this.renderer.dispose();
   }
