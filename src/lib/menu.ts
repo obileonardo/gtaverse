@@ -59,7 +59,7 @@ export const linkArt = (href: string): MenuArt | null => {
   if (!item || !existsSync(join(pub, `media/hero/keyart-${i}-${item.widths[0]}.webp`))) return null;
   const p = `/media/hero/keyart-${i}`;
   const portrait = `${p}-portrait`;
-  const phone = '(max-width: 1023px)';
+  const phone = '(max-width: 1279px)';
   return {
     key: href,
     caption: item.alt,

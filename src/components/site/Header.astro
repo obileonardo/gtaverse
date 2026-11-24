@@ -1,7 +1,7 @@
 ---
 // The site header: the NEON island, fixed and centred, always visible, and the full screen menu it opens
 // (decisions M1 to M4, the owner's BitcoinOS "full-screen menu with art panel" pick).
-//   Desktop (1024 and up): the menu is one surface that grows out of the island to fill the window. Left, a tall
+//   Desktop (1280 and up): the menu is one surface that grows out of the island to fill the window. Left, a tall
 //   art panel with cut corners; hovering or focusing a link crossfades it to that link's picture (official cover
 //   art per game, the GTA VI wallpapers and our own coast drawing for the main links). Middle, the search, the
 //   numbered heavy caps links under bracket labels, the small utility links, the chapter setting and the theme.
@@ -38,7 +38,7 @@ const currentGame = switcherIds.find((id) => isCurrent(path, `/gtaverse/games/${
 const currentLink = nav.find((n) => n.href !== '/' && isCurrent(path, n.href))?.href ?? '/';
 const startKey = [currentGame, currentLink, '/'].find((k) => k && artKeys.has(k)) ?? '';
 const start = arts.find((a) => a.key === startKey);
-const SIZES = '(max-width: 1023px) calc(100vw - 32px), 30vw';
+const SIZES = '(max-width: 1279px) calc(100vw - 32px), 30vw';
 
 // Story spoilers and mature finds never appear in previews (feed.ts), so the latest three skip them.
 const latest = byNewest.filter((f) => !f.spoiler && !f.mature).slice(0, 3);
@@ -197,7 +197,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     const frame = header.querySelector<HTMLElement>('[data-art-frame]')!;
     const caption = header.querySelector<HTMLElement>('[data-art-caption]')!;
     const credit = header.querySelector<HTMLElement>('[data-art-credit]')!;
-    const desktop = matchMedia('(min-width: 1024px)');
+    const desktop = matchMedia('(min-width: 1280px)');
     const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
     const css = getComputedStyle(document.documentElement);
     const ms = (name: string, fallback: number) => parseFloat(css.getPropertyValue(name)) || fallback;
@@ -735,7 +735,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     transition: background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour);
   }
   .games__scroll { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 4px; border-top: var(--border-w) solid var(--border-1); }
-  .games__group { display: grid; grid-template-columns: 76px minmax(0, 1fr); }
+  .games__group { display: grid; grid-template-columns: 84px minmax(0, 1fr); }
   .games__glabel { hyphens: auto; -webkit-hyphens: auto; padding: 9px 6px 0 8px; color: var(--text-3); font-size: 12px; font-weight: 600; line-height: 1.25; letter-spacing: 0.08em; text-transform: uppercase; }
   .games__list { display: flex; flex-direction: column; gap: 4px; }
   .games__row {
@@ -801,7 +801,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   :global([data-motion='none']) .menu :is(.menu__art, .menu__fade, .menu__item, .menu__pic img) { transition: none !important; }
 
   /* ================= Tablet and phone: a full screen sheet; the art is a short banner that stays at the top ================= */
-  @media (max-width: 1023px) {
+  @media (max-width: 1279px) {
     .menu__inner {
       display: flex;
       flex-direction: column;
