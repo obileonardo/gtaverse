@@ -16,7 +16,7 @@
       "icon_key": { "type": "string", "pattern": "^icon\\.[a-z-]+\\.[a-z0-9-]+$" },
       "color_token": { "type": "string", "pattern": "^color\\.[a-z-]+\\.[a-z0-9-]+$", "description": "Token name only. Hex, rgb or hsl values are rejected." },
       "reference_totals": {
-        "description": "Counts seen on a third-party checklist, for cross-reference only. Never copy their pins.",
+        "description": "Counts seen on a third-party checklist. Pins are copied only under an owner exception, with credit (decision C1, content/collectibles.json).",
         "oneOf": [
           { "type": "null" },
           {

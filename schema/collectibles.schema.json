@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rockstarworld.elvisobi.com/schema/collectibles.schema.json",
+  "title": "Collectibles",
+  "description": "content/collectibles.json: collectible locations transcribed from third-party maps under the owner's exception (docs/DECISIONS.md C1). Every item credits its source. Positions are pixels of the official map image (docs/MAP.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["about", "transcribed", "method", "layers", "items"],
+  "properties": {
+    "about": { "type": "string", "minLength": 10 },
+    "transcribed": { "type": "string", "format": "date" },
+    "method": { "type": "string", "minLength": 10 },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["layer", "source_image", "image_px", "marked", "total", "transcribed", "numbers_unreadable", "numbers_uncertain", "registration", "pin_radius_px"],
+        "properties": {
+          "layer": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "A map-layer id in content/categories.json." },
+          "source_image": { "type": "string", "format": "uri", "description": "The post the source map was read from." },
+          "image_px": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 2, "maxItems": 2, "description": "Width and height of the source image read." },
+          "marked": { "type": "integer", "minimum": 0, "description": "Locations the source map says it marks." },
+          "total": { "type": "integer", "minimum": 0, "description": "Locations the source says exist in the game." },
+          "transcribed": { "type": "integer", "minimum": 0, "description": "Items in this file for the layer." },
+          "numbers_unreadable": { "type": "integer", "minimum": 0 },
+          "numbers_uncertain": { "type": "integer", "minimum": 0 },
+          "registration": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["model", "scale_official_px_per_source_px", "rotation_deg", "inliers", "rmse_px", "grid_offset_px"],
+            "properties": {
+              "model": { "enum": ["similarity", "affine", "homography"] },
+              "scale_official_px_per_source_px": { "type": "number", "exclusiveMinimum": 0 },
+              "rotation_deg": { "type": "number" },
+              "inliers": { "type": "integer", "minimum": 0 },
+              "rmse_px": { "type": "number", "minimum": 0, "description": "Reprojection error of the matched features, in official map pixels." },
+              "grid_offset_px": { "type": "number", "minimum": 0, "description": "Mean distance between the source map's printed grid lines, carried through the transform, and the grid in content/map.json, in official map pixels." }
+            }
+          },
+          "pin_radius_px": { "type": "integer", "minimum": 1, "description": "Radius of one source pin disc, in official map pixels: the scale of the reading error." }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "layer", "number", "pin", "pin_accuracy", "label", "source", "verification", "notes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "layer": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "number": { "type": ["integer", "null"], "minimum": 1, "description": "The source checklist number. Null when it could not be read." },
+          "pin": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["x", "y"],
+            "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } }
+          },
+          "pin_accuracy": { "enum": ["transcribed"], "description": "Read off another map, not placed by us." },
+          "label": { "type": "string", "minLength": 2, "description": "Our own short label, never the source's description text." },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "url", "via"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "format": "uri" },
+              "via": { "type": ["string", "null"], "format": "uri" }
+            }
+          },
+          "verification": { "enum": ["multi-source", "single-source", "rumor", "debunked"] },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

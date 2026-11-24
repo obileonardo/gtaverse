@@ -92,7 +92,7 @@ The validator enforces: pin, accuracy and basis are all set or all null; the pin
 
 ### How Chime places or corrects a pin
 
-1. Find the spot from the find's clip or in game. Never take a position from Game Checklists, MapGenie, GTABase, State of Leonida or any other map; use them only to cross-check (decision 13).
+1. Find the spot from the find's clip or in game. Never take a find's position from Game Checklists, MapGenie, GTABase, State of Leonida or any other map; use them only to cross-check (decision 13). The collectible layers below are the one exception (decision C1), and they never feed finds.
 2. Run `pnpm map:fetch`, `pnpm map:tiles` and `pnpm map:harness`, open the harness and zoom in.
 3. Click the spot. "Picked" shows `"pin": { "x": ..., "y": ... }` and the grid cell.
 4. In `content/finds.json` set `pin`, `pin_accuracy` and `pin_basis`, and set `updated_at` to today.
@@ -103,6 +103,37 @@ The validator enforces: pin, accuracy and basis are all set or all null; the pin
 6. Run `pnpm validate`, then open a pull request into `staging`.
 
 Pins can be checked in the harness: click a red pin to see its title, accuracy and basis.
+
+## Collectible layers
+
+`content/collectibles.json` (schema `schema/collectibles.schema.json`) holds 892 collectible locations in 12 layers, transcribed on 2026-11-24 from the 12 Game Checklists maps reposted by @Sksj002, under the owner's exception (decision C1). Every item credits Game Checklists and links the post its map came from.
+
+| Layer | On the map | Marked on their map | Their total | Numbers hard to read | Unreadable |
+|---|---|---|---|---|---|
+| Collectible card sets | 102 | 102 | 480 | 0 | 0 |
+| Cocaine flamingos | 8 | 8 | 22 | 0 | 0 |
+| Drone time trials | 42 | 42 | 42 | 0 | 0 |
+| Fish and fishing spots | 35 | 35 | 41 | 0 | 0 |
+| Kitty litter labs | 12 | 12 | 13 | 0 | 0 |
+| Magazines, books and comics | 25 | 25 | 36 | 0 | 0 |
+| Meditation spots | 10 | 10 | 10 | 0 | 0 |
+| Meteorites | 11 | 11 | 11 | 0 | 0 |
+| Payday loan jobs | 7 | 7 | 7 | 0 | 0 |
+| Shops and stores | 234 | 234 | 261 | 91 | 5 |
+| Stunts | 397 | 397 | 397 | 20 | 0 |
+| Tattoo studios | 9 | 9 | 11 | 0 | 0 |
+
+How they were made (scripts and the number readings are in `scripts/one-off/collectibles/`, the images are never committed):
+
+1. **Images.** The 12 maps came from the post's media at the largest size X serves (1,080 px wide, about 1,490 tall). No higher resolution or original post was found.
+2. **Registration, code only.** `register.py` matches SIFT features between each map and a 2,310 px wide sRGB copy of the official image (made with `sharp`, never viewed) and fits a RANSAC similarity transform. Every map came out at a scale of 4.979 official px per source px with no rotation; reprojection error 1.5 to 2.5 px, 3,400 to 6,300 inliers per map. `gridcheck.py` carries our measured grid lines into each map and finds their printed grid within about 2 px on average.
+3. **Pins, code plus reading.** `detect.py` finds the purple pin discs by colour and shape (centre of the disc's convex hull; pieces cut apart by digits are merged; discs that touch without a gap are split). The counts match their stated "marked" totals on all 12 maps. Numbers were read by eye from enlarged crops; `check.py` lists duplicates and gaps against the totals, and the closer crops that settled them are recorded in `compile.py`.
+4. **Fans.** Their renderer never overlaps pins: close locations are fanned out around a small hub dot with legs. `hubs.py` finds hubs (dropping purple spots that recur at the same official place on other maps, which are part of the base map) and traces legs; fanned pins are placed at the hub. Three fans were settled by hand (noted in `compile.py`).
+5. **Export.** `export.py` writes the file with each item's note: a hard to read number, a fanned pin and how far it moved, or a touching pin that may be nudged.
+
+Accuracy: about 5 to 10 px from the transform and the disc centre, plus up to one pin width (about 60 to 135 px, per layer in `pin_radius_px`) where their map nudged a pin, plus the hub spacing inside the big fans in Vice City and Vice Beach. Treat these as "this is the spot their map shows", not a measured position. The validator checks: every layer is a `map-layer` category, counts match the items and `categories.json`, numbers are unique per layer and within the total, pins lie inside the image, and every item has a credit.
+
+To rerun: put the 12 images as `m01.jpg` to `m12.jpg` in an empty folder outside the repo, make a Python venv with `opencv-python-headless` and `numpy`, and run the scripts in the order above from a work folder (`python -I register.py <images> <official copies> reg.json`, then `detect.py`, `detect_v1.py` (only to map the first readings), `hubs.py`, `gridcheck.py`, `compile.py`, `export.py`).
 
 ## If Rockstar updates the map
 
@@ -117,6 +148,8 @@ Pins can be checked in the harness: click a red pin to see its title, accuracy a
 | File | Role |
 |---|---|
 | `content/map.json` | Coordinate system: image, source, tiles, grid, labels. Schema `schema/map.schema.json`. |
+| `content/collectibles.json` | Collectible layers transcribed from Game Checklists (decision C1). Schema `schema/collectibles.schema.json`. Served to the map as `/collectibles.json` (`src/pages/collectibles.json.ts`). |
+| `scripts/one-off/collectibles/` | How the collectible layers were transcribed: registration, pin detection, fans, readings, export. |
 | `scripts/map/fetch-map.mjs` | Download, verify, extract. |
 | `scripts/map/build-tiles.mjs` | Tiles, meta.json, preview. |
 | `scripts/map/measure-grid.mjs` | Re-measures the printed grid. |
