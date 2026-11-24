@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Icon } from './ui';
 import type { IconName } from '../ui/icons';
-import { verificationLabels, type Filters, type MapCategory, type MapFind, type MapRegion, passes } from './types';
+import { verificationLabels, type Filters, type MapCategory, type MapFind, type MapLayer, type MapRegion, passes } from './types';
 import { exportCode, parseCode } from './found';
 
 function Popover({ id, label, open, onClose, anchor, className, children }: { id: string; label: string; open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; className?: string; children: ReactNode }) {
@@ -85,7 +85,18 @@ export function FilterMenu({ open, onClose, anchor, finds, filters, setFilters, 
   );
 }
 
-export function BasemapMenu({ open, onClose, anchor, basemap, setBasemap, grid, setGrid }: { open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; basemap: 'official' | 'muted'; setBasemap: (b: 'official' | 'muted') => void; grid: boolean; setGrid: (g: boolean) => void }) {
+/** Collectible layer switches: one row per layer, off by default. Used in the basemap menu and the desktop Legend. */
+export function LayerRows({ layers, on, setOn }: { layers: MapLayer[]; on: string[]; setOn: (ids: string[]) => void }) {
+  return (
+    <>
+      {layers.map((l) => (
+        <Row key={l.id} type="checkbox" name={`layer-${l.id}`} checked={on.includes(l.id)} onChange={() => setOn(on.includes(l.id) ? on.filter((x) => x !== l.id) : [...on, l.id])} label={l.label} count={l.count} />
+      ))}
+    </>
+  );
+}
+
+export function BasemapMenu({ open, onClose, anchor, basemap, setBasemap, grid, setGrid, layers, layersOn, setLayersOn }: { open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; basemap: 'official' | 'muted'; setBasemap: (b: 'official' | 'muted') => void; grid: boolean; setGrid: (g: boolean) => void; layers: MapLayer[]; layersOn: string[]; setLayersOn: (ids: string[]) => void }) {
   const options: { id: 'official' | 'muted'; label: string }[] = [
     { id: 'official', label: 'Official' },
     { id: 'muted', label: 'Muted' },
@@ -105,6 +116,15 @@ export function BasemapMenu({ open, onClose, anchor, basemap, setBasemap, grid, 
       <div className="popover__foot">
         <Row type="checkbox" name="grid" checked={grid} onChange={() => setGrid(!grid)} icon="grid" label="Show the grid" />
       </div>
+      {layers.length > 0 && (
+        <div className="popover__scroll popover__scroll--layers">
+          <fieldset className="mgroup">
+            <legend className="mgroup__title">Collectible layers</legend>
+            <LayerRows layers={layers} on={layersOn} setOn={setLayersOn} />
+          </fieldset>
+          <p className="popover__note">Locations from Game Checklists, with their numbers.</p>
+        </div>
+      )}
     </Popover>
   );
 }

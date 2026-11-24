@@ -44,6 +44,7 @@ To move a feature: run `pnpm map:harness`, click the spot, copy x and y into `po
 - **Water depth.** Water is found by colour at render time: a saturated cyan to blue hue (the thresholds were checked against the colour count in M3D4; the rule itself is generic). It gets a deeper tint away from the shore, read from a blurred mipmap of the same tile, plus a sheen that changes with the view angle. Nothing animates, so frames are drawn only when something changes.
 - **Distance haze.** Far ground fades toward the page colour, which reads as depth when tilted.
 - **Pins.** Each find with a pin is a marker (a disc with its type icon on a short stem) whose stem foot is the exact pixel, at the terrain height there. They stay visible over hills. Tap targets are 44 px around the disc. Rest is pink, hover gets a ring, selected turns white with a pink ring, as in 2D. Nearby finds are not grouped in 3D.
+- **Collectible layers.** When a layer is turned on (Legend or Basemap menu), its items show in 3D as the same small disc as the 2D `.cpin`, at the same pixels, all in one draw call; items that share a spot sit on a small ring, as in 2D. Tapping one opens the same card. Find pins win when both are under the pointer. Checklist numbers show in 2D only.
 - **Theme and basemap.** Colours come from the tokens (`--bg`, `--map-land`, `--accent`, `--on-accent`, `--inverse-*`) and follow the header's theme toggle. "Muted" desaturates in the shader.
 
 ## Controls
@@ -89,5 +90,5 @@ An M4 is faster than a mid laptop. The CPU side has more than 10x headroom insid
 
 - Relief positions and heights are guesses until a person checks them against the printed names.
 - The water test is a colour rule. Any land printed in a strong cyan would get the water sheen; the deep tint can show a faint step at tile edges because each tile's blurred mipmap only sees that tile.
-- The printed grid overlay and pin groups are 2D only.
+- The printed grid overlay, pin groups and collectible numbers are 2D only.
 - The 3D view needs WebGL 2; without it the view says so and the 2D map and list keep working.

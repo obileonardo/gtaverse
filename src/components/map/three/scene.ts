@@ -128,8 +128,11 @@ export type SceneOptions = {
   reduced: boolean;
   start: View2D | null;
   onPick: (slug: string | null) => void;
+  onPickCollectible: (id: string) => void;
   onChange: () => void;
 };
+
+export type Collectible3D = { id: string; x: number; y: number };
 
 export class MapScene {
   readonly renderer: THREE.WebGLRenderer;
@@ -143,6 +146,11 @@ export class MapScene {
   private roots: Node[] = [];
   private terrain = new THREE.Group();
   private pins = new THREE.Group();
+  // Collectible layers (content/collectibles.json): one Points draw for all items, plus one for the selected item.
+  private cItems: (Collectible3D & { wx: number; wz: number })[] = [];
+  private cPoints: THREE.Points | null = null;
+  private cSelected: THREE.Points | null = null;
+  private cSelectedId: string | null = null;
   private pinData = new Map<string, { pin: Pin3D; sprite: THREE.Sprite }>();
   private pinTex = new Map<string, THREE.Texture>();
   private iconImages = new Map<string, HTMLImageElement>();
@@ -594,6 +602,94 @@ export class MapScene {
 
   setSelected(slug: string | null) { this.setState(slug, this.hovered); }
 
+  // ---------------------------------------------------------------- collectibles
+
+  /** A small disc texture, drawn like the 2D `.cpin`: surface fill, text-coloured ring (selected: inverse fill, pink ring). */
+  private discTexture(selected: boolean) {
+    const css = (n: string, f: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d')!;
+    g.beginPath();
+    g.arc(32, 32, 26, 0, Math.PI * 2);
+    g.fillStyle = selected ? this.theme.inverseFill : css('--surface-1', '#1a1a2e');
+    g.fill();
+    g.lineWidth = 10;
+    g.strokeStyle = selected ? this.theme.accent : css('--text-1', '#f2f2f2');
+    g.stroke();
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  private pointsOf(items: { wx: number; wz: number; x: number; y: number }[], sizeCss: number, selected: boolean) {
+    const pos = new Float32Array(items.length * 3);
+    items.forEach((c, i) => pos.set([c.wx, heightAt(c.x, c.y) + 1, c.wz], i * 3));
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ size: sizeCss * this.renderer.getPixelRatio(), sizeAttenuation: false, map: this.discTexture(selected), transparent: true, depthTest: false, depthWrite: false, alphaTest: 0.05 });
+    const pts = new THREE.Points(geo, mat);
+    pts.renderOrder = selected ? 2 : 0; // under the find pins, as in 2D
+    pts.frustumCulled = false;
+    return pts;
+  }
+
+  private disposePoints(p: THREE.Points | null) {
+    if (!p) return;
+    this.scene.remove(p);
+    p.geometry.dispose();
+    const m = p.material as THREE.PointsMaterial;
+    m.map?.dispose();
+    m.dispose();
+  }
+
+  /** The items of the layers that are on. Items sharing one spot sit on a small ring so each can be picked, as in 2D. */
+  setCollectibles(list: Collectible3D[], selected: string | null) {
+    const spots = new Map<string, Collectible3D[]>();
+    for (const c of list) { const k = `${c.x},${c.y}`; spots.set(k, [...(spots.get(k) ?? []), c]); }
+    this.cItems = list.map((c) => {
+      const same = spots.get(`${c.x},${c.y}`)!;
+      if (same.length < 2) return { ...c, wx: c.x, wz: c.y };
+      const a = (2 * Math.PI * same.indexOf(c)) / same.length, r = 8 + same.length * 3;
+      return { ...c, wx: c.x + Math.cos(a) * r, wz: c.y + Math.sin(a) * r };
+    });
+    this.cSelectedId = selected;
+    this.disposePoints(this.cPoints);
+    this.disposePoints(this.cSelected);
+    this.cPoints = this.cSelected = null;
+    const rest = this.cItems.filter((c) => c.id !== selected);
+    if (rest.length) { this.cPoints = this.pointsOf(rest, 12, false); this.scene.add(this.cPoints); }
+    const sel = this.cItems.find((c) => c.id === selected);
+    if (sel) { this.cSelected = this.pointsOf([sel], 16, true); this.scene.add(this.cSelected); }
+    this.invalidate();
+  }
+
+  /** Where a collectible is on screen, in CSS px (its ring position when it shares a spot), or null. */
+  collectiblePoint(x: number, y: number) {
+    const at = this.cItems.filter((i) => i.x === x && i.y === y);
+    const c = at.find((i) => i.id === this.cSelectedId) ?? at[0];
+    const v = new THREE.Vector3(c?.wx ?? x, heightAt(x, y), c?.wz ?? y).project(this.camera);
+    if (v.z > 1) return null;
+    const el = this.opts.canvas;
+    return { x: ((v.x + 1) / 2) * el.clientWidth, y: ((1 - v.y) / 2) * el.clientHeight };
+  }
+
+  /** The collectible under the pointer: nearest centre within 18 px (a 36 px target around a 12 px disc). */
+  private pickCollectible(e: PointerEvent) {
+    if (!this.cItems.length) return null;
+    const r = this.opts.canvas.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const v = new THREE.Vector3();
+    let best: { id: string; d: number } | null = null;
+    for (const c of this.cItems) {
+      v.set(c.wx, heightAt(c.x, c.y), c.wz).project(this.camera);
+      if (v.z > 1) continue;
+      const d = Math.hypot(((v.x + 1) / 2) * r.width - px, ((1 - v.y) / 2) * r.height - py);
+      if (d <= 18 && (!best || d < best.d)) best = { id: c.id, d };
+    }
+    return best?.id ?? null;
+  }
+
   setTheme(theme: Theme3D) {
     this.theme = theme;
     this.uniforms.ground.set(theme.ground);
@@ -604,6 +700,7 @@ export class MapScene {
     for (const t of this.pinTex.values()) t.dispose();
     this.pinTex.clear();
     for (const [slug, d] of this.pinData) this.stylePin(slug, d);
+    if (this.cItems.length) this.setCollectibles(this.cItems.map(({ id, x, y }) => ({ id, x, y })), this.cSelectedId);
     this.invalidate();
   }
 
@@ -636,12 +733,14 @@ export class MapScene {
     this.down = null;
     if (!d || e.button !== 0 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return; // a drag, not a tap
     const slug = this.pick(e);
-    if (slug) this.opts.onPick(slug);
+    if (slug) { this.opts.onPick(slug); return; }
+    const cid = this.pickCollectible(e); // find pins win over collectibles, as their layer sits above in 2D
+    if (cid) this.opts.onPickCollectible(cid);
   };
   private onHover = (e: PointerEvent) => {
     if (e.pointerType !== 'mouse' || e.buttons) return;
     const slug = this.pick(e);
-    this.opts.canvas.style.cursor = slug ? 'pointer' : '';
+    this.opts.canvas.style.cursor = slug || this.pickCollectible(e) ? 'pointer' : '';
     if (slug !== this.hoverPick) { this.hoverPick = slug; this.setState(this.selected, slug ?? this.listHover); }
   };
   private hoverPick: string | null = null;
@@ -745,6 +844,8 @@ export class MapScene {
     }
     for (const t of this.pinTex.values()) t.dispose();
     for (const d of this.pinData.values()) (d.sprite.material as THREE.SpriteMaterial).dispose();
+    this.disposePoints(this.cPoints);
+    this.disposePoints(this.cSelected);
     this.renderer.dispose();
   }
 }

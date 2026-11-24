@@ -27,6 +27,10 @@ export type MapFind = {
 };
 
 export type MapCategory = { id: string; label: string; icon: IconName; count: number };
+/** A collectible transcribed from another map (content/collectibles.json). Off the map until its layer is turned on. */
+export type MapCollectible = { id: string; layer: string; number: number | null; x: number; y: number; label: string; note: string | null; url: string };
+/** A collectible layer: `count` items here, `marked` of `total` on the source map. */
+export type MapLayer = { id: string; label: string; count: number; marked: number; total: number; source: string };
 export type MapRegion = { id: string; name: string };
 export type MapMeta = { width: number; height: number; maxZoom: number; tileSize?: number; tileUrl: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
 

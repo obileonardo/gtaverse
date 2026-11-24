@@ -5,12 +5,13 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { icons } from '../ui/icons';
-import type { MapFind, MapMeta } from './types';
+import type { MapCollectible, MapFind, MapMeta } from './types';
 
 export type MapApi = {
   flyTo: (f: MapFind, opts?: { offsetX?: number; offsetY?: number; instant?: boolean }) => void;
   zoomBy: (d: number) => void;
   pointOf: (f: MapFind) => { x: number; y: number } | null;
+  pointAt: (x: number, y: number) => { x: number; y: number } | null;
   pinElement: (slug: string) => HTMLElement | null;
   // The view as image pixels at the centre and a Leaflet zoom, so the 3D view (three/Map3D.tsx) opens and closes
   // on the same spot at the same scale.
@@ -28,6 +29,9 @@ type Props = {
   grid: boolean;
   fitPadding: { top: number; right: number; bottom: number; left: number };
   onPin: (slug: string, el: HTMLElement) => void;
+  collectibles: MapCollectible[]; // items of the layers that are turned on
+  selectedCollectible: string | null;
+  onCollectible: (id: string, el: HTMLElement) => void;
   onMove: () => void;
   onReady: () => void;
 };
@@ -88,6 +92,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   const map = useRef<Leaflet.Map | null>(null);
   const pins = useRef<Leaflet.LayerGroup | null>(null);
   const grid = useRef<Leaflet.LayerGroup | null>(null);
+  const cpins = useRef<Leaflet.LayerGroup | null>(null);
   const live = useRef(props);
   live.current = props;
 
@@ -110,6 +115,12 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       const m = map.current;
       if (!m || !f.pin) return null;
       const p = m.latLngToContainerPoint(toLatLng(f.pin.x, f.pin.y));
+      return { x: p.x, y: p.y };
+    },
+    pointAt: (x, y) => {
+      const m = map.current;
+      if (!m) return null;
+      const p = m.latLngToContainerPoint(toLatLng(x, y));
       return { x: p.x, y: p.y };
     },
     pinElement: (slug) => box.current?.querySelector<HTMLElement>(`.pin[data-slug="${CSS.escape(slug)}"]`) ?? null,
@@ -163,11 +174,14 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
       m.setMinZoom(Math.max(0, m.getZoom() - 0.5));
       m.setMaxBounds(image.pad(0.15));
       m.getContainer().setAttribute('aria-label', 'Map of Leonida. Use the arrow keys to move and plus or minus to zoom.');
+      cpins.current = lib.layerGroup().addTo(m); // added first, so find pins sit above
       pins.current = lib.layerGroup().addTo(m);
       grid.current = lib.layerGroup();
-      m.on('zoomend', () => draw());
+      m.on('zoomend', () => { draw(); numbers(); });
       m.on('move zoom', () => live.current.onMove());
       draw();
+      drawCollectibles();
+      numbers();
       drawGrid();
       live.current.onReady();
     })();
@@ -215,6 +229,30 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
     }
   };
 
+  // Collectible pins: small quiet discs, one per item, never grouped; numbers show once zoomed in (numbers()).
+  const drawCollectibles = () => {
+    const lib = L.current, m = map.current, layer = cpins.current;
+    if (!lib || !m || !layer) return;
+    const { collectibles, selectedCollectible } = live.current;
+    layer.clearLayers();
+    // Items that share one spot (the source fanned them out) are drawn on a small ring around it, so each can be tapped.
+    const spots = new Map<string, MapCollectible[]>();
+    for (const c of collectibles) { const k = `${c.x},${c.y}`; spots.set(k, [...(spots.get(k) ?? []), c]); }
+    for (const c of collectibles) {
+      const sel = c.id === selectedCollectible;
+      const same = spots.get(`${c.x},${c.y}`)!;
+      const ring = same.length > 1 ? ` style="--a:${((360 * same.indexOf(c)) / same.length).toFixed(1)}deg;--ring:${same.length}"` : '';
+      const html = `<button type="button" class="cpin${sel ? ' is-selected' : ''}${ring ? ' cpin--ring' : ''}"${ring} aria-label="${esc(c.label)}" data-cid="${esc(c.id)}"><span class="cpin__n tabular" aria-hidden="true">${c.number ?? '?'}</span></button>`;
+      const mk = lib.marker(toLatLng(c.x, c.y), { icon: lib.divIcon({ className: 'map-marker', html, iconSize: [0, 0] }), keyboard: false, zIndexOffset: sel ? 900 : -100 });
+      mk.on('click', () => { const el = mk.getElement()?.querySelector<HTMLElement>('.cpin'); if (el) live.current.onCollectible(c.id, el); });
+      layer.addLayer(mk);
+    }
+  };
+  const numbers = () => {
+    const m = map.current;
+    if (m && box.current) box.current.dataset.cnum = String(m.getZoom() >= live.current.meta.maxZoom - 1.5);
+  };
+
   // The printed grid (rows A to M, columns 1 to 9), from content/map.json.
   const drawGrid = () => {
     const lib = L.current, m = map.current, layer = grid.current;
@@ -231,6 +269,7 @@ export const MapCanvas = forwardRef<MapApi, Props>(function MapCanvas(props, ref
   };
 
   useEffect(() => { draw(); }, [props.finds, props.selected, props.hovered, props.phone]);
+  useEffect(() => { drawCollectibles(); }, [props.collectibles, props.selectedCollectible]);
   useEffect(() => {
     const m = map.current, g = grid.current;
     if (!m || !g) return;

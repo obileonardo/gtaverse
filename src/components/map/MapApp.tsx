@@ -9,15 +9,17 @@ import { readUrl, writeUrl, type MapView } from './url';
 import { searchRank } from './search';
 import { Sheet, type SnapPoint } from './Sheet';
 import { DrawerContent, SheetContent } from './FindDetail';
-import { BasemapMenu, FilterMenu } from './Menus';
+import { BasemapMenu, FilterMenu, LayerRows } from './Menus';
 import { Button, Chip, Icon, Tabs, Verification } from './ui';
-import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, type Filters, type MapCategory, type MapFind, type MapMeta, type MapRegion } from './types';
+import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
 import './map.css';
 
 // The 3D view (docs/MAP-3D.md) and Three.js load only when the visitor opens 3D: a separate chunk.
 const Map3D = lazy(() => import('./three/Map3D'));
 
-type Props = { finds: MapFind[]; categories: MapCategory[]; regions: MapRegion[]; meta: MapMeta };
+type Props = { finds: MapFind[]; categories: MapCategory[]; regions: MapRegion[]; meta: MapMeta; layers: MapLayer[]; collectiblesUrl: string };
+type View = { basemap: 'official' | 'muted'; grid: boolean; layers: string[] };
+const defaultView: View = { basemap: 'official', grid: false, layers: [] };
 type Toast = { id: number; icon: 'hand' | 'link' | 'check'; text: string; persist?: boolean } | null;
 
 const PHONE = '(max-width: 767px)';
@@ -68,7 +70,23 @@ function Row({ find, selected, onOpen, onHover }: { find: MapFind; selected: boo
   );
 }
 
-export default function MapApp({ finds, categories, regions, meta }: Props) {
+/** A collectible's card: our label, its number against the source's total, any reading note, and the credit. */
+function CollectibleCard({ item, layer, onClose, close }: { item: MapCollectible; layer: MapLayer | undefined; onClose: () => void; close: 'glass' | 'quiet' }) {
+  return (
+    <div className="ccard" role="dialog" aria-labelledby={`cc-${item.id}`}>
+      <span className="ccard__kicker">{layer?.label ?? item.layer}</span>
+      <h2 className="ccard__title" id={`cc-${item.id}`}>{item.label}</h2>
+      <span className="ccard__line tabular">{item.number !== null && layer ? `Number ${item.number} of ${layer.total} in their checklist` : 'Checklist number not readable'}</span>
+      {item.note && <span className="ccard__note">{item.note}</span>}
+      <a className="ccard__credit" href={item.url} target="_blank" rel="noopener noreferrer">
+        Location: Game Checklists<Icon name="arrow-up-right" size={16} />
+      </a>
+      <Button variant={close} size="s" icon="close" iconOnly label="Close" className="ccard__close" onClick={onClose} />
+    </div>
+  );
+}
+
+export default function MapApp({ finds, categories, regions, meta, layers, collectiblesUrl }: Props) {
   const [phone, setPhone] = useState(false);
   const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [search, setSearch] = useState('');
@@ -77,7 +95,10 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [tab, setTab] = useState('list');
   const [menu, setMenu] = useState<'filters' | 'basemap' | null>(null);
-  const [view, setView] = useState<{ basemap: 'official' | 'muted'; grid: boolean }>({ basemap: 'official', grid: false });
+  const [view, setView] = useState<View>(defaultView);
+  const [picked, setPicked] = useState<string | null>(null); // the open collectible
+  const [collectibles, setCollectibles] = useState<MapCollectible[]>([]); // fetched once, when a layer is first turned on
+  const collectiblesState = useRef<'idle' | 'loading' | 'ready'>('idle');
   const [listSnap, setListSnap] = useState('closed');
   const [findSnap, setFindSnap] = useState('closed');
   const [toast, setToast] = useState<Toast>(null);
@@ -110,7 +131,9 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
     const url = readUrl({ categories: new Set(categories.map((c) => c.id)), regions: new Set(regions.map((r) => r.id)), finds: new Set(finds.map((f) => f.slug)) });
     if (url.hasFilters) { setFiltersState({ ...defaultFilters, categories: url.categories, region: url.region }); setSearch(url.q); }
     else setFiltersState(loadFilters());
-    setView(readJson(VIEW_STORE, { basemap: 'official' as const, grid: false }));
+    const v = readJson(VIEW_STORE, defaultView);
+    const known = new Set(layers.map((l) => l.id));
+    setView({ ...v, layers: Array.isArray(v.layers) ? v.layers.filter((id) => known.has(id)) : [] });
     if (url.find) { setSelected(url.find); setFindSnap('full'); }
     if (url.view === '3d') setMode('3d');
     const kd = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') keyboard.current = true; };
@@ -121,7 +144,23 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
   }, []);
 
   const setFilters = (f: Filters) => { setFiltersState(f); saveFilters(f); };
-  const setViewSaved = (v: typeof view) => { setView(v); writeJson(VIEW_STORE, v); };
+  const setViewSaved = (v: View) => { setView(v); writeJson(VIEW_STORE, v); };
+  const setLayersOn = (ids: string[]) => {
+    setViewSaved({ ...view, layers: ids });
+    if (pickedItem && !ids.includes(pickedItem.layer)) setPicked(null);
+  };
+  useEffect(() => {
+    if (!view.layers.length || collectiblesState.current !== 'idle') return;
+    collectiblesState.current = 'loading';
+    fetch(collectiblesUrl)
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<MapCollectible[]>; })
+      .then((items) => { collectiblesState.current = 'ready'; setCollectibles(items); })
+      .catch(() => { collectiblesState.current = 'idle'; showToast({ id: Date.now(), icon: 'hand', text: 'Collectibles did not load. Turn the layer off and on to try again.' }, 5000); });
+  }, [view.layers.length]);
+  const shownCollectibles = useMemo(() => collectibles.filter((c) => view.layers.includes(c.layer)), [collectibles, view.layers]);
+  const pickedItem = picked ? collectibles.find((c) => c.id === picked) ?? null : null;
+  const pickedLayer = pickedItem ? layers.find((l) => l.id === pickedItem.layer) : undefined;
+  const closePicked = () => { setPicked(null); const back = opener.current; if (back?.isConnected) back.focus({ preventScroll: true }); };
   const resetFilters = () => { setFilters(defaultFilters); setSearch(''); };
 
   const visible = useMemo(() => {
@@ -190,6 +229,7 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
     opener.current = from ?? (document.activeElement as HTMLElement | null);
     setInstant(keyboard.current);
     setPreview(null);
+    setPicked(null);
     setSelected(f.slug);
     setFindSnap('full');
     fly(f, true);
@@ -208,7 +248,8 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || menu) return;
       if (document.querySelector('[data-menu="open"]')) return; // the site menu has it
-      if (selected) { e.preventDefault(); closeFind(); }
+      if (picked) { e.preventDefault(); closePicked(); }
+      else if (selected) { e.preventDefault(); closeFind(); }
       else if (preview) { e.preventDefault(); const back = opener.current; setPreview(null); back?.focus({ preventScroll: true }); }
     };
     addEventListener('keydown', onKey);
@@ -220,9 +261,17 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
     if (!f) return;
     opener.current = el;
     if (selected === slug) return;
+    setPicked(null);
     setSelected(null);
     setFindSnap('closed');
     setPreview(slug);
+  };
+  // A collectible pin: its card replaces any find preview; an open find stays open on desktop.
+  const onCollectible = (id: string, el: HTMLElement) => {
+    opener.current = el;
+    setPreview(null);
+    if (phone && selected) closeFind();
+    setPicked(id);
   };
 
   const copyLink = async (f: MapFind) => {
@@ -261,18 +310,23 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
 
   // Desktop popup position at the pin (Airbnb), recomputed as the map moves.
   const popupAt = !phone && previewFind ? mapApi()?.pointOf(previewFind) ?? null : null;
-  useLayoutEffect(() => { placePopup(popupAt); });
-  // Keep the popup on its pin while the map moves: written straight to the element, no re-render per frame.
+  const cpopupAt = !phone && pickedItem ? mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null : null;
+  useLayoutEffect(() => { placePopup(popupRef.current, popupAt, 320); placePopup(cpopupRef.current, cpopupAt, 220); });
+  // Keep a popup on its pin while the map moves (2D or 3D): written straight to the element, no re-render per frame.
   const popupRef = useRef<HTMLDivElement>(null);
-  const placePopup = (pt: { x: number; y: number } | null) => {
-    const el = popupRef.current;
+  const cpopupRef = useRef<HTMLDivElement>(null);
+  const placePopup = (el: HTMLDivElement | null, pt: { x: number; y: number } | null, room: number) => {
     if (!el || !pt) return;
     const w = document.querySelector('.map-stage')?.clientWidth ?? 0;
     const x = Math.min(Math.max(pt.x, 176), Math.max(176, w - 176));
     el.style.translate = `${x}px ${pt.y}px`;
-    el.dataset.below = String(pt.y < 320);
+    el.dataset.below = String(pt.y < room);
   };
-  const onMove = () => { if (previewFind && !phone) placePopup(mapApi()?.pointOf(previewFind) ?? null); };
+  const onMove = () => {
+    if (phone) return;
+    if (previewFind) placePopup(popupRef.current, mapApi()?.pointOf(previewFind) ?? null, 320);
+    if (pickedItem) placePopup(cpopupRef.current, mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null, 220);
+  };
 
   const filterCount = activeFilterCount({ ...filters, categories: [] });
   const fitPadding = phone ? { top: 130, right: 16, bottom: 150, left: 16 } : { top: 72, right: 16, bottom: 16, left: 16 };
@@ -316,6 +370,19 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
       <ul className="legend__rows" role="list">
         {categories.map((c) => <li key={c.id}><span className="legend__key"><Icon name={c.icon} size={20} /></span>{c.label}<span className="legend__count tabular">{c.count}</span></li>)}
       </ul>
+      {layers.length > 0 && (
+        <>
+          <h3 className="legend__h">Collectible layers</h3>
+          <p className="legend__about">Locations transcribed from Game Checklists' maps, with their checklist numbers. Off until you turn a layer on. Numbers are theirs; some are hard to read on their image and say so.</p>
+          <fieldset className="mgroup legend__layers">
+            <legend className="sr-only">Collectible layers</legend>
+            <LayerRows layers={layers} on={view.layers} setOn={setLayersOn} />
+          </fieldset>
+          <ul className="legend__rows" role="list">
+            <li><span className="legend__key"><span className="cpin cpin--key" aria-hidden="true" /></span>A collectible (its number shows when you zoom in)</li>
+          </ul>
+        </>
+      )}
     </div>
   );
 
@@ -351,10 +418,10 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
 
       {/* The map */}
       <div className="map-stage">
-        <MapCanvas ref={api} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} phone={phone} basemap={view.basemap} grid={view.grid} fitPadding={fitPadding} onPin={onPin} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
+        <MapCanvas ref={api} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} phone={phone} basemap={view.basemap} grid={view.grid} fitPadding={fitPadding} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
         {mode === '3d' && (
           <Suspense fallback={<div className="map3d map3d--loading" role="status"><p className="map3d__fail">Loading the 3D map</p></div>}>
-            <Map3D ref={api3} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} basemap={view.basemap} start={start3d} instant={open3dInstant} onPin={onPin} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
+            <Map3D ref={api3} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} basemap={view.basemap} start={start3d} instant={open3dInstant} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
           </Suspense>
         )}
 
@@ -366,7 +433,7 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
           <Button variant="glass" size="m" className="map-ctrl map-ctrl--3d" aria-pressed={mode === '3d'} aria-label="3D view" title="3D view" onClick={() => switchMode(mode === '3d' ? '2d' : '3d')}>3D</Button>
           <Button variant="glass" size="m" icon="layers" iconOnly label="Basemap" aria-expanded={menu === 'basemap'} aria-controls="map-basemap" className="map-ctrl" onClick={() => setMenu(menu === 'basemap' ? null : 'basemap')} data-ref="basemap" />
           <FilterMenu open={menu === 'filters'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="filters"]')?.focus(); }} anchor={controls} finds={finds} filters={filters} setFilters={setFilters} regions={regions} search={search} onReset={resetFilters} categories={categories} found={found} onImport={mergeFound} />
-          <BasemapMenu open={menu === 'basemap'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="basemap"]')?.focus(); }} anchor={controls} basemap={view.basemap} setBasemap={(b) => setViewSaved({ ...view, basemap: b })} grid={view.grid} setGrid={(g) => setViewSaved({ ...view, grid: g })} />
+          <BasemapMenu open={menu === 'basemap'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="basemap"]')?.focus(); }} anchor={controls} basemap={view.basemap} setBasemap={(b) => setViewSaved({ ...view, basemap: b })} grid={view.grid} setGrid={(g) => setViewSaved({ ...view, grid: g })} layers={layers} layersOn={view.layers} setLayersOn={setLayersOn} />
         </div>
 
         <div className="map-zoom" role="group" aria-label="Zoom">
@@ -374,7 +441,17 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
           <button type="button" className="map-zoom__btn" aria-label="Zoom out" onClick={() => mapApi()?.zoomBy(-0.5)}><Icon name="minus" size={18} /></button>
         </div>
 
-        <p className="map-credit">{meta.attribution}</p>
+        <p className={`map-credit${view.layers.length ? ' map-credit--two' : ''}`}>
+          {meta.attribution}
+          {view.layers.length > 0 && <span className="map-credit__extra">Collectible locations: Game Checklists</span>}
+        </p>
+
+        {/* Desktop: the open collectible's card at its pin */}
+        {pickedItem && cpopupAt && (
+          <div className="popup popup--c" ref={cpopupRef}>
+            <CollectibleCard item={pickedItem} layer={pickedLayer} onClose={closePicked} close="glass" />
+          </div>
+        )}
 
         {/* Desktop: Airbnb popup anchored to the pin */}
         {previewFind && popupAt && (
@@ -408,6 +485,13 @@ export default function MapApp({ finds, categories, regions, meta }: Props) {
           </div>
         )}
       </div>
+
+      {/* Phone: the open collectible's card, in the Strava card's place */}
+      {phone && pickedItem && !selected && (
+        <div className="pcard pcard--c">
+          <CollectibleCard item={pickedItem} layer={pickedLayer} onClose={closePicked} close="quiet" />
+        </div>
+      )}
 
       {/* Phone: Strava selected card, Rodeo chips, toggle and search */}
       {phone && previewFind && !selected && (

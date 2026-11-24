@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { MapScene, type Theme3D, type View2D } from './scene';
 import { reliefLabel } from './relief';
 import type { MapApi } from '../MapCanvas';
-import type { MapFind, MapMeta } from '../types';
+import type { MapCollectible, MapFind, MapMeta } from '../types';
 
 export type Map3DApi = MapApi & { close: (done: () => void) => void };
 
@@ -18,6 +18,9 @@ type Props = {
   start: View2D | null;
   instant: boolean; // opened from the keyboard: skip the tilt-in
   onPin: (slug: string, el: HTMLElement) => void;
+  collectibles: MapCollectible[]; // items of the collectible layers that are on (Legend and Basemap controls)
+  selectedCollectible: string | null;
+  onCollectible: (id: string, el: HTMLElement) => void;
   onMove: () => void;
   onReady: () => void;
 };
@@ -49,6 +52,7 @@ const Map3D = forwardRef<Map3DApi, Props>(function Map3D(props, ref) {
     flyTo: (f, opts = {}) => { if (f.pin) scene.current?.flyTo(f.pin.x, f.pin.y, opts); },
     zoomBy: (d) => scene.current?.zoomBy(d),
     pointOf: (f) => (f.pin && scene.current ? scene.current.project(f.pin.x, f.pin.y) : null),
+    pointAt: (x, y) => scene.current?.collectiblePoint(x, y) ?? null,
     pinElement: () => canvas.current,
     getView: () => scene.current?.view() ?? null,
     setView: () => { /* 3D opens from the 2D view; it does not take one later */ },
@@ -69,6 +73,7 @@ const Map3D = forwardRef<Map3DApi, Props>(function Map3D(props, ref) {
         reduced,
         start: live.current.start,
         onPick: (slug) => { if (slug && canvas.current) live.current.onPin(slug, canvas.current); },
+        onPickCollectible: (id) => { if (canvas.current) live.current.onCollectible(id, canvas.current); },
         onChange: () => {
           const el = compass.current;
           if (el && scene.current) el.style.rotate = `${scene.current.heading()}deg`; // follows the camera, no easing
@@ -93,6 +98,9 @@ const Map3D = forwardRef<Map3DApi, Props>(function Map3D(props, ref) {
     scene.current?.setPins(props.finds.filter((f) => f.pin).map((f) => ({ slug: f.slug, x: f.pin!.x, y: f.pin!.y, icon: f.icon, title: f.title })));
   }, [props.finds]);
   useEffect(() => { scene.current?.setSelected(props.selected); }, [props.selected]);
+  useEffect(() => {
+    scene.current?.setCollectibles(props.collectibles.map((c) => ({ id: c.id, x: c.x, y: c.y })), props.selectedCollectible);
+  }, [props.collectibles, props.selectedCollectible]);
   useEffect(() => { scene.current?.setListHover(props.hovered); }, [props.hovered]);
   useEffect(() => { scene.current?.setTheme(readTheme(props.basemap)); }, [props.basemap]);
 

@@ -7,7 +7,8 @@ import { finds, regionById, categories as allCategories } from '../lib/content';
 import { findStill, regionLabel, categoryIcon, categoryChipLabel, categorySingular } from '../lib/media';
 import { youtubeId } from '../lib/clip';
 import mapJson from '../../content/map.json';
-import type { MapFind, MapCategory, MapRegion, MapMeta } from '../components/map/types';
+import collectiblesJson from '../../content/collectibles.json';
+import type { MapFind, MapCategory, MapRegion, MapMeta, MapLayer } from '../components/map/types';
 
 const ancestors = (id: string): string[] => {
   const out: string[] = [];
@@ -48,6 +49,17 @@ const categories: MapCategory[] = allCategories
 
 const regions: MapRegion[] = [...new Set(data.flatMap((f) => f.regionIds))].map((id) => ({ id, name: regionById(id)?.name ?? id }));
 
+// Collectible layers (content/collectibles.json): transcribed from Game Checklists with credit, off until turned on.
+// Only the layer list ships with the page; the pins load from /collectibles.json when a layer is turned on.
+const layers: MapLayer[] = collectiblesJson.layers.map((l) => ({
+  id: l.layer,
+  label: allCategories.find((c) => c.id === l.layer)?.label ?? l.layer,
+  count: l.transcribed,
+  marked: l.marked,
+  total: l.total,
+  source: 'Game Checklists',
+}));
+
 const meta: MapMeta = {
   width: mapJson.image.width,
   height: mapJson.image.height,
@@ -61,5 +73,5 @@ const meta: MapMeta = {
 };
 ---
 <Base title="Map of Leonida" description="Every find in Leonida on the official map, with the clip, the credit and how sure we are." layout="bare">
-  <MapApp client:load finds={data} categories={categories} regions={regions} meta={meta} />
+  <MapApp client:load finds={data} categories={categories} regions={regions} meta={meta} layers={layers} collectiblesUrl="/collectibles.json" />
 </Base>
