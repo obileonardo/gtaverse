@@ -1,0 +1,63 @@
+---
+// Colour: every colour token in tokens.css, both themes side by side, drawn from the tokens themselves (the dark
+// swatch wears data-scheme="dark", the light swatch the light block's values), with the contrast on the theme's ground
+// and the pairs the interface draws, computed at build time.
+import LevelTable, { type LevelRow } from '../ui/LevelTable.astro';
+import { colourGroups, contrast, contrastPairs, lightStyle, type Colour } from './tokens';
+import { usage } from './source';
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// A gradient's value is long: the cell names it and its stops; the full value is in the tooltip and the source.
+const shown = (c: Colour, value: string) => (c.kind === 'gradient' ? `${(value.match(/^[\w-]+/)?.[0] ?? '').replace('-', ' ')}, ${(value.match(/\d+(\.\d+)?%(?=[,)])/g) ?? []).length} stops` : value);
+const ratio = (c: Colour, theme: 'dark' | 'light') => (c.kind === 'colour' && c.name !== '--bg' ? contrast(c.name, '--bg', theme) : null);
+const swatch = (c: Colour, theme: 'dark' | 'light') => {
+  const value = theme === 'dark' ? c.dark : c.light;
+  const scheme = theme === 'dark' ? 'data-scheme="dark"' : `style="${esc(lightStyle)}"`;
+  const fill = c.kind === 'filter'
+    ? `<span style="background: var(--glass-fill); backdrop-filter: var(${c.name}); -webkit-backdrop-filter: var(${c.name})"></span>`
+    : `<span style="background: var(${c.name})"></span>`;
+  const same = theme === 'light' && c.lightSame;
+  const r = ratio(c, theme);
+  const text = same ? 'Same as dark' : shown(c, value);
+  return `<span class="ds-sw" title="${esc(value)}"><span class="ds-sw__chip" ${scheme}>${fill}</span><span class="ds-sw__text"><span class="ds-sw__v${same ? ' ds-dim' : ''}">${esc(text)}</span>${r !== null ? `<span class="ds-ratio ds-dim">${r}:1 on ground</span>` : ''}</span></span>`;
+};
+const useCell = (c: Colour) => {
+  const files = usage(c.name);
+  const where = files.length ? `<span class="ds-dim">Read by ${files.length} file${files.length === 1 ? '' : 's'}</span>` : '<span class="ds-dim">Not read by any file yet</span>';
+  return `${c.note ? `${esc(c.note)}<br />` : ''}${where}`;
+};
+const tables = colourGroups.map((g) => ({
+  ...g,
+  rows: g.items.map((c): LevelRow => ({ label: `<span class="ds-tok">${c.name}</span>`, cells: [swatch(c, 'dark'), swatch(c, 'light'), useCell(c)] })),
+}));
+
+const badge = (label: string, variant: string) => `<span class="badge badge--${variant} badge--caps"><span class="badge__label">${label}</span></span>`;
+const gradeOf = (r: number | null, need: number) => {
+  if (r === null) return '<span class="ds-dim">n/a</span>';
+  if (need === 0) return `<span class="ds-ratio">${r}</span>`;
+  const pass = r >= need;
+  const label = !pass ? 'Fail' : need >= 4.5 ? (r >= 7 ? 'AAA' : 'AA') : '3:1';
+  return `<span class="ds-ratio">${r} ${badge(label, pass ? (label === 'AAA' ? 'verified' : 'meta') : 'outline')}</span>`;
+};
+const pairRows: LevelRow[] = contrastPairs.map((p) => ({
+  label: `<span class="ds-tok">${p.fg}</span> <span class="ds-dim">on</span> <span class="ds-tok">${p.bg}</span>`,
+  cells: [gradeOf(contrast(p.fg, p.bg, 'dark'), p.need), gradeOf(contrast(p.fg, p.bg, 'light'), p.need), p.need ? `${p.need}:1` : 'None', esc(p.use)],
+}));
+const fails = contrastPairs.flatMap((p) => (['dark', 'light'] as const).map((t) => ({ p, t, r: contrast(p.fg, p.bg, t) }))).filter((x) => x.p.need && x.r !== null && x.r < x.p.need);
+---
+<div class="ds-block">
+  <p class="ds-note">Dark is the default theme; light is a full theme, never the default. The dark swatch is drawn inside <code>data-scheme="dark"</code>, the light swatch inside the light block's own values, so both columns are the tokens, not pictures of them. Under each value: its WCAG 2 contrast on that theme’s <code>--bg</code>, the colour alpha composited over the ground.</p>
+</div>
+
+{tables.map((g) => (
+  <div class="ds-block" id={`colour-${g.id}`}>
+    <h3 class="ds-h3">{g.title}<sup class="ds-dim mono"> {g.items.length}</sup></h3>
+    <LevelTable head={['Token', 'Dark', 'Light', 'Use']} rows={g.rows} caption={`${g.title} colour tokens`} />
+  </div>
+))}
+
+<div class="ds-block" id="colour-contrast">
+  <h3 class="ds-h3">Contrast of the pairs we draw</h3>
+  <p class="ds-note">Text needs 4.5:1 (WCAG AA); large text, fills and graphics need 3:1. {fails.length === 0 ? 'Every pair passes in both themes.' : `${fails.length} pair${fails.length === 1 ? '' : 's'} fall below the line and are listed under the table.`} Pink is a fill only in light: pink text in light uses <code>--accent-text</code>.</p>
+  <LevelTable head={['Pair', 'Dark', 'Light', 'Needs', 'Where']} rows={pairRows} caption="Contrast of foreground and background pairs" footnote={fails.length ? `Below the line: ${fails.map((f) => `${f.p.fg} on ${f.p.bg} in ${f.t} (${f.r}:1)`).join('; ')}.` : undefined} />
+</div>

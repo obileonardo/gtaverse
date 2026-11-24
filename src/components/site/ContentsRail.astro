@@ -1,0 +1,142 @@
+---
+// "On this page": the contents rail (Obvious, Like). One element on every screen size: a sticky rail at 1024 px and
+// wider, a closed disclosure in reading order below that (decision GS13). A 2px accent marker travels beside the
+// section being read (motion study item 12): transform only, on --ease-crit; a click moves it at once while the page
+// scrolls natively. A 1px line fills down the rail with the page's own scroll (off the main thread).
+// Used by the explainers and the design system page. The page places the nav: in its own grid column, or lifted
+// beside a reading column (the explainer does that from its own stylesheet).
+//   <ContentsRail items={[{ id: 'colour', label: 'Colour' }]} />
+// items: the sections, in page order; each id is the id of the section's heading or element.
+import Icon from '../ui/Icon.astro';
+interface Item { id: string; label: string }
+interface Props { items: Item[]; title?: string; class?: string }
+const { items, title = 'On this page', class: className } = Astro.props;
+const titleId = `toc-title-${Math.random().toString(36).slice(2, 8)}`;
+---
+<nav class:list={['toc', className]} aria-labelledby={titleId} data-rail-root>
+  <details class="toc__box" data-toc>
+    <summary class="toc__summary"><span id={titleId} class="toc__title">{title}</span><Icon name="chevron-down" size={16} class="toc__chevron" /></summary>
+    <ul class="toc__list" data-rail>
+      {items.map((h) => <li><a href={`#${h.id}`} data-rail-link={h.id}>{h.label}</a></li>)}
+      <li class="toc__track" aria-hidden="true"><span class="toc__progress"></span><span class="toc__marker" data-rail-marker></span></li>
+    </ul>
+  </details>
+  <script is:inline>
+    // Desktop: the contents rail is always open, before first paint. Phone and tablet: a closed disclosure.
+    (function () { var d = document.currentScript.previousElementSibling; if (matchMedia('(min-width: 1024px)').matches) d.open = true; })();
+  </script>
+</nav>
+
+<script>
+  const wide = matchMedia('(min-width: 1024px)');
+  document.querySelectorAll<HTMLElement>('[data-rail-root]').forEach((root) => {
+    // "On this page": open as a rail on desktop, a disclosure below; follow the window across the breakpoint.
+    const toc = root.querySelector<HTMLDetailsElement>('[data-toc]');
+    wide.addEventListener('change', () => { if (toc) toc.open = wide.matches; });
+    // On the phone, choosing a section closes the disclosure so the section is what you see.
+    toc?.addEventListener('click', (e) => { if (!wide.matches && (e.target as HTMLElement).closest('a')) toc.open = false; });
+
+    // Mark the section being read.
+    const links = [...root.querySelectorAll<HTMLAnchorElement>('[data-rail-link]')];
+    const targets = links.map((a) => document.getElementById(a.dataset.railLink!)).filter((t): t is HTMLElement => !!t);
+    const marker = root.querySelector<HTMLElement>('[data-rail-marker]');
+    let markerPlaced = false;
+    let jumpUntil = 0;
+    const placeMarker = (a: HTMLAnchorElement | undefined, instant = false) => {
+      if (!marker || !a) return;
+      if (instant || !markerPlaced) { marker.classList.add('is-instant'); void marker.offsetWidth; }
+      marker.style.transform = `translateY(${a.offsetTop + 6}px) scaleY(${Math.max(1, a.offsetHeight - 12)})`;
+      marker.classList.add('is-on');
+      if (instant || !markerPlaced) requestAnimationFrame(() => marker.classList.remove('is-instant'));
+      markerPlaced = true;
+    };
+    root.querySelector('[data-rail]')?.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('[data-rail-link]');
+      if (!a) return;
+      links.forEach((l) => l.toggleAttribute('aria-current', l === a));
+      placeMarker(a, true);
+      jumpUntil = performance.now() + 1200; // the sections the page scrolls past on the way do not pull the marker
+    });
+    addEventListener('resize', () => placeMarker(links.find((a) => a.hasAttribute('aria-current')), true), { passive: true });
+    if (targets.length) {
+      const visible = new Set<string>();
+      const mark = () => {
+        const current = targets.find((t) => visible.has(t.id)) ?? null;
+        if (!current || performance.now() < jumpUntil) return;
+        links.forEach((a) => a.toggleAttribute('aria-current', a.dataset.railLink === current.id));
+        placeMarker(links.find((a) => a.dataset.railLink === current.id));
+      };
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => (en.isIntersecting ? visible.add(en.target.id) : visible.delete(en.target.id)));
+        mark();
+      }, { rootMargin: '-15% 0px -60% 0px' });
+      targets.forEach((t) => io.observe(t));
+    }
+  });
+</script>
+
+<style>
+  .toc { width: 200px; }
+  .toc__box { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
+  .toc__summary { display: flex; align-items: center; justify-content: space-between; list-style: none; cursor: default; }
+  .toc__summary::-webkit-details-marker { display: none; }
+  .toc__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .toc :global(.toc__chevron) { display: none; color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+  .toc__list { position: relative; display: flex; flex-direction: column; margin-top: var(--space-4); border-left: var(--border-w) solid var(--border-1); }
+  .toc__list a {
+    position: relative;
+    display: block;
+    padding: 6px 0 6px var(--space-4);
+    color: var(--text-2);
+    font-size: var(--text-body-s);
+    line-height: 1.35;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  .toc__list a[aria-current] { color: var(--text-1); }
+  @media (hover: hover) and (pointer: fine) {
+    .toc__list a:hover { color: var(--text-1); }
+  }
+  /* Without the script: the current item's 1px mark. With it: the travelling marker below. */
+  :global(html:not(.motion)) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+  .toc__track { position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; pointer-events: none; }
+  /* Reading progress: a fill down the rail's line, driven by the page's own scroll (off the main thread). */
+  .toc__progress { position: absolute; inset: 0 auto 0 0; width: 1px; background: var(--text-3); transform-origin: 50% 0; transform: scaleY(0); display: none; }
+  @supports (animation-timeline: scroll()) {
+    .toc__progress { display: block; animation-name: toc-progress; animation-timing-function: linear; animation-fill-mode: both; }
+    /* Its own rule: a minifier must never fold the timeline into the animation shorthand (that drops it). */
+    .toc__track .toc__progress { animation-timeline: scroll(root block); }
+  }
+  @keyframes toc-progress { to { transform: scaleY(1); } }
+  .toc__marker {
+    position: absolute;
+    top: 0;
+    left: -0.5px;
+    width: 2px;
+    height: 1px;
+    border-radius: var(--radius-full);
+    background: var(--accent);
+    transform-origin: 50% 0;
+    opacity: 0;
+    transition: transform 240ms var(--ease-crit), opacity 120ms var(--ease-colour);
+  }
+  .toc__marker:global(.is-on) { opacity: 1; }
+  .toc__marker:global(.is-instant) { transition: none; }
+
+  @media (max-width: 1023px) {
+    .toc__track { display: none; }
+    :global(html.motion) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+    .toc { width: auto; }
+    .toc__box { position: static; display: block; padding: 0; border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); background: var(--surface-1); }
+    .toc__summary { min-height: 48px; padding-inline: var(--space-4); cursor: pointer; }
+    .toc__title { color: var(--text-1); }
+    .toc :global(.toc__chevron) { display: block; }
+    .toc__box[open] :global(.toc__chevron) { transform: rotate(180deg); }
+    .toc__list { margin: 0 var(--space-4) var(--space-4); }
+    .toc__list a { min-height: 44px; display: flex; align-items: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toc__list a, .toc :global(.toc__chevron) { transition: none; }
+    .toc__marker { transition: opacity 120ms var(--ease-colour); }
+    .toc__progress { display: none; }
+  }
+</style>

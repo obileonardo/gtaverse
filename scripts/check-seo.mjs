@@ -25,8 +25,10 @@ const walk = (dir, out = []) => {
   }
   return out;
 };
-// The PRD and the design system's review pages (/design/...) are never for search: noindex, no card, not in the sitemap.
-const pages = walk(dist).filter((p) => !p.endsWith('/prd.html') && !relative(dist, p).startsWith('design/'));
+// The PRD and the design system (/design and its review pages /design/...) are never for search: noindex, no card,
+// not in the sitemap.
+const isDesign = (p) => relative(dist, p) === 'design.html' || relative(dist, p).startsWith('design/');
+const pages = walk(dist).filter((p) => !p.endsWith('/prd.html') && !isDesign(p));
 const pathOf = (file) => '/' + relative(dist, file).replace(/\.html$/, '').replace(/(^|\/)index$/, '');
 const all = (html, re) => [...html.matchAll(re)].map((m) => m[1]);
 
@@ -126,6 +128,7 @@ if (!indexable) {
   if (/X-Robots-Tag/.test(pageBlock)) fail('_headers', 'the /* block still has X-Robots-Tag while site.indexable is true');
 }
 if (!/^\/prd\n\s+X-Robots-Tag: noindex/m.test(headers)) fail('_headers', '/prd must always be noindex');
+if (!/^\/design\n\s+X-Robots-Tag: noindex/m.test(headers)) fail('_headers', '/design must always be noindex');
 if (!/^\/design\/\*\n\s+X-Robots-Tag: noindex/m.test(headers)) fail('_headers', '/design/* must always be noindex');
 
 console.log(`SEO check: ${pages.length} pages, site.indexable = ${indexable}`);

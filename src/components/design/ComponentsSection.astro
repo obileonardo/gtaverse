@@ -1,0 +1,279 @@
+---
+// Components: one live instance of every shared component in its states, from the real component and real content.
+// A "Demo data / Worst case" switch (break-ui) swaps the text-bearing specimens to the longest values the content
+// actually holds, so a component built against kind data shows where it breaks. ?data=worst keeps the switch on a
+// reload. Nothing here restyles a component; the frames around them are the page's own.
+import Button from '../ui/Button.astro';
+import Chip from '../ui/Chip.astro';
+import Badge from '../ui/Badge.astro';
+import Card from '../ui/Card.astro';
+import Tabs from '../ui/Tabs.astro';
+import LevelTable from '../ui/LevelTable.astro';
+import Verification from '../Verification.astro';
+import Clip from '../Clip.astro';
+import Spoiler from '../Spoiler.astro';
+import ChapterControl from '../ChapterControl.astro';
+import GamePlate from '../games/GamePlate.astro';
+import GameChips from '../games/GameChips.astro';
+import Specimen from './Specimen.astro';
+import { explainers, finds, categories as allCategories } from '../../lib/content';
+import { explainerParts } from '../../lib/explainers';
+import { categoryLabel, regionLabel, findStill, showcaseable, categoryChipLabel } from '../../lib/media';
+import { verificationLabel } from '../../lib/finds';
+import { games, gameById } from '../../lib/games';
+import type { Find } from '../../lib/content';
+
+// Real finds for the specimens: one with art, one spoiler and one mature, each with a YouTube clip.
+const yt = (f: Find) => f.clip?.platform === 'youtube';
+const art = finds.find((f) => showcaseable(f) && yt(f))!;
+const spoilerFind = finds.find((f) => f.spoiler && !f.mature && yt(f));
+// No mature find carries a clip yet, so the mature gate is shown on the default find's clip.
+const matureFind = finds.find((f) => f.mature && f.clip);
+const still = findStill(art)!;
+
+// Worst case: the longest values our content holds (break-ui: plausible or schema-backed, never random).
+const longest = <T,>(xs: T[], key: (x: T) => string) => [...xs].sort((a, b) => key(b).length - key(a).length)[0];
+const longFind = longest(finds, (f) => f.title);
+const longRegion = longest(finds, (f) => regionLabel(f));
+const longCategory = longest(allCategories, (c) => categoryChipLabel(c.id));
+const longGame = longest(games, (g) => g.short_name);
+const longCreator = longest(finds.filter((f) => f.clip?.creator), (f) => f.clip!.creator!);
+const meta = (f: Find) => `${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`;
+
+// The level table from a real explainer: the first table whose rows carry level badges.
+let levelTable: { head: string[]; rows: any[]; footnote?: string; caption?: string } | null = null;
+for (const e of explainers) {
+  const { segments } = await explainerParts(e);
+  const t = segments.find((s) => s.type === 'table' && s.rows.some((r) => r.badge));
+  if (t && t.type === 'table') { levelTable = t; break; }
+}
+
+const vi = gameById('gta-vi') ?? games[0];
+const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && !f.spoiler && !f.mature);
+---
+<div class="ds-comp" data-data="demo">
+  <p class="ds-note">Worst case swaps the text-bearing specimens to the longest values in our content: the title “{longFind.title}”, the region “{regionLabel(longRegion)}”, the category “{categoryChipLabel(longCategory.id)}”, the game “{longGame.short_name}” and the creator “{longCreator.clip?.creator}”. The switch stays in reach while you scroll the components.</p>
+  <div class="ds-row ds-comp__switch" role="group" aria-label="Specimen data">
+    <Chip selected data-case-pick="demo">Demo data</Chip>
+    <Chip data-case-pick="worst">Worst case</Chip>
+  </div>
+
+  <Specimen id="c-button" name="Button" file="src/components/ui/Button.astro" props={/interface Props \{/}>
+    <div class="ds-cell"><span class="ds-cap">Variants</span>
+      <div class="ds-row">
+        <Button variant="primary" icon="play">Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button variant="quiet">Quiet</Button>
+        <Button variant="ghost" icon="share">Ghost</Button>
+        <Button variant="outline">Outline</Button>
+      </div>
+    </div>
+    <div class="ds-cell"><span class="ds-cap">Over art: inverse and glass</span>
+      <div class="ds-art ds-row" data-scheme="dark">
+        <Button variant="inverse" size="l" icon="play">Play clip</Button>
+        <Button variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
+        <Button variant="glass" size="l">Glass</Button>
+      </div>
+    </div>
+    <div class="ds-cell"><span class="ds-cap">Sizes s 32, m 40, l 48, xl 56, with icon only circles</span>
+      <div class="ds-row">
+        <Button size="s" variant="quiet" icon="share">Small</Button>
+        <Button size="m" variant="quiet" icon="share">Medium</Button>
+        <Button size="l" variant="quiet" icon="share">Large</Button>
+        <Button size="xl" variant="quiet" icon="share">Extra large</Button>
+        <Button size="s" variant="quiet" icon="close" iconOnly label="Close" />
+        <Button size="m" variant="quiet" icon="close" iconOnly label="Close" />
+        <Button size="l" variant="quiet" icon="close" iconOnly label="Close" />
+        <Button size="xl" variant="quiet" icon="close" iconOnly label="Close" />
+      </div>
+    </div>
+    <div class="ds-cell"><span class="ds-cap">States: link with an end icon, disabled, pressed (hold it)</span>
+      <div class="ds-row">
+        <Button href="/map" variant="secondary" iconEnd="arrow-right">Link to the map</Button>
+        <Button href="https://www.youtube.com" variant="quiet" iconEnd="arrow-up-right" rel="noopener" target="_blank">Opens another site</Button>
+        <Button variant="primary" disabled>Disabled</Button>
+      </div>
+    </div>
+    <div class="ds-cell" data-case="worst"><span class="ds-cap">Worst case: the longest category as a label</span>
+      <div class="ds-row"><Button variant="secondary" iconEnd="arrow-right">{`See every ${categoryChipLabel(longCategory.id).toLowerCase()}`}</Button></div>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-chip" name="Chip" file="src/components/ui/Chip.astro" props={/interface Props \{/}>
+    <div class="ds-row">
+      <Chip>Default</Chip>
+      <Chip icon="finds" count={12}>With a count</Chip>
+      <Chip selected icon="map" count={85}>Selected</Chip>
+      <Chip touch icon="pin">Touch, 40 high</Chip>
+      <Chip href="/finds">Link chip</Chip>
+    </div>
+    <div class="ds-art ds-row" data-scheme="dark">
+      <Chip glass icon="layers">Glass over art</Chip>
+      <Chip glass selected>Glass selected</Chip>
+    </div>
+    <div class="ds-row" data-case="worst">
+      <Chip icon="finds" count={1}>{categoryChipLabel(longCategory.id)}</Chip>
+      <Chip selected touch count={1284}>{categoryChipLabel(longCategory.id)}</Chip>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-badge" name="Badge and verification" file="src/components/ui/Badge.astro" props={/interface Props \{/} note="Verification (src/components/Verification.astro) maps the four content levels onto Badge, each with its own icon, never by colour alone.">
+    <div class="ds-row">
+      <Badge variant="meta">Meta</Badge>
+      <Badge variant="verified" icon="check">Verified</Badge>
+      <Badge variant="outline">Outline</Badge>
+      <Badge variant="muted" icon="question">Muted</Badge>
+      <Badge variant="debunked">Debunked</Badge>
+      <Badge variant="new">New</Badge>
+      <Badge variant="meta" caps={false}>Sentence case</Badge>
+    </div>
+    <div class="ds-row">
+      <Verification level="multi-source" />
+      <Verification level="single-source" />
+      <Verification level="rumor" />
+      <Verification level="debunked" />
+    </div>
+    <div class="ds-row" data-case="worst">
+      <Badge variant="meta">{regionLabel(longRegion)}</Badge>
+      <Badge variant="outline">{longGame.short_name}</Badge>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-card" name="Card" file="src/components/ui/Card.astro" props={/interface Props \{/}>
+    <div class="ds-cards" data-case="demo">
+      <Card href={`/finds/${art.slug}`} image={still.src} srcset={still.srcset} sizes="(max-width: 767px) 100vw, 300px" kicker={categoryLabel(art)} title={art.title} meta={meta(art)} />
+      <Card href={`/finds/${spoilerFind?.slug ?? art.slug}`} kicker={spoilerFind ? categoryLabel(spoilerFind) : 'Easter egg'} title={spoilerFind?.title ?? art.title} meta={spoilerFind ? meta(spoilerFind) : ''} />
+      <Card framed kicker="Framed" title="On the surface, with a border and 16 of padding" meta="Panels, Going cards, About cards" />
+    </div>
+    <div class="ds-cards" data-case="worst">
+      <Card href={`/finds/${longFind.slug}`} kicker={categoryLabel(longFind)} title={longFind.title} meta={`${regionLabel(longRegion)} · Single source · Spoiler · Mature`} />
+      <Card href={`/finds/${longFind.slug}`} image={still.src} srcset={still.srcset} sizes="300px" kicker={categoryChipLabel(longCategory.id)} title={longFind.title} meta={meta(longRegion)} />
+      <Card framed kicker={categoryChipLabel(longCategory.id)} title={longFind.title} meta={`Clip by ${longCreator.clip?.creator}`} />
+    </div>
+  </Specimen>
+
+  <Specimen id="c-tabs" name="Tabs" file="src/components/ui/Tabs.astro" props={/interface Props \{/}>
+    <Tabs id="ds-tabs" label="Specimen tabs" tabs={[{ id: 'details', label: 'Details' }, { id: 'sources', label: 'Sources (6)' }, { id: 'related', label: 'Related' }]}>
+      <p slot="details" class="body-s muted">The underline moves to the chosen tab; the content swaps without sliding. Arrow keys, Home and End move between tabs without animating.</p>
+      <p slot="sources" class="body-s muted">Six sources would list here.</p>
+      <p slot="related" class="body-s muted">Related finds would list here.</p>
+    </Tabs>
+  </Specimen>
+
+  <Specimen id="c-clip" name="Clip" file="src/components/Clip.astro" props={/interface Props \{/} note="Thumbnail first; the creator’s player (youtube-nocookie) loads only on tap. Spoiler and mature clips wait behind a gate on the glow and load no thumbnail until revealed; a spoiler gate carries the chapter setting.">
+    <div class="ds-clips">
+      <div class="ds-cell"><span class="ds-cap">Default</span><Clip clip={art.clip!} title={art.title} /></div>
+      {spoilerFind && <div class="ds-cell"><span class="ds-cap">Spoiler gate</span><Clip clip={spoilerFind.clip!} title={spoilerFind.title} spoiler chapterGate={spoilerFind.chapter_gate ?? null} /></div>}
+      <div class="ds-cell"><span class="ds-cap">{matureFind ? 'Mature gate' : 'Mature gate (no mature find has a clip yet; shown on the default clip)'}</span><Clip clip={(matureFind ?? art).clip!} title={(matureFind ?? art).title} mature /></div>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-spoiler" name="Spoiler and chapter setting" file="src/components/Spoiler.astro" props={/interface Props \{/} note="ChapterControl (src/components/ChapterControl.astro): “I’m on Chapter N”, stored on this device; every copy stays in sync and a spoiler gated at or before the chosen chapter opens by itself.">
+    <ChapterControl />
+    <Spoiler chapter="Chapter 3"><p>An inline spoiler: native details on surface 2 with a dashed edge. It opens by itself once the chapter setting reaches Chapter 3.</p></Spoiler>
+  </Specimen>
+
+  {levelTable && (
+    <Specimen id="c-leveltable" name="LevelTable" file="src/components/ui/LevelTable.astro" props={/interface Props \{/} stage={false} note="Every table on the site, including the tables on this page. This instance is a real explainer table; its level badges light up in order the first time it is in view.">
+      <LevelTable head={levelTable.head} rows={levelTable.rows} footnote={levelTable.footnote} caption={levelTable.caption} />
+    </Specimen>
+  )}
+
+  <Specimen id="c-timeline" name="Timeline" file="src/components/lore/Timeline.astro" props={/interface Props \{/} stage={false} notes={false} note="The GTAverse timeline, one selected moment at a time: the Grok hairline with year ticks on desktop, the Queue ruler sheet on the phone. Arrow keys, Home and End move without animating; a moment swap never slides two views at once (see Motion). It sits in a frame (/design/timeline) because its headline is always the page’s h1.">
+    <iframe class="ds-frame ds-bleed" src="/design/timeline" title="The GTAverse timeline" loading="lazy" data-follow height="900"></iframe>
+  </Specimen>
+
+  <Specimen id="c-games" name="Game plate, Also in chips and the switcher" file="src/components/games/GamePlate.astro" props={/interface Props \{/}>
+    <div class="ds-row ds-row--top">
+      {(['chip', 'rail', 'sheet', 'hub'] as const).map((size) => (
+        <div class="ds-cell"><span class="ds-cap">{size}</span><GamePlate game={vi} size={size} /></div>
+      ))}
+    </div>
+    <GameChips games={[vi, gameById('gta-vice-city'), gameById('gta-san-andreas')].filter((g): g is NonNullable<typeof g> => !!g)} />
+    <div data-case="worst"><GameChips games={[longGame]} label="Also in (worst case)" /></div>
+    <div class="ds-row">
+      <Button variant="quiet" icon="grid" data-open-games>Open the games switcher</Button>
+      <p class="ds-note">The switcher row lives in the header (src/components/site/Header.astro). This opens the real one: the Games rail in the menu on desktop, the bottom sheet on the phone.</p>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-map" name="Map list row, drawer and toast" file="src/components/map/" stage={false} notes={false} note="The map’s React island renders the site’s components through src/components/map/ui.tsx (same classes, same look). The drawer content is the real DrawerContent; the drawer frame, the list row and the toast are drawn with map.css’s own classes, because MapApp.tsx keeps them inside itself. They sit in a frame (/design/map-parts) because map.css’s global class names would restyle the timeline above.">
+    <iframe class="ds-frame" src="/design/map-parts" title="The map list row, drawer and toast" loading="lazy" data-follow height="900"></iframe>
+  </Specimen>
+
+  <Specimen id="c-sheet" name="Phone sheet" file="src/components/map/Sheet.tsx" props={/type Props = \{/} stage={false} notes={false} note="Drag 1:1, release into a critically damped spring seeded with the finger’s speed, snap to the point the flick was heading for, catch it mid-flight. The sheet only exists at phone width, so here it is the real map at 390 px, opened on a find.">
+    <div class="ds-phone">
+      <iframe class="ds-phone__frame" data-theme-follow src={`/map?find=${pinnedFind?.slug ?? art.slug}`} title="The map at phone size with a find open in the sheet" loading="lazy" width="390" height="760"></iframe>
+    </div>
+    <p class="ds-note ds-phone__alt">On a narrow screen, <a class="link" href={`/map?find=${pinnedFind?.slug ?? art.slug}`}>open the map</a> to use the sheet itself.</p>
+  </Specimen>
+
+  <Specimen id="c-rail" name="Contents rail" file="src/components/site/ContentsRail.astro" props={/interface Props \{/} stage={false} note="The rail at the left of this page is the explainers’ rail: one component. Sticky at 1024 and wider, a closed disclosure below.">
+  </Specimen>
+
+  <Specimen id="c-pagehead" name="Page head" file="src/components/site/PageHead.astro" props={/interface Props \{/} stage={false} note="The head of this page is a PageHead: display caps title, optional mono count and trail, a lede.">
+  </Specimen>
+</div>
+
+<script>
+  // Framed specimens (/design/map-parts) follow this page: its height, the data switch and the theme.
+  const frames = [...document.querySelectorAll<HTMLIFrameElement>('iframe[data-follow]')];
+  const themed = [...document.querySelectorAll<HTMLIFrameElement>('iframe[data-follow], iframe[data-theme-follow]')];
+  const syncTheme = () => themed.forEach((f) => { const html = f.contentDocument?.documentElement; if (html) html.dataset.theme = document.documentElement.dataset.theme ?? 'dark'; });
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  themed.forEach((f) => f.addEventListener('load', syncTheme));
+  frames.forEach((f) => f.addEventListener('load', () => {
+    const doc = f.contentDocument;
+    if (!doc) return;
+    doc.documentElement.dataset.data = root?.dataset.data ?? 'demo';
+    const fit = () => { f.style.height = `${Math.ceil(doc.body.getBoundingClientRect().height)}px`; };
+    new ResizeObserver(fit).observe(doc.body);
+    fit();
+  }));
+
+  // Demo data or worst case, kept in the URL so a reload keeps it.
+  const root = document.querySelector<HTMLElement>('.ds-comp');
+  const picks = [...document.querySelectorAll<HTMLButtonElement>('[data-case-pick]')];
+  const set = (c: string, write = true) => {
+    if (!root) return;
+    root.dataset.data = c;
+    picks.forEach((p) => { const on = p.dataset.casePick === c; p.classList.toggle('is-selected', on); p.setAttribute('aria-pressed', String(on)); });
+    frames.forEach((f) => { const html = f.contentDocument?.documentElement; if (html) html.dataset.data = c; });
+    if (write) {
+      const u = new URL(location.href);
+      if (c === 'worst') u.searchParams.set('data', 'worst'); else u.searchParams.delete('data');
+      history.replaceState(history.state, '', u);
+    }
+  };
+  picks.forEach((p) => p.addEventListener('click', () => set(p.dataset.casePick!)));
+  if (new URLSearchParams(location.search).get('data') === 'worst') set('worst', false);
+
+  document.querySelector('[data-open-games]')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('vf:open-games')));
+</script>
+
+<style>
+  .ds-comp { display: flex; flex-direction: column; gap: var(--space-16); }
+  .ds-comp__switch { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-3)); z-index: 2; align-self: flex-start; margin-top: calc(var(--space-12) * -1); padding: var(--space-1); border-radius: var(--radius-full); border: var(--border-w) solid var(--glass-border); background: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); gap: var(--space-1); }
+  .ds-comp[data-data='demo'] :global([data-case='worst']), .ds-comp[data-data='worst'] :global([data-case='demo']) { display: none; }
+  .ds-art { padding: var(--space-6); border-radius: var(--radius-m); background: var(--glow-hero), var(--surface-1); }
+  .ds-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+  .ds-clips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8) var(--space-5); }
+  .ds-clips > .ds-cell { align-items: stretch; }
+  .ds-phone { display: flex; justify-content: center; padding: var(--space-6); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--surface-1); }
+  .ds-phone__frame { display: block; width: 390px; max-width: 100%; height: 760px; border: var(--border-w) solid var(--border-2); border-radius: var(--radius-sheet); background: var(--bg); }
+  .ds-phone__alt { display: none; }
+  .ds-frame { display: block; width: 100%; border: 0; background: transparent; }
+  /* The timeline is drawn for the full container: on desktop it steps out of the chapter column over the rail's. */
+  @media (min-width: 1024px) {
+    .ds-bleed { margin-inline-start: calc(-1 * (200px + var(--space-16))); width: calc(100% + 200px + var(--space-16)); }
+  }
+  @media (max-width: 1199px) {
+    .ds-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .ds-comp__switch { position: static; }
+    .ds-cards, .ds-clips { grid-template-columns: minmax(0, 1fr); }
+    .ds-phone { display: none; }
+    .ds-phone__alt { display: block; }
+  }
+</style>
