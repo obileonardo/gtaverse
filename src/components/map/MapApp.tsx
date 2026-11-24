@@ -1,14 +1,21 @@
 // The map screen. Desktop is GetYourGuide's list beside the map; phone is Rodeo's full map with chips above a
 // bottom search pill. Every find opens from the list, so the screen works before any pin is placed.
 // Spec: the taste board's analysis/direction-map.md. Styles: ./map.css.
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MapCanvas, type MapApi } from './MapCanvas';
+import type { Map3DApi } from './three/Map3D';
+import { useFound } from './found';
+import { readUrl, writeUrl, type MapView } from './url';
+import { searchRank } from './search';
 import { Sheet, type SnapPoint } from './Sheet';
 import { DrawerContent, SheetContent } from './FindDetail';
 import { BasemapMenu, FilterMenu, LayerRows } from './Menus';
 import { Button, Chip, Icon, Tabs, Verification } from './ui';
 import { activeFilterCount, defaultFilters, findUrl, loadFilters, passes, saveFilters, type Filters, type MapCategory, type MapCollectible, type MapFind, type MapLayer, type MapMeta, type MapRegion } from './types';
 import './map.css';
+
+// The 3D view (docs/MAP-3D.md) and Three.js load only when the visitor opens 3D: a separate chunk.
+const Map3D = lazy(() => import('./three/Map3D'));
 
 type Props = { finds: MapFind[]; categories: MapCategory[]; regions: MapRegion[]; meta: MapMeta; layers: MapLayer[]; collectiblesUrl: string };
 type View = { basemap: 'official' | 'muted'; grid: boolean; layers: string[] };
@@ -97,8 +104,14 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const [toast, setToast] = useState<Toast>(null);
   const [instant, setInstant] = useState(false);
   const [, setTick] = useState(0);
+  const [mode, setMode] = useState<MapView>('2d'); // 2D or 3D (?view=3d)
+  const [start3d, setStart3d] = useState<{ x: number; y: number; zoom: number } | null>(null);
+  const [open3dInstant, setOpen3dInstant] = useState(false); // opened from the keyboard: no tilt-in animation
+  const { found, toggle: toggleFound, merge: mergeFound } = useFound();
 
   const api = useRef<MapApi>(null);
+  const api3 = useRef<Map3DApi>(null);
+  const mapApi = (): MapApi | null => (mode === '3d' ? api3.current : api.current);
   const opener = useRef<HTMLElement | null>(null);
   const keyboard = useRef(false);
   const controls = useRef<HTMLDivElement>(null);
@@ -113,12 +126,16 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     const on = () => setPhone(mq.matches);
     on();
     mq.addEventListener('change', on);
-    setFiltersState(loadFilters());
+    // A link with ?q, ?category or ?region shows exactly that view (from the defaults, so spoilers stay hidden);
+    // otherwise the filters saved on this device apply (url.ts).
+    const url = readUrl({ categories: new Set(categories.map((c) => c.id)), regions: new Set(regions.map((r) => r.id)), finds: new Set(finds.map((f) => f.slug)) });
+    if (url.hasFilters) { setFiltersState({ ...defaultFilters, categories: url.categories, region: url.region }); setSearch(url.q); }
+    else setFiltersState(loadFilters());
     const v = readJson(VIEW_STORE, defaultView);
     const known = new Set(layers.map((l) => l.id));
     setView({ ...v, layers: Array.isArray(v.layers) ? v.layers.filter((id) => known.has(id)) : [] });
-    const slug = new URLSearchParams(location.search).get('find');
-    if (slug && finds.some((f) => f.slug === slug)) { setSelected(slug); setFindSnap('full'); }
+    if (url.find) { setSelected(url.find); setFindSnap('full'); }
+    if (url.view === '3d') setMode('3d');
     const kd = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') keyboard.current = true; };
     const pd = () => { keyboard.current = false; };
     addEventListener('keydown', kd, true);
@@ -146,7 +163,12 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const closePicked = () => { setPicked(null); const back = opener.current; if (back?.isConnected) back.focus({ preventScroll: true }); };
   const resetFilters = () => { setFilters(defaultFilters); setSearch(''); };
 
-  const visible = useMemo(() => finds.filter((f) => passes(f, filters, search)), [finds, filters, search]);
+  const visible = useMemo(() => {
+    const list = finds.filter((f) => passes(f, filters, search, null, found));
+    if (!search.trim()) return list;
+    const rank = new Map(list.map((f) => [f.slug, searchRank(f, search)]));
+    return [...list].sort((x, y) => rank.get(y.slug)! - rank.get(x.slug)!); // best matches first (search.ts), stable
+  }, [finds, filters, search, found]);
   const pinned = useMemo(() => visible.filter((f) => f.pin), [visible]);
   const pinnedTotal = useMemo(() => finds.filter((f) => f.pin).length, [finds]);
   const current = selected ? finds.find((f) => f.slug === selected) ?? null : null;
@@ -173,19 +195,34 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     setToast(null);
   };
 
-  // Keep the URL in step with the open find, so it can be shared: /map?find=<slug>.
+  // Keep the URL in step with the view, so it can be shared and survives a reload (url.ts): q, category, region,
+  // view and find. Skipped until the first read so the static page never wipes an incoming link.
+  const urlReady = useRef(false);
   useEffect(() => {
-    const url = new URL(location.href);
-    if (selected) url.searchParams.set('find', selected); else url.searchParams.delete('find');
-    if (url.href !== location.href) history.replaceState(history.state, '', url);
-  }, [selected]);
+    if (!urlReady.current) { urlReady.current = true; return; }
+    writeUrl({ q: search, categories: filters.categories, region: filters.region, view: mode, find: selected });
+  }, [search, filters.categories, filters.region, mode, selected]);
+
+  // 2D and 3D: 3D opens on the spot and scale the 2D map shows, and hands its spot back when it closes.
+  const switchMode = (next: MapView) => {
+    if (next === mode) return;
+    setPreview(null);
+    if (next === '3d') { setStart3d(api.current?.getView() ?? null); setOpen3dInstant(keyboard.current); setMode('3d'); return; }
+    const back = api3.current;
+    const finish = () => {
+      const v = back?.getView();
+      setMode('2d');
+      if (v) requestAnimationFrame(() => api.current?.setView(v));
+    };
+    if (back && !keyboard.current) back.close(finish); else finish();
+  };
 
   const fly = (f: MapFind, sheetOpen: boolean) => {
     if (!f.pin) return;
     const stage = document.querySelector('.map-stage');
     const h = stage?.clientHeight ?? 800;
-    if (phone) api.current?.flyTo(f, { offsetY: sheetOpen ? h * 0.22 : 0 });
-    else api.current?.flyTo(f, { offsetX: 188 });
+    if (phone) mapApi()?.flyTo(f, { offsetY: sheetOpen ? h * 0.22 : 0 });
+    else mapApi()?.flyTo(f, { offsetX: 188 });
   };
 
   const openFind = (f: MapFind, from?: HTMLElement | null) => {
@@ -272,10 +309,10 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   const onFindSnap = (id: string) => { setFindSnap(id); if (id === 'closed') closeFind(); };
 
   // Desktop popup position at the pin (Airbnb), recomputed as the map moves.
-  const popupAt = !phone && previewFind ? api.current?.pointOf(previewFind) ?? null : null;
-  const cpopupAt = !phone && pickedItem ? api.current?.pointAt(pickedItem.x, pickedItem.y) ?? null : null;
+  const popupAt = !phone && previewFind ? mapApi()?.pointOf(previewFind) ?? null : null;
+  const cpopupAt = !phone && pickedItem ? mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null : null;
   useLayoutEffect(() => { placePopup(popupRef.current, popupAt, 320); placePopup(cpopupRef.current, cpopupAt, 220); });
-  // Keep a popup on its pin while the map moves: written straight to the element, no re-render per frame.
+  // Keep a popup on its pin while the map moves (2D or 3D): written straight to the element, no re-render per frame.
   const popupRef = useRef<HTMLDivElement>(null);
   const cpopupRef = useRef<HTMLDivElement>(null);
   const placePopup = (el: HTMLDivElement | null, pt: { x: number; y: number } | null, room: number) => {
@@ -287,8 +324,8 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   };
   const onMove = () => {
     if (phone) return;
-    if (previewFind) placePopup(popupRef.current, api.current?.pointOf(previewFind) ?? null, 320);
-    if (pickedItem) placePopup(cpopupRef.current, api.current?.pointAt(pickedItem.x, pickedItem.y) ?? null, 220);
+    if (previewFind) placePopup(popupRef.current, mapApi()?.pointOf(previewFind) ?? null, 320);
+    if (pickedItem) placePopup(cpopupRef.current, mapApi()?.pointAt(pickedItem.x, pickedItem.y) ?? null, 220);
   };
 
   const filterCount = activeFilterCount({ ...filters, categories: [] });
@@ -350,7 +387,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
   );
 
   return (
-    <section className={`map-app${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} aria-label="Map of Leonida">
+    <section className={`map-app${phone ? ' is-phone' : ''}`} data-list={listSnap} data-find={selected ? findSnap : 'closed'} data-view={mode} aria-label="Map of Leonida">
       <h1 className="sr-only map-h1">Map of Leonida</h1>
 
       {/* The list: GetYourGuide's column on desktop, a sheet on phone. */}
@@ -382,20 +419,26 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
       {/* The map */}
       <div className="map-stage">
         <MapCanvas ref={api} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} phone={phone} basemap={view.basemap} grid={view.grid} fitPadding={fitPadding} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
+        {mode === '3d' && (
+          <Suspense fallback={<div className="map3d map3d--loading" role="status"><p className="map3d__fail">Loading the 3D map</p></div>}>
+            <Map3D ref={api3} meta={meta} finds={pinned} selected={selected ?? preview} hovered={hovered} basemap={view.basemap} start={start3d} instant={open3dInstant} onPin={onPin} collectibles={shownCollectibles} selectedCollectible={picked} onCollectible={onCollectible} onMove={onMove} onReady={() => setTick((t) => t + 1)} />
+          </Suspense>
+        )}
 
         <div className="map-controls" ref={controls}>
           <span className="map-ctrl-wrap">
             <Button variant="glass" size="m" icon="filter" iconOnly label={filterCount ? `Filters, ${filterCount} on` : 'Filters'} aria-expanded={menu === 'filters'} aria-controls="map-filters" className="map-ctrl" onClick={() => setMenu(menu === 'filters' ? null : 'filters')} data-ref="filters" />
             {filterCount > 0 && <span className="map-ctrl__badge tabular" aria-hidden="true">{filterCount}</span>}
           </span>
+          <Button variant="glass" size="m" className="map-ctrl map-ctrl--3d" aria-pressed={mode === '3d'} aria-label="3D view" title="3D view" onClick={() => switchMode(mode === '3d' ? '2d' : '3d')}>3D</Button>
           <Button variant="glass" size="m" icon="layers" iconOnly label="Basemap" aria-expanded={menu === 'basemap'} aria-controls="map-basemap" className="map-ctrl" onClick={() => setMenu(menu === 'basemap' ? null : 'basemap')} data-ref="basemap" />
-          <FilterMenu open={menu === 'filters'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="filters"]')?.focus(); }} anchor={controls} finds={finds} filters={filters} setFilters={setFilters} regions={regions} search={search} onReset={resetFilters} />
+          <FilterMenu open={menu === 'filters'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="filters"]')?.focus(); }} anchor={controls} finds={finds} filters={filters} setFilters={setFilters} regions={regions} search={search} onReset={resetFilters} categories={categories} found={found} onImport={mergeFound} />
           <BasemapMenu open={menu === 'basemap'} onClose={(restore) => { setMenu(null); if (restore) document.querySelector<HTMLElement>('[data-ref="basemap"]')?.focus(); }} anchor={controls} basemap={view.basemap} setBasemap={(b) => setViewSaved({ ...view, basemap: b })} grid={view.grid} setGrid={(g) => setViewSaved({ ...view, grid: g })} layers={layers} layersOn={view.layers} setLayersOn={setLayersOn} />
         </div>
 
         <div className="map-zoom" role="group" aria-label="Zoom">
-          <button type="button" className="map-zoom__btn" aria-label="Zoom in" onClick={() => api.current?.zoomBy(0.5)}><Icon name="plus" size={18} /></button>
-          <button type="button" className="map-zoom__btn" aria-label="Zoom out" onClick={() => api.current?.zoomBy(-0.5)}><Icon name="minus" size={18} /></button>
+          <button type="button" className="map-zoom__btn" aria-label="Zoom in" onClick={() => mapApi()?.zoomBy(0.5)}><Icon name="plus" size={18} /></button>
+          <button type="button" className="map-zoom__btn" aria-label="Zoom out" onClick={() => mapApi()?.zoomBy(-0.5)}><Icon name="minus" size={18} /></button>
         </div>
 
         <p className={`map-credit${view.layers.length ? ' map-credit--two' : ''}`}>
@@ -429,7 +472,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
         {!phone && current && (
           <article ref={drawerRef} className="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" tabIndex={-1} data-instant={instant || undefined}>
             <div className="drawer__content" key={current.slug}>
-              <DrawerContent find={current} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(current)} onCopy={() => copyLink(current)} onShare={() => share(current)} />
+              <DrawerContent find={current} meta={meta} titleId="drawer-title" onClose={closeFind} onShowOnMap={() => showOnMap(current)} onCopy={() => copyLink(current)} onShare={() => share(current)} found={found.has(current.slug)} onToggleFound={() => toggleFound(current.slug)} />
             </div>
           </article>
         )}
@@ -483,7 +526,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
 
       {/* Phone: Apple Maps sheet, clip at the top */}
       <Sheet snaps={findSnaps} snap={phone ? findSnap : 'closed'} onSnap={onFindSnap} closedId="closed" enabled={phone} inert={!phone || !selected} className="fsheet" label={shown ? shown.title : 'Find'} role="dialog">
-        {phone && shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} />}
+        {phone && shown && <SheetContent key={shown.slug} find={shown} meta={meta} titleId="sheet-title" onClose={closeFind} onShowOnMap={() => showOnMap(shown)} onCopy={() => copyLink(shown)} onShare={() => share(shown)} found={found.has(shown.slug)} onToggleFound={() => toggleFound(shown.slug)} />}
       </Sheet>
     </section>
   );

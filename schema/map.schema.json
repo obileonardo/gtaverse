@@ -62,7 +62,7 @@
       "additionalProperties": false,
       "required": ["tile_size", "format", "output", "note"],
       "properties": {
-        "tile_size": { "const": 256 },
+        "tile_size": { "enum": [256, 512] },
         "format": { "enum": ["webp", "jpeg", "png"] },
         "output": { "type": "string" },
         "note": { "type": "string" }

@@ -1,0 +1,52 @@
+{
+  "note": "Hand-drawn relief for the 3D map (docs/MAP-3D.md). Relief is approximate, drawn by The Vice Files. Not measured, not traced, and not derived from any leak, any fan height map (GTADB included) or any video. Positions are pixels of the official map image (docs/MAP.md, Coordinate system). Edit freely: a person moves a point by clicking the spot in the map harness and copying x and y, then sets placed to checked.",
+  "label": "Relief is approximate, drawn by The Vice Files.",
+  "metres_per_pixel": 2,
+  "vertical_exaggeration": 2,
+  "features": [
+    {
+      "id": "mount-kalaga",
+      "name": "Mount Kalaga",
+      "kind": "peak",
+      "points": [[3150, 1500]],
+      "height_m": 340,
+      "radius_px": 560,
+      "roughness": 0.35,
+      "placed": "approximate",
+      "basis": "Rockstar's site puts Mount Kalaga National Park on Leonida's northern fringes. The peak sits on the northernmost land of the map (cells C5 and C6, found by counting land and water pixels, not by looking) until a person places it on the printed name."
+    },
+    {
+      "id": "kalaga-ridge",
+      "name": "Kalaga ridge",
+      "kind": "ridge",
+      "points": [[2500, 1900], [2850, 1650], [3150, 1500], [3550, 1450], [3850, 1650]],
+      "height_m": 190,
+      "radius_px": 380,
+      "roughness": 0.45,
+      "placed": "approximate",
+      "basis": "Our drawing: a ridge running through the peak so the park reads as hill country, not a lone cone."
+    },
+    {
+      "id": "northern-hills-west",
+      "name": "Northern hills, west",
+      "kind": "hills",
+      "points": [[1950, 2250], [2150, 2000], [2450, 2300]],
+      "height_m": 95,
+      "radius_px": 320,
+      "roughness": 0.55,
+      "placed": "approximate",
+      "basis": "Our drawing: low rolling hills west of the park."
+    },
+    {
+      "id": "northern-hills-east",
+      "name": "Northern hills, east",
+      "kind": "hills",
+      "points": [[4000, 2150], [4150, 2050], [4250, 2350]],
+      "height_m": 80,
+      "radius_px": 320,
+      "roughness": 0.55,
+      "placed": "approximate",
+      "basis": "Our drawing: low rolling hills east of the park."
+    }
+  ]
+}

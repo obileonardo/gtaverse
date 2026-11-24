@@ -67,6 +67,26 @@ check('regions.schema.json', regions, 'content/regions.json');
 check('categories.schema.json', categories, 'content/categories.json');
 check('sources.schema.json', sources, 'content/sources.json');
 
+// Map extras (docs/MAP.md, docs/MAP-3D.md): our search words and our hand-drawn relief.
+const searchTerms = readJson('content/search-terms.json');
+const relief = readJson('content/relief.json');
+check('search-terms.schema.json', searchTerms, 'content/search-terms.json');
+check('relief.schema.json', relief, 'content/relief.json');
+if (searchTerms && categories && regions) {
+  const catIds = new Set(categories.map((c) => c.id));
+  const regIds = new Set(regions.map((r) => r.id));
+  for (const id of Object.keys(searchTerms.categories ?? {})) if (!catIds.has(id)) err('content/search-terms.json', `unknown category "${id}"`);
+  for (const id of Object.keys(searchTerms.regions ?? {})) if (!regIds.has(id)) err('content/search-terms.json', `unknown region "${id}"`);
+}
+if (relief?.features && map?.image) {
+  const seen = new Set();
+  for (const f of relief.features) {
+    if (seen.has(f.id)) err('content/relief.json', `duplicate feature id "${f.id}"`);
+    seen.add(f.id);
+    for (const [x, y] of f.points) if (x >= map.image.width || y >= map.image.height) err('content/relief.json', `${f.id}: point ${x}, ${y} is outside the map image`);
+  }
+}
+
 const connections = connDoc?.items ?? [];
 
 // ---------------------------------------------------------------- explainers (frontmatter subset parser)
