@@ -577,7 +577,7 @@ const gameOrder = [...switcherIds, ...allGames.map((g) => g.id).filter((id) => !
     transition: background-color var(--dur-colour) var(--ease-colour);
   }
   .games__row.is-current { background: var(--glass-hover); }
-  .games__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .games__name { min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; } /* sideways only: the count's superscript stays whole */
   .games__count { margin-left: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); vertical-align: super; line-height: 0; }
   .games__tm { padding: 6px 10px 2px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
   @media (hover: hover) and (pointer: fine) {
