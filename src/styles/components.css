@@ -180,3 +180,56 @@
   @media (prefers-reduced-motion: reduce) {
     .tabs__indicator { transition: none; }
   }
+
+/* ---------- Game plate (games/GamePlate.astro): an official game logo, or a text plate when there is none ---------- */
+  /* The logo is shown as published: never recoloured, filtered or cropped. Only the plate behind it is ours. */
+  .gplate {
+    --plate-w: 104px;
+    --plate-h: 28px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--plate-w);
+    height: var(--plate-h);
+    padding: 4px;
+    border-radius: var(--radius-s);
+    background: var(--logo-plate);
+    border: var(--border-w) solid var(--logo-plate-edge);
+    overflow: hidden;
+  }
+  .gplate img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .gplate__text {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: rgb(255 255 255 / 0.86);
+  }
+  .gplate--sheet { --plate-w: 120px; --plate-h: 36px; }
+  .gplate--chip { --plate-w: 64px; --plate-h: 22px; padding: 2px 4px; border-radius: var(--radius-xs); }
+  .gplate--hub { --plate-w: 280px; --plate-h: 64px; padding: 10px 14px; border-radius: var(--radius-m); }
+  .gplate--hub .gplate__text { font-size: 20px; }
+  .gplate--textual { padding: 2px 4px; }
+
+/* ---------- Spoiler (Spoiler.astro and explainer "Spoiler:" paragraphs; markup in src/lib/spoiler.ts) ---------- */
+  .spoiler { margin-block: var(--space-2) var(--space-5); border-radius: var(--radius-m); border: var(--border-w) dashed var(--border-2); background: var(--surface-2); }
+  .spoiler__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    list-style: none;
+    border-radius: inherit;
+  }
+  .spoiler__summary::-webkit-details-marker { display: none; }
+  .spoiler__hint { color: var(--accent-text); font-size: var(--text-label); font-weight: 600; }
+  .spoiler[open] .spoiler__hint { color: var(--text-2); }
+  .spoiler__body { padding: 0 var(--space-4) var(--space-4); }
+  .spoiler__body > :last-child { margin-bottom: 0; }

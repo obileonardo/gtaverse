@@ -2,68 +2,27 @@
 // The GTAverse (the lore section): the shared universe across GTA I to VI, Red Dead, Bully and L.A. Noire, as one
 // timeline (Grok on desktop, Queue on the phone), then every connection as a numbered list by year (Brink chapter
 // list, Like) so each one is a link without JavaScript. Was /lore; /lore redirects here (public/_redirects).
+// ?game=<id> narrows both to one game (the game lens); the games index and hubs live at /gtaverse/games.
 import Base from '../../layouts/Base.astro';
 import Timeline from '../../components/lore/Timeline.astro';
-import Icon from '../../components/ui/Icon.astro';
-import { moments, confidenceLabel, typeLabel } from '../../lib/lore';
-
-const byYear = [...new Set(moments.map((m) => m.year))].map((y) => ({ year: y, items: moments.filter((m) => m.year === y) }));
+import ConnectionList from '../../components/lore/ConnectionList.astro';
+import GameLens from '../../components/games/GameLens.astro';
+import { moments } from '../../lib/lore';
 ---
 <Base title="The GTAverse" description="The shared universe across GTA I to VI, Red Dead, Bully and L.A. Noire: every link to GTA VI, placed on one timeline." layout="bare">
   <Timeline
     headline="The GTAverse"
     intro={`${moments.length} links between GTA VI and the rest of the Rockstar universe. Each sits at the release year of the earliest game it appears in, with how sure we are and where it comes from.`}
-  />
-  <section class="container index" aria-labelledby="all-title">
-    <h2 id="all-title" class="index__title">All connections</h2>
-    {byYear.map((g) => (
-      <div class="index__year">
-        <p class="index__y mono">{g.year}</p>
-        <ol class="index__list">
-          {g.items.map((m) => (
-            <li>
-              <a class="row" href={`/gtaverse/${m.slug}`}>
-                <span class="row__n mono tabular">{String(m.index + 1).padStart(2, '0')}</span>
-                <span class="row__text">
-                  <span class="row__title">{m.title}</span>
-                  <span class="row__meta">{m.firstGame} · {typeLabel[m.type] ?? m.type} · {confidenceLabel[m.confidence] ?? m.confidence}</span>
-                </span>
-                <Icon name="chevron-right" size={20} />
-              </a>
-            </li>
-          ))}
-        </ol>
-      </div>
-    ))}
-  </section>
+  >
+    <div slot="head" class="head-links">
+      <GameLens noun="connections" />
+      <a class="games-link" href="/gtaverse/games">Browse by game</a>
+    </div>
+  </Timeline>
+  <ConnectionList items={moments} title="All connections" />
 </Base>
 
 <style>
-  .index { padding-bottom: var(--space-section); }
-  .index__title { font-size: var(--text-h2); font-weight: 700; padding-bottom: var(--space-4); border-bottom: var(--border-w) solid var(--border-1); }
-  .index__year { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--space-6); padding-block: var(--space-4); border-bottom: var(--border-w) solid var(--border-1); }
-  .index__y { color: var(--text-3); padding-top: 14px; }
-  .index__list { display: flex; flex-direction: column; }
-  .row {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--space-4);
-    min-height: 56px;
-    padding-block: var(--space-2);
-    color: var(--text-3);
-    transition: color var(--dur-colour) var(--ease-colour);
-  }
-  .row__text { display: flex; flex-direction: column; min-width: 0; }
-  .row__title { color: var(--text-1); font-family: var(--font-serif); font-size: 19px; line-height: 1.3; }
-  .row__meta { font-size: var(--text-body-s); color: var(--text-2); }
-  @media (hover: hover) and (pointer: fine) {
-    .row:hover { color: var(--text-1); }
-    .row:hover .row__title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-  }
-  @media (max-width: 767px) {
-    .index__year { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
-    .index__y { padding-top: 0; }
-    .row { grid-template-columns: 32px minmax(0, 1fr) auto; gap: var(--space-3); }
-  }
+  .head-links { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+  .games-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-text); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 </style>

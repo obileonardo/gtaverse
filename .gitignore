@@ -17,5 +17,8 @@ dist/
 public/map/
 tools/map-harness/screenshots/
 
+# Official game logos: Rockstar and Take-Two trademarks, fetched at build, never committed (scripts/media/fetch-logos.mjs)
+public/media/
+
 # Private research (never committed)
 private/

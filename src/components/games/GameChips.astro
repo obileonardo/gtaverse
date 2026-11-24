@@ -1,0 +1,33 @@
+---
+// "Also in": one link chip per game a find or connection names, oldest first, each opening that game's hub.
+// Curated from our data (connections.games, finds.crossover_games), never matched by name in text. Renders nothing
+// when there are no games, so no empty label is left behind. Works without JavaScript.
+import GamePlate from './GamePlate.astro';
+import type { Game } from '../../lib/games';
+interface Props { games: Game[]; label?: string; level?: 'h2' | 'h3' | 'p'; class?: string }
+const { games, label = 'Also in', level = 'p', class: className } = Astro.props;
+const Heading = level;
+const id = `also-${Math.random().toString(36).slice(2, 8)}`;
+---
+{games.length > 0 && (
+  <section class:list={['also', className]} aria-labelledby={id}>
+    <Heading class="also__label label-caps" id={id}>{label}</Heading>
+    <ul class="also__list" role="list">
+      {games.map((g) => (
+        <li>
+          <a class="chip chip--touch also__chip" href={`/gtaverse/games/${g.id}`}>
+            <GamePlate game={g} size="chip" />
+            <span>{g.short_name}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .also { display: flex; flex-direction: column; gap: var(--space-3); }
+  .also__label { color: var(--text-3); }
+  .also__list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .also__chip { gap: 10px; padding-left: 6px; }
+</style>

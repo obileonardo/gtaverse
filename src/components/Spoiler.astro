@@ -1,0 +1,15 @@
+---
+// <Spoiler chapter="Chapter 3">a sentence that gives the story away</Spoiler>
+// A collapsed native <details> with the muted badge as its summary ("Spoiler, Chapter 3, Reveal"). The markup is
+// shared with explainer markdown (src/lib/spoiler.ts), and it opens by itself when the visitor's "I'm on Chapter N"
+// setting has reached its chapter.
+import { spoilerOpen, spoilerClose } from '../lib/spoiler';
+interface Props { chapter?: string | number | null }
+const { chapter = null } = Astro.props;
+const inner = await Astro.slots.render('default');
+---
+<Fragment set:html={`${spoilerOpen(chapter)}${inner}${spoilerClose}`} />
+<script>
+  import { initChapter } from '../lib/chapter';
+  initChapter();
+</script>

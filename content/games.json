@@ -1,0 +1,393 @@
+{
+  "generated": "2026-11-24",
+  "updated_at": "2026-11-24",
+  "logo_policy": "Official game logos identify each game in the game switcher and on its hub, unaltered, next to the game's name in text, with the line \"Game logos are trademarks of Rockstar Games and Take-Two Interactive\". Files come only from official Rockstar or Take-Two pages, are never committed, and are fetched at build by scripts/media/fetch-logos.mjs into public/media/logos/. A game without a confirmed official file shows a text plate. Decisions GS1 to GS4.",
+  "groups": [
+    { "id": "hd", "label": "HD universe" },
+    { "id": "3d", "label": "3D universe" },
+    { "id": "red-dead", "label": "Red Dead" },
+    { "id": "rockstar", "label": "Also from Rockstar" },
+    { "id": "more", "label": "More games" }
+  ],
+  "items": [
+    {
+      "id": "gta-vi",
+      "name": "Grand Theft Auto VI",
+      "short_name": "GTA VI",
+      "year": 2026,
+      "universe": "HD",
+      "group": "hd",
+      "aliases": ["GTA VI"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/VI",
+        "file_url": "https://www.rockstargames.com/VI/_next/static/media/vi.0hxa9~pf214xe.png",
+        "file": "gta-vi.png",
+        "alt_on_source": "Grand Theft Auto VI",
+        "retrieved": "2026-11-24",
+        "sha256": "f1a4e777835a98fa0386106ef5a948e8fd590121ee0cd72daa191997ed979616",
+        "bytes": 27804,
+        "width": 807,
+        "height": 540,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-v",
+      "name": "Grand Theft Auto V",
+      "short_name": "GTA V",
+      "year": 2013,
+      "universe": "HD",
+      "group": "hd",
+      "aliases": ["GTA V"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/gta-v",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/732efc56393d89076732e76b0a2b55b2.svg",
+        "file": "gta-v.svg",
+        "alt_on_source": "gta5",
+        "retrieved": "2026-11-24",
+        "sha256": "41782d1115f3720c5cdfb2747bce83484b49d77cc780c96cd3dd5f5758affb9f",
+        "bytes": 342724,
+        "width": 217,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-iv",
+      "name": "Grand Theft Auto IV",
+      "short_name": "GTA IV",
+      "year": 2008,
+      "universe": "HD",
+      "group": "hd",
+      "aliases": ["GTA IV", "GTA IV: The Lost and Damned", "GTA IV: The Ballad of Gay Tony"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/IV",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/01dcdecd53de88ec599ab76ce2863fcd.svg",
+        "file": "gta-iv.svg",
+        "alt_on_source": "Grand Theft Auto IV",
+        "retrieved": "2026-11-24",
+        "sha256": "3e2df1d35f0bd97352d577d067eb44f170ce38de52b0104c4e077901f3bbb3d0",
+        "bytes": 64905,
+        "width": 245,
+        "height": 34,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-san-andreas",
+      "name": "Grand Theft Auto: San Andreas",
+      "short_name": "San Andreas",
+      "year": 2004,
+      "universe": "3D",
+      "group": "3d",
+      "aliases": ["GTA San Andreas", "GTA San Andreas: The Definitive Edition", "GTA San Andreas (Bigfoot myth)"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/sanandreas",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/854bac2f4c6c23fb7ca33f9407ac3c0d.svg",
+        "file": "gta-san-andreas.svg",
+        "alt_on_source": "Grand Theft Auto: San Andreas",
+        "retrieved": "2026-11-24",
+        "sha256": "14131134142ccbbfa4a7bf96a3f8fd3a98bbc4948444fe09950b4c24d49a1094",
+        "bytes": 36132,
+        "width": 294,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-vice-city",
+      "name": "Grand Theft Auto: Vice City",
+      "short_name": "Vice City",
+      "year": 2002,
+      "universe": "3D",
+      "group": "3d",
+      "aliases": ["GTA Vice City"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/vicecity",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/9333c000d509d8c82858967b42ff46f8.svg",
+        "file": "gta-vice-city.svg",
+        "alt_on_source": "Grand Theft Auto: Vice City",
+        "retrieved": "2026-11-24",
+        "sha256": "33d12990dbe10833d0e5c92917119b90acd1df00953c75cf289fc238db99bd81",
+        "bytes": 30578,
+        "width": 240,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-iii",
+      "name": "Grand Theft Auto III",
+      "short_name": "GTA III",
+      "year": 2001,
+      "universe": "3D",
+      "group": "3d",
+      "aliases": ["GTA III", "GTA III - The Definitive Edition"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/grandtheftauto3",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/70d4774a8eb28cbdc69793504746f961.svg",
+        "file": "gta-iii.svg",
+        "alt_on_source": "Grand Theft Auto III",
+        "retrieved": "2026-11-24",
+        "sha256": "6f31a8f8e5b4510714026934131ace86e74237fddd5006302729960fe4da968b",
+        "bytes": 9620,
+        "width": 259,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-liberty-city-stories",
+      "name": "Grand Theft Auto: Liberty City Stories",
+      "short_name": "Liberty City Stories",
+      "year": 2005,
+      "universe": "3D",
+      "group": "3d",
+      "aliases": ["GTA Liberty City Stories"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/libertycitystories",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/0e39e530c8e7a5b1a3243edeaaf0b223.svg",
+        "file": "gta-liberty-city-stories.svg",
+        "alt_on_source": "Grand Theft Auto: Liberty City Stories",
+        "retrieved": "2026-11-24",
+        "sha256": "4a8e016377ec58044ce6775b4196a39ba15729d538266c79f15ab56699d0640d",
+        "bytes": 217554,
+        "width": 389,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-vice-city-stories",
+      "name": "Grand Theft Auto: Vice City Stories",
+      "short_name": "Vice City Stories",
+      "year": 2006,
+      "universe": "3D",
+      "group": "3d",
+      "aliases": ["GTA Vice City Stories"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/vicecitystories",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/a73128cb6201d9d830f2ac4802ad6c2f.svg",
+        "file": "gta-vice-city-stories.svg",
+        "alt_on_source": "Grand Theft Auto: Vice City Stories",
+        "retrieved": "2026-11-24",
+        "sha256": "612c224fcb57745fe72b92b7d319e04b857ae82629b93b1dfcec33a22ec30728",
+        "bytes": 41181,
+        "width": 267,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "red-dead-redemption-2",
+      "name": "Red Dead Redemption 2",
+      "short_name": "Red Dead Redemption 2",
+      "year": 2018,
+      "universe": "Red Dead",
+      "group": "red-dead",
+      "aliases": ["Red Dead Redemption 2", "Red Dead Redemption 2 (Bigfoot)"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/reddeadredemption2",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/5e3cf24e53a1fb96410ddbe7d17ca96f.svg",
+        "file": "red-dead-redemption-2.svg",
+        "alt_on_source": "Red Dead Redemption 2",
+        "retrieved": "2026-11-24",
+        "sha256": "841f9259b73bbdd6c40720f8ecda6ed61a49412429cde87145bbf3798a99e704",
+        "bytes": 439655,
+        "width": 282,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "red-dead-redemption",
+      "name": "Red Dead Redemption",
+      "short_name": "Red Dead Redemption",
+      "year": 2010,
+      "universe": "Red Dead",
+      "group": "red-dead",
+      "aliases": ["Red Dead Redemption", "Red Dead Redemption: Undead Nightmare"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/reddeadredemption",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/afce1282be848202a965031813991b09.svg",
+        "file": "red-dead-redemption.svg",
+        "alt_on_source": "Red Dead Redemption",
+        "retrieved": "2026-11-24",
+        "sha256": "a2a657194976e99a68343f4f5d3285d6ba913a54fbccfcc6eef2c745e77731f9",
+        "bytes": 222412,
+        "width": 254,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "bully",
+      "name": "Bully",
+      "short_name": "Bully",
+      "year": 2006,
+      "universe": "other",
+      "group": "rockstar",
+      "aliases": ["Bully"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/bully",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/b2e6fe18e15f1109b7d442881fccb9a6.svg",
+        "file": "bully.svg",
+        "alt_on_source": "bully",
+        "retrieved": "2026-11-24",
+        "sha256": "cafc48cf4d1086d59b57c0beab2dad248d1bc5479848f946e7e9f69224c99637",
+        "bytes": 35521,
+        "width": 143,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "la-noire",
+      "name": "L.A. Noire",
+      "short_name": "L.A. Noire",
+      "year": 2011,
+      "universe": "other",
+      "group": "rockstar",
+      "aliases": ["L.A. Noire"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/lanoire",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/63c149607e42c3f7a8988ef21d53ec97.svg",
+        "file": "la-noire.svg",
+        "alt_on_source": "L.A. NOIRE",
+        "retrieved": "2026-11-24",
+        "sha256": "ba41ffc94a31b8ed202b1da8103b19d290bc66a900129fe51cd535f8d745e96a",
+        "bytes": 15375,
+        "width": 166,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "max-payne-3",
+      "name": "Max Payne 3",
+      "short_name": "Max Payne 3",
+      "year": 2012,
+      "universe": "other",
+      "group": "rockstar",
+      "aliases": ["Max Payne 3"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/maxpayne3",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/ba94346e4b206acc56976b59974bffbe.png",
+        "file": "max-payne-3.png",
+        "alt_on_source": "Max Payne 3",
+        "retrieved": "2026-11-24",
+        "sha256": "e40155726827090c7e2229e11bbaf26f2a0eab41b35cb640b556342e5f5d6590",
+        "bytes": 19944,
+        "width": 362,
+        "height": 64,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "manhunt",
+      "name": "Manhunt",
+      "short_name": "Manhunt",
+      "year": 2003,
+      "universe": "other",
+      "group": "rockstar",
+      "aliases": ["Manhunt"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/manhunt",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/36e8ec97940586d12e63320c75c99d03.svg",
+        "file": "manhunt.svg",
+        "alt_on_source": "Man Hunt",
+        "retrieved": "2026-11-24",
+        "sha256": "0b5819bb9333b5b3930a039a0fe1a90698fbd4c6399b4bc7579bedf733978963",
+        "bytes": 161952,
+        "width": 104,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "the-warriors",
+      "name": "The Warriors",
+      "short_name": "The Warriors",
+      "year": 2005,
+      "universe": "other",
+      "group": "rockstar",
+      "aliases": ["The Warriors"],
+      "logo": null,
+      "logo_note": "The official page (https://www.rockstargames.com/games/thewarriors) showed no logo image on 2026-11-24. Text plate until an official file is confirmed."
+    },
+    {
+      "id": "gta",
+      "name": "Grand Theft Auto",
+      "short_name": "GTA",
+      "year": 1997,
+      "universe": "2D",
+      "group": "more",
+      "aliases": ["GTA"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/gta",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/65f1aec1603710b9836acf07cf9ac79d.svg",
+        "file": "gta.svg",
+        "alt_on_source": "Grand Theft Auto",
+        "retrieved": "2026-11-24",
+        "sha256": "d7bf047fb692d021a98879bb6fd3e660aac71998ad72275c99a5b62813b2e5c4",
+        "bytes": 31504,
+        "width": 65,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-2",
+      "name": "Grand Theft Auto 2",
+      "short_name": "GTA 2",
+      "year": 1999,
+      "universe": "2D",
+      "group": "more",
+      "aliases": ["GTA 2"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/gta2",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/d183c567f4254a34a55e0bc49cf69fe6.svg",
+        "file": "gta-2.svg",
+        "alt_on_source": "Grand Theft Auto 2",
+        "retrieved": "2026-11-24",
+        "sha256": "a9c7b254f0e432a7d0cf05e4306d2bcd9c8469c8a134a151da1688454bc5d28f",
+        "bytes": 3866,
+        "width": 123,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-chinatown-wars",
+      "name": "Grand Theft Auto: Chinatown Wars",
+      "short_name": "Chinatown Wars",
+      "year": 2009,
+      "universe": "HD",
+      "group": "more",
+      "aliases": ["GTA Chinatown Wars"],
+      "logo": {
+        "page_url": "https://www.rockstargames.com/games/chinatownwars",
+        "file_url": "https://media-rockstargames-com.akamaized.net/mfe-r19/prod/__common/img/02cb5f725e6afe939eba7948707242f5.svg",
+        "file": "gta-chinatown-wars.svg",
+        "alt_on_source": "Grand Theft Auto: Chinatown Wars",
+        "retrieved": "2026-11-24",
+        "sha256": "ad3c4d55f6da3589223819c7f8ef012a180a2f4bc466f0bc9bd353d6d470a6ad",
+        "bytes": 150543,
+        "width": 371,
+        "height": 32,
+        "licence_note": "Trademark of Take-Two Interactive. Not licensed by this repo. Used unaltered only to identify the game."
+      }
+    },
+    {
+      "id": "gta-online",
+      "name": "GTA Online",
+      "short_name": "GTA Online",
+      "year": 2013,
+      "universe": "HD",
+      "group": "more",
+      "aliases": ["GTA Online"],
+      "logo": null,
+      "logo_note": "The official page (https://www.rockstargames.com/gta-online) showed no logo image on 2026-11-24. Text plate."
+    }
+  ]
+}

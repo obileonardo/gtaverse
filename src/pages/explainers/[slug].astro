@@ -39,6 +39,21 @@ const updated = formatDate(updatedRaw);
         </p>
       </header>
 
+      {headings.length > 1 && (
+        <nav class="toc" aria-labelledby="toc-title">
+          <details class="toc__box" data-toc>
+            <summary class="toc__summary"><span id="toc-title" class="toc__title">On this page</span><Icon name="chevron-down" size={16} class="toc__chevron" /></summary>
+            <ul class="toc__list" data-rail>
+              {headings.map((h) => <li><a href={`#${h.slug}`} data-rail-link={h.slug}>{h.text}</a></li>)}
+            </ul>
+          </details>
+          <script is:inline>
+            // Desktop: the contents rail is always open, before first paint. Phone and tablet: a closed disclosure.
+            (function () { var d = document.currentScript.previousElementSibling; if (matchMedia('(min-width: 1024px)').matches) d.open = true; })();
+          </script>
+        </nav>
+      )}
+
       <div class="prose doc__body">
         {segments.map((s) => s.type === 'html'
           ? <Fragment set:html={s.html} />
@@ -61,18 +76,20 @@ const updated = formatDate(updatedRaw);
       </footer>
     </article>
 
-    {headings.length > 1 && (
-      <nav class="rail" aria-label="Contents">
-        <p class="rail__title">Contents</p>
-        <ul class="rail__list" data-rail>
-          {headings.map((h) => <li><a href={`#${h.slug}`} data-rail-link={h.slug}>{h.text}</a></li>)}
-        </ul>
-      </nav>
-    )}
   </div>
 </Base>
 
 <script>
+  import { initChapter } from '../../lib/chapter';
+  initChapter(); // inline "Spoiler:" blocks open by themselves once the visitor's chapter has reached them
+
+  // "On this page": open as a rail on desktop, a disclosure below; follow the window across the breakpoint.
+  const toc = document.querySelector<HTMLDetailsElement>('[data-toc]');
+  const wide = matchMedia('(min-width: 1024px)');
+  wide.addEventListener('change', () => { if (toc) toc.open = wide.matches; });
+  // On the phone, choosing a section closes the disclosure so the section is what you see.
+  toc?.addEventListener('click', (e) => { if (!wide.matches && (e.target as HTMLElement).closest('a')) toc.open = false; });
+
   // Contents rail: mark the section being read. Colour only, no motion.
   const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-rail-link]')];
   const targets = links.map((a) => document.getElementById(a.dataset.railLink!)).filter((t): t is HTMLElement => !!t);
@@ -92,8 +109,10 @@ const updated = formatDate(updatedRaw);
 </script>
 
 <style>
-  /* Obvious: a 712 reading column and a 200 rail, centred together. */
-  .doc { display: grid; grid-template-columns: minmax(0, 712px) 200px; justify-content: center; column-gap: var(--space-12); }
+  /* Obvious: a 712 reading column and a 200 rail, centred together. The rail ("On this page") sits in the article
+     after the head, so on smaller screens it is a disclosure in reading order; on desktop it is lifted into the
+     right column and sticks. */
+  .doc { position: relative; display: grid; grid-template-columns: minmax(0, 712px) 200px; justify-content: center; column-gap: var(--space-12); }
   .doc__main { min-width: 0; }
   .doc__head { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-8); border-bottom: var(--border-w) solid var(--border-1); }
   .doc__title { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; }
@@ -161,14 +180,18 @@ const updated = formatDate(updatedRaw);
   .doc__source-list { display: flex; flex-direction: column; gap: var(--space-1); color: var(--text-3); font-size: var(--text-caption); }
   .doc__updated { padding-top: var(--space-5); border-top: var(--border-w) solid var(--border-1); color: var(--text-2); font-size: var(--text-body-s); }
   @media (hover: hover) and (pointer: fine) {
-    .rail__list a:hover { color: var(--text-1); }
+    .toc__list a:hover { color: var(--text-1); }
   }
 
-  /* Obvious contents rail */
-  .rail { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); align-self: start; display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
-  .rail__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
-  .rail__list { display: flex; flex-direction: column; border-left: var(--border-w) solid var(--border-1); }
-  .rail__list a {
+  /* On this page: the Obvious contents rail on desktop, a disclosure on smaller screens (one element). */
+  .toc { position: absolute; top: 0; bottom: 0; right: max(0px, calc((100% - 960px) / 2)); width: 200px; }
+  .toc__box { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
+  .toc__summary { display: flex; align-items: center; justify-content: space-between; list-style: none; cursor: default; }
+  .toc__summary::-webkit-details-marker { display: none; }
+  .toc__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .toc :global(.toc__chevron) { display: none; color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+  .toc__list { display: flex; flex-direction: column; margin-top: var(--space-4); border-left: var(--border-w) solid var(--border-1); }
+  .toc__list a {
     position: relative;
     display: block;
     padding: 6px 0 6px var(--space-4);
@@ -177,12 +200,19 @@ const updated = formatDate(updatedRaw);
     line-height: 1.35;
     transition: color var(--dur-colour) var(--ease-colour);
   }
-  .rail__list a[aria-current] { color: var(--text-1); }
-  .rail__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+  .toc__list a[aria-current] { color: var(--text-1); }
+  .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
 
   @media (max-width: 1023px) {
     .doc { grid-template-columns: minmax(0, 712px); }
-    .rail { display: none; }
+    .toc { position: static; width: auto; margin-top: var(--space-6); }
+    .toc__box { position: static; display: block; padding: 0; border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); background: var(--surface-1); }
+    .toc__summary { min-height: 48px; padding-inline: var(--space-4); cursor: pointer; }
+    .toc__title { color: var(--text-1); }
+    .toc :global(.toc__chevron) { display: block; }
+    .toc__box[open] :global(.toc__chevron) { transform: rotate(180deg); }
+    .toc__list { margin: 0 var(--space-4) var(--space-4); }
+    .toc__list a { min-height: 44px; display: flex; align-items: center; }
   }
   @media (max-width: 767px) {
     .doc__title { font-size: 32px; }
@@ -190,6 +220,6 @@ const updated = formatDate(updatedRaw);
     .doc__body { font-size: 17px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .rail__list a { transition: none; }
+    .toc__list a, .toc :global(.toc__chevron) { transition: none; }
   }
 </style>

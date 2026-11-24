@@ -34,7 +34,7 @@ jobs:
           ALLOWLIST=''
 
           blocked_ext='\.(png|jpe?g|gif|webp|avif|bmp|tiff?|ico|svg|heic|heif|psd|ai|eps|woff2?|ttf|otf|eot|mp4|m4v|mov|webm|mkv|avi|mp3|wav|ogg|m4a|flac|aac|zip|tar|gz|tgz|bz2|xz|7z|rar|pdf)$'
-          blocked_dir='^(public/map/|\.cache/)'
+          blocked_dir='^(public/map/|public/media/|\.cache/)'
 
           by_name=$(git ls-files | grep -i -E "$blocked_ext|$blocked_dir" || true)
           # Binary files of any extension, as git sees them in the index.

@@ -15,6 +15,7 @@
     "preview": "astro preview",
     "validate": "node scripts/validate.mjs",
     "map:fetch": "node scripts/map/fetch-map.mjs",
+    "logos:fetch": "node scripts/media/fetch-logos.mjs",
     "map:tiles": "node scripts/map/build-tiles.mjs",
     "map:grid": "node scripts/map/measure-grid.mjs",
     "map:harness": "node tools/map-harness/serve.mjs",
