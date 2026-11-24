@@ -3,10 +3,11 @@
 //   between groups, Zillow's "Reset all filters"); Tide Guide's navy glass menu with a check column on phone.
 //   Basemap: Felt's basemap popover (thumbnail rows, the selected one ringed pink) with a grid checkbox row.
 // Category filtering lives in the chip row, so the menu holds the other groups (one control per action).
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Icon } from './ui';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Button, Icon } from './ui';
 import type { IconName } from '../ui/icons';
-import { verificationLabels, type Filters, type MapFind, type MapRegion, passes } from './types';
+import { verificationLabels, type Filters, type MapCategory, type MapFind, type MapRegion, passes } from './types';
+import { exportCode, parseCode } from './found';
 
 function Popover({ id, label, open, onClose, anchor, className, children }: { id: string; label: string; open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; className?: string; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
@@ -42,8 +43,8 @@ function Row({ type, name, checked, onChange, icon, label, count, disabled }: { 
   );
 }
 
-export function FilterMenu({ open, onClose, anchor, finds, filters, setFilters, regions, search, onReset }: { open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; finds: MapFind[]; filters: Filters; setFilters: (f: Filters) => void; regions: MapRegion[]; search: string; onReset: () => void }) {
-  const count = (skip: keyof Filters, test: (f: MapFind) => boolean) => finds.filter((f) => passes(f, filters, search, skip) && test(f)).length;
+export function FilterMenu({ open, onClose, anchor, finds, filters, setFilters, regions, search, onReset, categories, found, onImport }: { open: boolean; onClose: (restore: boolean) => void; anchor: React.RefObject<HTMLElement | null>; finds: MapFind[]; filters: Filters; setFilters: (f: Filters) => void; regions: MapRegion[]; search: string; onReset: () => void; categories: MapCategory[]; found: Set<string>; onImport: (slugs: string[]) => void }) {
+  const count = (skip: keyof Filters, test: (f: MapFind) => boolean) => finds.filter((f) => passes(f, filters, search, skip, found) && test(f)).length;
   const levels = [...new Set(finds.map((f) => f.verification))];
   const regionRows = regions
     .map((r) => ({ ...r, n: count('region', (f) => f.regionIds.includes(r.id)) }))
@@ -78,6 +79,7 @@ export function FilterMenu({ open, onClose, anchor, finds, filters, setFilters, 
             <Row key={r.id} type="radio" name="region" checked={filters.region === r.id} onChange={() => set({ region: r.id })} label={r.name} count={r.n} disabled={r.n === 0} />
           ))}
         </fieldset>
+        <FoundGroup finds={finds} categories={categories} found={found} hide={filters.hideFound} setHide={(v) => set({ hideFound: v })} onImport={onImport} />
       </div>
     </Popover>
   );
@@ -104,5 +106,50 @@ export function BasemapMenu({ open, onClose, anchor, basemap, setBasemap, grid, 
         <Row type="checkbox" name="grid" checked={grid} onChange={() => setGrid(!grid)} icon="grid" label="Show the grid" />
       </div>
     </Popover>
+  );
+}
+
+// Found tracker (found.ts): hide what you found, found counts per type, and a code to move your list to another browser.
+function FoundGroup({ finds, categories, found, hide, setHide, onImport }: { finds: MapFind[]; categories: MapCategory[]; found: Set<string>; hide: boolean; setHide: (v: boolean) => void; onImport: (slugs: string[]) => void }) {
+  const [code, setCode] = useState('');
+  const [note, setNote] = useState('');
+  const total = finds.filter((f) => found.has(f.slug)).length;
+  const known = new Set(finds.map((f) => f.slug));
+  const doExport = async () => {
+    const c = exportCode([...found].filter((s) => known.has(s)));
+    setCode(c);
+    try { await navigator.clipboard.writeText(c); setNote('Code copied. Paste it into this box on your other browser.'); }
+    catch { setNote('Copy the code above. Paste it into this box on your other browser.'); }
+  };
+  const doImport = () => {
+    const slugs = parseCode(code, known);
+    if (!slugs) { setNote('That is not a Vice Files code. Codes start with VF1.'); return; }
+    const added = slugs.filter((s) => !found.has(s)).length;
+    onImport(slugs);
+    setNote(added ? `Added ${added} ${added === 1 ? 'find' : 'finds'} to your found list.` : 'Nothing new in that code.');
+  };
+  return (
+    <fieldset className="mgroup mgroup--found">
+      <legend className="mgroup__title">Found <span className="mgroup__sub tabular">{total} of {finds.length}</span></legend>
+      <Row type="checkbox" name="hideFound" checked={hide} onChange={() => setHide(!hide)} label="Hide found" count={total} />
+      <ul className="found-counts" role="list" aria-label="Found by type">
+        {categories.map((c) => {
+          const all = finds.filter((f) => f.category === c.id);
+          const n = all.filter((f) => found.has(f.slug)).length;
+          return <li key={c.id} className={n ? 'has-found' : undefined}><Icon name={c.icon} size={16} /><span className="found-counts__label">{c.label}</span><span className="found-counts__n tabular">{n}/{all.length}</span></li>;
+        })}
+      </ul>
+      <div className="found-code">
+        <label className="found-code__field">
+          <span className="sr-only">Found list code</span>
+          <input type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Paste a code to import" autoComplete="off" spellCheck={false} />
+        </label>
+        <div className="found-code__actions">
+          <Button variant="secondary" size="s" onClick={doExport}>Export code</Button>
+          <Button variant="quiet" size="s" onClick={doImport} disabled={!code.trim()}>Import</Button>
+        </div>
+        <p className="found-code__note caption" aria-live="polite">{note || 'Saved on this device only. No account.'}</p>
+      </div>
+    </fieldset>
   );
 }
