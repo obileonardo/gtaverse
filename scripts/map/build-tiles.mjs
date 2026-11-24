@@ -1,4 +1,4 @@
-// Builds 256 px deep-zoom tiles of the official Leonida map for Leaflet CRS.Simple.
+// Builds 512 px deep-zoom tiles of the official Leonida map for Leaflet CRS.Simple.
 // Run with: pnpm map:tiles (after pnpm map:fetch).
 //
 // Output (git-ignored, never committed: the map is Rockstar's copyright):
@@ -7,10 +7,16 @@
 //   public/map/preview.jpg             1600 px wide preview for quick checks
 //
 // Coordinate rule: at zoom z the image is scaled by 2^(z - maxZoom). Tile (x, y)
-// at zoom z covers scaled pixels [x*256, (x+1)*256) by [y*256, (y+1)*256), so
+// at zoom z covers scaled pixels [x*T, (x+1)*T) by [y*T, (y+1)*T) with T = 512, so
 // image pixel (px, py) is Leaflet point (px, py) at maxZoom:
 //   map.unproject([px, py], maxZoom)
-// Edge tiles are padded to 256 px with transparent pixels.
+// Edge tiles are padded to T px with transparent pixels.
+//
+// Why 512 px tiles (docs/MAP.md, "Sharpness"): the front end shows a 512 px tile at 512 CSS px on a 1x
+// screen and at 256 CSS px (one level deeper, zoomOffset 1) on a 2x screen, so every device pixel gets
+// one map pixel. One pyramid serves both, with a quarter of the requests 256 px tiles would need.
+// The zoom numbering stays on the old 256 px reference (full resolution is zoom 5), so the pixel space,
+// every pin and Leaflet's CRS are unchanged.
 
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -22,7 +28,9 @@ const map = JSON.parse(readFileSync(join(root, 'content/map.json'), 'utf8'));
 const { width: W, height: H } = map.image;
 const TILE = map.tiles.tile_size;
 const FORMAT = map.tiles.format;
-const QUALITY = 82;
+// Measured on 14 sample tiles (docs/MAP.md, "Sharpness"): quality 90 with smart chroma subsampling keeps
+// thin coloured lines and small type crisp; quality 82 with plain 4:2:0 softened them.
+const WEBP = { quality: 90, effort: 6, smartSubsample: true };
 
 // Cloudflare static asset limits (Workers static assets, checked 2026-11-23).
 const CF_MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -42,8 +50,9 @@ if (meta.width !== W || meta.height !== H) {
   process.exit(1);
 }
 
-// Native max zoom: the smallest z where one tile grid at full resolution covers the image.
-let maxZoom = Math.ceil(Math.log2(Math.max(W, H) / TILE));
+// Native max zoom on the 256 px reference: zoom 5 is full resolution for this image, whatever TILE is.
+const REF_TILE = 256;
+let maxZoom = Math.ceil(Math.log2(Math.max(W, H) / REF_TILE));
 const tilesAt = (z) => {
   const s = 2 ** (z - maxZoom);
   return Math.ceil((W * s) / TILE) * Math.ceil((H * s) / TILE);
@@ -89,7 +98,7 @@ for (let z = 0; z <= maxZoom; z++) {
       let img = sharp(level, { raw: { width: zw, height: zh, channels: 3 } }).extract({ left, top, width: w, height: h });
       if (w < TILE || h < TILE) img = img.extend({ right: TILE - w, bottom: TILE - h, background: { r: 0, g: 0, b: 0, alpha: 0 } });
       const out = join(tileDir, String(z), String(tx), `${ty}.${FORMAT}`);
-      await img.webp({ quality: QUALITY, effort: 4 }).toFile(out);
+      await img.webp(WEBP).toFile(out);
       const size = statSync(out).size;
       zCount++;
       zBytes += size;

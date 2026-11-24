@@ -1,6 +1,7 @@
 // Data the map island receives from src/pages/map.astro, and the pure helpers that filter it.
 // Kept free of content imports so the island bundle carries only what the map needs.
 import type { IconName } from '../ui/icons';
+import { matchesSearch } from './search';
 
 export type MapFind = {
   slug: string;
@@ -17,6 +18,7 @@ export type MapFind = {
   pinAccuracy: string | null;
   summary: string;
   where: string | null;
+  area: string | null; // the find's area text, for search
   still: string | null; // YouTube thumbnail of the creator's own post (never a Short)
   clip: { platform: string; url: string; creator: string | null; yt: string | null } | null;
   sources: { type: string; url: string; creator: string | null }[];
@@ -25,8 +27,12 @@ export type MapFind = {
 };
 
 export type MapCategory = { id: string; label: string; icon: IconName; count: number };
+/** A collectible transcribed from another map (content/collectibles.json). Off the map until its layer is turned on. */
+export type MapCollectible = { id: string; layer: string; number: number | null; x: number; y: number; label: string; note: string | null; url: string };
+/** A collectible layer: `count` items here, `marked` of `total` on the source map. */
+export type MapLayer = { id: string; label: string; count: number; marked: number; total: number; source: string };
 export type MapRegion = { id: string; name: string };
-export type MapMeta = { width: number; height: number; maxZoom: number; tileUrl: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
+export type MapMeta = { width: number; height: number; maxZoom: number; tileSize?: number; tileUrl: string; attribution: string; frame: { x0: number; y0: number; x1: number; y1: number }; rows: { id: string; y0: number; y1: number }[]; columns: { id: string; x0: number; x1: number }[] };
 
 export type Filters = {
   categories: string[];
@@ -35,9 +41,10 @@ export type Filters = {
   hasClip: boolean;
   spoilers: boolean;
   mature: boolean;
+  hideFound: boolean; // found tracker (found.ts): hide what this visitor has found
 };
 
-export const defaultFilters: Filters = { categories: [], region: 'all', verification: 'all', hasClip: false, spoilers: false, mature: false };
+export const defaultFilters: Filters = { categories: [], region: 'all', verification: 'all', hasClip: false, spoilers: false, mature: false, hideFound: false };
 
 const STORE = 'vf-map-filters';
 export const loadFilters = (): Filters => {
@@ -52,6 +59,7 @@ export const loadFilters = (): Filters => {
       hasClip: v.hasClip === true,
       spoilers: v.spoilers === true,
       mature: v.mature === true,
+      hideFound: v.hideFound === true,
     };
   } catch {
     return defaultFilters; // private mode or blocked storage: the defaults apply for this visit
@@ -62,23 +70,22 @@ export const saveFilters = (f: Filters) => {
 };
 
 type Skip = keyof Filters | 'search' | null;
-/** Does a find pass the filters? `skip` leaves one group out, for counts beside that group's options. */
-export const passes = (f: MapFind, flt: Filters, search: string, skip: Skip = null) => {
+const NONE = new Set<string>();
+/** Does a find pass the filters? `skip` leaves one group out, for counts beside that group's options. `found` is the found set. */
+export const passes = (f: MapFind, flt: Filters, search: string, skip: Skip = null, found: Set<string> = NONE) => {
   if (skip !== 'categories' && flt.categories.length && !flt.categories.includes(f.category)) return false;
   if (skip !== 'region' && flt.region !== 'all' && !f.regionIds.includes(flt.region)) return false;
   if (skip !== 'verification' && flt.verification !== 'all' && f.verification !== flt.verification) return false;
   if (skip !== 'hasClip' && flt.hasClip && !f.clip) return false;
   if (skip !== 'spoilers' && !flt.spoilers && f.spoiler) return false;
   if (skip !== 'mature' && !flt.mature && f.mature) return false;
-  if (skip !== 'search' && search) {
-    const q = search.toLowerCase();
-    if (!`${f.title} ${f.categoryLabel} ${f.regionLabel} ${f.summary}`.toLowerCase().includes(q)) return false;
-  }
+  if (skip !== 'hideFound' && flt.hideFound && found.has(f.slug)) return false;
+  if (skip !== 'search' && search && !matchesSearch(f, search)) return false; // search.ts: words, our synonyms, finders
   return true;
 };
 
 export const activeFilterCount = (flt: Filters) =>
-  flt.categories.length + (flt.region !== 'all' ? 1 : 0) + (flt.verification !== 'all' ? 1 : 0) + (flt.hasClip ? 1 : 0) + (flt.spoilers ? 1 : 0) + (flt.mature ? 1 : 0);
+  flt.categories.length + (flt.region !== 'all' ? 1 : 0) + (flt.verification !== 'all' ? 1 : 0) + (flt.hasClip ? 1 : 0) + (flt.spoilers ? 1 : 0) + (flt.mature ? 1 : 0) + (flt.hideFound ? 1 : 0);
 
 export const verificationLabels: Record<string, string> = {
   'multi-source': 'Multi-source',

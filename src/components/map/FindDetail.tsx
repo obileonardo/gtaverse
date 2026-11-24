@@ -17,6 +17,8 @@ type Common = {
   onCopy: () => void;
   onShare: () => void;
   titleId: string;
+  found: boolean; // found tracker (found.ts)
+  onToggleFound: () => void;
 };
 
 const hostOf = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
@@ -71,7 +73,7 @@ function pinText(find: MapFind, meta: MapMeta) {
   return [find.pinAccuracy ? accuracyLabels[find.pinAccuracy] ?? find.pinAccuracy : null, cell ? `cell ${cell}` : null].filter(Boolean).join(', ');
 }
 
-export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleId }: Common) {
+export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleId, found, onToggleFound }: Common) {
   const [tab, setTab] = useState<'details' | 'sources'>('details');
   return (
     <>
@@ -86,6 +88,7 @@ export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleI
         <div className="drawer__actions">
           <Button variant="ghost" size="m" icon="link" iconOnly label="Copy link to this find" onClick={onCopy} />
           <Button variant="ghost" size="m" icon="pin" iconOnly label={find.pin ? 'Show on the map' : 'No pin yet'} onClick={onShowOnMap} disabled={!find.pin} />
+          <Button variant="ghost" size="m" icon="check" iconOnly label={found ? 'Found. Mark as not found' : 'Mark as found'} aria-pressed={found} onClick={onToggleFound} className="found-toggle" />
           <Button variant="ghost" size="m" icon="arrow-right" iconOnly label="Open the find page" href={findUrl(find.slug)} className="drawer__open" />
         </div>
         <div className="drawer__tabs">
@@ -109,7 +112,7 @@ export function DrawerContent({ find, meta, onClose, onShowOnMap, onCopy, titleI
   );
 }
 
-export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleId }: Common) {
+export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleId, found, onToggleFound }: Common) {
   const pinValue = find.pin ? (find.pinAccuracy ? (accuracyLabels[find.pinAccuracy] ?? find.pinAccuracy).split(' ')[0] : 'Placed') : 'None';
   const stats = [
     { label: 'Sources', value: String(find.sources.length) },
@@ -134,6 +137,7 @@ export function SheetContent({ find, meta, onClose, onShowOnMap, onShare, titleI
         <div className="fsheet__actions">
           <Button variant="primary" stack icon="arrow-right" href={findUrl(find.slug)}>Find page</Button>
           <Button variant="secondary" stack icon="pin" onClick={onShowOnMap} disabled={!find.pin}>{find.pin ? 'Map' : 'No pin yet'}</Button>
+          <Button variant="secondary" stack icon="check" onClick={onToggleFound} aria-pressed={found} className="found-toggle">Found</Button>
           <Button variant="secondary" stack icon="share" onClick={onShare}>Share</Button>
         </div>
         <dl className="stats">

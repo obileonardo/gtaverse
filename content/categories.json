@@ -114,7 +114,7 @@
     "description": "Trading card sets hidden around Leonida, including Liberty City and Los Santos teams.",
     "icon_key": "icon.layer.card-sets",
     "color_token": "color.layer.card-sets",
-    "reference_totals": { "marked": 102, "total": 480, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 102, "total": 480, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "cocaine-flamingos",
@@ -123,7 +123,7 @@
     "description": "Flamingo collectibles. Replies to the reference post report flamingos at unmarked spots.",
     "icon_key": "icon.layer.cocaine-flamingos",
     "color_token": "color.layer.cocaine-flamingos",
-    "reference_totals": { "marked": 8, "total": 22, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 8, "total": 22, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "drone-time-trials",
@@ -132,7 +132,7 @@
     "description": "Timed drone courses.",
     "icon_key": "icon.layer.drone-time-trials",
     "color_token": "color.layer.drone-time-trials",
-    "reference_totals": { "marked": 42, "total": 42, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 42, "total": 42, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "fishing",
@@ -141,7 +141,7 @@
     "description": "Fishing spots and fish species. Fishing also raises Focus.",
     "icon_key": "icon.layer.fishing",
     "color_token": "color.layer.fishing",
-    "reference_totals": { "marked": 35, "total": 41, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 35, "total": 41, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "kitty-litter-labs",
@@ -150,7 +150,7 @@
     "description": "Kitty litter lab locations.",
     "icon_key": "icon.layer.kitty-litter-labs",
     "color_token": "color.layer.kitty-litter-labs",
-    "reference_totals": { "marked": 12, "total": 13, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 12, "total": 13, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "magazines-books-comics",
@@ -159,7 +159,7 @@
     "description": "Readable print media, several with Rockstar crossover references.",
     "icon_key": "icon.layer.magazines-books-comics",
     "color_token": "color.layer.magazines-books-comics",
-    "reference_totals": { "marked": 25, "total": 36, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 25, "total": 36, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "meditation-spots",
@@ -168,7 +168,7 @@
     "description": "Meditation spots.",
     "icon_key": "icon.layer.meditation-spots",
     "color_token": "color.layer.meditation-spots",
-    "reference_totals": { "marked": 10, "total": 10, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 10, "total": 10, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "meteorites",
@@ -177,7 +177,7 @@
     "description": "Fallen meteorites. Total is disputed: one player reports 16, not 11.",
     "icon_key": "icon.layer.meteorites",
     "color_token": "color.layer.meteorites",
-    "reference_totals": { "marked": 11, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. A reply reports 16 meteorites. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 11, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. A reply reports 16 meteorites. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "payday-loan-jobs",
@@ -186,7 +186,7 @@
     "description": "Payday loan job locations.",
     "icon_key": "icon.layer.payday-loan-jobs",
     "color_token": "color.layer.payday-loan-jobs",
-    "reference_totals": { "marked": 7, "total": 7, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 7, "total": 7, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "shops",
@@ -195,7 +195,7 @@
     "description": "Shops and stores across Leonida.",
     "icon_key": "icon.layer.shops",
     "color_token": "color.layer.shops",
-    "reference_totals": { "marked": 234, "total": 261, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 234, "total": 261, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "stunts",
@@ -204,7 +204,7 @@
     "description": "Stunt jumps and stunt locations.",
     "icon_key": "icon.layer.stunts",
     "color_token": "color.layer.stunts",
-    "reference_totals": { "marked": 397, "total": 397, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 397, "total": 397, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   },
   {
     "id": "tattoo-studios",
@@ -213,6 +213,6 @@
     "description": "Tattoo studios, such as Electric Fang Tattoo in Stockyard.",
     "icon_key": "icon.layer.tattoo-studios",
     "color_token": "color.layer.tattoo-studios",
-    "reference_totals": { "marked": 9, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work: cross-reference only." }
+    "reference_totals": { "marked": 9, "total": 11, "source_id": "game-checklists", "url": "https://x.com/Sksj002/status/2124675198209364423", "as_of": "2026-11-23", "note": "Counts from the Game Checklists map as reposted by @Sksj002. Their pins are their work; transcribed with credit under the owner exception of 2026-11-24 (decision C1), see content/collectibles.json." }
   }
 ]

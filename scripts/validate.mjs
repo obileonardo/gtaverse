@@ -57,13 +57,35 @@ const regions = readJson('content/regions.json');
 const categories = readJson('content/categories.json');
 const sources = readJson('content/sources.json');
 const map = readJson('content/map.json');
+const collectibles = readJson('content/collectibles.json');
 
 check('finds.schema.json', finds, 'content/finds.json');
+check('collectibles.schema.json', collectibles, 'content/collectibles.json');
 check('map.schema.json', map, 'content/map.json');
 check('connections.schema.json', connDoc, 'content/connections.json');
 check('regions.schema.json', regions, 'content/regions.json');
 check('categories.schema.json', categories, 'content/categories.json');
 check('sources.schema.json', sources, 'content/sources.json');
+
+// Map extras (docs/MAP.md, docs/MAP-3D.md): our search words and our hand-drawn relief.
+const searchTerms = readJson('content/search-terms.json');
+const relief = readJson('content/relief.json');
+check('search-terms.schema.json', searchTerms, 'content/search-terms.json');
+check('relief.schema.json', relief, 'content/relief.json');
+if (searchTerms && categories && regions) {
+  const catIds = new Set(categories.map((c) => c.id));
+  const regIds = new Set(regions.map((r) => r.id));
+  for (const id of Object.keys(searchTerms.categories ?? {})) if (!catIds.has(id)) err('content/search-terms.json', `unknown category "${id}"`);
+  for (const id of Object.keys(searchTerms.regions ?? {})) if (!regIds.has(id)) err('content/search-terms.json', `unknown region "${id}"`);
+}
+if (relief?.features && map?.image) {
+  const seen = new Set();
+  for (const f of relief.features) {
+    if (seen.has(f.id)) err('content/relief.json', `duplicate feature id "${f.id}"`);
+    seen.add(f.id);
+    for (const [x, y] of f.points) if (x >= map.image.width || y >= map.image.height) err('content/relief.json', `${f.id}: point ${x}, ${y} is outside the map image`);
+  }
+}
 
 const connections = connDoc?.items ?? [];
 
@@ -285,6 +307,43 @@ for (const c of categories ?? []) {
   if (c.reference_totals && c.reference_totals.marked > c.reference_totals.total) err(`category ${c.id}`, 'marked is greater than total');
 }
 
+// ---------------------------------------------------------------- collectibles (content/collectibles.json, docs/MAP.md)
+if (collectibles) {
+  const where = 'content/collectibles.json';
+  const layerIds = new Set();
+  for (const l of collectibles.layers ?? []) {
+    const cat = catById.get(l.layer);
+    if (!cat) err(where, `layer "${l.layer}" not in categories.json`);
+    else if (cat.kind !== 'map-layer') err(where, `layer "${l.layer}" is a ${cat.kind}, not a map-layer`);
+    if (layerIds.has(l.layer)) err(where, `layer "${l.layer}" listed twice`);
+    layerIds.add(l.layer);
+    if (l.marked > l.total) err(where, `layer "${l.layer}": marked ${l.marked} is greater than total ${l.total}`);
+    const its = (collectibles.items ?? []).filter((i) => i.layer === l.layer);
+    if (its.length !== l.transcribed) err(where, `layer "${l.layer}": transcribed says ${l.transcribed}, items hold ${its.length}`);
+    if (its.filter((i) => i.number === null).length !== l.numbers_unreadable) err(where, `layer "${l.layer}": numbers_unreadable does not match the items`);
+    if (l.transcribed !== l.marked) warn(where, `layer "${l.layer}": ${l.transcribed} items for ${l.marked} marked on the source`);
+    const ref = cat?.reference_totals;
+    if (ref && (ref.marked !== l.marked || ref.total !== l.total)) err(where, `layer "${l.layer}": counts differ from categories.json reference_totals`);
+  }
+  const keys = new Set();
+  for (const i of collectibles.items ?? []) {
+    const w = `collectible ${i.id}`;
+    if (!layerIds.has(i.layer)) err(w, `layer "${i.layer}" has no entry in layers`);
+    if (i.number !== null) {
+      const key = `${i.layer}#${i.number}`;
+      if (keys.has(key)) err(w, `number ${i.number} is used twice in layer "${i.layer}"`);
+      keys.add(key);
+      const total = (collectibles.layers ?? []).find((l) => l.layer === i.layer)?.total;
+      if (total && i.number > total) err(w, `number ${i.number} is above the layer total ${total}`);
+    }
+    if (map?.image && (i.pin.x >= map.image.width || i.pin.y >= map.image.height)) err(w, `pin (${i.pin.x}, ${i.pin.y}) is outside the ${map.image.width} x ${map.image.height} map image`);
+    else if (map?.grid && !insideFrame(i.pin)) warn(w, `pin (${i.pin.x}, ${i.pin.y}) is in the poster margin, outside the map frame`);
+    if (!i.source?.name?.trim() || !i.source?.url) err(w, 'needs a source credit (name and url)');
+    if (blockedUrls.some((u) => i.source.url.startsWith(u))) err(w, `source URL is on the blocked list: ${i.source.url}`);
+  }
+  uniq(collectibles.items, 'id', where);
+}
+
 // ---------------------------------------------------------------- sources
 for (const s of sources ?? []) {
   if (s.status === 'blocked' && s.url) err(`source ${s.id}`, 'blocked sources must have url null so nothing links to them');
@@ -327,6 +386,7 @@ console.log(`  sources      ${count(sources)} (${unusedCount} not yet cited by a
 console.log(`  explainers   ${explainers.length}`);
 const pinned = (finds ?? []).filter((f) => f.pin);
 console.log(`  map          ${map?.image ? `${map.image.width} x ${map.image.height} px` : 'missing'}; ${count(map?.labels)} labels; ${pinned.length} pinned finds (${pinned.filter((f) => f.pin_accuracy === 'exact').length} exact, ${pinned.filter((f) => f.pin_accuracy === 'landmark').length} landmark, ${pinned.filter((f) => f.pin_accuracy === 'area').length} area)`);
+console.log(`  collectibles ${count(collectibles?.items)} in ${count(collectibles?.layers)} layers (${(collectibles?.items ?? []).filter((i) => i.number === null).length} with an unreadable number)`);
 console.log(`  files scanned for em dashes: ${scan.length}`);
 if (warnings.length) {
   console.log(`\n${warnings.length} warning(s):`);

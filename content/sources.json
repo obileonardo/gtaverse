@@ -87,7 +87,7 @@
     "role": "map",
     "url": null,
     "status": "active",
-    "notes": "Collectible maps drawn on the official Leonida map. Their pins are their work: cross-reference only, never copy pins wholesale. Seen via the @Sksj002 repost; original URL not recorded."
+    "notes": "Collectible maps drawn on the official Leonida map, watermarked Game Checklists. Their pins are their work. Owner exception of 2026-11-24 (decision C1): the 12 collectible maps reposted by @Sksj002 (https://x.com/Sksj002/status/2124675198209364423) were transcribed into content/collectibles.json, every item credited. Finds still never take a position from them. Their own site or original post was not found on 2026-11-24, so url stays null."
   },
   {
     "id": "gamerant",
