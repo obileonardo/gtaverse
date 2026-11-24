@@ -1,0 +1,220 @@
+---
+// Home chapter 007, The map (round 2: the owner's Joby Aviation Love, a line map beside a list; PamPam's framed live
+// preview as the way in; phone: Justin Jefferson M010's big-type tile). Left: the headline, the four regions with
+// the most finds (real counts; the active row adds how many are pinned, true today and updated as pins arrive) and
+// the map credit. Right: our own drawing of Leonida's coast (traced by code at deploy, public/media/hero/coast.json,
+// the same file the hero's line art uses) in mild perspective, with every collectible location as a faint dot
+// (Game Checklists' positions, in the same map pixel space). Joby's arc and ring are drawn only for a pinned find:
+// there are none yet, so there is no route. Under it, PamPam's card frames the map's own base (the official tiles
+// built at deploy for /map, shown as they are, credited) with the map's chrome drawn on top; it falls back to the
+// coast drawing when the tiles are not built. Behaviour and motion: the-map.ts.
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
+import mapInfo from '../../../content/map.json';
+import { finds } from '../../lib/content';
+import { type RegionRow, collectiblePins, layerCards } from '../../lib/home';
+import { blipSvg } from '../../icons/render';
+import { categoryGlyphs } from '../../icons/family';
+
+interface Props { regions: RegionRow[]; index: number }
+const { regions, index } = Astro.props;
+const pinned = finds.filter((f) => f.pin).length;
+
+// The coast drawing's units: the printed frame of the official map is 1 wide (scripts/media/build-coast.mjs).
+// Collectible positions are map image pixels; the same frame maps them into the drawing (verified in that script).
+const fr = mapInfo.grid.frame;
+const fw = fr.x1 - fr.x0;
+const aspect = (fr.y1 - fr.y0) / fw;
+const VB = 1000;
+const dots = collectiblePins
+  .map((p) => [((p.x - fr.x0) / fw) * VB, ((p.y - fr.y0) / fw) * VB])
+  .filter(([x, y]) => x >= 0 && y >= 0 && x <= VB && y <= VB * aspect)
+  .map(([x, y]) => `M${x.toFixed(1)} ${y.toFixed(1)}h0`)
+  .join('');
+const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'));
+
+// The preview: the map's zoom 3 tiles (public/map/, built at deploy) shown at 256 CSS px each, so the whole map is
+// 722 x 988 CSS px; the band shows its middle, centred on the collectible locations.
+const metaFile = join(process.cwd(), 'public/map/meta.json');
+const meta = existsSync(metaFile) ? (JSON.parse(readFileSync(metaFile, 'utf8')) as { width: number; height: number; tileSize: number; perZoom: { z: number; width: number; height: number; cols: number; rows: number }[] }) : null;
+const z3 = meta?.perZoom.find((z) => z.z === 3) ?? null;
+const cy = collectiblePins.reduce((s, p) => s + p.y, 0) / collectiblePins.length / mapInfo.image.height;
+const tiles = z3 ? Array.from({ length: z3.cols * z3.rows }, (_, k) => ({ x: k % z3.cols, y: Math.floor(k / z3.cols) })) : [];
+const tw = z3 ? (meta!.tileSize / z3.width) * 100 : 0;
+const th = z3 ? (meta!.tileSize / z3.height) * 100 : 0;
+// One coral pin per layer, at its first real location, inside the band.
+const layers = layerCards();
+const firstPins = layers.slice(0, 7).map((l) => ({ id: l.id, label: l.label, pin: collectiblePins.find((p) => p.layer === l.id)! }));
+const band = { top: cy - 0.215, bottom: cy + 0.215 };
+const pins = firstPins.filter((p) => p.pin.y / mapInfo.image.height > band.top + 0.04 && p.pin.y / mapInfo.image.height < band.bottom - 0.02);
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+---
+<section class="mp" aria-labelledby="mp-title" data-mp>
+  <div class="container"><ChapterHead index={index} label="The map" heading={false} /></div>
+  <div class="mp__band">
+    <div class="container mp__grid">
+      <div class="mp__col">
+        <h2 class="mp__title" id="mp-title">Every find on one map<span class="mp__stop">.</span></h2>
+        <ul class="mp__list" role="list" data-mp-list>
+          {regions.map((r, i) => (
+            <li>
+              <a class="mp__row" href={`/map?region=${r.id}`} data-mp-row data-active={i === 0 ? '' : undefined}>
+                <span class="mp__name">{r.name}</span>
+                <span class="mp__parent">{r.parent}</span>
+                <span class="mp__more"><span>{plural(r.count, 'find', 'finds')} · {r.pinned} pinned so far</span></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div class="mp__cta"><Button href="/map" variant="primary" size="xl">Open the map</Button></div>
+        <p class="mp__foot">Map © Rockstar Games. Pins are placed by hand{pinned === 0 ? ', and none are placed yet.' : '.'}</p>
+      </div>
+      <a class="mp__art" href="/map" aria-label="Open the map" tabindex="-1" data-mp-art data-coast={hasCoast ? '/media/hero/coast.json' : undefined}>
+        <span class="mp__tilt">
+          <svg class="mp__svg" viewBox={`0 0 ${VB} ${Math.round(VB * aspect)}`} preserveAspectRatio="xMaxYMin meet" aria-hidden="true" focusable="false">
+            <g class="mp__coast" data-mp-coast></g>
+            <path class="mp__dots" d={dots} />
+          </svg>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <div class="container">
+    <a class="pv" href="/map">
+      <div class="pv__head">
+        <p class="pv__title">Open the map</p>
+        <p class="pv__lede">Filter by type, turn on {layers.length} collectible layers, mark what you found.</p>
+      </div>
+      <div class="pv__band" data-scheme="dark">
+        {z3 ? (
+          <div class="pv__map" style={`--cy:${cy.toFixed(4)}`} aria-hidden="true">
+            {tiles.map((t) => <img src={`/map/tiles/3/${t.x}/${t.y}.webp`} alt="" width="256" height="256" loading="lazy" decoding="async" style={`left:${(t.x * tw).toFixed(3)}%;top:${(t.y * th).toFixed(3)}%;width:${tw.toFixed(3)}%;height:${th.toFixed(3)}%`} />)}
+            {pins.map((p) => <span class="pv__pin" style={`left:${((p.pin.x / mapInfo.image.width) * 100).toFixed(2)}%;top:${((p.pin.y / mapInfo.image.height) * 100).toFixed(2)}%`} set:html={blipSvg(categoryGlyphs[p.id as keyof typeof categoryGlyphs], { form: 'pin', size: 32 })} />)}
+          </div>
+        ) : (
+          <div class="pv__fallback" aria-hidden="true">
+            <svg viewBox={`0 0 ${VB} ${Math.round(VB * aspect)}`} preserveAspectRatio="xMidYMid slice"><g class="mp__coast" data-mp-coast></g><path class="mp__dots" d={dots} /></svg>
+          </div>
+        )}
+        <div class="pv__panel" aria-hidden="true">
+          <p class="pv__tabs"><span class="is-on">Legend</span><span>List</span></p>
+          <ul role="list">
+            {layers.slice(0, 4).map((l) => <li><span set:html={blipSvg(categoryGlyphs[l.id as keyof typeof categoryGlyphs], { size: 20 })} />{l.label}</li>)}
+          </ul>
+        </div>
+        {z3 && <p class="pv__credit">{mapInfo.source.attribution.split('.')[0]}.</p>}
+      </div>
+    </a>
+  </div>
+</section>
+
+<script>
+  import { initTheMap } from './the-map';
+  document.querySelectorAll<HTMLElement>('[data-mp]').forEach(initTheMap);
+</script>
+
+<style>
+  .mp__band { position: relative; margin-top: var(--space-10); }
+  .mp__grid { position: relative; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: var(--space-10); min-height: 680px; }
+  .mp__col { position: relative; z-index: 1; display: flex; flex-direction: column; }
+  /* Joby's headline: two lines, 600, tight tracking and leading. */
+  .mp__title { font-size: var(--text-section); font-weight: 600; line-height: var(--leading-display); letter-spacing: -0.03em; padding-block: 0.06em; }
+  .mp__list { margin-top: var(--space-12); }
+  .mp__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-top: var(--border-w) solid var(--rule-soft);
+    min-height: 44px;
+  }
+  .mp__list li:last-child .mp__row { border-bottom: var(--border-w) solid var(--rule-soft); }
+  .mp__name { font-size: var(--text-title-l); line-height: 1.3; color: var(--text-1); }
+  .mp__parent { align-self: center; font-size: var(--text-caption); color: var(--text-3); }
+  /* The active row's second line crossfades in (old out 140, new in 240). Every row keeps the line's room, so the
+     list never jumps: Joby's row grows, but a height change would animate layout, which the motion rules rule out. */
+  .mp__more { grid-column: 1 / -1; padding-top: 4px; opacity: 0; font-size: var(--text-body-s); color: var(--text-2); transition: opacity 140ms var(--ease-colour); }
+  .mp__row[data-active] .mp__more { opacity: 1; transition: opacity 240ms var(--ease-colour); }
+  .mp__cta { display: none; }
+  .mp__foot { margin-top: auto; padding-top: var(--space-10); font-size: var(--text-caption); color: var(--text-3); max-width: 280px; }
+
+  /* The drawing: our coast in 1px lines at about 40% of --text-3, the collectible dots fainter still, tilted. */
+  .mp__art { position: relative; display: block; perspective: 1600px; margin-right: calc(-1 * var(--page-pad)); overflow: hidden; overflow: clip; }
+  .mp__tilt { position: absolute; inset: -4% -6% -46% 8%; display: block; transform: rotateX(28deg); transform-origin: 50% 30%; }
+  .mp__svg { width: 100%; height: 100%; overflow: visible; }
+  .mp__svg :global(.mp__coast path), .pv__fallback :global(.mp__coast path) { fill: none; stroke: var(--text-3); stroke-opacity: 0.55; stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .mp__dots { fill: none; stroke: var(--text-3); stroke-opacity: 0.45; stroke-width: 2.5px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  /* First view: the coast sweeps in from the south (a clip-path reveal, once, 1.6s). */
+  @media screen {
+    :global(html.js:not(.rv-off)) .mp__art:not([data-in]) .mp__svg { clip-path: inset(100% 0 0 0); }
+  }
+  .mp__art[data-in='in'] .mp__svg { animation: mp-draw 1600ms var(--ease-in-out) both; }
+  @keyframes mp-draw { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
+
+  /* PamPam's card: 60% of the content box, a tinted head band over the framed product. */
+  .pv { display: block; width: min(100%, 710px); margin: var(--space-16) auto 0; border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); overflow: hidden; background: var(--surface-1); transition: transform var(--dur-press) var(--ease-out); }
+  .pv:active { transform: scale(0.99); }
+  .pv__head { padding: var(--space-8) var(--space-10) var(--space-6); display: grid; gap: var(--space-2); }
+  .pv__title { font-size: var(--text-h1); font-weight: 600; line-height: var(--leading-tight); letter-spacing: -0.01em; }
+  .pv__lede { font-size: var(--text-body); color: var(--text-2); max-width: 44ch; }
+  .pv__band { position: relative; aspect-ratio: 1.7; overflow: hidden; background: var(--map-land); container-type: inline-size; }
+  .pv__map { position: absolute; left: 50%; top: 50%; width: 101.7%; aspect-ratio: 722 / 988; translate: -50% calc(var(--cy) * -100%); overflow: hidden; }
+  .pv__map img { position: absolute; max-width: none; }
+  .pv__pin { position: absolute; translate: -50% -100%; display: flex; }
+  .pv__fallback { position: absolute; inset: 0; }
+  .pv__fallback svg { width: 100%; height: 100%; }
+  .pv__panel {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    width: 34%;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-radius: var(--radius-s);
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: var(--border-w) solid var(--glass-border);
+    color: var(--text-1);
+  }
+  .pv__tabs { display: flex; gap: var(--space-4); padding-bottom: var(--space-2); margin-bottom: var(--space-2); border-bottom: var(--border-w) solid var(--glass-border); font-size: 13px; font-weight: 600; color: var(--text-2); }
+  .pv__tabs .is-on { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; text-decoration-color: var(--accent); }
+  .pv__panel ul { display: grid; gap: 6px; }
+  .pv__panel li { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; line-height: 1.3; min-width: 0; white-space: nowrap; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; }
+  .pv__panel li span { display: flex; flex: none; }
+  .pv__credit { position: absolute; right: var(--space-3); bottom: var(--space-2); font-size: 12px; color: rgb(255 255 255 / 0.8); padding: 2px 8px; border-radius: var(--radius-xs); background: rgb(13 12 26 / 0.6); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .mp__row:hover .mp__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  }
+
+  @media (max-width: 1023px) {
+    .mp__grid { grid-template-columns: 280px minmax(0, 1fr); min-height: 560px; }
+  }
+
+  /* Phone (Justin Jefferson M010): the coast bleeds off the right edge, the headline in four lines of condensed caps
+     at the bottom left, one wide pink pill; the region list follows. PamPam's card is the desktop's way in only. */
+  @media (max-width: 767px) {
+    .mp__band { margin-top: var(--space-6); }
+    .mp__grid { display: block; min-height: 0; }
+    .mp__art { position: absolute; top: 0; right: 0; width: 70%; height: 520px; margin: 0; }
+    .mp__tilt { inset: 0 -30% 0 0; transform: none; }
+    .mp__col { padding-top: 240px; }
+    .mp__title { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-l); line-height: 0.95; letter-spacing: var(--tracking-display); text-transform: uppercase; max-width: 6.2em; }
+    .mp__stop { display: none; }
+    .mp__cta { display: block; order: 2; margin-top: var(--space-6); }
+    .mp__cta :global(.btn) { width: 205px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.02em; }
+    .mp__list { order: 3; margin-top: var(--space-8); }
+    .mp__foot { order: 4; padding-top: var(--space-5); }
+    .pv { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js:not(.rv-off)) .mp__art:not([data-in]) .mp__svg { clip-path: none; opacity: 0; }
+    .mp__art[data-in='in'] .mp__svg { animation: mp-fade var(--dur-fade-reduced) linear both; }
+    .pv { transition: none; }
+  }
+  @keyframes mp-fade { from { opacity: 0; } }
+</style>

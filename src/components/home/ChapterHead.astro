@@ -1,0 +1,81 @@
+---
+// The head every round 2 home chapter opens on (owner answer Q3 B, 24 Nov 2026): a 1px rule across the content
+// width, then the mono index with its 6px square bullet, 8px above the bracket label (the menu's "[ The guide ]"
+// voice), Geist Mono caps. A24's "Recently added" rule and label, with kprverse's index. Use it once per chapter,
+// inside the chapter's .container so the rule spans the content box. One implementation for chapters 001 to 015.
+//   index    the chapter number: 1 prints as 001; a string ("009") prints as given
+//   label    the words inside the brackets
+//   count    an optional mono superscript after the label (A24 / NEON count)
+//   heading  true (default): the label is the chapter's h2. false: a <p>, when the chapter has its own visible title
+//            (then pass that title's id to the section's aria-labelledby)
+//   id       the label's id, for aria-labelledby
+// Slot "end": links at the right end of the label row (Linear's "All updates").
+// Motion (first-view.ts, never on a back navigation): the rule draws from the left (scaleX, a composited transform;
+// a clip-path draw cost a frame in twelve while scrolling) over --dur-reveal on --ease-reveal, and the index and label
+// rise 8px (--dur-reveal-group). Reduced motion: they fade only.
+import { pad3 } from '../../lib/home';
+interface Props { index: number | string; label: string; id?: string; heading?: boolean; count?: number; class?: string }
+const { index, label, id, heading = true, count, class: className } = Astro.props;
+const Tag = heading ? 'h2' : 'p';
+const num = typeof index === 'number' ? pad3(index) : index;
+---
+<div class:list={['chead', className]} data-fv>
+  <span class="chead__rule" aria-hidden="true"></span>
+  <div class="chead__row">
+    <div class="chead__ids">
+      <p class="chead__index" aria-hidden="true"><span class="chead__bullet"></span>{num}</p>
+      <Tag class="chead__label" id={id}><span aria-hidden="true">[&nbsp;</span>{label}<span aria-hidden="true">&nbsp;]</span>{count !== undefined && <sup class="chead__count">{count}</sup>}</Tag>
+    </div>
+    {Astro.slots.has('end') && <div class="chead__end"><slot name="end" /></div>}
+  </div>
+</div>
+
+<style>
+  .chead { display: flex; flex-direction: column; }
+  .chead__rule { display: block; height: 1px; margin-bottom: var(--space-3); background: var(--rule-soft); transform-origin: left center; }
+  .chead__row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
+  .chead__ids { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chead__index {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .chead__bullet { width: 6px; height: 6px; background: currentColor; flex: none; }
+  .chead__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-2);
+  }
+  .chead__count { margin-left: 4px; font-size: var(--text-mono-caps); color: var(--text-3); vertical-align: top; position: relative; top: -0.3em; }
+  .chead__end { display: flex; align-items: center; gap: var(--space-5); }
+
+  /* Hidden start states only under html.js, so print, screenshots without JavaScript and no-JS show the head. */
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) .chead__rule { transform: scaleX(0); }
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) :is(.chead__index, .chead__label) { opacity: 0; }
+  .chead[data-fv='in'] .chead__rule { animation: chead-draw var(--dur-reveal) var(--ease-reveal) both; }
+  .chead[data-fv='in'] .chead__index { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 120ms both; }
+  .chead[data-fv='in'] .chead__label { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 170ms both; }
+  @keyframes chead-draw { from { transform: scaleX(0); } }
+  @keyframes chead-rise { from { opacity: 0; translate: 0 8px; } }
+  @keyframes chead-fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) .chead__rule { transform: none; opacity: 0; }
+    .chead[data-fv='in'] :is(.chead__rule, .chead__index, .chead__label) { animation: chead-fade var(--dur-fade-reduced) var(--ease-colour) both; }
+  }
+  :global(html.rv-off) .chead :is(.chead__rule, .chead__index, .chead__label) { transform: none !important; opacity: 1 !important; }
+</style>
+
+<script>
+  import { initFirstView } from './first-view';
+  initFirstView();
+</script>

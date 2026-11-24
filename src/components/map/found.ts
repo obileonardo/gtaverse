@@ -1,31 +1,11 @@
 // Found tracker: which finds this visitor has found, kept on the device only (no accounts, nothing sent anywhere).
-// Storage can be blocked (private mode, strict settings): then the set lives in memory for this visit and nothing breaks.
+// Storage (and its in-memory fallback) lives in src/lib/found-store.ts, shared with the home page's Found toggles.
 // An export code moves the set to another browser: "VF1." + base64url of the slugs, space separated. Unknown slugs
 // in an imported code are ignored, so a code keeps working as finds are added or renamed.
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { readFound as read, writeFound as write, onFoundChange } from '../../lib/found-store';
 
-const STORE = 'vf-found';
 const PREFIX = 'VF1.';
-let memory: string[] | null = null; // the fallback when storage throws
-const listeners = new Set<() => void>();
-
-function read(): string[] {
-  try {
-    const raw = localStorage.getItem(STORE);
-    if (!raw) return memory ?? [];
-    const v = JSON.parse(raw);
-    return Array.isArray(v?.slugs) ? v.slugs.filter((s: unknown): s is string => typeof s === 'string') : [];
-  } catch {
-    return memory ?? [];
-  }
-}
-
-function write(slugs: string[]) {
-  const unique = [...new Set(slugs)].sort();
-  memory = unique;
-  try { localStorage.setItem(STORE, JSON.stringify({ v: 1, slugs: unique })); } catch { /* blocked: kept in memory for this visit */ }
-  listeners.forEach((l) => l());
-}
 
 const toBase64Url = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromBase64Url = (s: string) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)));
@@ -50,10 +30,7 @@ export function useFound() {
   useEffect(() => {
     const sync = () => setSlugs(read());
     sync();
-    listeners.add(sync);
-    const onStorage = (e: StorageEvent) => { if (e.key === STORE) sync(); };
-    addEventListener('storage', onStorage);
-    return () => { listeners.delete(sync); removeEventListener('storage', onStorage); };
+    return onFoundChange(sync);
   }, []);
   const toggle = useCallback((slug: string) => {
     const cur = read();
