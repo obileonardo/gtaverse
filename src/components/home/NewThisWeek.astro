@@ -1,0 +1,191 @@
+---
+// Home chapter 003, New this week (round 2: the owner's Linear Love, opened by A24's hairline rule and label; Runway
+// at tablet width; PlayStation App's news feed on the phone). Dated update cards: a small dark still (or the sunrise
+// glow with the type's blip), the day it was added, the title and our summary. Four show at once; A24's thin
+// chevrons page through the newest twelve. The dates are each find's real added_at, so when finds were added the
+// same day every card says so. Spoiler and mature finds keep their summary and art out (safeSummary, cardImage).
+// The chapter is left out when nothing was added in the seven days before the build.
+import Icon from '../ui/Icon.astro';
+import Button from '../ui/Button.astro';
+import ChapterHead from './ChapterHead.astro';
+import type { Find } from '../../lib/content';
+import { cardImage, formatDate } from '../../lib/finds';
+import { categoryLabel } from '../../lib/media';
+import { safeSummary } from '../../lib/feed';
+import { ageLabel } from '../../lib/home';
+import { youtubeId } from '../../lib/clip';
+import { blipSvg, iconSvg } from '../../icons/render';
+import { categoryGlyphs } from '../../icons/family';
+
+interface Props { finds: Find[]; total: number; index: number }
+const { finds, total, index } = Astro.props;
+const blip = (f: Find, size: number) => blipSvg(categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin', { size });
+---
+{finds.length > 0 && (
+<section class="nw" aria-labelledby="nw-label">
+  <div class="container">
+    <ChapterHead index={index} label="New this week" count={total} id="nw-label">
+      <Fragment slot="end">
+        <a class="nw__link" href="/rss.xml"><span set:html={iconSvg('rss', { size: 16 })} />Follow by RSS</a>
+        <a class="nw__link" href="/finds">All {total} new finds<Icon name="chevron-right" size={16} stroke={2} /></a>
+      </Fragment>
+    </ChapterHead>
+    <div class="nw__frame">
+      <button type="button" class="nw__chev nw__chev--prev" data-nw-prev aria-label="Newer finds" hidden><span></span></button>
+      <ul class="nw__track" role="list" data-nw-track data-reveal>
+        {finds.map((f) => {
+          const img = cardImage(f);
+          const yt = f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
+          return (
+            <li class="nw__item">
+              <article class="nw__card">
+                <header class="nw__head">
+                  <span class="nw__avatar" set:html={blip(f, 28)} />
+                  <span class="nw__who"><span class="nw__cat">{categoryLabel(f)}</span><span class="nw__age">{ageLabel(f.added_at)}</span></span>
+                </header>
+                <div class="nw__media">
+                  {img ? (
+                    <img src={img.src} srcset={img.srcset} sizes="(max-width: 767px) 92vw, (max-width: 1023px) 31vw, 290px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+                  ) : (
+                    <div class="nw__glow" aria-hidden="true"><span set:html={blip(f, 40)} /></div>
+                  )}
+                </div>
+                <div class="nw__body">
+                  <p class="nw__date"><time datetime={f.added_at}>{formatDate(f.added_at)}</time></p>
+                  <h3 class="nw__title"><a href={`/finds/${f.slug}`} class="nw__hit"><span class="nw__clamp">{f.title}</span></a></h3>
+                  <p class="nw__summary"><span class="nw__clamp nw__clamp--3">{safeSummary(f)}</span></p>
+                </div>
+                <div class="nw__actions">
+                  {yt && <Button href={f.clip!.url} variant="secondary" size="s" icon="arrow-up-right" target="_blank" rel="noopener" class="nw__yt">Watch on YouTube</Button>}
+                  <button type="button" class="nw__found" data-found={f.slug} aria-pressed="false" aria-label={`Found it: ${f.title}`} set:html={iconSvg('found', { size: 20 })} />
+                </div>
+              </article>
+            </li>
+          );
+        })}
+      </ul>
+      <button type="button" class="nw__chev nw__chev--next" data-nw-next aria-label="Older finds" hidden><span></span></button>
+    </div>
+    <div class="nw__all"><Button href="/finds" variant="quiet" iconEnd="chevron-right">All new finds</Button></div>
+  </div>
+</section>
+)}
+
+<script>
+  import { initNewThisWeek } from './new-this-week';
+  document.querySelectorAll<HTMLElement>('.nw').forEach(initNewThisWeek);
+</script>
+
+<style>
+  .nw__link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-body-s); font-weight: 600; color: var(--text-2); transition: color var(--dur-colour) var(--ease-colour); }
+  .nw__link > span { display: flex; }
+  @media (hover: hover) and (pointer: fine) { .nw__link:hover { color: var(--text-1); } }
+
+  .nw__frame { position: relative; margin-top: var(--space-10); }
+  /* Four cards across the content box, 20 apart; the track scrolls natively and A24's chevrons page it by four. */
+  .nw__track {
+    --cols: 4;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - (var(--cols) - 1) * var(--space-5)) / var(--cols));
+    gap: var(--space-5);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 4px;
+    margin-block: -4px;
+  }
+  .nw__track::-webkit-scrollbar { display: none; }
+  .nw__item { scroll-snap-align: start; min-width: 0; }
+
+  /* Linear's card: a step above the ground, a 1px edge, radius 12, the art flush on top at 1.6:1. */
+  .nw__card { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--surface-1); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); }
+  .nw__head, .nw__actions { display: none; }
+  .nw__media { position: relative; aspect-ratio: 1.6; background: var(--surface-2); overflow: hidden; border-radius: calc(var(--radius-m) - 1px) calc(var(--radius-m) - 1px) 0 0; }
+  .nw__media img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; transition: transform var(--dur-card-lift) var(--ease-out); }
+  .nw__glow { position: absolute; inset: 0; display: grid; place-items: center; background: var(--glow-hero), var(--surface-1); }
+  .nw__glow span { display: flex; }
+  .nw__body { display: grid; gap: var(--space-2); padding: var(--space-6); }
+  .nw__date { font-family: var(--font-mono); font-size: var(--text-mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .nw__title { font-size: var(--text-title); font-weight: 600; line-height: 1.35; }
+  .nw__summary { font-size: var(--text-body-s); line-height: 20px; color: var(--text-2); }
+  /* Clamped lines keep their full glyphs: the clip lives on a wrapper with room above and below each line. */
+  .nw__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+  .nw__clamp--3 { -webkit-line-clamp: 3; }
+  .nw__hit::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+  .nw__card:has(.nw__hit:focus-visible) { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+  .nw__hit:focus-visible { outline: none; }
+  .nw__card { transition: transform var(--dur-press) var(--ease-out); }
+  .nw__card:active { transform: scale(0.98); }
+
+  /* A24's thin chevron: a 1px line 50 tall in the gutter, a 44 wide hit area. */
+  .nw__chev { position: absolute; top: 0; bottom: 0; width: 44px; display: grid; place-items: center; color: var(--text-2); transition: color var(--dur-colour) var(--ease-colour); }
+  .nw__chev[hidden] { display: none; }
+  .nw__chev--next { right: calc(-1 * var(--page-pad) / 2 - 22px); }
+  .nw__chev--prev { left: calc(-1 * var(--page-pad) / 2 - 22px); }
+  .nw__chev span { width: 18px; height: 50px; background: currentColor; clip-path: polygon(0 0, 1.5px 0, 100% 50%, 1.5px 100%, 0 100%, calc(100% - 1.5px) 50%); }
+  .nw__chev--prev span { transform: scaleX(-1); }
+  .nw__all { display: none; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nw__card:hover .nw__media img { transform: scale(1.03); }
+    .nw__chev:hover { color: var(--text-1); }
+  }
+
+  /* Tablet (Runway): three across, the summary folds away, the headline steps up. */
+  @media (max-width: 1023px) {
+    .nw__track { --cols: 3; }
+    .nw__summary { display: none; }
+    .nw__title { font-size: var(--text-h2); line-height: 1.25; }
+    .nw__chev--next { right: calc(-1 * var(--page-pad)); }
+    .nw__chev--prev { left: calc(-1 * var(--page-pad)); }
+  }
+
+  /* Phone (PlayStation App): a feed of full-width cards separated by an 8px band; a head row with the type's blip,
+     its name and the age; the still; the title and three lines; then "Watch on YouTube" and the Found toggle. */
+  @media (max-width: 767px) {
+    .nw__frame { margin-top: var(--space-5); margin-inline: calc(-1 * var(--page-pad)); }
+    .nw__track { display: flex; flex-direction: column; gap: 8px; overflow: visible; scroll-snap-type: none; background: var(--surface-1); padding: 0; margin: 0; }
+    .nw__item:nth-child(n + 5) { display: none; }
+    .nw__card { background: var(--bg); border: 0; border-radius: 0; padding: var(--space-5) var(--page-pad); gap: var(--space-3); }
+    .nw__card:active { transform: none; }
+    .nw__head { display: flex; align-items: center; gap: var(--space-3); }
+    .nw__avatar { display: flex; }
+    .nw__who { display: grid; line-height: 1.25; }
+    .nw__cat { font-size: var(--text-label); color: var(--text-1); }
+    .nw__age { font-size: 13px; color: var(--text-3); }
+    .nw__media { aspect-ratio: 16 / 9; border-radius: var(--radius-m); }
+    .nw__body { padding: 0; gap: var(--space-1); }
+    .nw__date { display: none; }
+    .nw__summary { display: block; font-size: var(--text-body-s); line-height: 21px; }
+    .nw__title { font-size: var(--text-title); }
+    .nw__actions { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); }
+    .nw__actions :global(.nw__yt) { margin-right: auto; }
+    .nw__found {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      margin: -6px -6px -6px auto;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-full);
+      background: radial-gradient(closest-side, var(--surface-2) 15.5px, transparent 16px);
+      color: var(--text-2);
+      transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour);
+    }
+    .nw__found:active { transform: scale(0.94); }
+    .nw__found[aria-pressed='true'] { background: radial-gradient(closest-side, var(--inverse-fill) 15.5px, transparent 16px); color: var(--inverse-text); }
+    .nw__chev { display: none !important; }
+    .nw__all { display: flex; margin-top: var(--space-6); }
+    .nw__all :global(.btn) { --h: var(--ctrl-size); }
+    /* PlayStation's pill and like button stay 32 to the eye; their hit areas reach 44. */
+    .nw__actions :global(.nw__yt) { --h: var(--ctrl-size); position: relative; background: none; padding-inline: 14px; }
+    .nw__actions :global(.nw__yt .btn__label), .nw__actions :global(.nw__yt .icon) { position: relative; }
+    .nw__actions :global(.nw__yt)::before { content: ''; position: absolute; inset: 6px 0; border-radius: var(--radius-full); background: var(--accent-tint); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nw__media img, .nw__card, .nw__found { transition: none; }
+  }
+</style>

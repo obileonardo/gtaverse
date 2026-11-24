@@ -69,6 +69,10 @@
   /* Map (dark) */
   --map-land: #1f1f38;
   --map-halo: rgb(13 12 26 / 0.8);
+
+  /* Ruled pages (round 2, HUXLEY 007, 009, 013): a hairline half as strong as --border-1, for chapter rules, ruled
+     cells and lists. --border-1 reads as a card edge; this reads as a ruled page. */
+  --rule-soft: rgb(255 255 255 / 0.08);
 }
 
 [data-scheme='dark'] { color: var(--text-1); }
@@ -100,11 +104,18 @@
   --text-mono-caps: 12px;
   --text-stat: 20px;
 
+  /* Round 2 (home chapters): Unseen Studio's and Joby's chapter titles, Justin Jefferson's manifesto, HUXLEY 007's
+     mono name. Phone values below. */
+  --text-section: clamp(44px, 4.2vw, 80px);  /* Inter 500 to 600 chapter titles (60 at 1440) */
+  --text-manifesto: clamp(64px, 6.7vw, 128px); /* Big Shoulders 900 caps manifesto (96 at 1440: Big Shoulders is wider than Justin Jefferson's face, so this keeps their three to four lines) */
+  --text-mono-display: 64px;                  /* Geist Mono 300 caps names (the type spotlight) */
+
   --leading-display: 0.92;
   --leading-tight: 1.15;
   --leading-body: 1.45;
   --tracking-display: -0.015em;
   --tracking-caps: 0.12em;
+  --tracking-wide: 0.2em;   /* spaced mono caps labels (Coda's pill, Justin Jefferson's stat lines) */
 
   /* ---------- Spacing (4pt base) ---------- */
   --space-1: 4px;
@@ -118,6 +129,7 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-section: 96px;
+  --space-chapter: 160px;   /* between home chapters (A24 150, Justin Jefferson 170 at 1440); 96 on the phone */
 
   /* The gutter (owner decision, 24 Nov 2026): the left and right edge every page shares, header-aligned content,
      the hero and the footer. 128px at 1440 and wider, stepping down at 1280, 1024 and 768, 16px on the phone. */
@@ -151,6 +163,11 @@
   --radius-xl: 20px;
   --radius-sheet: 32px;
   --radius-full: 9999px;
+
+  /* ---------- The cut (round 2): one signature shape, a 45 degree chamfer, used only where a Love shows one ---------- */
+  --cut-s: 12px;  /* bracket marks on an active tile, a card notch */
+  --cut-m: 24px;  /* phone art panels */
+  --cut-l: 56px;  /* desktop art panels (BitcoinOS) */
 
   /* ---------- Borders (no box shadows anywhere) ---------- */
   --border-w: 1px;
@@ -225,6 +242,10 @@
     --text-mono: 17px;
     --gutter: 16px;
     --space-section: 64px;
+    --space-chapter: 96px;
+    --text-section: 40px;
+    --text-manifesto: 56px;
+    --text-mono-display: 32px;
     --island-top: 8px;
     --radius-xl: 28px;
   }
@@ -277,4 +298,6 @@
 
   --map-land: #f9f5f0;
   --map-halo: rgb(249 245 240 / 0.85);
+
+  --rule-soft: rgb(47 47 47 / 0.1);
 }

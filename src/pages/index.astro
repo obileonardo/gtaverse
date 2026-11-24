@@ -3,31 +3,39 @@
 // line art) behind the A24 stack of featured finds on desktop and the Apple TV slides on the phone.
 // Featured = the first five published finds (content order) that are safe to show and have a still, with titles
 // short enough to sit on one line of the A24 stack (47 characters).
+// Below the hero, fifteen numbered chapters (round 2 of the taste board, docs/DESIGN-SYSTEM.md "Home chapters"),
+// each opened by a 1px rule and a mono index. Media chapters alternate with type-led ones so no two neighbours look
+// alike; they are 160px apart (--space-chapter). Every list and number comes from content (src/lib/home.ts), and a
+// find shown in an earlier chapter is skipped where a later one would repeat it.
 import Base from '../layouts/Base.astro';
-import Card from '../components/ui/Card.astro';
-import Icon from '../components/ui/Icon.astro';
 import Hero from '../components/home/Hero.astro';
-import { finds, connections, explainers } from '../lib/content';
-import { findStill, showcaseable, categoryLabel, regionLabel } from '../lib/media';
-import { cardImage } from '../lib/finds';
+import Spotlight from '../components/home/Spotlight.astro';
+import SelectedFinds from '../components/home/SelectedFinds.astro';
+import NewThisWeek from '../components/home/NewThisWeek.astro';
+import WatchClips from '../components/home/WatchClips.astro';
+import Manifesto from '../components/home/Manifesto.astro';
+import ByType from '../components/home/ByType.astro';
+import TheMap from '../components/home/TheMap.astro';
+import CollectibleLayers from '../components/home/CollectibleLayers.astro';
+import { finds } from '../lib/content';
+import { findStill } from '../lib/media';
 import { addedThisWeek } from '../lib/feed';
+import { spotlightFinds, selectedFilters, newThisWeek, clipFinds, typeEntries, topRegions, layerCards, collectibleTotal } from '../lib/home';
 import { website, organization } from '../lib/seo';
 
-const pool = finds.filter(showcaseable);
 // Finds with a still come first; finds without one still qualify and show the sunrise glow instead.
 const safe = finds.filter((f) => !f.spoiler && !f.mature && f.title.length <= 47);
 const featured = [...safe.filter((f) => findStill(f)), ...safe.filter((f) => !findStill(f))].slice(0, 5);
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-const more = pool.filter((f) => !featured.includes(f)).slice(0, 8);
-const pinned = finds.filter((f) => f.pin).length;
 const lead = featured[0];
 const leadStill = lead ? findStill(lead) : null;
-const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.clip.creator}` : undefined);
-// New this week: finds added in the seven days before this build, newest first, skipping any already shown above.
-// The site is static, so "this week" is as of the last build; the row disappears when nothing new was added.
-const fresh = addedThisWeek();
-const freshShown = fresh.filter((f) => !featured.includes(f) && !more.includes(f)).slice(0, 4);
-const dayLabel = (d?: string) => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '');
+
+// 001 to 008 (this file's chapters); 009 to 015 and the footer are composed below.
+const spot = spotlightFinds(featured);
+const filters = selectedFilters([...featured, ...spot]);
+const shownAbove = [...featured, ...spot, ...filters[0].finds];
+const fresh = newThisWeek(shownAbove);
+const freshTotal = addedThisWeek().length;
+const layers = layerCards();
 ---
 <Base
   title="The Vice Files"
@@ -37,80 +45,26 @@ const dayLabel = (d?: string) => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateStr
 >
   <Hero featured={featured} />
 
-  <section class="row container" id="more" aria-labelledby="more-title">
-    <h2 class="row__title h2" id="more-title"><a href="/finds">More finds <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
-    <ul class="row__list" role="list">
-      {more.map((f) => {
-        const s = findStill(f)!;
-        return (
-          <li>
-            <Card href={`/finds/${f.slug}`} image={s.src} srcset={s.srcset} sizes="(max-width: 767px) 72vw, 25vw" kicker={categoryLabel(f)} title={f.title} meta={[regionLabel(f), credit(f)].filter(Boolean).join(' · ')} />
-          </li>
-        );
-      })}
-    </ul>
-  </section>
-
-  {freshShown.length > 0 && (
-    <section class="row container" aria-labelledby="new-title">
-      <h2 class="row__title h2" id="new-title"><a href="/finds">New this week<sup class="row__count mono">{fresh.length}</sup> <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
-      <p class="row__lede">{fresh.length === 1 ? 'One find' : `${fresh.length} finds`} added in the last seven days. <a class="link" href="/rss.xml">Follow new finds by RSS</a>.</p>
-      <ul class="row__list" role="list">
-        {freshShown.map((f) => {
-          const img = cardImage(f);
-          return (
-            <li>
-              <Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 72vw, 25vw" kicker={categoryLabel(f)} title={f.title} meta={`Added ${dayLabel(f.added_at)} · ${regionLabel(f)}${f.spoiler ? ' · Spoiler' : ''}`} />
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  )}
-
-  <section class="row container" aria-labelledby="explore-title">
-    <h2 class="row__title h2" id="explore-title">Explore</h2>
-    <ul class="row__list row__list--three" role="list">
-      <li><Card href="/map" kicker="Map" title="The map of Leonida" meta={`${plural(finds.length, 'find', 'finds')}, ${pinned} pinned so far`} /></li>
-      <li><Card href="/explainers" kicker="Explainers" title="How the game works" meta={`${plural(explainers.length, 'guide', 'guides')}, in review`} /></li>
-      <li><Card href="/gtaverse" kicker="GTAverse" title="The Rockstar universe" meta={`${plural(connections.length, 'connection', 'connections')} across the games`} /></li>
-    </ul>
-  </section>
+  <div class="chapters">
+    <Spotlight index={1} finds={spot} />
+    <SelectedFinds index={2} filters={filters} />
+    <NewThisWeek index={3} finds={fresh} total={freshTotal} />
+    <WatchClips index={4} finds={clipFinds()} />
+    <Manifesto index={5} />
+    <ByType index={6} types={typeEntries()} />
+    <TheMap index={7} regions={topRegions()} />
+    <CollectibleLayers index={8} layers={layers} total={collectibleTotal} />
+    {/* 009 By the numbers to 015 GTAverse: Home builder B's chapters (src/components/home/), wired in once that
+        branch is merged. Placeholder: renders nothing. */}
+  </div>
 </Base>
 
-
 <style>
-  /* ---------- Rows below the hero ---------- */
-  .row { padding-top: var(--space-section); }
-  .row:last-of-type { padding-bottom: var(--space-section); }
-  .row__title { margin-bottom: var(--space-2); }
-  .row__count { margin-left: 4px; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); vertical-align: top; position: relative; top: -0.2em; }
-  .row__lede { margin-top: calc(var(--space-2) * -1); margin-bottom: var(--space-4); color: var(--text-2); font-size: var(--text-body-s); }
-  .row__title a { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; }
-  .row__title:not(:has(a)) { min-height: 44px; display: flex; align-items: center; }
-  .row__title a :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
-  @media (hover: hover) and (pointer: fine) {
-    .row__title a:hover :global(.icon) { transform: translateX(3px); }
-  }
-  .row__list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8) var(--space-5); }
-  .row__list--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
+  /* Chapters sit --space-chapter apart (160, 96 on the phone); the last one keeps the same room above the footer. */
+  .chapters { display: flex; flex-direction: column; gap: var(--space-chapter); padding-block: var(--space-chapter); }
+  .chapters > :global(*) { min-width: 0; }
+  /* Apple TV on the phone: the first chapter follows the hero's dots closely. */
   @media (max-width: 767px) {
-    .row__list, .row__list--three {
-      display: flex;
-      gap: var(--space-3);
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-padding-inline: var(--page-pad);
-      margin-inline: calc(-1 * var(--page-pad));
-      padding-inline: var(--page-pad);
-      overscroll-behavior-x: contain;
-      scrollbar-width: none;
-    }
-    .row__list::-webkit-scrollbar { display: none; }
-    .row__list > li { flex: 0 0 72%; min-width: 0; scroll-snap-align: start; }
-    /* Apple TV: the next row follows the dots closely */
-    :global(.hero) + .row { padding-top: var(--space-6); }
+    .chapters { padding-top: var(--space-12); }
   }
-
 </style>

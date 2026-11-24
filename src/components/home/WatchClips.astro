@@ -1,0 +1,187 @@
+---
+// Home chapter 004, Watch the clips (round 2: the owner's Dasha Kebirova C04 Love, one big trailer beside a short
+// stack on a vertical rail; Monije Dina C03's full-bleed rail of stills under it). The big card holds the chosen
+// creator's clip (click to load, the one glass play circle), its title, our summary and the credit; three more sit
+// on the rail at the right; every safe clip runs along the bottom, edge to edge. In place of Dasha's figure, the
+// chosen still bleeds in from the left, blurred and faint (the creator's own thumbnail under a CSS filter, nothing
+// derived). Behaviour and motion: watch-clips.ts.
+import ChapterHead from './ChapterHead.astro';
+import Icon from '../ui/Icon.astro';
+import type { Find } from '../../lib/content';
+import { findStill } from '../../lib/media';
+import { youtubeId, ytEmbed } from '../../lib/clip';
+
+interface Props { finds: Find[]; index: number }
+const { finds, index } = Astro.props;
+const clips = finds.map((f) => {
+  const s = findStill(f)!;
+  return { slug: f.slug, title: f.title, summary: f.summary, creator: f.clip?.creator ?? 'an unknown creator', url: f.clip!.url, embed: ytEmbed(youtubeId(f.clip!.url)!), src: s.src, srcset: s.srcset, thumb: s.thumb };
+});
+const lead = clips[0];
+const stack = clips.slice(1, 4);
+const json = JSON.stringify(clips).replace(/</g, '\\u003c');
+---
+{lead && (
+<section class="wc" aria-labelledby="wc-label" data-wc>
+  <div class="container"><ChapterHead index={index} label="Watch the clips" count={clips.length} id="wc-label" /></div>
+  <div class="wc__bg" aria-hidden="true"><img data-wc-bg src={lead.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" data-nofade /></div>
+  <div class="container wc__stage">
+    <div class="wc__main">
+      <div class="wc__frame" data-wc-frame>
+        <button type="button" class="wc__play" data-play data-wc-play aria-label={`Play clip: ${lead.title}`}>
+          <img data-wc-img src={lead.src} srcset={lead.srcset} sizes="(max-width: 767px) 100vw, 688px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
+        </button>
+      </div>
+      <div class="wc__info" data-wc-info>
+        <h3 class="wc__title"><a href={`/finds/${lead.slug}`} data-wc-link>{lead.title}</a></h3>
+        <p class="wc__summary"><span class="wc__clamp" data-wc-summary>{lead.summary}</span></p>
+        <p class="wc__credit">Clip by <span data-wc-creator>{lead.creator}</span> on YouTube. <a href={lead.url} rel="noopener" target="_blank" data-wc-post>Original post</a></p>
+      </div>
+    </div>
+    <div class="wc__rail">
+      <span class="wc__line" aria-hidden="true"></span>
+      <span class="wc__marker" data-wc-marker aria-hidden="true"></span>
+      <ul class="wc__stack" role="list" aria-label="More clips">
+        {stack.map((c, k) => (
+          <li>
+            <button type="button" class="wc__thumb" data-wc-pick={k + 1} aria-pressed="false">
+              <span class="wc__dot" data-wc-dot aria-hidden="true"></span>
+              <span class="wc__tmedia"><img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" /></span>
+              <span class="wc__tlabel"><span class="wc__clamp">{c.title}</span></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+  <ul class="wc__strip" role="list" aria-label="Every clip" data-wc-strip>
+    {clips.map((c, k) => (
+      <li>
+        <button type="button" class="wc__still" data-wc-pick={k} aria-pressed={k === 0 ? 'true' : 'false'} aria-label={`Show clip: ${c.title}`}>
+          <img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" />
+        </button>
+      </li>
+    ))}
+  </ul>
+  <script is:inline type="application/json" data-wc-data set:html={json} />
+</section>
+)}
+
+<script>
+  import { initWatchClips } from './watch-clips';
+  document.querySelectorAll<HTMLElement>('[data-wc]').forEach(initWatchClips);
+</script>
+
+<style>
+  .wc { position: relative; isolation: isolate; }
+  /* Dasha's figure, honestly: the chosen still, blurred and faint, bleeding off the left edge behind the card. */
+  .wc__bg {
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    top: 0;
+    bottom: 160px;
+    width: 58vw;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 20% 50%, #000 35%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 20% 50%, #000 35%, transparent 100%);
+  }
+  .wc__bg img { position: absolute; inset: -48px; width: calc(100% + 96px); height: calc(100% + 96px); max-width: none; object-fit: cover; filter: blur(24px); opacity: 0.3; }
+
+  /* The card where Dasha's sits (between 45 and 80% of the width), the rail at the right of the content box. */
+  .wc__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 688px) 64px 200px;
+    margin-top: var(--space-10);
+  }
+  .wc__main { grid-column: 2; display: grid; gap: var(--space-6); align-content: start; }
+  .wc__frame { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; background: var(--frame); outline: var(--border-w) solid var(--border-1); outline-offset: -1px; }
+  .wc__frame[data-playing] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+  .wc__frame :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .wc__play { position: absolute; inset: 0; display: block; width: 100%; }
+  .wc__play img, .wc__frame :global(.wc__layer) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .wc__play .clip__play { z-index: 1; }
+  .wc__info { display: grid; gap: var(--space-3); }
+  .wc__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-m);
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    text-wrap: balance;
+    max-width: 640px;
+  }
+  .wc__summary { max-width: var(--measure-short); font-size: var(--text-body); line-height: 23px; color: var(--text-2); }
+  .wc__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .wc__credit { font-size: var(--text-label); color: var(--text-2); }
+  .wc__credit a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+  /* Dasha's rail: a 1px line with a dot per clip; the active marker (our one pink in the chapter) travels along it. */
+  .wc__rail { grid-column: 3 / 5; position: relative; display: grid; grid-template-columns: 64px 200px; align-content: start; }
+  .wc__line { position: absolute; left: 24px; top: 0; bottom: 0; width: 1px; background: var(--border-2); }
+  .wc__marker { position: absolute; left: 24px; top: 0; width: 16px; height: 16px; margin: -8px 0 0 -7.5px; border-radius: var(--radius-full); background: var(--accent); will-change: transform; }
+  .wc__stack { grid-column: 1 / 3; display: grid; gap: var(--space-6); }
+  .wc__thumb { position: relative; display: grid; grid-template-columns: 64px 200px; grid-template-rows: auto auto; text-align: left; width: 100%; }
+  .wc__dot { position: absolute; left: 24px; top: 56px; width: 8px; height: 8px; margin: -4px 0 0 -3.5px; border-radius: var(--radius-full); background: var(--text-3); }
+  .wc__tmedia { grid-column: 2; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: outline-color var(--dur-colour) var(--ease-colour); }
+  .wc__tmedia img { width: 100%; height: 100%; object-fit: cover; }
+  .wc__tlabel { grid-column: 2; margin-top: var(--space-2); font-size: var(--text-title); font-weight: 600; line-height: 1.3; }
+  .wc__tlabel .wc__clamp { -webkit-line-clamp: 2; }
+  .wc__thumb[aria-pressed='true'] .wc__tmedia { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+
+  /* Monije's rail: every clip, edge to edge, scrolling sideways with snap. */
+  .wc__strip {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-12);
+    padding: 4px var(--page-pad);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--page-pad);
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .wc__strip::-webkit-scrollbar { display: none; }
+  .wc__strip li { flex: none; scroll-snap-align: start; }
+  .wc__still { display: block; width: 180px; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: transform var(--dur-press) var(--ease-out), outline-color var(--dur-colour) var(--ease-colour); }
+  .wc__still img { width: 100%; height: 100%; object-fit: cover; }
+  .wc__still[aria-pressed='true'] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+  .wc__still:active, .wc__thumb:active { transform: scale(0.97); }
+  .wc__thumb { transition: transform var(--dur-press) var(--ease-out); }
+  .wc__still:focus-visible, .wc__thumb:focus-visible { outline-offset: 2px; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .wc__thumb:not([aria-pressed='true']):hover .wc__tmedia, .wc__still:not([aria-pressed='true']):hover { outline-color: var(--text-3); }
+  }
+
+  @media (max-width: 1279px) {
+    .wc__stage { grid-template-columns: minmax(0, 1fr) 48px 180px; }
+    .wc__main { grid-column: 1; }
+    .wc__rail { grid-column: 2 / 4; grid-template-columns: 48px 180px; }
+    .wc__thumb { grid-template-columns: 48px 180px; }
+    .wc__line, .wc__marker, .wc__dot { left: 20px; }
+  }
+
+  /* Phone: the big clip full width, then the stack as three rows (thumb left, title right), then the strip. */
+  @media (max-width: 767px) {
+    .wc__bg { display: none; }
+    .wc__stage { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-6); row-gap: var(--space-8); }
+    .wc__main { grid-column: 1; }
+    .wc__rail { grid-column: 1; grid-template-columns: 1fr; }
+    .wc__line, .wc__marker, .wc__dot { display: none; }
+    .wc__stack { grid-column: 1; gap: var(--space-3); }
+    .wc__thumb { grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: auto; column-gap: var(--space-3); align-items: center; }
+    .wc__tmedia { grid-column: 1; }
+    .wc__tlabel { grid-column: 2; margin-top: 0; }
+    .wc__strip { margin-top: var(--space-8); }
+    .wc__still { width: 160px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wc__still, .wc__thumb, .wc__tmedia { transition: none; }
+  }
+</style>

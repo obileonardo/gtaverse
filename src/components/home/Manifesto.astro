@@ -1,0 +1,103 @@
+---
+// Home chapter 005, Manifesto (round 2: the owner's Justin Jefferson 012 Love). A breath between the media chapters:
+// quote marks, three lines of condensed caps in the --text-2 role, two small lines under them, centred in 650px of
+// a wide field of air. The words are our own, from the About page's standfirst (owner answer Q2 A: no invented
+// quotes): "A fan-made field guide to GTA VI. Every secret we list is shown in the clip of the fan who found it, with
+// its sources and an honest label for how sure we are." No grain (a pattern over reading text).
+// Motion: on first view the quote's lines (never letters) rise 16px and fade, 70ms apart (--stagger-hero), over
+// --dur-reveal on --ease-reveal, once. Reduced motion: one fade. Without JavaScript it simply shows.
+import ChapterHead from './ChapterHead.astro';
+interface Props { index: number }
+const { index } = Astro.props;
+const quote = 'Every secret is shown in the clip of the fan who found it';
+const small = 'With its sources and an honest label for how sure we are.';
+const words = quote.split(' ');
+---
+<section class="mf" aria-labelledby="mf-label">
+  <div class="container">
+    <ChapterHead index={index} label="Manifesto" id="mf-label" />
+    <figure class="mf__body" data-mf>
+      <p class="mf__marks" aria-hidden="true">&ldquo; &rdquo;</p>
+      <blockquote class="mf__quote">
+        <p><span class="sr-only">{quote}</span><span aria-hidden="true">{words.map((w, i) => <Fragment><span class="mf__w" data-w>{w}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>)}</span></p>
+      </blockquote>
+      <figcaption class="mf__small">{small}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<script>
+  // Lines are only known once the words are laid out: group the words by their top edge, give each line its delay,
+  // then reveal the whole quote the first time it comes into view.
+  document.querySelectorAll<HTMLElement>('[data-mf]').forEach((fig) => {
+    const words = [...fig.querySelectorAll<HTMLElement>('[data-w]')];
+    const assign = () => {
+      let line = -1, top = NaN;
+      words.forEach((w) => {
+        const t = w.offsetTop;
+        if (!(Math.abs(t - top) < 4)) { line++; top = t; }
+        w.style.setProperty('--line', String(line));
+      });
+      fig.style.setProperty('--lines', String(line + 1));
+    };
+    assign();
+    addEventListener('resize', assign);
+    if (document.documentElement.classList.contains('nav-back') || !('IntersectionObserver' in window)) { fig.dataset.in = 'skip'; return; }
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      assign();
+      fig.dataset.in = 'in';
+      io.disconnect();
+    }, { rootMargin: '0px 0px -20% 0px' });
+    io.observe(fig);
+  });
+</script>
+
+<style>
+  .mf__body { display: grid; justify-items: center; text-align: center; padding-block: 120px 40px; }
+  .mf__marks {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: 0.7;
+    height: 0.5em;
+    color: var(--text-3);
+  }
+  .mf__quote { margin-top: var(--space-12); max-width: 880px; }
+  .mf__quote p {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-manifesto);
+    line-height: 1.06;
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--text-2);
+  }
+  .mf__w { display: inline-block; }
+  .mf__small { margin-top: var(--space-12); max-width: var(--measure-short); font-size: var(--text-body); line-height: 25px; color: var(--text-2); text-wrap: balance; }
+  .mf__small a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; white-space: nowrap; }
+
+  @media screen {
+    :global(html.js:not(.rv-off)) .mf__body:not([data-in]) :is(.mf__w, .mf__marks, .mf__small) { opacity: 0; }
+    :global(html.js:not(.rv-off)) .mf__body:not([data-in]) .mf__w { translate: 0 16px; }
+  }
+  /* Each line rises with the gaps shrinking a little (the hero's i*70 - i*i*6), the marks first, the small copy last. */
+  .mf__body[data-in='in'] .mf__marks { animation: mf-fade var(--dur-reveal-group) var(--ease-reveal) both; }
+  .mf__body[data-in='in'] .mf__w { animation: mf-rise var(--dur-reveal) var(--ease-reveal) both; animation-delay: calc(80ms + var(--line, 0) * var(--stagger-hero) - var(--line, 0) * var(--line, 0) * 6ms); }
+  .mf__body[data-in='in'] .mf__small { animation: mf-rise var(--dur-reveal-group) var(--ease-reveal) both; animation-delay: calc(160ms + var(--lines, 3) * var(--stagger-hero)); }
+  @keyframes mf-rise { from { opacity: 0; translate: 0 16px; } }
+  @keyframes mf-fade { from { opacity: 0; } }
+
+  @media (max-width: 767px) {
+    .mf__body { padding-block: 72px 16px; }
+    .mf__quote { margin-top: var(--space-8); }
+    .mf__small { margin-top: var(--space-8); font-size: 15px; line-height: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js:not(.rv-off)) .mf__body:not([data-in]) .mf__w { translate: none; }
+    .mf__body[data-in='in'] :is(.mf__w, .mf__marks, .mf__small) { animation: mf-fade var(--dur-fade-reduced) linear both; animation-delay: 0ms; }
+  }
+</style>

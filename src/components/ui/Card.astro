@@ -4,11 +4,15 @@
 // framed: puts the whole card on --surface-1 with a 1px border and padding (panels, Going cards, About cards).
 // No image: the card shows the dispersed sunrise glow with the kicker in display caps (finds without art).
 // The whole card is one link when href is set.
-interface Props { href?: string; image?: string | null; srcset?: string; sizes?: string; imageAlt?: string; kicker?: string; title: string; meta?: string; framed?: boolean; ratio?: string; class?: string; loading?: 'lazy' | 'eager' }
-const { href, image, srcset, sizes, imageAlt = '', kicker, title, meta, framed = false, ratio = '16 / 9', class: className, loading = 'lazy' } = Astro.props;
+// line: Unseen Studio's caption (home "Selected finds"): no kicker line; the title and the meta sit on two lines at
+// one size (20, 600 and 400) with an arrow at the right and a 1px rule 8px under, each line ellipsed. The kicker
+// still names the glow when there is no image. Hover lifts the media 4px and nudges the arrow.
+import Icon from './Icon.astro';
+interface Props { href?: string; image?: string | null; srcset?: string; sizes?: string; imageAlt?: string; kicker?: string; title: string; meta?: string; framed?: boolean; line?: boolean; ratio?: string; class?: string; loading?: 'lazy' | 'eager' }
+const { href, image, srcset, sizes, imageAlt = '', kicker, title, meta, framed = false, line = false, ratio = '16 / 9', class: className, loading = 'lazy' } = Astro.props;
 const Tag = href ? 'a' : 'div';
 ---
-<Tag class:list={['card', { 'card--framed': framed }, className]} href={href}>
+<Tag class:list={['card', { 'card--framed': framed, 'card--line': line }, className]} href={href}>
   <div class="card__media" style={`aspect-ratio: ${ratio}`}>
     {image ? (
       <img src={image} srcset={srcset} sizes={sizes} alt={imageAlt} loading={loading} decoding="async" width="1280" height="720" />
@@ -17,12 +21,22 @@ const Tag = href ? 'a' : 'div';
     )}
     <slot name="media" />
   </div>
-  <div class="card__body">
-    {kicker && <p class="card__kicker label-caps">{kicker}</p>}
-    <h3 class="card__title">{title}</h3>
-    {meta && <p class="card__meta">{meta}</p>}
-    <slot />
-  </div>
+  {line ? (
+    <div class="card__line">
+      <div class="card__text">
+        <h3 class="card__title">{title}</h3>
+        {meta && <p class="card__meta">{meta}</p>}
+      </div>
+      <Icon name="arrow-right" size={20} class="card__arrow" />
+    </div>
+  ) : (
+    <div class="card__body">
+      {kicker && <p class="card__kicker label-caps">{kicker}</p>}
+      <h3 class="card__title">{title}</h3>
+      {meta && <p class="card__meta">{meta}</p>}
+      <slot />
+    </div>
+  )}
 </Tag>
 
 <style>
@@ -67,13 +81,35 @@ const Tag = href ? 'a' : 'div';
   }
   .card__meta { font-size: var(--text-body-s); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* line (Unseen Studio) */
+  .card--line { gap: var(--space-3); }
+  .card--line .card__media { transition: transform var(--dur-card-lift) var(--ease-out); }
+  .card__line { display: flex; align-items: flex-end; gap: var(--space-4); padding-bottom: var(--space-2); border-bottom: var(--border-w) solid var(--rule-soft); }
+  .card__text { flex: 1; min-width: 0; }
+  .card--line .card__title, .card--line .card__meta {
+    display: block;
+    font-size: var(--text-title-l);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    overflow: clip visible;
+    text-overflow: ellipsis;
+  }
+  .card--line .card__title { font-weight: 600; }
+  .card--line .card__meta { font-weight: 400; color: var(--text-2); }
+  .card__arrow { flex: none; margin-bottom: 3px; color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+
   a.card { transition: transform var(--dur-press) var(--ease-out); }
   a.card:active { transform: scale(0.98); }
   @media (hover: hover) and (pointer: fine) {
     a.card:hover .card__media img { transform: scale(1.03); }
     a.card:hover .card__title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a.card--line:hover .card__media { transform: translateY(-4px); }
+    a.card--line:hover .card__media img { transform: none; }
+    a.card--line:hover .card__title { text-decoration: none; }
+    a.card--line:hover .card__arrow { transform: translateX(3px); color: var(--text-1); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .card__media img { transition: none; }
+    .card__media img, .card--line .card__media, .card__arrow { transition: none; }
   }
 </style>

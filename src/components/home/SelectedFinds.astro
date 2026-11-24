@@ -1,0 +1,144 @@
+---
+// Home chapter 002, Selected finds (round 2, the owner's Unseen Studio Love; phone: DAZN's chip row and Google TV's
+// rail). A centred title, a tray of counted filter pills (All, then every type with a safe find), and a two column
+// grid of big 1.95:1 stills with Unseen's two-line caption, arrow and rule. Six finds per filter, those with a still
+// first; a find without one shows the sunrise glow. "All 79 finds" closes it (Vucko's counted see-all link).
+// Without JavaScript the grid shows "All". Behaviour and motion: selected-finds.ts.
+import Card from '../ui/Card.astro';
+import Chip from '../ui/Chip.astro';
+import Button from '../ui/Button.astro';
+import ChapterHead from './ChapterHead.astro';
+import { finds, type Find } from '../../lib/content';
+import { findStill, categoryLabel, regionLabel } from '../../lib/media';
+import { type Filter } from '../../lib/home';
+import { blipSvg } from '../../icons/render';
+import { categoryGlyphs } from '../../icons/family';
+
+interface Props { filters: Filter[]; index: number }
+const { filters, index } = Astro.props;
+// Every find any filter shows, once each. data-o-<filter> holds its place in that filter.
+const union: Find[] = [];
+for (const flt of filters) for (const f of flt.finds) if (!union.includes(f)) union.push(f);
+const meta = (f: Find) => [regionLabel(f), f.clip?.creator ? `Clip by ${f.clip.creator}` : categoryLabel(f)].join(' · ');
+const first = filters[0];
+---
+<section class="sf" aria-labelledby="sf-title">
+  <div class="container">
+    <ChapterHead index={index} label="Featured finds" as="p" />
+    <h2 class="sf__title" id="sf-title">Selected finds</h2>
+    <div class="sf__row">
+      <div class="sf__tray" role="group" aria-label="Show finds of one type" data-sf-filters>
+        {filters.map((flt, i) => (
+          <Chip check={false} selected={i === 0} class="sf__chip" data-sf-filter={flt.id} data-sf-label={flt.label}>
+            {flt.id !== 'all' && <span slot="lead" class="sf__blip" set:html={blipSvg(categoryGlyphs[flt.id as keyof typeof categoryGlyphs] ?? 'pin', { size: 20 })} />}
+            {flt.label}<sup class="sf__count">{flt.count}</sup>
+          </Chip>
+        ))}
+      </div>
+    </div>
+    <ul class="sf__grid" role="list" data-sf-grid aria-label={`${first.label} finds`}>
+      {union.map((f) => {
+        const s = f.spoiler || f.mature ? null : findStill(f);
+        const at = Object.fromEntries(filters.map((flt) => [`data-o-${flt.id}`, flt.finds.indexOf(f)]).filter(([, v]) => (v as number) >= 0));
+        const order = first.finds.indexOf(f);
+        return (
+          <li data-sf-item {...at} hidden={order < 0} style={order >= 0 ? `order:${order}` : undefined}>
+            <Card line href={`/finds/${f.slug}`} image={s?.src} srcset={s?.srcset} sizes="(max-width: 767px) 72vw, 40vw" ratio="1.95 / 1" kicker={categoryLabel(f)} title={f.title} meta={meta(f)} />
+          </li>
+        );
+      })}
+    </ul>
+    <p class="sf__live sr-only" aria-live="polite" data-sf-live></p>
+    <div class="sf__more">
+      <Button href="/finds" variant="quiet" iconEnd="chevron-right">All {finds.length} finds</Button>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initSelectedFinds } from './selected-finds';
+  document.querySelectorAll<HTMLElement>('.sf').forEach(initSelectedFinds);
+</script>
+
+<style>
+  .sf__title {
+    margin-top: var(--space-10);
+    font-size: var(--text-section);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    text-align: center;
+    color: var(--text-1);
+  }
+  .sf__row { display: flex; justify-content: center; margin-top: var(--space-8); }
+  /* Unseen's pale tray: one rounded edge holding the pills, 4px inside. The row wraps to a second centred line
+     rather than scrolling inside a box (the box is what clipped before). */
+  .sf__tray {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    padding: 4px;
+    border-radius: 24px;
+    background: var(--glass-fill);
+    border: var(--border-w) solid var(--glass-border);
+    max-width: 100%;
+  }
+  .sf__tray :global(.sf__chip) { padding-inline: 11px; border-color: transparent; background: transparent; }
+  .sf__tray :global(.sf__chip.is-selected) { background: var(--inverse-fill); border-color: var(--inverse-fill); }
+  .sf__blip { display: none; }
+  .sf__count { margin-left: 2px; font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: var(--text-2); vertical-align: top; position: relative; top: -0.35em; }
+  :global(.sf__chip.is-selected) .sf__count { color: inherit; opacity: 0.7; }
+  @media (hover: hover) and (pointer: fine) {
+    .sf__tray :global(.sf__chip:not(.is-selected):hover) { background: var(--glass-hover); }
+  }
+
+  /* Unseen's grid: two columns of 1.95:1 stills, 40 apart, rows 24 apart. A lone last card keeps half the width. */
+  .sf__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-10);
+    margin-top: var(--space-12);
+  }
+  .sf__grid > li { min-width: 0; }
+  .sf__more { display: flex; justify-content: center; margin-top: var(--space-12); }
+
+  /* Phone: the title on the left (Google TV), DAZN's chip row of blip and label running edge to edge, and the grid
+     as Google TV's rail of 16:9 cards, 72% wide, the next one peeking. */
+  @media (max-width: 767px) {
+    .sf__title { margin-top: var(--space-6); text-align: left; }
+    .sf__row {
+      justify-content: flex-start;
+      margin-top: var(--space-5);
+      margin-inline: calc(-1 * var(--page-pad));
+      overflow-x: auto;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      padding: 6px var(--page-pad);
+    }
+    .sf__row::-webkit-scrollbar { display: none; }
+    .sf__tray { flex-wrap: nowrap; padding: 0; gap: var(--space-2); border: 0; background: none; border-radius: 0; max-width: none; }
+    .sf__tray :global(.sf__chip) { height: 44px; padding-inline: 12px 16px; gap: var(--space-2); border-color: var(--border-1); background: var(--surface-2); font-size: var(--text-label); font-weight: 600; }
+    .sf__tray :global(.sf__chip[data-sf-filter='all']) { padding-inline: 16px; }
+    .sf__blip { display: flex; }
+    .sf__grid {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+      margin-inline: calc(-1 * var(--page-pad));
+      padding-inline: var(--page-pad);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--page-pad);
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+    .sf__grid::-webkit-scrollbar { display: none; }
+    .sf__grid > li { flex: 0 0 72%; scroll-snap-align: start; }
+    .sf__grid :global(.card__media) { aspect-ratio: 16 / 9 !important; }
+    .sf__grid :global(.card--line .card__title), .sf__grid :global(.card--line .card__meta) { font-size: var(--text-title); }
+    .sf__more { justify-content: flex-start; margin-top: var(--space-6); }
+    .sf__more :global(.btn) { --h: var(--ctrl-size); }
+  }
+</style>

@@ -295,3 +295,31 @@
     .copy__l--to, [data-copied] .copy__l--from { translate: none; opacity: 0; }
     [data-copied] .copy__l--to { opacity: 1; }
   }
+
+/* ---------- Play circle (Clip.astro and the home clip chapters): the one play control over a still ---------- */
+  /* Sits centred in a positioned frame; its button (.clip-play, or any [data-play]) gives the press feedback. */
+  .clip__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: var(--ctrl-size-xl);
+    height: var(--ctrl-size-xl);
+    margin: calc(var(--ctrl-size-xl) / -2) 0 0 calc(var(--ctrl-size-xl) / -2);
+    border-radius: var(--radius-full);
+    background: rgb(13 12 26 / 0.56);
+    border: var(--border-w) solid rgb(255 255 255 / 0.16);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    color: #fff;
+    pointer-events: none;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  :is(.clip-play, [data-play]):active .clip__play { transform: scale(0.94); }
+  @media (hover: hover) and (pointer: fine) {
+    :is(.clip-play, [data-play]):hover .clip__play { background: rgb(13 12 26 / 0.72); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .clip__play { transition: none; }
+  }
