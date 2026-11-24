@@ -244,6 +244,14 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | IC6 | `/design/icons` is a noindex review page, excluded from the sitemap, the route list and the SEO check, with `X-Robots-Tag: noindex` on `/design/*`. | It is a design system page, not content. |
 | IC7 | No component is rewired in this slice. The migration plan is in `docs/ICONS.md`; whether the current menu item keeps switching to a filled icon or shows its state by colour alone is an owner decision. | The Motion pass is editing the same components. |
 
+## 2026-11-24: logo directions (open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| LG1 | Seven logo directions are shortlisted in Figma (docs/LOGO.md): Case File, Filed Pin, The Seal, Unfolded, Marked, Postcard, Cracked. None is chosen; the header keeps its text wordmark until Elvis and Chime pick. | Chime reviewed in rounds and kept these seven. |
+| LG2 | Every direction uses our own palette, pink `#F976B0` on navy `#0D0C1A` (Chime's call), and only original marks and open-licence Google Fonts. | Decisions 6 and GS1: nothing that reads as official or borrows a Rockstar mark or font. |
+| LG3 | The logo files live in Figma, not in the repository. The chosen logo will ship as SVG markup in code, like the icons (IC3); a favicon file needs an allowlist entry in the CI asset guard. | The asset guard blocks committed images, `.svg` included. |
+| LG4 | Blush `#FBD3E6` on Chime's boards is not a site token. The chosen logo ships in token colours only (pink, navy, cream, surface, wine) unless Elvis approves blush. The header keeps its text wordmark until the pick; the logo then replaces it in the header island and the Open Graph cards. | Colours come only from the owner's picks. Found in review of #41, 24 Nov 2026. |
 ## 2026-11-24: icon family round 2 (owner review)
 
 | # | Decision | Why |

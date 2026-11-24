@@ -16,6 +16,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 - Text containers never clip glyphs. An element that clips (`overflow` other than `visible`) and holds text gives every line box room for the full glyph: clip sideways only (`overflow: clip visible` for an ellipsis), or move the clip to a non-interactive wrapper that carries `padding-block` (about 0.14 to 0.2em) cancelled by a matching negative margin. Descenders (g, j, p, q, y) and accented capitals (É, Ñ) are never cut, also mid-animation.
 - No em or en dashes in copy or code comments.
 - No Rockstar logo, GTAArtDeco or Pricedown, and no game logo as our brand. Official game logos appear only as game identifiers through `GamePlate` (switcher, hubs, "Also in" chips), unaltered, beside the game's name, with the trademark line (decisions GS1 to GS6). Icons are our own drawings.
+- Our own logo is not chosen yet: Chime's seven directions are in [LOGO.md](LOGO.md) (decisions LG1 to LG4). Until the pick, the header island shows the text wordmark in `--font-display`. The chosen mark ships as SVG markup in code (IC3), in token colours only.
 - Text never under 12px. Touch targets 44px or more on phone.
 
 ## Files
