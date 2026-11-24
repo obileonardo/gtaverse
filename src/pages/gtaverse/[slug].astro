@@ -9,7 +9,7 @@ export function getStaticPaths() {
 }
 const { m } = Astro.props as { m: Moment };
 ---
-<Base title={m.title} description={m.summary} layout="bare">
+<Base title={m.title} description={m.summary} layout="bare" breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'GTAverse', href: '/gtaverse' }, { name: m.title, href: `/gtaverse/${m.slug}` }]}>
   <Timeline
     selected={m.index}
     syncUrl

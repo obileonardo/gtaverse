@@ -1,0 +1,50 @@
+---
+// The head of a list page: the finds index head (display caps title with a mono count superscript and a lede),
+// with an optional trail of links above it (hub pages). Used by /finders, /regions/[id] and /categories/[id].
+// The trail is drawn; the same crumbs go to Base as `breadcrumbs` for the BreadcrumbList JSON-LD.
+import Icon from '../ui/Icon.astro';
+import type { Crumb } from '../../lib/seo';
+interface Props { title: string; count?: number; trail?: Crumb[] }
+const { title, count, trail } = Astro.props;
+---
+<header class="phead">
+  {trail && trail.length > 0 && (
+    <nav class="phead__trail" aria-label="Breadcrumb">
+      <ol>
+        {trail.map((c) => (
+          <li><a href={c.href}>{c.name}</a><Icon name="chevron-right" size={14} /></li>
+        ))}
+      </ol>
+    </nav>
+  )}
+  <h1 class="phead__title">{title}{count !== undefined && <sup class="phead__count mono">{count}</sup>}</h1>
+  {Astro.slots.has('default') && <div class="phead__lede"><slot /></div>}
+</header>
+
+<style>
+  .phead { display: flex; flex-direction: column; gap: var(--space-4); max-width: 820px; }
+  .phead__trail ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); color: var(--text-2); font-size: var(--text-body-s); }
+  .phead__trail li { display: inline-flex; align-items: center; gap: var(--space-1); }
+  .phead__trail a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--dur-colour) var(--ease-colour); }
+  .phead__trail :global(.icon) { color: var(--text-3); }
+  @media (hover: hover) and (pointer: fine) {
+    .phead__trail a:hover { color: var(--text-1); }
+  }
+  .phead__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .phead__trail + .phead__title { margin-top: calc(var(--space-2) * -1); }
+  .phead__count { margin-left: 6px; vertical-align: top; position: relative; top: 0.3em; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); }
+  .phead__lede { display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--measure-short); color: var(--text-2); }
+  @media (prefers-reduced-motion: reduce) {
+    .phead__trail a { transition: none; }
+  }
+</style>

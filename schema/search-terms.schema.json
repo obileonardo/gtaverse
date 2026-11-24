@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thevicefiles.com/schema/search-terms.schema.json",
+  "title": "Search terms",
+  "description": "content/search-terms.json: our own words people type for a find type or a place, used by map search. See docs/MAP.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["note", "categories", "regions"],
+  "$defs": {
+    "terms": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9 ']*$" } }
+  },
+  "properties": {
+    "note": { "type": "string" },
+    "categories": { "type": "object", "additionalProperties": { "$ref": "#/$defs/terms" } },
+    "regions": { "type": "object", "additionalProperties": { "$ref": "#/$defs/terms" } }
+  }
+}

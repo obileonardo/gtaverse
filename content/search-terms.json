@@ -1,0 +1,29 @@
+{
+  "note": "Our own words that people type for a find type or a place, so map search finds them (docs/MAP.md, Search). Written by The Vice Files; never copied from another site's list. Keys are ids from content/categories.json (kind find) and content/regions.json. Lower case, plain words or short phrases.",
+  "categories": {
+    "easter-egg": ["easter egg", "egg", "secret", "hidden", "reference", "joke", "nod", "tribute"],
+    "paranormal": ["ufo", "alien", "aliens", "ghost", "ghosts", "haunted", "spooky", "creepy", "cryptid", "bigfoot", "skunk ape", "monster", "supernatural", "mystery", "abduction", "cult", "satan", "devil"],
+    "npc": ["npc", "character", "person", "people", "pedestrian", "stranger", "encounter", "random event", "cameo"],
+    "secret-location": ["secret", "hidden", "bunker", "cave", "room", "interior", "place", "spot", "location", "hideout"],
+    "real-world-reference": ["real life", "real world", "parody", "florida", "miami", "meme", "news", "celebrity", "brand"],
+    "vehicle": ["car", "cars", "vehicle", "boat", "plane", "helicopter", "heli", "bike", "motorcycle", "jet ski", "truck", "ride"],
+    "memorial": ["memorial", "tribute", "grave", "rip", "in memory", "plaque", "dedication"],
+    "weapon": ["gun", "guns", "weapon", "weapons", "rifle", "pistol", "knife", "melee", "ammo"],
+    "rockstar-crossover": ["crossover", "red dead", "rdr", "rdr2", "gta v", "gta 5", "gta iv", "gta 4", "vice city", "san andreas", "bully", "la noire", "max payne", "rockstar", "returning character"],
+    "collectible": ["collectible", "collectibles", "collect", "hunt", "set", "complete", "find all"],
+    "activity": ["activity", "side activity", "minigame", "mini game", "hobby", "sport", "race", "fishing", "hunting", "job"],
+    "glitch": ["glitch", "bug", "exploit", "clip", "out of map", "funny"]
+  },
+  "regions": {
+    "vice-city": ["miami", "city", "downtown", "vc"],
+    "leonida-keys": ["keys", "florida keys", "islands", "key west"],
+    "grassrivers": ["everglades", "swamp", "marsh", "gators", "alligators", "wetlands"],
+    "port-gellhorn": ["gellhorn", "panhandle", "gulf coast", "beach town"],
+    "ambrosia": ["sugar", "refinery", "farmland", "biker"],
+    "mount-kalaga": ["kalaga", "mountain", "mountains", "national park", "forest", "woods", "hills", "hunting"],
+    "vcia": ["airport", "vcia", "runway"],
+    "vice-beach": ["beach", "south beach"],
+    "little-cuba": ["little havana", "cuban"],
+    "mile-zero-air-station": ["military base", "air base", "army"]
+  }
+}

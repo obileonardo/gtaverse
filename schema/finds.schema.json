@@ -11,7 +11,7 @@
     "find": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "slug", "title", "status", "category", "verification", "spoiler", "mature", "chapter_gate", "area", "region_ids", "location_description", "pin", "pin_accuracy", "pin_basis", "summary", "crossover_games", "related_connections", "first_finder", "clip", "sources", "notes", "updated_at"],
+      "required": ["id", "slug", "title", "status", "category", "verification", "spoiler", "mature", "chapter_gate", "area", "region_ids", "location_description", "pin", "pin_accuracy", "pin_basis", "summary", "crossover_games", "related_connections", "first_finder", "clip", "sources", "notes", "added_at", "updated_at"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "slug": { "$ref": "#/$defs/id", "description": "URL slug. Unique across finds and explainers." },
@@ -100,6 +100,7 @@
           }
         },
         "notes": { "type": ["string", "null"], "description": "Editor notes: conflicts between sources, credit details, handling cautions." },
+        "added_at": { "$ref": "#/$defs/date", "description": "The day the find entered the guide (research date, or the day its pull request adds it). Never changes after that. Drives the new finds feed (/rss.xml) and \"New this week\"." },
         "updated_at": { "$ref": "#/$defs/date" }
       }
     }

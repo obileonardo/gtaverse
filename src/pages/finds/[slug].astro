@@ -17,6 +17,11 @@ import Tabs from '../../components/ui/Tabs.astro';
 import { finds, type Find } from '../../lib/content';
 import { findStill, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
 import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
+import { nearbyFinds, hasRegionHub, hasCategoryHub } from '../../lib/hubs';
+import { regionById, categoryById } from '../../lib/content';
+import { correctionLink, submitFindLink } from '../../lib/issues';
+import { findPage } from '../../lib/seo';
+import { site } from '../../lib/site';
 
 export function getStaticPaths() {
   return finds.map((f) => ({ params: { slug: f.slug }, props: { find: f } }));
@@ -29,12 +34,14 @@ const line = creditLine(find);
 const updated = formatDate(find.updated_at);
 const others = moreClips(find);
 const lore = relatedLore(find);
-const related = relatedFinds(find, 10 - Math.min(lore.length, 4));
+const near = nearbyFinds(find, 10);
+const related = relatedFinds(find, 10 - Math.min(lore.length, 4), near.map((h) => h.find.slug));
 const howTo = tips(find.location_description);
 const mapHref = find.pin ? `/map?find=${find.slug}` : null;
 const hasClips = Boolean(find.clip) || others.length > 0;
 const tabs = [
   { id: 'related', label: 'Related' },
+  ...(near.length > 0 ? [{ id: 'nearby', label: 'Nearby' }] : []),
   ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
   { id: 'details', label: 'Details' },
 ];
@@ -45,8 +52,16 @@ const sub = mapHref
     : undefined;
 const loreConfidence: Record<string, string> = { canon: 'Canon', strong: 'Strong', speculative: 'Speculative', debunked: 'Debunked' };
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+const categoryName = categoryById(find.category)?.label ?? categoryLabel(find);
+const crumbs = [
+  { name: 'Home', href: '/' },
+  { name: 'Finds', href: '/finds' },
+  ...(hasCategoryHub(find.category) ? [{ name: categoryName, href: `/categories/${find.category}` }] : []),
+  { name: find.title, href: `/finds/${find.slug}` },
+];
+const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${regionLabel(h.find)} · On the map nearby` : `Also in ${regionById(h.region ?? '')?.name ?? regionLabel(h.find)}`;
 ---
-<Base title={find.title} description={find.summary} layout="bare" sub={sub}>
+<Base title={find.title} description={find.summary} layout="bare" sub={sub} ogType="article" jsonLd={findPage(find, who)} breadcrumbs={crumbs}>
   <article class="find" data-find>
     <div class:list={['find__art', { 'find__art--glow': !still }]} aria-hidden="true">
       {still && <img src={still.src} srcset={still.srcset} sizes="100vw" alt="" width="1280" height="720" fetchpriority="high" decoding="async" />}
@@ -143,6 +158,20 @@ const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,
             </ul>
           </div>
 
+          {near.length > 0 && (
+            <div slot="nearby">
+              <h2 class="sr-only">Nearby finds</h2>
+              <ul class="grid">
+                {near.map((h) => {
+                  const img = cardImage(h.find);
+                  return (
+                    <li><Card href={`/finds/${h.find.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(h.find)} title={h.find.title} meta={`${nearLabel(h)}${h.find.spoiler ? ' · Spoiler' : ''}`} /></li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           {hasClips && (
             <div slot="clips" class="clips">
               <h2 class="sr-only">Clips</h2>
@@ -178,8 +207,8 @@ const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,
                 </section>
               )}
               <dl class="facts">
-                <div><dt>Category</dt><dd>{categoryLabel(find)}</dd></div>
-                <div><dt>Where</dt><dd>{regionNames(find).join(', ')}{find.area && <span class="facts__sub">{find.area}</span>}</dd></div>
+                <div><dt>Category</dt><dd>{hasCategoryHub(find.category) ? <a class="link" href={`/categories/${find.category}`}>{categoryLabel(find)}</a> : categoryLabel(find)}</dd></div>
+                <div><dt>Where</dt><dd>{find.region_ids.length > 0 ? <span>{find.region_ids.map((id, i) => <>{i > 0 && ', '}{hasRegionHub(id) ? <a class="link" href={`/regions/${id}`}>{regionById(id)?.name ?? id}</a> : (regionById(id)?.name ?? id)}</>)}</span> : regionNames(find).join(', ')}{find.area && <span class="facts__sub">{find.area}</span>}</dd></div>
                 <div><dt>Verification</dt><dd><Verification level={find.verification} /><span class="facts__sub">{verificationNote[find.verification] ?? ''}</span></dd></div>
                 {find.chapter_gate && <div><dt>Unlocks after</dt><dd>{find.chapter_gate}</dd></div>}
                 {(find.crossover_games?.length ?? 0) > 0 && <div><dt>Crossover</dt><dd>{find.crossover_games!.join(', ')}</dd></div>}
@@ -227,6 +256,16 @@ const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,
           </div>
         </Tabs>
       </div>
+
+      <aside class="fix" aria-labelledby="fix-title">
+        <h2 id="fix-title" class="fix__title">Something wrong or missing credit?</h2>
+        <p class="fix__text">Every fix needs a source, just like the find did. Corrections and new finds go through public GitHub forms; we answer credit requests within {site.responseHours} hours.</p>
+        <div class="fix__actions">
+          <Button href={correctionLink(find)} variant="secondary" size="l" iconEnd="arrow-up-right">Suggest a correction</Button>
+          <Button href={submitFindLink()} variant="quiet" size="l" iconEnd="arrow-up-right">Submit a find</Button>
+          <a class="link fix__more" href="/editorial-policy">How we verify</a>
+        </div>
+      </aside>
     </div>
   </article>
 </Base>
@@ -364,6 +403,20 @@ const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,
     .source:hover { background: var(--surface-1); }
     .shot:hover .shot__label { color: var(--text-1); }
   }
+
+  /* ---------- Suggest a correction ---------- */
+  .fix {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: var(--border-w) solid var(--border-1);
+  }
+  .fix__title { font-size: var(--text-title); font-weight: 600; }
+  .fix__text { max-width: var(--measure); color: var(--text-2); font-size: var(--text-body-s); }
+  .fix__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); margin-top: var(--space-2); }
+  .fix__more { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--text-body-s); }
 
   /* ---------- Desktop (Disney+ web) ---------- */
   @media (min-width: 768px) {

@@ -15,7 +15,8 @@
 // FFMPEG_BIN overrides it.
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,9 +79,20 @@ const crop = ({ w, h }, rw, rh, focus) => {
   return `crop=${w}:${ch}:0:${y}`;
 };
 
+// Skip the slow encode when the selection, this script and every output are unchanged since the last build.
+const inputs = createHash('sha256')
+  .update(readFileSync(join(root, 'content/hero-media.json')))
+  .update(readFileSync(fileURLToPath(import.meta.url)))
+  .digest('hex');
+const previous = existsSync(join(outDir, 'manifest.json')) ? JSON.parse(readFileSync(join(outDir, 'manifest.json'), 'utf8')) : null;
+if (previous?.inputs === inputs && !process.argv.includes('--force') && (previous.files ?? []).every((f) => existsSync(join(outDir, f)))) {
+  console.log('build-media: unchanged since the last build, nothing to do (--force rebuilds)');
+  process.exit(0);
+}
+
 mkdirSync(outDir, { recursive: true });
 mkdirSync(tmpDir, { recursive: true });
-const manifest = { generated: new Date().toISOString().slice(0, 10), credit: config.credit };
+const manifest = { generated: new Date().toISOString().slice(0, 10), inputs, credit: config.credit };
 
 // ---------------------------------------------------------------- trailer reel
 const t = config.trailer;
@@ -197,7 +209,7 @@ for (const [n, k] of config.keyart.entries()) {
   console.log(`keyart  ${n}  ${k.landscape}  ${kb(join(outDir, `keyart-${n}-1920.avif`))} at 1920 avif`);
 }
 
-// Keep the coastline from build-coast.mjs if it is already there.
+manifest.files = readdirSync(outDir).filter((f) => f !== 'manifest.json' && f !== 'coast.json').sort();
 writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 rmSync(tmpDir, { recursive: true, force: true });
 console.log(`done    ${outDir}`);

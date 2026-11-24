@@ -9,6 +9,9 @@ import Icon from '../components/ui/Icon.astro';
 import Hero from '../components/home/Hero.astro';
 import { finds, connections, explainers } from '../lib/content';
 import { findStill, showcaseable, categoryLabel, regionLabel } from '../lib/media';
+import { cardImage } from '../lib/finds';
+import { addedThisWeek } from '../lib/feed';
+import { website, organization } from '../lib/seo';
 
 const pool = finds.filter(showcaseable);
 // Finds with a still come first; finds without one still qualify and show the sunrise glow instead.
@@ -20,10 +23,16 @@ const pinned = finds.filter((f) => f.pin).length;
 const lead = featured[0];
 const leadStill = lead ? findStill(lead) : null;
 const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.clip.creator}` : undefined);
+// New this week: finds added in the seven days before this build, newest first, skipping any already shown above.
+// The site is static, so "this week" is as of the last build; the row disappears when nothing new was added.
+const fresh = addedThisWeek();
+const freshShown = fresh.filter((f) => !featured.includes(f) && !more.includes(f)).slice(0, 4);
+const dayLabel = (d?: string) => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '');
 ---
 <Base
   title="The Vice Files"
   layout="bare"
+  jsonLd={[website(), organization()]}
   sub={lead ? { href: `/finds/${lead.slug}`, label: 'Watch the clip', image: leadStill?.thumb } : undefined}
 >
   <Hero featured={featured} />
@@ -42,6 +51,23 @@ const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.cl
     </ul>
   </section>
 
+  {freshShown.length > 0 && (
+    <section class="row container" aria-labelledby="new-title">
+      <h2 class="row__title h2" id="new-title"><a href="/finds">New this week<sup class="row__count mono">{fresh.length}</sup> <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
+      <p class="row__lede">{fresh.length === 1 ? 'One find' : `${fresh.length} finds`} added in the last seven days. <a class="link" href="/rss.xml">Follow new finds by RSS</a>.</p>
+      <ul class="row__list" role="list">
+        {freshShown.map((f) => {
+          const img = cardImage(f);
+          return (
+            <li>
+              <Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 72vw, 25vw" kicker={categoryLabel(f)} title={f.title} meta={`Added ${dayLabel(f.added_at)} · ${regionLabel(f)}${f.spoiler ? ' · Spoiler' : ''}`} />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+
   <section class="row container" aria-labelledby="explore-title">
     <h2 class="row__title h2" id="explore-title">Explore</h2>
     <ul class="row__list row__list--three" role="list">
@@ -58,6 +84,8 @@ const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.cl
   .row { padding-top: var(--space-section); }
   .row:last-of-type { padding-bottom: var(--space-section); }
   .row__title { margin-bottom: var(--space-2); }
+  .row__count { margin-left: 4px; font-size: var(--text-mono); font-weight: 400; color: var(--text-2); vertical-align: top; position: relative; top: -0.2em; }
+  .row__lede { margin-top: calc(var(--space-2) * -1); margin-bottom: var(--space-4); color: var(--text-2); font-size: var(--text-body-s); }
   .row__title a { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; }
   .row__title:not(:has(a)) { min-height: 44px; display: flex; align-items: center; }
   .row__title a :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }

@@ -1,0 +1,63 @@
+---
+// Editorial policy: how a find is verified, what counts as a source, credit, spoilers, and the lines we never cross.
+// The rules are docs/CONTENT-GUIDE.md and docs/LEGAL.md, said for readers. Counts come from published content.
+import Base from '../layouts/Base.astro';
+import DocPage from '../components/site/DocPage.astro';
+import LevelTable from '../components/ui/LevelTable.astro';
+import { finds } from '../lib/content';
+import { webPage } from '../lib/seo';
+import { POLICIES_UPDATED } from '../lib/trust';
+import { staticRoutes } from '../lib/routes';
+import { site } from '../lib/site';
+
+const r = staticRoutes.find((x) => x.path === '/editorial-policy')!;
+const n = (level: string) => finds.filter((f) => f.verification === level).length;
+const rows = [
+  { label: 'Multi-source', cells: ['Two or more independent sources show or confirm it.', `Published (${n('multi-source')} finds)`] },
+  { label: 'Single source', cells: ['One source, or several that all trace back to one original post.', `Published with its label (${n('single-source')} finds)`] },
+  { label: 'Rumour', cells: ['Reported but not shown, or the only source could not be checked.', 'Held back until a second independent source shows it'] },
+  { label: 'Debunked', cells: ['Shown to be false, a hoax or satire.', 'Only as a clearly labelled myth'] },
+];
+---
+<Base title={r.title} description={r.description} jsonLd={webPage('/editorial-policy', r.title, r.description)} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Editorial policy', href: '/editorial-policy' }]}>
+  <DocPage title={r.title} standfirst="Trust is the product. This is how we decide what goes on the site, how sure we say we are, and who gets the credit." updated={POLICIES_UPDATED}>
+    <h2>Every fact has a source</h2>
+    <p>Each find lists the posts, videos and articles it comes from, with links. If we cannot link it, we do not state it. Where sources disagree, the find says so instead of picking a side.</p>
+
+    <h2>How sure we are</h2>
+    <p>Every find carries one of four verification levels, shown as a badge on the find and on every card.</p>
+    <LevelTable head={['Level', 'What it means', 'On the site']} rows={rows} caption="Verification levels" class="doc__table" />
+    <p>Independent means independent. A second video from a different creator who shows it in their own game counts. Two wiki pages copying each other count as one. Aggregator wikis are useful leads, but they do not confirm each other.</p>
+    <p>When a rumour gets a second independent source, it is upgraded and published. When a find turns out to be wrong, it is corrected or labelled debunked, never quietly kept.</p>
+
+    <h2>Credit</h2>
+    <ul>
+      <li>When a source names who found something first, that person is credited by handle with a link to their original post.</li>
+      <li>Every creator whose clip or article we use is listed in the find's sources, and on <a href="/finders">the finders page</a>.</li>
+      <li>If the press credits someone without a link, we do not guess their profile.</li>
+      <li>Creators can ask us to remove their clip or change their credit at any time. We do it within {site.responseHours} hours, no questions (<a href="/takedown">how</a>).</li>
+    </ul>
+
+    <h2>Spoilers and mature content</h2>
+    <p>Finds that reveal story content, or can only be reached after story progress, are marked as spoilers. Their art and clips stay hidden until you choose to reveal them, and spoilers are hidden on the map by default. Finds with sexual or other adult content beyond the game's baseline are marked mature and gated the same way.</p>
+    <p>We never embed a clip that is mainly an isolated cutscene, an ending, a story reveal, or an in-game TV show.</p>
+
+    <h2>Lines we never cross</h2>
+    <ul>
+      <li><strong>No leaks.</strong> Nothing from leaked builds, pre-release footage, archive maps or the accounts that share them, in any form.</li>
+      <li><strong>No piracy, cheats or exploits.</strong> No money glitches, duplication exploits, cheats or mod menus.</li>
+      <li><strong>No AI-processed Rockstar art.</strong> We never feed Rockstar's screenshots, art or map into AI tools, for making images or for analysing them. The only images on open pages are creators' own video thumbnails, served by YouTube, and the official Leonida map, credited to Rockstar Games.</li>
+      <li><strong>No copied work.</strong> Summaries are in our own words. We never paste text from guide sites or AI-written SEO pages, and never copy another map's pins.</li>
+      <li><strong>No guessing.</strong> Unknown values stay empty. We do not say an in-game character is a real person unless Rockstar has said so.</li>
+    </ul>
+
+    <h2>GTAverse connections</h2>
+    <p>Links between GTA VI and other Rockstar games carry their own confidence: canon (it exists in the game and is documented), strong (several independent reports), speculative (a fan reading or a single source) or debunked. A theory is never canon unless Rockstar confirmed it.</p>
+
+    <h2>Explainers</h2>
+    <p>Every claim in an explainer is cited to a numbered source at the foot of the page. Explainers stay free of story spoilers, and are marked as drafts until reviewed.</p>
+
+    <h2>Mistakes</h2>
+    <p>We get things wrong sometimes. <a href="/corrections">Tell us</a> and we will fix it in the open.</p>
+  </DocPage>
+</Base>

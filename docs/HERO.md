@@ -29,7 +29,7 @@ Hovering a line of the A24 stack shows that find's clip thumbnail (the YouTube t
 
 ## Building the media
 
-The media is Rockstar's copyright: it is never committed. `public/media/` and `.cache/` are git-ignored, and CI's asset guard blocks media files. Like the map tiles, a deploy must build it first:
+The media is Rockstar's copyright: it is never committed. `public/media/` and `.cache/` are git-ignored, and CI's asset guard blocks media files and `public/media/`. Like the map tiles, a deploy must build it first; `pnpm run deploy` does, in this order:
 
 ```
 pnpm install
@@ -41,6 +41,7 @@ pnpm build
 
 - `content/hero-media.json` is the only committed piece: the two zips (URL, size, SHA-256), the clip order and in and out points, the crop focus of every clip and wallpaper, the sound section and the credit. Change the selection there, then run `pnpm media:build` again.
 - `media:fetch` fails if Rockstar changes a zip (size or hash), so the selection is checked again before anything ships.
+- `media:build` skips the encode when `content/hero-media.json`, the script and every output are unchanged since the last run (`--force` rebuilds), so repeat deploys from the same machine take seconds.
 - `media:build` needs an ffmpeg with libx264 and libsvtav1 (or libvpx-vp9). The dev dependency `ffmpeg-static` provides one; its binary is downloaded on the first `media:build`, not on every install, so CI stays fast. `FFMPEG_BIN` points at another ffmpeg. The AV1 encode takes about 10 minutes on an M-series Mac with this build.
 - `media:coast` (part of `media:build`) reads the cached map by numbers only: every pixel inside the printed frame is classed as water (the map's cyan) or land by its colour, the mask is cleaned, outlines are traced and simplified to about 450 points. Nobody looks at the map to do this (docs/MAP.md, decision OS7). `MAP_IMAGE` overrides the map path.
 
