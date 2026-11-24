@@ -178,6 +178,9 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | HS6 | The coastline is traced by code from the cached official map (colour classes, no person or AI looks at the map) and written to the git-ignored `public/media/hero/coast.json`; it is never committed, because it is a shape derived from Rockstar's map. | docs/MAP.md, OS7. |
 | HS7 | Video encoding uses the `ffmpeg-static` dev dependency (ffmpeg 6.0 with libx264 and SVT-AV1); its binary downloads on the first `pnpm media:build`, not on install. | Homebrew's ffmpeg on the build Mac has no libx264, VP9 or AV1 encoder; the brief allowed ffmpeg-static. |
 | HS8 | D3 is superseded for the hero background: home art is now the official reel, key art and our line art. The YouTube thumbnail still appears in the peek frame and the NEON sub bar. | H1. |
+| HS9 | The line art's weapons are a generic compact pistol and a generic pump shotgun of our own design (no real or in-game model), shown as a still product study with three shells; the pink accent is one shell. | Owner brief, 24 Nov 2026: weapons as line art; original drawings only. |
+| HS10 | Line art timing: one drawing per 10 s visit, the four drawings in turn across visits (coastline, coupe, sidearms, walk). Each is fully drawn by 3.75 s and drifts for the rest. Showing all four in one visit would need about 40 s and dwarf the trailer and key art. | Each drawing gets a whole slot; the rotation stays about 28 s. |
+| HS11 | The coastline is traced as the outer edge of each land mass (main island plus the major islands), not every land and water boundary, so it draws as a few continuous closed lines; the old trace drew 39 loops including lakes and specks, which read as broken dashes. | Owner brief, 24 Nov 2026: one clean outline. |
 
 ## 2026-11-24: game switcher and official game logos (owner decisions)
 
