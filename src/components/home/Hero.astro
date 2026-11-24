@@ -109,11 +109,12 @@ const thumb = (f: Find) => {
   </div>
 
   <!-- What the site is, top left at the gutter, level with the island (owner decision, 24 Nov 2026). -->
-  <div class="hero__top container">
-    <p class="hero__intro"><span class="hero__intro-name">The Vice Files</span> is a fan-made field guide to GTA VI. Every secret in Leonida, shown in the clip of the fan who found it, labelled by how sure we are, and linked across the Rockstar universe.</p>
+  <div class="hero__top container" data-hero-top>
+    <p class="hero__intro"><span class="hero__intro-name">The Vice Files</span> is a fan-made field guide to GTA&nbsp;VI. Every secret in Leonida, shown in the clip of the fan who found it, labelled by how sure we are, and linked across the Rockstar universe.</p>
   </div>
 
   <div class="hero__controls container">
+    <div class="hero__buttons" data-hero-buttons>
     {modes.length > 1 && (
       <div class="modes" role="group" aria-label="Hero background" data-modes>
         {modes.map((m, i) => (
@@ -127,15 +128,18 @@ const thumb = (f: Find) => {
         ))}
       </div>
     )}
+    <!-- Sound (owner, 24 Nov 2026): option A, beside the mode circles; option B (?sound=b, temporary until the owner
+         picks) moves it top left beside the intro. Shown only while the trailer plays (hero-stage.ts). -->
+    {trailer && manifest?.sound && (
+      <button type="button" class="sound" data-sound-btn aria-pressed="false" aria-label="Turn the trailer sound on" hidden>
+        <span class="sound__icon sound__icon--off"><Icon name="sound-off" size={20} /></span>
+        <span class="sound__icon sound__icon--on"><Icon name="sound" size={20} /></span>
+      </button>
+    )}
+    </div>
     <p class="hero__credit" data-credit data-credits={JSON.stringify(credits)}>{credits[modes[0].id as keyof typeof credits]}</p>
   </div>
 
-  {trailer && manifest?.sound && (
-    <button type="button" class="sound" data-sound-btn aria-pressed="false" aria-label="Turn the trailer sound on" hidden>
-      <span class="sound__icon sound__icon--off"><Icon name="sound-off" size={20} /></span>
-      <span class="sound__icon sound__icon--on"><Icon name="sound" size={20} /></span>
-    </button>
-  )}
 
   <!-- Desktop: A24 -->
   <div class="a24" data-a24>
@@ -155,7 +159,7 @@ const thumb = (f: Find) => {
         <img class="peek__img" data-peek-img="1" alt="" decoding="async" />
       </div>
       <a class="a24__down" href="#more" aria-label="More finds below">
-        <svg width="16" height="46" viewBox="0 0 16 46" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8 0v45M1 38l7 7 7-7" /></svg>
+        <Icon name="arrow-down" size={20} />
       </a>
     </div>
   </div>
@@ -200,6 +204,12 @@ const thumb = (f: Find) => {
 
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   if (hero) {
+    // Temporary (owner to pick, 24 Nov 2026): ?sound=b puts the sound toggle top left beside the intro (option B);
+    // the default is option A, beside the mode circles. Remove the flag once the owner has chosen.
+    const place = new URLSearchParams(location.search).get('sound');
+    const sound = hero.querySelector('[data-sound-btn]');
+    const top = hero.querySelector('[data-hero-top]');
+    if (place === 'b' && sound && top) { hero.dataset.soundPlace = 'b'; top.append(sound); }
     initStage(hero);
     initPeek(hero);
   }
@@ -340,7 +350,7 @@ const thumb = (f: Find) => {
     .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 148px - 36px)); }
   }
   /* Narrower desktops: not enough room beside the circles, so the caption goes under them, as on the phone. */
-  @media (max-width: 1279px) {
+  @media (min-width: 768px) and (max-width: 1279px) {
     .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
     .hero__credit { max-width: min(240px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 12px)); }
   }
@@ -366,19 +376,24 @@ const thumb = (f: Find) => {
     pointer-events: none;
   }
   .hero__intro-name { color: var(--text-1); font-weight: 500; }
+  .hero[data-sound-place='b'] .hero__top { display: flex; align-items: last baseline; gap: 16px; }
+  .hero[data-sound-place='b'] .hero__top .sound { pointer-events: auto; align-self: flex-end; }
   /* Between the phone and 1024 the island leaves no room beside it; on the phone the Apple TV slides fill the art
      from the bottom and the peek frame opens into that space, so the intro stays off (the page heading reads it). */
   @media (max-width: 1023px) {
     .hero__top { display: none; }
+    /* Option B below 1024: the toggle alone, top left (level with the island, or under it on the phone). */
+    .hero[data-sound-place='b'] .hero__intro { display: none; }
+  }
+  @media (max-width: 767px) {
+    .hero[data-sound-place='b'] .hero__top { padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
   }
 
-  /* ---------- Sound toggle (bottom right, trailer only) ---------- */
+  /* ---------- Sound toggle (trailer only): beside the mode circles (A) or beside the intro (B) ---------- */
+  .hero__buttons { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; pointer-events: auto; }
   .sound {
-    position: absolute;
+    position: relative;
     z-index: 3;
-    /* Above the scroll arrow, in the column the stack leaves free. */
-    right: calc(var(--page-pad) - 14px);
-    bottom: 116px;
     display: grid;
     place-items: center;
     width: var(--ctrl-size);
@@ -392,7 +407,10 @@ const thumb = (f: Find) => {
     touch-action: manipulation;
     transition: transform var(--dur-press) var(--ease-out), opacity var(--dur-colour) var(--ease-out);
   }
-  .sound[hidden] { display: none; }
+  /* A toggle, not a mode: an outlined ring instead of a filled circle, a little apart from them. Its place is kept
+     while it is hidden (trailer not playing), so the caption beside it never jumps. */
+  .sound[hidden] { display: grid; visibility: hidden; }
+  .hero__buttons .sound { margin-right: 6px; }
   .sound:active { transform: scale(0.94); }
   @starting-style { .sound { opacity: 0; } }
   @media (hover: hover) and (pointer: fine) {
@@ -405,7 +423,7 @@ const thumb = (f: Find) => {
   /* ---------- Desktop: A24 ---------- */
   .a24 { position: relative; height: 100svh; min-height: 640px; }
   .a24__inner { position: relative; height: 100%; display: flex; align-items: flex-end; padding-bottom: 52px; }
-  .a24__list { --a24-size: clamp(40px, 4vw, 72px); --a24-room: calc(var(--a24-size) * 0.2); position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
+  .a24__list { --a24-size: clamp(40px, 3.5vw, 72px); /* 3.5vw: every featured title (47 characters at most) fits between the 128px gutters */ --a24-room: calc(var(--a24-size) * 0.2); position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
   .a24__item {
     display: inline-flex;
     align-items: flex-start;
@@ -418,7 +436,7 @@ const thumb = (f: Find) => {
   /* Each line rises through its own mask, the list item, which carries 0.2em of room above and below the line for
      descenders and accents (cancelled by a negative margin, so the rhythm holds). It takes no pointer events, so the
      room never steals hover or clicks from the lines beside it; the link box itself never moves. */
-  .a24__list li { overflow: clip; padding-block: var(--a24-room); margin-block: calc(-1 * var(--a24-room)); pointer-events: none; }
+  .a24__list li { overflow: hidden; overflow: visible clip; padding-block: var(--a24-room); margin-block: calc(-1 * var(--a24-room)); pointer-events: none; }
   .a24__title {
     font-family: var(--font-body);
     font-weight: 500;
@@ -426,7 +444,9 @@ const thumb = (f: Find) => {
     line-height: 0.94;
     letter-spacing: -0.035em;
     white-space: nowrap;
-    /* The ellipsis clips sideways only: descenders and accents above and below the tight line box stay whole. */
+    /* The ellipsis clips sideways only: descenders and accents above and below the tight line box stay whole.
+       min-width 0: a clipping (not scrolling) box keeps its content width otherwise, and would push the label out. */
+    min-width: 0;
     overflow: hidden;
     overflow: clip visible;
     text-overflow: ellipsis;
@@ -455,21 +475,24 @@ const thumb = (f: Find) => {
   @keyframes hero-fade { from { opacity: 0; } }
   @keyframes hero-rise { from { opacity: 0; translate: 0 8px; } }
 
+  /* Small and quiet (owner, 24 Nov 2026): a 20px icon in a 44px hit area, its glyph's right edge on the gutter and
+     its bottom on the list's last line. */
   .a24__down {
     position: absolute;
     z-index: 1;
     right: var(--page-pad);
-    bottom: 52px;
+    bottom: calc(52px - 12px);
     display: grid;
     place-items: center;
     width: 44px;
-    height: 56px;
-    margin-right: -14px;
-    color: #ffffff;
-    transition: transform var(--dur-colour) var(--ease-out);
+    height: 44px;
+    margin-right: -12px;
+    border-radius: var(--radius-full);
+    color: var(--text-2);
+    transition: transform var(--dur-colour) var(--ease-out), color var(--dur-colour) var(--ease-colour);
   }
   @media (hover: hover) and (pointer: fine) {
-    .a24__down:hover { transform: translateY(4px); }
+    .a24__down:hover { transform: translateY(3px); color: var(--text-1); }
   }
 
   /* The peek frame: the hovered find's clip, tilted, over the list beside its line. */
@@ -487,9 +510,9 @@ const thumb = (f: Find) => {
     outline-offset: -1px;
     pointer-events: none;
     opacity: 0;
-    /* Position and tilt are written by hero-peek.ts (critically damped springs); opening is opacity and scale. */
-    transform: rotate(-3deg);
-    scale: 0.96;
+    /* Position and lean are written by hero-peek.ts (it follows the cursor on critically damped springs); entering
+       and leaving are opacity and scale, from the corner nearest the cursor (transform-origin, also set there). */
+    scale: 0.92;
     will-change: transform;
     transition: opacity var(--dur-popover-out) var(--ease-standard), scale var(--dur-popover-out) var(--ease-standard);
   }
@@ -515,8 +538,8 @@ const thumb = (f: Find) => {
         linear-gradient(to bottom, rgb(13 12 26 / 0.45) 0%, rgb(13 12 26 / 0) 16%);
     }
     /* Under the island on the phone, so the two never meet. */
-    .hero__controls { padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
-    .sound { right: var(--page-pad); bottom: 0; }
+    .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; padding-top: calc(var(--island-top) + env(safe-area-inset-top, 0px) + var(--island-h) + 12px); }
+
 
     .a24 { display: none; }
     .atv { display: block; position: relative; padding-bottom: 28px; }
