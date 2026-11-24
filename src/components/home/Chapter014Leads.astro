@@ -1,0 +1,131 @@
+---
+// Home 014, The two leads (board r2: Dasha Kebirova C08, Love; owner answer Q6: option A). The Love's layout as drawn:
+// a centred title, two figures at the outer edges, each lead's name and a short paragraph beside it, the first block
+// at 40% of the height and the second at 60%. The figures are ours: two original line-art silhouettes drawn in code in
+// the hero's line-art language (leads-art.ts), not likenesses. They draw themselves on the first view, the second
+// starting when the first is half drawn. The words are the bios in our protagonists explainer, citations removed.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
+
+interface Props { index?: string }
+const { index = '014' } = Astro.props;
+const md = readFileSync(join(process.cwd(), 'content/explainers/protagonists.md'), 'utf8').replace(/^---[\s\S]*?---/, '');
+const section = (name: string) => {
+  const m = md.match(new RegExp(`## ${name}[^\\n]*\\n([\\s\\S]*?)(?=\\n## |$)`));
+  const paras = (m?.[1] ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter((p) => p && !p.startsWith('Note:'));
+  // The official bio paragraph, else the first one; citations [n] and markdown marks removed.
+  const bio = paras.find((p) => /official bio/i.test(p)) ?? paras[0] ?? '';
+  return bio.replace(/\s?\[\d+\]/g, '').replace(/[*_`]/g, '').trim();
+};
+const leads = [
+  { key: 'jason', name: 'Jason', text: section('Jason') },
+  { key: 'lucia', name: 'Lucia', text: section('Lucia') },
+] as const;
+---
+<section class="ch14" aria-labelledby="ch14-title" data-ch14>
+  <div class="container">
+    <ChapterHead index={index} label="The two leads" heading={false} />
+    <div class="ch14__stage">
+      <h2 class="ch14__title" id="ch14-title">Jason and Lucia</h2>
+      {leads.map((l, i) => (
+        <>
+          <div class:list={['ch14__fig', `ch14__fig--${i}`]} aria-hidden="true">
+            <canvas class="ch14__canvas" data-ch14-art={l.key}></canvas>
+          </div>
+          <div class:list={['ch14__text', `ch14__text--${i}`]}>
+            <h3 class="ch14__name">{l.name}</h3>
+            <p class="ch14__p">{l.text}</p>
+          </div>
+        </>
+      ))}
+      <p class="ch14__note">Line art: The Vice Files. Two figures, not likenesses.</p>
+    </div>
+    <div class="ch14__more"><Button href="/explainers/protagonists" variant="outline" size="m" iconEnd="arrow-right">Read the explainer</Button></div>
+  </div>
+</section>
+
+<style>
+  .ch14 { padding-top: var(--space-chapter); }
+  /* Dasha C08 measured on a 2000 x 1125 frame: figures at 8 to 33% and 57 to 95% of the width, three quarters of the
+     height; text at 33% (40% down) and 52% (60% down). */
+  .ch14__stage { position: relative; aspect-ratio: 2000 / 1125; margin-top: var(--space-8); }
+  .ch14__title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 2%;
+    text-align: center;
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+    color: var(--text-1);
+    padding-block: 0.06em;
+  }
+  .ch14__fig { position: absolute; top: 18%; height: 80%; }
+  .ch14__fig--0 { left: 4%; width: 33%; }
+  .ch14__fig--1 { left: 60%; width: 36%; }
+  .ch14__canvas { display: block; width: 100%; height: 100%; color: var(--text-1); }
+  .ch14__text { position: absolute; width: min(340px, 28.5%); display: flex; flex-direction: column; gap: var(--space-4); }
+  .ch14__text--0 { left: 31%; top: 26%; }
+  /* Anchored to the bottom so a longer first paragraph never runs into it. */
+  .ch14__text--1 { left: 50%; bottom: 4%; }
+  .ch14__name {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-m);
+    line-height: var(--leading-display);
+    text-transform: uppercase;
+    color: var(--text-1);
+    padding-block: 0.06em;
+  }
+  .ch14__p { font-size: var(--text-body); line-height: 1.5; color: var(--text-2); }
+  .ch14__note { position: absolute; right: 0; bottom: 0; font-size: var(--text-caption); color: var(--text-3); }
+  .ch14__more { display: flex; justify-content: center; margin-top: var(--space-8); }
+  @media (max-width: 767px), (pointer: coarse) { .ch14__more :global(.btn) { --h: 44px; } }
+
+  /* The text blocks rise once the figure beside them has started drawing (set by the script). */
+  :global(html.js) .ch14:not([data-in]) .ch14__text { opacity: 0; }
+  .ch14[data-in='in'] .ch14__text { animation: ch14-rise var(--dur-reveal-group) var(--ease-reveal) both; }
+  .ch14[data-in='in'] .ch14__text--1 { animation-delay: 1.1s; }
+  .ch14[data-in='in'] .ch14__text--0 { animation-delay: 0.3s; }
+  @keyframes ch14-rise { from { opacity: 0; translate: 0 12px; } }
+  @keyframes ch14-fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .ch14[data-in='in'] .ch14__text { animation: ch14-fade var(--dur-fade-reduced) var(--ease-colour) both; }
+  }
+
+  @media (max-width: 1279px) {
+    .ch14__stage { aspect-ratio: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+    .ch14__title, .ch14__fig, .ch14__text, .ch14__note { position: static; width: auto; }
+    .ch14__title { text-align: left; font-size: var(--text-display-m); }
+    .ch14__fig { height: 420px; }
+    .ch14__text { max-width: 520px; }
+    .ch14__fig--1 { margin-top: var(--space-8); }
+    .ch14__more { justify-content: flex-start; }
+  }
+</style>
+
+<script>
+  import { createLeadArt } from './leads-art';
+  import { onFirstView, reduceMotion } from './first-view';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-ch14]')) {
+    const arts = [...root.querySelectorAll<HTMLCanvasElement>('[data-ch14-art]')].map((c) => createLeadArt(c, c.dataset.ch14Art as 'jason' | 'lucia'));
+    onFirstView([root], () => {
+      root.dataset.in = 'in';
+      if (reduceMotion()) { arts.forEach((a) => a.finish()); return; }
+      // The second figure starts when the first is half drawn (orchestration).
+      arts.forEach((a, i) => a.play(i * 1.2));
+      // Off screen, the camera turn pauses; it resumes where it was.
+      const io = new IntersectionObserver(([e]) => arts.forEach((a) => (e.isIntersecting ? a.resume() : a.pause())));
+      io.observe(root);
+    }, () => { root.dataset.in = 'skip'; arts.forEach((a) => a.finish()); }, '0px 0px -25% 0px');
+  }
+</script>

@@ -1,0 +1,141 @@
+---
+// Home 012, Finders and sources (board r2: Dropbox, Love; HUXLEY 009, Love, for the press list under it).
+// Dropbox: "Most credited" (the six finders and creators with the most finds, avatar initial on the pink tint, as on
+// /finders) beside "In the sources" (three counted rows: icon, number, label). HUXLEY 009: a light mono label at the
+// gutter and a ruled list of the outlets we cite, each with the find it backs (we hold no article headlines, so the
+// second column is honestly the find) and the source type at the right. Everything is counted from content.
+import ChapterHead from './ChapterHead.astro';
+import Icon from '../ui/Icon.astro';
+import { finds } from '../../lib/content';
+import { finders, outletCredits, creditTotals } from '../../lib/credits';
+
+interface Props { index?: string }
+const { index = '012' } = Astro.props;
+const top = finders.slice(0, 6);
+const count = (t: string) => finds.reduce((n, f) => n + f.sources.filter((s) => s.type === t).length, 0);
+const stats = [
+  { icon: 'clip' as const, value: count('youtube'), label: 'video sources' },
+  { icon: 'article' as const, value: count('article'), label: 'articles' },
+  { icon: 'link' as const, value: count('wiki'), label: 'wiki pages' },
+];
+const press = outletCredits.slice(0, 10).map((o) => ({ outlet: o.name, find: o.posts[0].find, kind: o.kind === 'Wiki' ? 'Wiki' : o.kind === 'Official' ? 'Official' : 'Article' }));
+const initial = (n: string) => n.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
+---
+<section class="ch12" aria-labelledby="ch12-title">
+  <div class="container">
+    <ChapterHead index={index} label="Finders and sources" id="ch12-title" />
+
+    <div class="ch12__top">
+      <div class="ch12__members">
+        <h3 class="ch12__h">Most credited</h3>
+        <ul class="ch12__people" role="list" data-reveal>
+          {top.map((p) => (
+            <li class="ch12__person">
+              <span class="ch12__avatar" aria-hidden="true">{initial(p.name)}</span>
+              <span class="ch12__who">
+                <span class="ch12__name">{p.name}</span>
+                <span class="ch12__role">{p.finds} {p.finds === 1 ? 'find' : 'finds'} · {p.platform}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="ch12__stats">
+        <h3 class="ch12__h">In the sources</h3>
+        <ul class="ch12__statlist" role="list" data-reveal>
+          {stats.map((s) => (
+            <li class="ch12__stat">
+              <Icon name={s.icon} size={24} />
+              <span class="ch12__stat-text"><span class="ch12__num">{s.value}</span><span class="ch12__label">{s.label}</span></span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="ch12__press">
+      <h3 class="ch12__plabel">Sources</h3>
+      <div class="ch12__pbody">
+        <ul class="ch12__rows" role="list" data-reveal>
+          {press.map((r) => (
+            <li>
+              <a class="ch12__row" href={`/finds/${r.find.slug}`}>
+                <span class="ch12__outlet">{r.outlet}</span>
+                <span class="ch12__find">{r.find.title}</span>
+                <span class="ch12__kind">{r.kind}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a class="ch12__all" href="/finders">All {creditTotals.people} finders and {creditTotals.outlets} outlets <Icon name="chevron-right" size={16} stroke={2} /></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ch12 { padding-top: var(--space-chapter); }
+  .ch12__top { display: grid; grid-template-columns: 7fr 5fr; gap: var(--space-10); margin-top: var(--space-12); }
+  .ch12__h { font-size: 36px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; color: var(--text-1); margin-bottom: var(--space-10); }
+  .ch12__people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-8); column-gap: var(--space-6); }
+  .ch12__person { display: flex; align-items: center; gap: var(--space-4); min-width: 0; min-height: 64px; }
+  .ch12__avatar { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-size: 20px; font-weight: 500; }
+  .ch12__who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ch12__name { font-size: var(--text-title); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .ch12__role { font-size: var(--text-body-s); color: var(--text-2); line-height: 1.35; }
+  .ch12__statlist { display: flex; flex-direction: column; gap: var(--space-8); }
+  .ch12__stat { display: flex; align-items: flex-start; gap: var(--space-4); color: var(--text-2); }
+  .ch12__stat :global(.icon) { margin-top: 6px; flex: none; }
+  .ch12__stat-text { display: flex; flex-direction: column; gap: 2px; }
+  .ch12__num { font-size: var(--text-h1); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--text-1); }
+  .ch12__label { font-size: var(--text-body-s); color: var(--text-2); }
+
+  /* HUXLEY 009: label column 26%, list 74%, rows 50 high on hairlines. */
+  .ch12__press { display: grid; grid-template-columns: 26fr 74fr; margin-top: calc(var(--space-16) + var(--space-8)); }
+  .ch12__plabel { font-family: var(--font-mono); font-weight: 300; font-size: 32px; line-height: 1.1; text-transform: uppercase; color: var(--text-1); padding-top: 12px; }
+  .ch12__rows { border-top: var(--border-w) solid var(--rule-soft); }
+  .ch12__rows li { border-bottom: var(--border-w) solid var(--rule-soft); }
+  .ch12__row {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-6);
+    min-height: 50px;
+    padding-inline: 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background-color var(--dur-colour) var(--ease-colour);
+  }
+  .ch12__outlet { color: var(--text-1); overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .ch12__find { color: var(--text-2); overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .ch12__kind { font-size: var(--text-mono-caps); color: var(--text-3); }
+  @media (hover: hover) and (pointer: fine) {
+    .ch12__row:hover { background: var(--glass-hover-soft); }
+    .ch12__all:hover :global(.icon) { transform: translateX(3px); }
+  }
+  .ch12__all { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: var(--space-4); font-size: var(--text-body-s); font-weight: 600; color: var(--text-1); }
+  .ch12__all :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+
+  @media (max-width: 1023px) {
+    .ch12__top { grid-template-columns: minmax(0, 1fr); gap: var(--space-12); }
+    .ch12__press { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  }
+  @media (max-width: 767px) {
+    .ch12__h { font-size: var(--text-h1); margin-bottom: var(--space-6); }
+    .ch12__people { row-gap: var(--space-5); column-gap: var(--space-3); }
+    .ch12__person { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+    .ch12__statlist { flex-direction: row; justify-content: space-between; gap: var(--space-3); }
+    .ch12__stat { flex-direction: column; gap: var(--space-2); }
+    .ch12__stat :global(.icon) { margin-top: 0; }
+    .ch12__plabel { font-size: 24px; }
+    .ch12__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; row-gap: 2px; column-gap: var(--space-3); padding-block: var(--space-3); }
+    .ch12__outlet { grid-column: 1; }
+    .ch12__kind { grid-column: 2; grid-row: 1; }
+    .ch12__find { grid-column: 1 / -1; grid-row: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ch12__row, .ch12__all :global(.icon) { transition: none; }
+  }
+</style>

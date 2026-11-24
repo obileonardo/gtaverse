@@ -35,9 +35,11 @@ export default defineConfig({
   fonts: [
     // Big Shoulders Display now ships inside the "Big Shoulders" family as its optical size axis; opsz 72 is the
     // Display cut, fixed here so every size uses the Display drawing.
-    { provider: google, name: 'Big Shoulders', cssVariable: '--font-display-src', weights: ['800 900'], styles: ['normal'], subsets: ['latin'], fallbacks: ['Arial Narrow', 'sans-serif'], options: { experimental: { variableAxis: { opsz: ['72'] } } } },
-    { provider: google, name: 'Inter', cssVariable: '--font-body-src', weights: ['400 700'], styles: ['normal'], subsets: ['latin'], fallbacks: ['sans-serif'] },
-    { provider: google, name: 'Geist Mono', cssVariable: '--font-mono-src', weights: ['400 600'], styles: ['normal'], subsets: ['latin'], fallbacks: ['monospace'] },
+    { provider: google, name: 'Big Shoulders', cssVariable: '--font-display-src', weights: ['100 900'], styles: ['normal'], subsets: ['latin'], fallbacks: ['Arial Narrow', 'sans-serif'], options: { experimental: { variableAxis: { opsz: ['72'] } } } },
+    // Round 2 weights (board analysis tokens-r2.md): Big Shoulders 100 for the faint words (home 010, 015), Inter 200
+    // (Olha's thin labels), 900 (the Coda number) and italic (FLORA's phrase), Geist Mono 300 (HUXLEY's light mono).
+    { provider: google, name: 'Inter', cssVariable: '--font-body-src', weights: ['200 900'], styles: ['normal', 'italic'], subsets: ['latin'], fallbacks: ['sans-serif'] },
+    { provider: google, name: 'Geist Mono', cssVariable: '--font-mono-src', weights: ['300 600'], styles: ['normal'], subsets: ['latin'], fallbacks: ['monospace'] },
     { provider: google, name: 'Newsreader', cssVariable: '--font-serif-src', weights: ['400 700'], styles: ['normal', 'italic'], subsets: ['latin'], fallbacks: ['serif'] },
   ],
 });

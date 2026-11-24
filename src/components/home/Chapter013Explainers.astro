@@ -1,0 +1,200 @@
+---
+// Home 013, Explainers (board r2: Kacio Felipe C11, Love; Notion changelog, Love; phone Justin Jefferson M008).
+// Band 1, over an official wallpaper dimmed to the ground (owner answer Q1, credited): the title in display caps at
+// the left, a short paragraph at the right. Band 2: the featured explainer as a wide rounded art card (2.13:1) with
+// two glass tags and its title in caps. Then Notion's ruled list of all explainers with ISO dates.
+// Phone: the heading, then a rail of two tall cards (the featured one on its wallpaper, the next on the glow), its
+// title, two lines and "Read the explainer", then the list.
+// Without the built wallpapers (CI) the band falls back to the ground and the card to the sunrise glow.
+import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import { explainers } from '../../lib/content';
+import { explainerParts } from '../../lib/explainers';
+import { wallpaper } from '../../lib/wallpaper';
+
+interface Props { index?: string }
+const { index = '013' } = Astro.props;
+const FEATURED = 'wanted-level-and-heat';
+const list = [...explainers].sort((a, b) => (a.frontmatter.slug === FEATURED ? -1 : b.frontmatter.slug === FEATURED ? 1 : 0));
+const lead = list[0];
+const second = list[1];
+const parts = lead ? await explainerParts(lead) : null;
+const status = (s: string) => (s === 'draft' ? 'In review' : 'Reviewed');
+// Band 1: the bridge over the water (wallpaper 2); the card: Jason and Lucia on the car (wallpaper 0).
+const bandArt = wallpaper(2);
+const cardArt = wallpaper(0);
+const standfirst = parts?.standfirst.replace(/<[^>]+>/g, '').replace(/\s*\d+\s*$/, '').trim();
+---
+<section class="ch13" aria-labelledby="ch13-title">
+  <div class="ch13__band" data-scheme={bandArt ? 'dark' : undefined}>
+    {bandArt && (
+      <picture class="ch13__bg" aria-hidden="true">
+        {bandArt.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="100vw" />)}
+        <img src={bandArt.src} alt="" loading="lazy" decoding="async" style={`object-position: ${bandArt.position}`} data-fv />
+      </picture>
+    )}
+    <div class="container ch13__inner">
+      <ChapterHead index={index} label="Explainers" heading={false} />
+      <div class="ch13__intro">
+        <h2 class="ch13__title" id="ch13-title">How the game works</h2>
+        <p class="ch13__para">{explainers.length} explainers on the systems behind Leonida, written from cited sources and labelled while they are in review.</p>
+      </div>
+
+      {lead && (
+        <a class="ch13__card" data-scheme="dark" href={`/explainers/${lead.frontmatter.slug}`}>
+          {cardArt ? (
+            <picture class="ch13__card-art">
+              {cardArt.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="(max-width: 767px) 70vw, 1184px" />)}
+              <img src={cardArt.src} alt={cardArt.alt} loading="lazy" decoding="async" style={`object-position: ${cardArt.position}`} />
+            </picture>
+          ) : <span class="ch13__card-glow" aria-hidden="true"></span>}
+          <span class="ch13__card-body">
+            <span class="ch13__tags">
+              <span class="chip chip--glass ch13__tag">{status(lead.frontmatter.status)}</span>
+              {parts && <span class="chip chip--glass ch13__tag">{parts.minutes} min read</span>}
+            </span>
+            <span class="ch13__card-title">{lead.frontmatter.title}</span>
+          </span>
+        </a>
+      )}
+      {cardArt && <p class="ch13__credit">{cardArt.credit}</p>}
+    </div>
+  </div>
+
+  {/* Phone (Justin Jefferson M008): two tall cards with the next one peeking, then the featured explainer's text. */}
+  <div class="ch13__phone container">
+    <ul class="ch13__rail" role="list">
+      {[lead, second].filter(Boolean).map((e, i) => {
+        const art = i === 0 ? cardArt : null;
+        return (
+          <li>
+            <a class="ch13__tall" href={`/explainers/${e!.frontmatter.slug}`} aria-label={e!.frontmatter.title}>
+              {art ? (
+                <picture>
+                  {art.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="70vw" />)}
+                  <img src={art.src} alt="" loading="lazy" decoding="async" style={`object-position: ${art.position}`} />
+                </picture>
+              ) : <span class="ch13__card-glow"><span class="ch13__glow-label">{e!.frontmatter.title}</span></span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+    {cardArt && <p class="ch13__credit ch13__credit--phone">{cardArt.credit}</p>}
+    {lead && (
+      <div class="ch13__ptext">
+        <h3 class="ch13__ptitle">{lead.frontmatter.title}</h3>
+        {standfirst && <p class="ch13__pbody">{standfirst}</p>}
+        <Button href={`/explainers/${lead.frontmatter.slug}`} variant="inverse" size="l">Read the explainer</Button>
+      </div>
+    )}
+  </div>
+
+  <div class="container ch13__list-wrap">
+    <div class="ch13__lhead">
+      <h3 class="ch13__lh">All explainers</h3>
+      <p class="ch13__lsub">Every explainer, with the day it was last checked.</p>
+    </div>
+    <div class="ch13__list">
+      <ul class="ch13__rows" role="list" data-reveal>
+        {explainers.map((e) => (
+          <li>
+            <a class="ch13__row" href={`/explainers/${e.frontmatter.slug}`}>
+              <span class="ch13__date">{String(e.frontmatter.updated_at).slice(0, 10)}</span>
+              <span class="ch13__rtitle">{e.frontmatter.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a class="ch13__all" href="/explainers">All explainers <Icon name="arrow-right" size={20} /></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ch13 { padding-top: var(--space-chapter); }
+  .ch13__band { position: relative; isolation: isolate; color: var(--text-1); }
+  /* The wallpaper as-is, dimmed by a scrim and faded into the ground at the bottom (Kacio's dimmed art band). */
+  .ch13__bg { position: absolute; inset: calc(-1 * var(--space-16)) 0 0; z-index: -1; overflow: hidden; }
+  .ch13__bg::before { content: ''; position: absolute; inset: 0 0 auto; height: 30%; z-index: 1; background: linear-gradient(to bottom, var(--bg), rgb(13 12 26 / 0)); }
+  .ch13__bg img { width: 100%; height: 100%; object-fit: cover; }
+  .ch13__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(13 12 26 / 0.86), rgb(13 12 26 / 0.72) 35%, rgb(13 12 26 / 0.86) 70%, var(--bg) 100%); }
+  :global(html.js) .ch13__bg img[data-fv]:not([data-fv='in'], [data-fv='skip']) { scale: 1.04; }
+  .ch13__bg img[data-fv='in'] { animation: ch13-settle var(--dur-moment) var(--ease-reveal) both; }
+  @keyframes ch13-settle { from { scale: 1.04; } }
+
+  .ch13__intro { display: grid; grid-template-columns: 41fr 29fr 30fr; align-items: start; margin-top: var(--space-10); }
+  .ch13__title {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    font-size: var(--text-display-l);
+    line-height: var(--leading-display);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+    padding-block: 0.06em;
+  }
+  .ch13__para { grid-column: 3; font-size: var(--text-body-l); line-height: 1.55; color: var(--text-2); padding-top: 6px; }
+
+  .ch13__card { position: relative; display: block; margin-top: var(--space-12); aspect-ratio: 2.13; border-radius: var(--radius-sheet); overflow: hidden; background: var(--surface-1); isolation: isolate; }
+  .ch13__card-art, .ch13__card-art img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ch13__card-art img { object-fit: cover; transition: scale var(--dur-card-lift) var(--ease-out); }
+  .ch13__card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgb(13 12 26 / 0.78), rgb(13 12 26 / 0) 55%), linear-gradient(to right, rgb(13 12 26 / 0.45), rgb(13 12 26 / 0) 50%); pointer-events: none; }
+  .ch13__card-glow { position: absolute; inset: 0; display: grid; place-items: center; background: var(--glow-hero), var(--surface-1); }
+  .ch13__card-body { position: absolute; left: var(--space-12); bottom: var(--space-12); right: var(--space-12); z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-6); color: #fff; }
+  .ch13__tags { display: flex; gap: var(--space-3); }
+  .ch13__tag { height: 44px; padding-inline: 20px; font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; color: #fff; cursor: inherit; pointer-events: none; }
+  .ch13__card-title { max-width: 14em; font-size: var(--text-display-m); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-transform: uppercase; text-wrap: balance; padding-block: 0.06em; }
+  @media (hover: hover) and (pointer: fine) {
+    .ch13__card:hover .ch13__card-art img { scale: 1.02; }
+  }
+  .ch13__card:active { scale: 0.995; transition: scale var(--dur-press) var(--ease-out); }
+  .ch13__credit { margin-top: var(--space-3); font-size: var(--text-caption); color: var(--text-3); }
+
+  /* Notion's list, in the right half of the content box. */
+  .ch13__list-wrap { display: grid; grid-template-columns: 1fr 1fr; align-items: start; margin-top: var(--space-16); }
+  .ch13__list { grid-column: 2; }
+  .ch13__lh { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+  .ch13__lsub { margin-top: var(--space-3); font-size: var(--text-body); color: var(--text-2); }
+  .ch13__rows li { border-bottom: var(--border-w) solid var(--rule-soft); }
+  .ch13__row { display: grid; grid-template-columns: 136px minmax(0, 1fr); align-items: center; gap: var(--space-4); min-height: 64px; padding-block: var(--space-2); }
+  .ch13__date { font-family: var(--font-mono); font-size: var(--text-mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .ch13__rtitle { font-size: var(--text-title-l); font-weight: 400; line-height: 1.3; color: var(--text-1); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color var(--dur-colour) var(--ease-colour); }
+  @media (hover: hover) and (pointer: fine) {
+    .ch13__row:hover .ch13__rtitle { text-decoration-color: currentColor; }
+    .ch13__all:hover :global(.icon) { transform: translateX(3px); }
+  }
+  .ch13__all { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: var(--space-5); font-size: var(--text-body); font-weight: 600; color: var(--accent-text); }
+  .ch13__all :global(.icon) { transition: transform var(--dur-colour) var(--ease-out); }
+
+  .ch13__phone { display: none; }
+  @media (max-width: 767px) {
+    .ch13__card, .ch13__band > .container > .ch13__credit, .ch13__intro .ch13__para { display: none; }
+    .ch13__intro { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-8); }
+    .ch13__title { font-size: 52px; }
+    .ch13__phone { display: block; margin-top: var(--space-6); }
+    .ch13__rail { display: flex; gap: var(--space-3); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+    .ch13__rail::-webkit-scrollbar { display: none; }
+    .ch13__rail li { flex: 0 0 64%; scroll-snap-align: start; }
+    .ch13__tall { position: relative; display: block; aspect-ratio: 0.57; overflow: hidden; background: var(--surface-1); }
+    .ch13__tall img { width: 100%; height: 100%; object-fit: cover; }
+    .ch13__glow-label { padding: var(--space-4); font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 28px; line-height: 1; text-transform: uppercase; text-align: center; padding-block: 0.1em; }
+    .ch13__credit--phone { margin-top: var(--space-2); }
+    .ch13__ptext { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-6); }
+    .ch13__ptitle { font-size: var(--text-title-l); font-weight: 700; line-height: 1.3; }
+    .ch13__pbody { font-size: var(--text-body); line-height: 1.45; color: var(--text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .ch13__ptext :global(.btn) { margin-top: var(--space-3); }
+    .ch13__list-wrap { grid-template-columns: minmax(0, 1fr); }
+    .ch13__list { grid-column: 1; }
+    .ch13__lh { font-size: var(--text-h1); }
+    .ch13__lhead { margin-bottom: var(--space-4); }
+    .ch13__row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ch13__bg img[data-fv='in'] { animation: none; }
+    .ch13__card-art img, .ch13__rtitle, .ch13__all :global(.icon) { transition: none; }
+  }
+</style>

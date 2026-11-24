@@ -1,0 +1,312 @@
+---
+// Home chapter 001, Spotlight (round 2, the owner's Siena Film Foundation Love, with Apple's peek and pager; phone:
+// Peacock's card with Google TV's pager). One find at a time at full size: the creator's still fills a rounded
+// panel; the find's kicker, title and credit table sit bottom left, its verification top left, up to three of its
+// real sources down the right (Siena's acclaim column, with no invented praise), and "Play clip" and "Open the find"
+// bottom right. Neighbours peek into the gutter at 40%. Swipe, the dots, the arrow keys or a click on a neighbour
+// move it; nothing plays on its own (no loops). The clip loads in place only when asked (click to load).
+// Motion and behaviour: spotlight.ts.
+import Verification from '../Verification.astro';
+import Button from '../ui/Button.astro';
+import ChapterHead from './ChapterHead.astro';
+import type { Find } from '../../lib/content';
+import { findStill, categoryLabel, regionLabel } from '../../lib/media';
+import { youtubeId, ytEmbed } from '../../lib/clip';
+import { spotSources } from '../../lib/home';
+import { iconSvg } from '../../icons/render';
+
+interface Props { finds: Find[]; index: number }
+const { finds, index } = Astro.props;
+const glyph = { video: 'clip', article: 'article', wiki: 'link' } as const;
+const kind = { video: 'Video', article: 'Article', wiki: 'Wiki' } as const;
+// Two lines of 72 hold about 24 characters; longer titles step down so no title needs more than three lines.
+const titleSize = (t: string) => (t.length <= 24 ? 'l' : t.length <= 47 ? 'm' : 's');
+const initial = (s: string) => s.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
+---
+{finds.length > 0 && (
+<section class="spot" id="more" aria-labelledby="spot-label">
+  <div class="container"><ChapterHead index={index} label="Spotlight" id="spot-label" /></div>
+  <div class="spot__viewport" data-spot tabindex="0" role="group" aria-roledescription="carousel" aria-label="Spotlight finds. Use the arrow keys to move between them.">
+    <ul class="spot__track" role="list" data-spot-track>
+      {finds.map((f, i) => {
+        const s = findStill(f)!;
+        const yt = youtubeId(f.clip!.url)!;
+        const sources = spotSources(f);
+        const finder = f.first_finder?.handle ?? null;
+        return (
+          <li class="spot__slide" data-spot-slide data-active={i === 0 ? '' : undefined} aria-roledescription="slide" aria-label={`${i + 1} of ${finds.length}: ${f.title}`}>
+            <article class="spot__panel" data-scheme="dark">
+              <div class="spot__media">
+                <img src={s.src} srcset={s.srcset} sizes="(max-width: 767px) 88vw, min(1664px, 100vw - 256px)" alt="" width="1280" height="720" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+              </div>
+              <div class="spot__player" data-spot-player></div>
+              <div class="spot__text" data-spot-text>
+                <div class="spot__top">
+                  <Verification level={f.verification} />
+                  <p class="spot__count">{f.sources.length} {f.sources.length === 1 ? 'source' : 'sources'}</p>
+                </div>
+                <div class="spot__left">
+                  <p class="spot__kicker">{categoryLabel(f)}</p>
+                  <h3 class={`spot__title spot__title--${titleSize(f.title)}`}><a href={`/finds/${f.slug}`}>{f.title}</a></h3>
+                  <dl class="spot__table">
+                    <div><dt>Region</dt><dd>{regionLabel(f)}</dd></div>
+                    <div><dt>Found by</dt><dd class:list={{ 'is-none': !finder }}>{finder ?? 'Not credited yet'}</dd></div>
+                    <div><dt>Clip by</dt><dd>{f.clip?.creator ?? 'Unknown creator'}</dd></div>
+                  </dl>
+                  <p class="spot__byline">
+                    <span class="spot__avatar" aria-hidden="true">{initial(finder ?? f.clip?.creator ?? '?')}</span>
+                    <span>{finder ? `Found by ${finder}` : `Clip by ${f.clip?.creator ?? 'an unknown creator'}`}</span>
+                  </p>
+                </div>
+                {sources.length > 0 && (
+                  <ul class="spot__right" role="list" aria-label="Sources">
+                    {sources.map((src) => (
+                      <li>
+                        <span class="spot__glyph" set:html={iconSvg(glyph[src.type], { size: 20 })} />
+                        <span class="spot__type">{kind[src.type]}</span>
+                        <span class="spot__outlet" title={src.name || undefined}>{src.name || kind[src.type]}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div class="spot__actions">
+                  <Button variant="inverse" size="l" icon="play" data-spot-play data-embed={ytEmbed(yt)} aria-label={`Play clip: ${f.title}`}>Play clip</Button>
+                  <Button href={`/finds/${f.slug}`} variant="glass" size="l" iconEnd="arrow-right" class="spot__open">Open the find</Button>
+                </div>
+              </div>
+              <Button variant="glass" size="m" icon="close" iconOnly label="Close the clip" class="spot__close" data-spot-close />
+            </article>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+  <div class="container spot__pager">
+    <div class="spot__dots" role="group" aria-label="Choose a find">
+      {finds.map((f, i) => (
+        <button type="button" class="spot__dot" data-spot-dot aria-label={`Show ${i + 1} of ${finds.length}: ${f.title}`} aria-current={i === 0 ? 'true' : undefined}></button>
+      ))}
+    </div>
+  </div>
+</section>
+)}
+
+<script>
+  import { initSpotlight } from './spotlight';
+  document.querySelectorAll<HTMLElement>('[data-spot]').forEach(initSpotlight);
+</script>
+
+<style>
+  .spot { --slide-gap: var(--space-4); }
+  .spot__viewport {
+    --slide-w: min(100cqw - 2 * var(--page-pad), var(--container-max));
+    container-type: inline-size;
+    margin-top: var(--space-10);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    outline-offset: -2px;
+  }
+  .spot__viewport::-webkit-scrollbar { display: none; }
+  .spot__track {
+    display: flex;
+    gap: var(--slide-gap);
+    padding-inline: calc((100cqw - var(--slide-w)) / 2);
+    width: max-content;
+  }
+  .spot__slide {
+    flex: 0 0 auto;
+    width: var(--slide-w);
+    scroll-snap-align: center;
+    opacity: 0.4;
+    cursor: pointer;
+    transition: opacity var(--dur-crossfade) var(--ease-colour);
+  }
+  .spot__slide[data-active] { opacity: 1; cursor: auto; }
+
+  /* Siena's panel: 1.95:1, the still edge to edge, the radius of a sheet. */
+  .spot__panel {
+    position: relative;
+    aspect-ratio: 1.95;
+    border-radius: var(--radius-sheet);
+    overflow: hidden;
+    background: var(--frame);
+    color: var(--text-1);
+    isolation: isolate;
+  }
+  .spot__media, .spot__player { position: absolute; inset: 0; }
+  .spot__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
+  /* Two scrims so both text columns read: up from the bottom left, and in from the right. */
+  .spot__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgb(13 12 26 / 0.86), rgb(13 12 26 / 0) 62%),
+      linear-gradient(to right, rgb(13 12 26 / 0.6), rgb(13 12 26 / 0) 46%),
+      linear-gradient(to left, rgb(13 12 26 / 0.72), rgb(13 12 26 / 0) 40%);
+  }
+  .spot__player { z-index: 2; display: none; background: var(--frame); }
+  .spot__player :global(iframe) { width: 100%; height: 100%; border: 0; }
+  .spot__panel[data-playing] .spot__player { display: block; }
+
+  .spot__text {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 440px) 1fr minmax(0, 200px);
+    grid-template-rows: auto 1fr auto;
+    padding: var(--space-10) var(--space-12) var(--space-12);
+    pointer-events: none;
+  }
+  .spot__text :is(a, button) { pointer-events: auto; }
+  .spot__top { grid-area: 1 / 1; justify-self: start; display: grid; justify-items: center; gap: var(--space-2); }
+  .spot__count { font-size: var(--text-label-caps); font-weight: 600; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-2); }
+  .spot__left { grid-area: 3 / 1; display: grid; justify-items: center; text-align: center; gap: var(--space-4); }
+  .spot__kicker {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .spot__title {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .spot__title--l { font-size: var(--text-display-l); }
+  .spot__title--m { font-size: 56px; }
+  .spot__title--s { font-size: var(--text-display-m); }
+  .spot__title a { display: block; }
+  .spot__table { width: 100%; margin-top: var(--space-2); }
+  .spot__table div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); padding-block: 6px; border-top: var(--border-w) solid rgb(255 255 255 / 0.24); }
+  .spot__table div:last-child { border-bottom: var(--border-w) solid rgb(255 255 255 / 0.24); }
+  .spot__table dt { font-size: var(--text-label-caps); font-weight: 600; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-2); }
+  .spot__table dd { margin: 0; font-size: var(--text-label); font-weight: 600; text-align: right; min-width: 0; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
+  .spot__table dd.is-none { color: var(--text-2); font-weight: 500; }
+  .spot__byline { display: none; }
+
+  /* Siena's acclaim column, honestly: each block is one of the find's own sources. */
+  .spot__right { grid-area: 1 / 3 / 3 / 4; display: grid; align-content: start; gap: var(--space-10); text-align: center; }
+  .spot__right li { display: grid; justify-items: center; gap: var(--space-2); }
+  .spot__glyph { color: var(--text-2); display: flex; }
+  .spot__type { font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-2); }
+  .spot__outlet {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 800;
+    font-size: var(--text-display-s);
+    line-height: 1.3;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .spot__actions { grid-area: 3 / 3; justify-self: end; align-self: end; display: flex; gap: var(--space-3); }
+  /* Siena's split arrow: a 1px dashed divider before the arrow, inside the pill. */
+  .spot__actions :global(.spot__open) { gap: 0; padding-inline: 24px 18px; }
+  .spot__actions :global(.spot__open .btn__label) { align-self: stretch; display: flex; align-items: center; padding-right: 16px; margin-right: 14px; border-right: var(--border-w) dashed var(--glass-border); }
+  .spot__actions :global(.spot__open .icon) { transition: transform var(--dur-colour) var(--ease-out); }
+
+  :global(.spot__close) { position: absolute; top: var(--space-4); right: var(--space-4); z-index: 3; display: none; }
+  .spot__panel[data-playing] :global(.spot__close) { display: inline-flex; }
+
+  /* The text swap (direction-aware, never two at once): the old text fades by 160ms in place, the new text arrives
+     from the side of the move from 120ms over 280ms. --dir is set by spotlight.ts before a slide becomes active. */
+  .spot__text { opacity: 0; visibility: hidden; translate: calc(var(--dir, 1) * 24px) 0; transition: opacity 160ms var(--ease-standard), translate 0s linear 160ms, visibility 0s linear 160ms; }
+  .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: 0 0; transition: opacity 280ms var(--ease-out) 120ms, translate 280ms var(--ease-out) 120ms, visibility 0s; }
+  .spot__panel[data-playing] .spot__text { opacity: 0; translate: 0 0; transition: opacity 160ms var(--ease-standard); }
+  .spot__panel[data-playing] .spot__text :is(a, button) { pointer-events: none; visibility: hidden; }
+
+  .spot__pager { display: flex; justify-content: center; margin-top: var(--space-6); }
+  .spot__dots { display: flex; gap: 4px; }
+  /* 8px dots; the active one opens to a 24px bar (Justin Jefferson's pill) so it reads without colour. The bar is
+     always 24 wide and clipped to a dot (clip-path, so nothing reflows). Each dot sits in a 20 x 44 hit area. */
+  .spot__dot { position: relative; width: 20px; height: 44px; display: grid; place-items: center; }
+  .spot__dot::before {
+    content: '';
+    width: 24px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--text-3);
+    opacity: 0.4;
+    clip-path: inset(0 8px round 4px);
+    transition: clip-path var(--dur-morph-out) var(--ease-standard), opacity var(--dur-colour) var(--ease-colour), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .spot__dot[aria-current='true']::before { clip-path: inset(0 round 4px); background: var(--text-1); opacity: 1; transition: clip-path var(--dur-morph) var(--ease-out), opacity var(--dur-colour) var(--ease-colour), background-color var(--dur-colour) var(--ease-colour); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .spot__slide[data-active] .spot__panel:hover .spot__media img { transform: scale(1.02); }
+    .spot__slide:not([data-active]):hover { opacity: 0.6; }
+    .spot__actions :global(.spot__open:hover .icon) { transform: translateX(3px); }
+    .spot__dot:hover::before { opacity: 1; }
+  }
+
+  @media (max-width: 1439px) { .spot__right { gap: var(--space-5); } }
+
+  /* 768 to 1023: the same panel, the source column folds away. */
+  @media (max-width: 1023px) {
+    .spot__text { grid-template-columns: minmax(0, 1fr) auto; padding: var(--space-8); }
+    .spot__right { display: none; }
+    .spot__actions { grid-area: 3 / 2; }
+    .spot__title--l { font-size: var(--text-display-m); }
+    .spot__title--m, .spot__title--s { font-size: 40px; }
+  }
+
+  /* Phone (Peacock): a rounded card 88% wide, 1.27 times as tall as wide, the next card peeking; content centred in
+     the bottom half: the verification badge where Peacock shows LIVE, the category, the title (three lines at most),
+     "Found by" with its avatar initial, one centred Play pill. Google TV's dots sit right aligned under the card. */
+  @media (max-width: 767px) {
+    .spot { --slide-gap: var(--space-2); }
+    .spot__viewport { --slide-w: 88cqw; margin-top: var(--space-6); scroll-padding-inline: var(--page-pad); }
+    .spot__track { padding-inline: var(--page-pad); }
+    .spot__slide { scroll-snap-align: start; opacity: 1; }
+    .spot__panel { aspect-ratio: 1 / 1.27; border-radius: var(--radius-l); }
+    .spot__media::after { background: linear-gradient(to top, rgb(13 12 26 / 0.92), rgb(13 12 26 / 0.5) 45%, rgb(13 12 26 / 0) 70%); }
+    .spot__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) var(--space-5) var(--space-6);
+      text-align: center;
+      opacity: 1;
+      translate: none;
+      transition: none;
+    }
+    .spot__slide .spot__text, .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: none; transition: none; }
+    .spot__top { order: 0; display: flex; align-items: center; gap: var(--space-2); }
+    .spot__count { display: none; }
+    .spot__left { order: 1; gap: var(--space-3); }
+    .spot__kicker { font-family: var(--font-body); font-size: var(--text-label); font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--text-1); }
+    .spot__title--l, .spot__title--m, .spot__title--s { font-size: var(--text-display-m); }
+    .spot__title--s { font-size: 32px; }
+    .spot__table, .spot__right { display: none; }
+    .spot__byline { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-s); color: var(--text-1); }
+    .spot__avatar { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-weight: 700; font-size: 13px; }
+    .spot__actions { order: 2; justify-self: auto; align-self: center; margin-top: var(--space-2); }
+    .spot__actions :global(.spot__open) { display: none; }
+    .spot__pager { justify-content: flex-end; margin-top: var(--space-3); }
+    /* Touch: each dot gets a full 44px hit area of its own (the tap rule wins over Google TV's tighter spacing). */
+    .spot__dots { gap: 0; margin-right: -14px; }
+    .spot__dot { width: 44px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spot__media img { transition: none; }
+    .spot__text, .spot__slide[data-active] .spot__text { translate: none; transition: opacity var(--dur-fade-reduced) linear; }
+    .spot__dot::before, .spot__dot[aria-current='true']::before { transition: opacity var(--dur-fade-reduced) linear; }
+  }
+</style>

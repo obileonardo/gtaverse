@@ -1,0 +1,272 @@
+---
+// Home chapter 006, By type (round 2: the owner's HUXLEY 007 Love, a spotlight with a thumbnail strip; phone: Justin
+// Jefferson M007's info card, HUXLEY M007's strip on top). Left, the lead still of the chosen type (its safe finds
+// with a still, up to five, cycled by the pager on the image); right, HUXLEY's ruled cells: the name in light mono
+// caps, the type's description and two facts in mono caps, and a meta row (finds, how many are multi-source). Under
+// it, a strip of twelve tiles, one per type, each with its blip; the active tile wears the cut-corner brackets.
+// The sci-fi HUD glyphs are left out (the board's note); the mono type and the ruled cells stay.
+// Behaviour and motion: by-type.ts.
+import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
+import { type TypeEntry } from '../../lib/home';
+import { findStill } from '../../lib/media';
+import { blipSvg } from '../../icons/render';
+import { categoryGlyphs } from '../../icons/family';
+
+interface Props { types: TypeEntry[]; index: number }
+const { types, index } = Astro.props;
+const blip = (id: string, size: number) => blipSvg(categoryGlyphs[id as keyof typeof categoryGlyphs] ?? 'pin', { size });
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegion ? ` Most in ${t.topRegion}.` : ''}`;
+---
+<section class="bt" aria-labelledby="bt-label" data-bt>
+  <div class="container">
+    <ChapterHead index={index} label="By type" count={types.length} id="bt-label" />
+    <div class="bt__frame">
+      <div class="bt__media" data-bt-media>
+        {types.map((t, i) => (
+          <div class="bt__lead" data-bt-lead={i} data-active={i === 0 ? '' : undefined}>
+            {t.leads.length ? t.leads.map((f, k) => {
+              const s = findStill(f)!;
+              return <img src={s.src} srcset={s.srcset} sizes="(max-width: 767px) 100vw, 568px" alt="" width="1280" height="720" loading="lazy" decoding="async" data-bt-still={k} data-active={k === 0 ? '' : undefined} />;
+            }) : <div class="bt__glow" aria-hidden="true"></div>}
+            <span class="bt__blip" set:html={blip(t.id, 40)} />
+            {t.leads.length > 1 && (
+              <button type="button" class="bt__pager" data-bt-cycle aria-label={`Next still of ${t.name.toLowerCase()} (${t.leads.length})`}>
+                {t.leads.map((_, k) => <span class="bt__bar" data-bt-bar={k} data-active={k === 0 ? '' : undefined}></span>)}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      <div class="bt__panels" data-bt-panels>
+        {types.map((t, i) => (
+          <article class="bt__panel" data-bt-panel={i} data-active={i === 0 ? '' : undefined} aria-hidden={i === 0 ? undefined : 'true'}>
+            <h3 class="bt__name">{t.name}</h3>
+            <div class="bt__copy">
+              <p>{t.description}</p>
+              <p>{fact(t)}</p>
+              <a class="bt__all" href={`/categories/${t.id}`} tabindex={i === 0 ? undefined : -1}>See all {t.count}<span aria-hidden="true"> &rarr;</span></a>
+            </div>
+            <dl class="bt__meta">
+              <div><dt>Finds</dt><dd>{t.count}</dd></div>
+              <div><dt>Verified</dt><dd>{t.multi} multi-source</dd></div>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </div>
+    <div class="bt__under">
+      <div class="bt__dots" aria-hidden="true">
+        {types.map((_, i) => <span class="bt__dot" data-bt-dot={i} data-active={i === 0 ? '' : undefined}></span>)}
+      </div>
+      <Button href={`/categories/${types[0].id}`} variant="inverse" size="l" class="bt__viewall" data-bt-all>All {types[0].count}</Button>
+    </div>
+    <div class="bt__striprow">
+      <div class="bt__arrows">
+        <Button variant="outline" size="m" icon="chevron-left" iconOnly label="Previous type" data-bt-prev />
+        <Button variant="outline" size="m" icon="chevron-right" iconOnly label="Next type" data-bt-next />
+      </div>
+      <div class="bt__stripwrap">
+        <ul class="bt__strip" role="list" aria-label="Find types" data-bt-strip>
+          {types.map((t, i) => (
+            <li>
+              <button type="button" class="bt__tile" data-bt-tile={i} aria-pressed={i === 0 ? 'true' : 'false'} data-count={t.count} data-href={`/categories/${t.id}`}>
+                <span class="bt__tblip" set:html={blip(t.id, 40)} />
+                <span class="bt__tlabel">{t.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <span class="bt__brackets" data-bt-brackets aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initByType } from './by-type';
+  document.querySelectorAll<HTMLElement>('[data-bt]').forEach(initByType);
+</script>
+
+<style>
+  /* HUXLEY 007: the media and the ruled cells share one hairline frame, 48 / 49% of it each. */
+  .bt__frame {
+    display: grid;
+    grid-template-columns: 48fr 52fr;
+    margin-top: var(--space-10);
+    border: var(--border-w) solid var(--rule-soft);
+  }
+  .bt__media { position: relative; aspect-ratio: 1.1; overflow: hidden; background: var(--surface-1); }
+  .bt__lead, .bt__lead img, .bt__glow { position: absolute; inset: 0; }
+  .bt__lead { opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
+  .bt__lead[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  .bt__lead img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
+  .bt__lead img[data-active] { opacity: 1; }
+  .bt__glow { background: var(--glow-hero), var(--surface-1); }
+  .bt__lead::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgb(13 12 26 / 0.7), rgb(13 12 26 / 0) 40%); pointer-events: none; }
+  .bt__blip { position: absolute; z-index: 1; left: var(--space-6); bottom: var(--space-6); display: flex; }
+  /* HUXLEY's pager on the image: the active bar 32 wide, the rest squares; 6 high (indicators, not controls). The
+     whole pager is one button that shows the next still. */
+  .bt__pager { position: absolute; z-index: 1; left: 50%; bottom: var(--space-4); translate: -50% 0; display: flex; align-items: center; gap: 8px; height: 44px; padding-inline: var(--space-3); }
+  .bt__bar { width: 6px; height: 6px; background: rgb(255 255 255 / 0.4); transition: background-color var(--dur-colour) var(--ease-colour); }
+  .bt__bar[data-active] { width: 32px; background: #fff; }
+
+  /* The ruled cells */
+  .bt__panels { display: grid; border-left: var(--border-w) solid var(--rule-soft); min-width: 0; }
+  .bt__panel { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
+  .bt__panel[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  .bt__name {
+    padding: var(--space-8) var(--space-12) var(--space-6);
+    border-bottom: var(--border-w) solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-display);
+    font-weight: 300;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--text-1);
+    overflow-wrap: anywhere;
+  }
+  .bt__copy { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-12); max-width: calc(520px + 2 * var(--space-12)); }
+  .bt__copy p, .bt__all {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    line-height: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .bt__all { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .bt__meta { display: grid; grid-template-columns: 1fr 1fr; border-top: var(--border-w) solid var(--rule-soft); }
+  .bt__meta div { padding: var(--space-8) var(--space-12); display: grid; gap: 4px; }
+  .bt__meta div + div { border-left: var(--border-w) solid var(--rule-soft); }
+  .bt__meta dt, .bt__meta dd { margin: 0; font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.1em; text-transform: uppercase; }
+  .bt__meta dt { color: var(--text-3); }
+  .bt__meta dd { color: var(--text-1); }
+
+  .bt__under { display: none; }
+
+  /* The strip: two stacked round arrows, then one tile per type, 8 apart. */
+  .bt__striprow { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+  .bt__arrows { display: grid; gap: var(--space-2); align-content: start; }
+  .bt__stripwrap { position: relative; flex: 1; min-width: 0; }
+  .bt__strip { display: grid; grid-template-columns: repeat(var(--n, 12), minmax(0, 1fr)); gap: var(--space-2); }
+  .bt__tile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-content: start;
+    gap: var(--space-3);
+    width: 100%;
+    height: 112px;
+    padding: var(--space-4) var(--space-2) var(--space-2);
+    border: var(--border-w) solid var(--rule-soft);
+    transition: background-color var(--dur-colour) var(--ease-colour), transform var(--dur-press) var(--ease-out);
+  }
+  .bt__tile:active { transform: scale(0.97); }
+  .bt__tile[aria-pressed='true'] { background: var(--surface-1); }
+  .bt__tblip { display: flex; }
+  .bt__tlabel {
+    width: 100%;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    overflow: clip visible;
+    text-overflow: ellipsis;
+  }
+  .bt__tile[aria-pressed='true'] .bt__tlabel { color: var(--text-1); }
+  /* HUXLEY's corner brackets, in the accent (our cut-corner signature): four 8px L marks that travel between tiles. */
+  .bt__brackets {
+    --c: var(--accent-ink);
+    --l: 8px;
+    --w: 1.5px;
+    position: absolute;
+    top: -3px;
+    left: 0;
+    height: calc(112px + 6px);
+    width: 0;
+    pointer-events: none;
+    will-change: transform;
+    background:
+      linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w),
+      linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) top right / var(--l) var(--w),
+      linear-gradient(var(--c), var(--c)) top right / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--w),
+      linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--l),
+      linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--w),
+      linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--l);
+    background-repeat: no-repeat;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .bt__tile:not([aria-pressed='true']):hover { background: var(--glass-hover-soft); }
+  }
+
+  @media (max-width: 1023px) {
+    .bt__strip { display: flex; overflow-x: auto; scrollbar-width: none; }
+    .bt__strip::-webkit-scrollbar { display: none; }
+    .bt__strip li { flex: 0 0 96px; }
+    .bt__name { padding: var(--space-6) var(--space-8) var(--space-5); font-size: 44px; }
+    .bt__copy { padding: var(--space-8); }
+    .bt__meta div { padding: var(--space-5) var(--space-8); }
+  }
+
+  /* Phone (HUXLEY M007, Justin Jefferson M007): the strip first, the still at 16:9, then JJ's info cards in a row
+     (88% wide, the neighbours peeking), the progress pager left and "All 18" right. */
+  @media (max-width: 767px) {
+    .container { display: flex; flex-direction: column; }
+    .bt__striprow { order: 1; margin-top: var(--space-5); margin-inline: calc(-1 * var(--page-pad)); }
+    .bt__arrows { display: none; }
+    .bt__stripwrap { overflow: hidden; overflow: clip visible; }
+    .bt__strip { padding: 4px var(--page-pad); scroll-padding-inline: var(--page-pad); }
+    .bt__strip li { flex: 0 0 84px; }
+    .bt__tile { height: 104px; }
+    .bt__brackets { height: calc(104px + 6px); top: 1px; }
+    .bt__frame { order: 2; display: block; margin-top: var(--space-4); margin-inline: calc(-1 * var(--page-pad)); border: 0; }
+    .bt__media { aspect-ratio: 16 / 9; }
+    .bt__panels {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      padding-inline: 6%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      border: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .bt__panels::-webkit-scrollbar { display: none; }
+    .bt__panel, .bt__panel[data-active] {
+      flex: 0 0 88%;
+      scroll-snap-align: center;
+      opacity: 1;
+      visibility: visible;
+      transition: none;
+      display: block;
+      padding: var(--space-5);
+      border-radius: var(--radius-l);
+      background: var(--surface-1);
+    }
+    .bt__name { padding: 0; border: 0; font-size: 24px; font-weight: 400; }
+    .bt__copy { padding: 0; margin-top: var(--space-3); gap: var(--space-3); }
+    .bt__copy p { font-family: var(--font-body); font-size: var(--text-body-s); line-height: 20px; letter-spacing: 0; text-transform: none; }
+    .bt__copy p:first-child { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+    .bt__all, .bt__meta { display: none; }
+    .bt__under { order: 3; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-5); }
+    .bt__dots { display: flex; align-items: center; gap: 8px; }
+    .bt__dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--text-3); opacity: 0.5; transition: opacity var(--dur-colour) var(--ease-colour); }
+    .bt__dot[data-active] { width: 28px; opacity: 1; background: var(--text-1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bt__lead, .bt__lead[data-active], .bt__panel, .bt__panel[data-active], .bt__lead img { transition-duration: var(--dur-fade-reduced); }
+    .bt__bar, .bt__dot, .bt__tile { transition: none; }
+  }
+</style>

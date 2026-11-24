@@ -147,11 +147,13 @@ html.is-locked { overflow: hidden; }
 @keyframes vt-fade-in { from { opacity: 0; } }
 
 /* Game hub to game hub (the switcher): the page leaves toward the side it came from and the next game arrives from
-   the side of the move. The old page finishes moving (at 70% of its fade) before the new one starts. */
-html:active-view-transition-type(game-next)::view-transition-old(root) { animation: vt-leave-l 140ms var(--ease-standard) both; }
-html:active-view-transition-type(game-prev)::view-transition-old(root) { animation: vt-leave-r 140ms var(--ease-standard) both; }
-html:active-view-transition-type(game-next)::view-transition-new(root) { animation: vt-arrive-r 260ms var(--ease-out) 100ms both; }
-html:active-view-transition-type(game-prev)::view-transition-new(root) { animation: vt-arrive-l 260ms var(--ease-out) 100ms both; }
+   the side of the move. The exit takes --dur-morph-out (180ms, 64% of the --dur-morph entrance, decision M1); the
+   old page finishes moving at 70% of its exit, and only then does the new one start, so two slides never overlap. */
+html:active-view-transition-type(game-next, game-prev)::view-transition-group(root) { animation-duration: calc(var(--dur-morph-out) * 0.7 + var(--dur-morph)); }
+html:active-view-transition-type(game-next)::view-transition-old(root) { animation: vt-leave-l var(--dur-morph-out) var(--ease-standard) both; }
+html:active-view-transition-type(game-prev)::view-transition-old(root) { animation: vt-leave-r var(--dur-morph-out) var(--ease-standard) both; }
+html:active-view-transition-type(game-next)::view-transition-new(root) { animation: vt-arrive-r var(--dur-morph) var(--ease-out) calc(var(--dur-morph-out) * 0.7) both; }
+html:active-view-transition-type(game-prev)::view-transition-new(root) { animation: vt-arrive-l var(--dur-morph) var(--ease-out) calc(var(--dur-morph-out) * 0.7) both; }
 @keyframes vt-leave-l { 70% { transform: translateX(-12px); } to { opacity: 0; transform: translateX(-12px); } }
 @keyframes vt-leave-r { 70% { transform: translateX(12px); } to { opacity: 0; transform: translateX(12px); } }
 @keyframes vt-arrive-r { from { opacity: 0; transform: translateX(12px); } }

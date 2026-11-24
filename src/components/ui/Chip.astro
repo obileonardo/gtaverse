@@ -3,11 +3,12 @@
 // selected: the white pill with a dark label (Apple TV, Hulu active state), set aria-pressed for toggles.
 // glass: over the map or art. touch: 40 high instead of 34 (phone rows).
 // Pass href for a link chip; otherwise a toggle <button>. The "lead" slot puts something before the icon and label
-// (a game plate in the "Also in" chips).
+// (a game plate in the "Also in" chips). check={false} drops the widening check on a toggle chip, for a row where
+// exactly one chip is selected (a filter row: the white fill alone marks it, and the row never changes width).
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
-interface Props { href?: string; icon?: IconName; selected?: boolean; glass?: boolean; touch?: boolean; count?: number; class?: string; [key: string]: unknown }
-const { href, icon, selected = false, glass = false, touch = false, count, class: className, ...rest } = Astro.props;
+interface Props { href?: string; icon?: IconName; selected?: boolean; glass?: boolean; touch?: boolean; count?: number; check?: boolean; class?: string; [key: string]: unknown }
+const { href, icon, selected = false, glass = false, touch = false, count, check = true, class: className, ...rest } = Astro.props;
 const Tag = href ? 'a' : 'button';
 const attrs = href ? { href, 'aria-current': selected ? 'page' : undefined } : { type: 'button', 'aria-pressed': selected ? 'true' : 'false' };
 ---
@@ -16,5 +17,5 @@ const attrs = href ? { href, 'aria-current': selected ? 'page' : undefined } : {
   {icon && <Icon name={icon} size={touch ? 20 : 16} />}
   <span><slot /></span>
   {count !== undefined && <span class="chip__count tabular">{count}</span>}
-  {!href && <span class="chip__check" aria-hidden="true"><span><Icon name="check" size={touch ? 18 : 16} stroke={2} /></span></span>}
+  {!href && check && <span class="chip__check" aria-hidden="true"><span><Icon name="check" size={touch ? 18 : 16} stroke={2} /></span></span>}
 </Tag>

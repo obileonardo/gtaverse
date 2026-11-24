@@ -1,0 +1,223 @@
+---
+// Home 009, By the numbers (board r2: Coda, Love; phone Marina Omelchenko C11, Love; Railway digits, Like).
+// Desktop and tablet: one number at a time on a sticky stage, moved by native scroll (no scroll-jacking, no snap):
+// the counter "01 / 05" at the gutter, the outlined pill with its dotted tick into a dashed arc, the number in Inter
+// 900 rolling digit by digit, its label, and a vertical dot pager at 89% of the width.
+// Phone: Marina's five stacked rows, the number sitting low in its row, a glyph bleeding the row's top edge.
+// Every number is counted from content at build. Readers get the plain list (the stage is drawn for the eye only).
+import ChapterHead from './ChapterHead.astro';
+import Icon from '../ui/Icon.astro';
+import { finds, connections } from '../../lib/content';
+import { creditTotals } from '../../lib/credits';
+import { blipSvg } from '../../icons/render';
+import collectibles from '../../../content/collectibles.json';
+
+interface Props { index?: string }
+const { index = '009' } = Astro.props;
+const items = (collectibles as { items: unknown[] }).items.length;
+const stats = [
+  { value: finds.length, label: 'Finds in the guide', short: 'Finds', glyph: 'finds' as const },
+  { value: connections.length, label: 'Connections across the games', short: 'Connections', glyph: 'lore' as const },
+  { value: items, label: 'Collectible locations', short: 'Collectibles', glyph: 'blip' as const },
+  { value: creditTotals.people, label: 'Finders and creators credited', short: 'Finders', glyph: 'person' as const },
+  { value: creditTotals.outlets, label: 'Outlets cited', short: 'Outlets', glyph: 'article' as const },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+<section class="ch9" aria-labelledby="ch9-title" style={`--steps: ${stats.length}`}>
+  <div class="container"><ChapterHead index={index} label="By the numbers" id="ch9-title" /></div>
+
+  <ol class="ch9__list container" role="list" data-reveal>
+    {stats.map((s) => (
+      <li class="ch9__row">
+        <span class="ch9__row-label">{s.label}</span>
+        <span class="ch9__row-num">{s.value}</span>
+        <span class="ch9__row-glyph" aria-hidden="true">
+          {s.glyph === 'blip' ? <Fragment set:html={blipSvg('stunt', { size: 40 })} /> : <Icon name={s.glyph} size={40} stroke={1.25} />}
+        </span>
+      </li>
+    ))}
+  </ol>
+
+  <div class="ch9__track" data-ch9>
+    <div class="ch9__stage" aria-hidden="true">
+      <p class="ch9__counter"><span class="ch9__counter-now" data-ch9-counter>01</span> / {pad(stats.length)}</p>
+      <div class="ch9__top">
+        <span class="ch9__pill">The guide in numbers</span>
+        <span class="ch9__tick"></span>
+      </div>
+      <svg class="ch9__arc" viewBox="0 0 1400 620" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="ch9-fade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" />
+            <stop offset="0.55" stop-color="#fff" stop-opacity="0.7" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <mask id="ch9-mask"><rect width="1400" height="620" fill="url(#ch9-fade)" /></mask>
+        </defs>
+        <path d="M1 620 C 1 250 300 1 700 1 C 1100 1 1399 250 1399 620" stroke="currentColor" stroke-width="1" stroke-dasharray="6 7" vector-effect="non-scaling-stroke" mask="url(#ch9-mask)" />
+      </svg>
+      <p class="ch9__num" data-ch9-num>{stats[0].value}</p>
+      <p class="ch9__label" data-ch9-label>{stats[0].label}</p>
+      <div class="ch9__dots">
+        {stats.map((s, i) => (
+          <button type="button" class:list={['ch9__dot', { 'is-active': i === 0 }]} tabindex="-1" data-ch9-dot={i} aria-label={s.short}></button>
+        ))}
+      </div>
+    </div>
+  </div>
+  <script type="application/json" data-ch9-data set:html={JSON.stringify(stats.map((s) => ({ value: String(s.value), label: s.label })))} />
+</section>
+
+<style>
+  .ch9 { padding-top: var(--space-chapter); }
+
+  /* ---------- Phone (Marina Omelchenko C11): five stacked rows ---------- */
+  .ch9__list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-8); }
+  .ch9__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--space-3);
+    height: 112px;
+    padding: 0 var(--space-4) 0 var(--space-5);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+  .ch9__row-label { align-self: center; font-size: var(--text-label); font-weight: 600; line-height: 1.3; color: var(--text-1); text-wrap: balance; }
+  /* Marina sets the number low so the row's edge cuts its baseline; our glyph rule never cuts a glyph, so the digits
+     sit 4px above the edge instead (no descenders in digits, so nothing reaches past the box). */
+  .ch9__row-num { font-size: 76px; font-weight: 700; line-height: 0.74; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text-1); padding-bottom: 4px; }
+  .ch9__row-glyph { position: absolute; top: -8px; right: var(--space-4); color: var(--text-2); display: flex; }
+
+  /* ---------- Desktop and tablet (Coda): the sticky stage ---------- */
+  .ch9__track { display: none; }
+  @media (min-width: 768px) {
+    :global(html.js) .ch9__list { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; padding: 0; }
+    :global(html.js) .ch9__track { display: block; position: relative; height: calc(100svh + (var(--steps) - 1) * 80svh); }
+  }
+  .ch9__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 560px;
+    overflow: clip;
+  }
+  .ch9__counter {
+    position: absolute;
+    left: var(--gutter);
+    top: 27%;
+    translate: 0 -50%;
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+  .ch9__counter-now { display: inline-flex; }
+  /* Rolling digits: room above and below each cell, so its clip never touches a glyph (the glyph rule). */
+  .ch9 :global(.roll__cell) { padding-block: 0.2em; margin-block: -0.2em; }
+  .ch9__top { position: absolute; left: 50%; top: 27%; translate: -50% -20px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
+  .ch9__pill {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding-inline: var(--space-4);
+    border: var(--border-w-strong) solid var(--text-1);
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--text-1);
+    white-space: nowrap;
+  }
+  .ch9__tick { width: 0; height: 48px; border-left: 1px dotted var(--text-1); }
+  .ch9__arc { position: absolute; left: 13.5%; width: 73%; top: 36%; height: 52%; color: var(--border-2); pointer-events: none; }
+  .ch9__num {
+    position: absolute;
+    left: 50%;
+    top: 57%;
+    translate: -50% -50%;
+    font-size: var(--text-stat-xl);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-1);
+    padding-block: 0.08em;
+  }
+  .ch9__label { position: absolute; left: 0; right: 0; top: 73%; translate: 0 -50%; font-size: var(--text-h1); font-weight: 400; line-height: 1.3; color: var(--text-1); text-align: center; padding-inline: var(--gutter); }
+  .ch9__dots { position: absolute; left: 89%; top: 50%; translate: -50% -50%; display: flex; flex-direction: column; gap: 12px; }
+  .ch9__dot { position: relative; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--text-3); opacity: 0.3; transition: opacity var(--dur-morph) var(--ease-out), background-color var(--dur-morph) var(--ease-out); }
+  /* A 32px hit area around each 8px dot. */
+  .ch9__dot::before { content: ''; position: absolute; inset: -12px; }
+  .ch9__dot.is-active { opacity: 1; background: var(--text-1); }
+  @media (hover: hover) and (pointer: fine) {
+    .ch9__dot:not(.is-active):hover { opacity: 0.6; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ch9__dot { transition: opacity var(--dur-fade-reduced) var(--ease-colour); }
+  }
+</style>
+
+<script>
+  import { roll, rollInit } from '../../scripts/motion/roll';
+  import { reduceMotion } from './first-view';
+
+  for (const root of document.querySelectorAll<HTMLElement>('.ch9')) {
+    const track = root.querySelector<HTMLElement>('[data-ch9]')!;
+    const data: { value: string; label: string }[] = JSON.parse(root.querySelector('[data-ch9-data]')!.textContent || '[]');
+    const num = root.querySelector<HTMLElement>('[data-ch9-num]')!;
+    const label = root.querySelector<HTMLElement>('[data-ch9-label]')!;
+    const counter = root.querySelector<HTMLElement>('[data-ch9-counter]')!;
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('[data-ch9-dot]')];
+    rollInit(num, data[0].value);
+    rollInit(counter, '01');
+    let step = 0;
+    let labelOut: Animation | null = null;
+    let labelIn: Animation | null = null;
+
+    const show = (i: number) => {
+      if (i === step) return;
+      const dir = i > step ? 1 : -1;
+      step = i;
+      roll(num, data[i].value, { dir });
+      roll(counter, String(i + 1).padStart(2, '0'), { dir });
+      dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
+      // The label crossfades: the old one leaves in 120ms, the new one arrives in 200ms (exit 60% of the entrance).
+      labelOut?.cancel();
+      labelIn?.cancel();
+      const next = data[i].label;
+      if (reduceMotion()) { label.textContent = next; labelIn = label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' }); return; }
+      const out = label.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+      labelOut = out;
+      out.finished.then(() => {
+        label.textContent = next;
+        labelIn = label.animate([{ opacity: 0, transform: `translateY(${6 * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        out.cancel();
+      }, () => {});
+    };
+
+    // Native scroll moves the step: the track is (steps - 1) screens of 80svh taller than the stage.
+    const range = () => track.offsetHeight - window.innerHeight;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (!track.offsetParent) return;
+      const top = track.getBoundingClientRect().top;
+      const p = Math.min(Math.max(-top / Math.max(range(), 1), 0), 0.9999);
+      show(Math.floor(p * data.length));
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+
+    dots.forEach((d, i) => d.addEventListener('click', () => {
+      const y = window.scrollY + track.getBoundingClientRect().top + ((i + 0.5) / data.length) * range();
+      window.scrollTo({ top: y, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    }));
+  }
+</script>
