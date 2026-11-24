@@ -1,13 +1,14 @@
 ---
-// The GTAverse timeline for the design system page (/design), framed on its own page: the timeline's headline is the
-// page's h1 (src/components/lore/Timeline.astro), and its phone layout follows the width it is given. /design embeds
-// this page in an iframe (components/design/Frame.astro).
+// The GTAverse timeline for the design system page (/design), framed on its own page because its phone layout follows
+// the width of the window it is in (media queries), and the frame gives it that width. Embedded here, its headline is
+// an h2 (headingLevel), not the h1 it is on /gtaverse pages. /design embeds this page in an iframe
+// (components/design/Frame.astro).
 import Frame from '../../components/design/Frame.astro';
 import Timeline from '../../components/lore/Timeline.astro';
 ---
 <Frame title="Timeline">
   <div class="container">
-    <Timeline headline="The GTAverse" intro="Every connection between the games, on one line. This is the real component with the real moments." />
+    <Timeline headingLevel={2} headline="The GTAverse" intro="Every connection between the games, on one line. This is the real component with the real moments." />
   </div>
 </Frame>
 

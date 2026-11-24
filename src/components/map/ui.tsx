@@ -29,11 +29,13 @@ export function Icon({ name, size = 20, solid = false, label, className, stroke 
   );
 }
 
-type Variant = 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'ghost';
+// The same variants and layouts as ui/Button.astro (variant, size, icon, iconEnd, iconOnly, stack).
+type Variant = 'primary' | 'inverse' | 'glass' | 'secondary' | 'quiet' | 'ghost' | 'outline';
 type BtnProps = {
   variant?: Variant;
   size?: 's' | 'm' | 'l' | 'xl';
   icon?: IconName;
+  iconEnd?: IconName;
   iconOnly?: boolean;
   stack?: boolean;
   label?: string;
@@ -42,13 +44,14 @@ type BtnProps = {
   className?: string;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & Pick<AnchorHTMLAttributes<HTMLAnchorElement>, 'target' | 'rel'>;
 
-export function Button({ variant = 'primary', size = 'm', icon, iconOnly, stack, label, href, children, className, ...rest }: BtnProps) {
+export function Button({ variant = 'primary', size = 'm', icon, iconEnd, iconOnly, stack, label, href, children, className, ...rest }: BtnProps) {
   const iconSize = size === 's' ? 16 : size === 'm' ? 20 : 24;
   const cls = ['btn', `btn--${variant}`, `btn--${size}`, iconOnly && 'btn--icon', stack && 'btn--stack', className].filter(Boolean).join(' ');
   const inner = (
     <>
       {icon && <Icon name={icon} size={stack ? 20 : iconSize} />}
       {!iconOnly && <span className="btn__label">{children}</span>}
+      {iconEnd && <Icon name={iconEnd} size={stack ? 20 : iconSize} />}
     </>
   );
   if (href) {

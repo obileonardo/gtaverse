@@ -58,6 +58,6 @@ const fails = contrastPairs.flatMap((p) => (['dark', 'light'] as const).map((t) 
 
 <div class="ds-block" id="colour-contrast">
   <h3 class="ds-h3">Contrast of the pairs we draw</h3>
-  <p class="ds-note">Text needs 4.5:1 (WCAG AA); large text, fills and graphics need 3:1. {fails.length === 0 ? 'Every pair passes in both themes.' : `${fails.length} pair${fails.length === 1 ? '' : 's'} fall below the line and are listed under the table.`} Pink is a fill only in light: pink text in light uses <code>--accent-text</code>.</p>
+  <p class="ds-note">Text needs 4.5:1 (WCAG AA); large text, fills and graphics need 3:1. {fails.length === 0 ? 'Every pair passes in both themes.' : `${fails.length} pair${fails.length === 1 ? '' : 's'} fall below the line and are listed under the table.`} Pink (<code>--accent</code>) is a fill only in light, always behind a navy label: pink text uses <code>--accent-text</code>, and a pink mark that shows a state (focus ring, current marker, active underline) uses <code>--accent-ink</code>.</p>
   <LevelTable head={['Pair', 'Dark', 'Light', 'Needs', 'Where']} rows={pairRows} caption="Contrast of foreground and background pairs" footnote={fails.length ? `Below the line: ${fails.map((f) => `${f.p.fg} on ${f.p.bg} in ${f.t} (${f.r}:1)`).join('; ')}.` : undefined} />
 </div>

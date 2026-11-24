@@ -97,7 +97,7 @@ const titleId = `toc-title-${Math.random().toString(36).slice(2, 8)}`;
     .toc__list a:hover { color: var(--text-1); }
   }
   /* Without the script: the current item's 1px mark. With it: the travelling marker below. */
-  :global(html:not(.motion)) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+  :global(html:not(.motion)) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent-ink); }
   .toc__track { position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; pointer-events: none; }
   /* Reading progress: a fill down the rail's line, driven by the page's own scroll (off the main thread). */
   .toc__progress { position: absolute; inset: 0 auto 0 0; width: 1px; background: var(--text-3); transform-origin: 50% 0; transform: scaleY(0); display: none; }
@@ -114,7 +114,7 @@ const titleId = `toc-title-${Math.random().toString(36).slice(2, 8)}`;
     width: 2px;
     height: 1px;
     border-radius: var(--radius-full);
-    background: var(--accent);
+    background: var(--accent-ink);
     transform-origin: 50% 0;
     opacity: 0;
     transition: transform 240ms var(--ease-crit), opacity 120ms var(--ease-colour);
@@ -124,7 +124,7 @@ const titleId = `toc-title-${Math.random().toString(36).slice(2, 8)}`;
 
   @media (max-width: 1023px) {
     .toc__track { display: none; }
-    :global(html.motion) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
+    :global(html.motion) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent-ink); }
     .toc { width: auto; }
     .toc__box { position: static; display: block; padding: 0; border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); background: var(--surface-1); }
     .toc__summary { min-height: 48px; padding-inline: var(--space-4); cursor: pointer; }

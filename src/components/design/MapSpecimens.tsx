@@ -1,7 +1,8 @@
 // The map's pieces on the design system page, built from the map island's own parts: DrawerContent (the drawer's real
 // content), the React twins in ui.tsx, usePresence for exits, and map.css for the look. The drawer frame, the list row
 // and the toast are markup that MapApp.tsx keeps inside itself, so they are drawn here with the same classes and the
-// same exit timings (drawer out --dur-morph-out, toast out 260ms). Data: one real find, and a worst case.
+// same exit timings (drawer out --dur-peek-out, toast out 260ms). The root carries .vf-map, the scope every map.css
+// rule sits under. Data: one real find, and a worst case.
 import { useEffect, useRef, useState } from 'react';
 import { DrawerContent } from '../map/FindDetail';
 import { Icon, Verification, Button } from '../map/ui';
@@ -50,7 +51,7 @@ export default function MapSpecimens({ demo, worst, meta }: { demo: MapFind; wor
   };
 
   return (
-    <div className="ds-map">
+    <div className="ds-map vf-map">
       <div className="ds-map__col">
         <p className="ds-cap">List row (desktop 120 px still, phone 88)</p>
         <ul className="frows ds-map__rows" role="list" data-case="demo"><Row find={demo} /></ul>
