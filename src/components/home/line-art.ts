@@ -25,6 +25,9 @@ export type Shot = {
   // Moving figures: their segments are built again every frame, in the same order, so they draw on the same way.
   pose?: (t: number) => Strokes;
   camera: (t: number) => Cam;
+  // Keep the drawing's bright lines inside the page's free band (below the island, intro and caption): the shot
+  // moves down, then scales down, when its default framing would reach above or below it.
+  fit?: boolean;
 };
 
 const NORMAL = 0, DIM = 1, ACCENT = 2;
@@ -256,7 +259,9 @@ function coastShot(paths: number[][][], aspect: number): Shot {
   }
   return {
     name: 'Leonida',
-    credit: 'Line art: The Vice Files. Coastline from the official map, Rockstar Games',
+    // Two lines in the caption (Hero.astro keeps the break).
+    credit: 'Line art: The Vice Files.\nCoastline from the official map, Rockstar Games',
+    fit: true,
     fixed: d.strokes(),
     camera: (t) => {
       const a = 0.42 + t * 0.016;
@@ -420,6 +425,7 @@ function armsShot(): Shot {
   shell(d, [3.8, 0, 1.15], 0.82, ACCENT);
   return {
     name: 'Sidearms',
+    fit: true,
     credit: 'Line art: The Vice Files',
     fixed: d.strokes(),
     camera: (t) => {
@@ -600,11 +606,18 @@ export function createLineArt(canvas: HTMLCanvasElement, coast?: { aspect: numbe
   let still = false;
   let raf = 0;
   let w = 0, h = 0, dpr = 1;
+  let bandTop = 0, bandBottom = 0;
+  let fitCache: { shot: Shot; focal: number; cy: number } | null = null;
 
   const resize = () => {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = canvas.clientWidth;
     h = canvas.clientHeight;
+    // The free band, set by the hero's layout (Hero.astro): px kept clear at the top and at the bottom.
+    const css = getComputedStyle(canvas);
+    bandTop = parseFloat(css.getPropertyValue('--line-top')) || 0;
+    bandBottom = parseFloat(css.getPropertyValue('--line-bottom')) || 0;
+    fitCache = null;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
     if (!running) draw(elapsedAtPause);
@@ -620,6 +633,34 @@ export function createLineArt(canvas: HTMLCanvasElement, coast?: { aspect: numbe
     ['#F976B0', '#F976B0', 'rgb(249 118 176 / 0.7)'],
   ];
 
+  function fitBand(s: Shot, focal: number, cy: number) {
+    const cam = s.camera(0);
+    const f = norm(sub(cam.target, cam.pos));
+    const r = norm(cross(f, [0, 1, 0]));
+    const u = cross(r, f);
+    let hi = -Infinity, lo = Infinity;
+    const { pos, kind } = s.fixed;
+    for (let i = 0; i < pos.length; i += 3) {
+      if (kind[Math.floor(i / 6)] === DIM) continue;
+      const p: V3 = [pos[i] - cam.pos[0], pos[i + 1] - cam.pos[1], pos[i + 2] - cam.pos[2]];
+      const z = dot(p, f);
+      if (z < 0.2) continue;
+      const v = dot(p, u) / z;
+      if (v > hi) hi = v;
+      if (v < lo) lo = v;
+    }
+    if (!Number.isFinite(hi)) return { focal, cy };
+    // A little room for the drift and the line width.
+    const pad = 12;
+    const top = bandTop + pad, bottom = h - bandBottom - pad;
+    if (cy - hi * focal < top) cy = top + hi * focal;
+    if (cy - lo * focal > bottom) {
+      focal = Math.min(focal, (bottom - top) / (hi - lo));
+      cy = top + hi * focal;
+    }
+    return { focal, cy };
+  }
+
   function draw(time: number) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -632,8 +673,15 @@ export function createLineArt(canvas: HTMLCanvasElement, coast?: { aspect: numbe
     const u = cross(r, f);
     const wide = w >= 768;
     // Horizontal field of view holds at 16:9, so a phone sees the subject whole.
-    const focal = (0.5 * Math.min(w, (h * 16) / 9)) / Math.tan(((cam.fov * Math.PI) / 180) / 2);
-    const cx = w * (wide ? 0.64 : 0.5), cy = h * (wide ? 0.42 : 0.36);
+    let focal = (0.5 * Math.min(w, (h * 16) / 9)) / Math.tan(((cam.fov * Math.PI) / 180) / 2);
+    let cy = h * (wide ? 0.42 : 0.36);
+    const cx = w * (wide ? 0.64 : 0.5);
+    if (shot.fit) {
+      // Measured once per shot and size, from the finished drawing at its first moment, so the framing holds still.
+      if (!fitCache || fitCache.shot !== shot) fitCache = { shot, ...fitBand(shot, focal, cy) };
+      focal = fitCache.focal;
+      cy = fitCache.cy;
+    }
     const near = 0.2;
     const subject = Math.hypot(cam.target[0] - cam.pos[0], cam.target[1] - cam.pos[1], cam.target[2] - cam.pos[2]);
     const nearBand = subject * 1.12, farBand = subject * 1.7;
