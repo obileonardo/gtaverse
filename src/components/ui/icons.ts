@@ -89,6 +89,11 @@ export const icons = {
     solid: '<path d="M12 20.5c-3.6 0-6.25-2.5-6.25-5.9 0-3.1 2.2-5 3.6-7.1.5 1.6 1.4 2.6 2.4 3 .2-2.8 1.3-5.2 3.4-7 .3 3 1.6 4.6 2.6 6.2.7 1.2 1.1 2.4 1.1 3.9 0 3.6-2.9 6.9-6.85 6.9z" fill="currentColor"/>',
   },
   radio: { line: '<circle cx="12" cy="12" r="1.75" fill="currentColor"/><path d="M8.3 8.3a5.2 5.2 0 0 0 0 7.4M15.7 8.3a5.2 5.2 0 0 1 0 7.4M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>' },
+  // Home hero modes and the trailer's sound toggle
+  image: { line: '<rect x="3.75" y="5.25" width="16.5" height="13.5" rx="2"/><path d="m3.75 16.25 4.6-4.6a1.2 1.2 0 0 1 1.7 0l5.2 5.2M13.5 14.5l1.6-1.6a1.2 1.2 0 0 1 1.7 0l3.45 3.45"/><circle cx="15.5" cy="9.25" r="1.5"/>' },
+  wire: { line: '<path d="M12 3.75 4.25 8v8L12 20.25 19.75 16V8z"/><path d="M4.25 8 12 12.25 19.75 8M12 12.25v8"/>' },
+  sound: { line: '<path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11"/>' },
+  'sound-off': { line: '<path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="m15.75 9.75 4.5 4.5M20.25 9.75l-4.5 4.5"/>' },
 } satisfies Record<string, IconDef>;
 
 export type IconName = keyof typeof icons;

@@ -59,7 +59,7 @@ Also:
 ## Files that must never be committed
 
 - **No images, fonts, video, audio or archives.** Not Rockstar media, not screenshots from other sites or design references, not font files. Fonts load from Google Fonts at build time; clips are embedded from their platforms.
-- **No map files or tiles.** `.cache/` and `public/map/` are git-ignored; keep them that way.
+- **No map files or tiles, no hero media.** `.cache/`, `public/map/` and `public/media/` are git-ignored; keep them that way (docs/MAP.md, docs/HERO.md).
 - **No secrets** (`.env` files are ignored).
 
 CI fails any pull request that adds an image, font, video, audio or archive file. If a change genuinely needs an original asset (for example a favicon drawn for the project), say so in the issue first; the maintainers decide and add it to the allowlist in `.github/workflows/ci.yml`.

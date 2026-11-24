@@ -1,14 +1,12 @@
 ---
-// Home. Desktop is the A24 frame: one still fills the screen and the featured finds stack bottom left as big lines
-// of type, each with a mono superscript; hovering a line swaps the still. Phone is the Apple TV frame: the find's
-// art to the top edge, display caps title, meta, a white Play pill and a glass circle, page dots.
+// Home. The hero (components/home/Hero.astro): a stage of three modes (official trailer reel, official key art, our
+// line art) behind the A24 stack of featured finds on desktop and the Apple TV slides on the phone.
 // Featured = the first five published finds (content order) that are safe to show and have a still, with titles
 // short enough to sit on one line of the A24 stack (47 characters).
 import Base from '../layouts/Base.astro';
-import Button from '../components/ui/Button.astro';
 import Card from '../components/ui/Card.astro';
 import Icon from '../components/ui/Icon.astro';
-import Verification from '../components/Verification.astro';
+import Hero from '../components/home/Hero.astro';
 import { finds, connections, explainers } from '../lib/content';
 import { findStill, showcaseable, categoryLabel, regionLabel } from '../lib/media';
 
@@ -28,70 +26,7 @@ const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.cl
   layout="bare"
   sub={lead ? { href: `/finds/${lead.slug}`, label: 'Watch the clip', image: leadStill?.thumb } : undefined}
 >
-  <section class="hero" data-scheme="dark" data-hero aria-labelledby="home-title">
-    <div class="container hero__label">
-      <h1 id="home-title" class="sr-only">The Vice Files: every secret in Leonida, shown in the clip of the fan who found it</h1>
-    </div>
-
-    <!-- Desktop: A24 -->
-    <div class="a24" data-a24>
-      <div class="a24__stills" aria-hidden="true">
-        {featured.map((f, i) => {
-          const s = findStill(f);
-          return s ? <img class:list={['a24__still', { 'is-active': i === 0 }]} data-still={i} src={s.src} alt="" width="1280" height="720" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" /> : <div class:list={['a24__still', { 'is-active': i === 0 }]} data-still={i}></div>;
-        })}
-        <div class="a24__scrim"></div>
-      </div>
-      <div class="container a24__inner">
-        <ol class="a24__list" aria-label="Featured finds" data-a24-list>
-          {featured.map((f, i) => (
-            <li style={`--i: ${i}`}>
-              <a class="a24__item" href={`/finds/${f.slug}`} data-index={i} data-slug={f.slug} data-thumb={findStill(f)?.thumb}>
-                <span class="a24__title">{f.title}</span>
-                <span class="a24__sup mono-caps">{categoryLabel(f)}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-        <a class="a24__down" href="#more" aria-label="More finds below">
-          <svg width="16" height="46" viewBox="0 0 16 46" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8 0v45M1 38l7 7 7-7" /></svg>
-        </a>
-      </div>
-    </div>
-
-    <!-- Phone: Apple TV -->
-    <div class="atv" data-atv>
-      <div class="atv__track" data-atv-track>
-        {featured.map((f, i) => {
-          const s = findStill(f);
-          return (
-            <article class="atv__slide" aria-roledescription="slide" aria-label={`${i + 1} of ${featured.length}`}>
-              <div class="atv__art" aria-hidden="true">
-                {s && <img src={s.src} alt="" width="1280" height="720" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />}
-              </div>
-              <div class="atv__body">
-                <p class="atv__kicker">{categoryLabel(f)}</p>
-                <h2 class="atv__title"><a href={`/finds/${f.slug}`}>{f.title}</a></h2>
-                <div class="atv__meta">
-                  <span>{regionLabel(f)}</span>
-                  <Verification level={f.verification} />
-                </div>
-                <div class="atv__actions">
-                  <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon="play" class="atv__play">Play clip</Button>
-                  <Button href="/map" variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-      <div class="atv__dots" data-atv-dots>
-        {featured.map((_, i) => (
-          <button type="button" class:list={['atv__dot', { 'is-active': i === 0 }]} aria-label={`Show find ${i + 1} of ${featured.length}`} aria-current={i === 0 ? 'true' : undefined} data-dot={i}><span></span></button>
-        ))}
-      </div>
-    </div>
-  </section>
+  <Hero featured={featured} />
 
   <section class="row container" id="more" aria-labelledby="more-title">
     <h2 class="row__title h2" id="more-title"><a href="/finds">More finds <Icon name="chevron-right" size={20} stroke={2} /></a></h2>
@@ -117,222 +52,8 @@ const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.cl
   </section>
 </Base>
 
-<script>
-  // Desktop: hovering or focusing a line crossfades the still and points the sub bar at that find.
-  const list = document.querySelector<HTMLElement>('[data-a24-list]');
-  const stills = [...document.querySelectorAll<HTMLImageElement>('[data-still]')];
-  const subbar = document.querySelector<HTMLAnchorElement>('[data-subbar]');
-  const subImg = document.querySelector<HTMLImageElement>('[data-subbar-img]');
-  if (list) {
-    const show = (item: HTMLAnchorElement) => {
-      const i = Number(item.dataset.index);
-      stills.forEach((s, k) => s.classList.toggle('is-active', k === i));
-      list.querySelectorAll('.a24__item').forEach((a) => a.classList.toggle('is-hot', a === item));
-      list.dataset.hot = 'true';
-      if (subbar) subbar.href = `/finds/${item.dataset.slug}`;
-      if (subImg && item.dataset.thumb) subImg.src = item.dataset.thumb;
-    };
-    list.querySelectorAll<HTMLAnchorElement>('.a24__item').forEach((a) => {
-      a.addEventListener('pointerenter', () => show(a));
-      a.addEventListener('focus', () => show(a));
-    });
-    const rest = () => { delete list.dataset.hot; };
-    list.addEventListener('pointerleave', rest);
-    list.addEventListener('focusout', (e) => { if (!list.contains(e.relatedTarget as Node)) rest(); });
-  }
-
-  // The sub bar belongs to the hero: it steps away once the hero has scrolled off.
-  const header = document.querySelector<HTMLElement>('[data-header]');
-  const hero = document.querySelector<HTMLElement>('[data-hero]');
-  if (header && hero && 'IntersectionObserver' in window) {
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) delete header.dataset.subbar; else header.dataset.subbar = 'hidden';
-    }, { rootMargin: '-160px 0px 0px 0px' }).observe(hero);
-  }
-
-  // Phone: the slides scroll natively with snap; the dots follow and can be tapped.
-  const track = document.querySelector<HTMLElement>('[data-atv-track]');
-  const dots = [...document.querySelectorAll<HTMLButtonElement>('[data-dot]')];
-  if (track && dots.length) {
-    let frame = 0;
-    const sync = () => {
-      frame = 0;
-      const i = Math.round(track.scrollLeft / track.clientWidth);
-      dots.forEach((d, k) => {
-        d.classList.toggle('is-active', k === i);
-        if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
-      });
-    };
-    track.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(sync); }, { passive: true });
-    dots.forEach((d, k) => d.addEventListener('click', () => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      track.scrollTo({ left: k * track.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
-    }));
-  }
-</script>
 
 <style>
-  .hero { position: relative; background: var(--bg); color: var(--text-1); }
-  .hero__label { position: absolute; inset: 0 0 auto 0; }
-  .hero__label h1 { margin: 0; }
-
-  /* ---------- Desktop: A24 ---------- */
-  .a24 { position: relative; height: 100svh; min-height: 640px; overflow: hidden; }
-  .a24__stills { position: absolute; inset: 0; background: var(--glow-hero), var(--bg); }
-  .a24__still {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity var(--dur-crossfade) var(--ease-colour);
-  }
-  .a24__still.is-active { opacity: 1; }
-  /* Dispersed, monochrome: keeps the white type at AA on any still without reading as a band. */
-  .a24__scrim {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(to top, rgb(13 12 26 / 0.5) 0%, rgb(13 12 26 / 0.2) 32%, rgb(13 12 26 / 0) 55%),
-      linear-gradient(to right, rgb(13 12 26 / 0.25) 0%, rgb(13 12 26 / 0) 50%),
-      linear-gradient(to bottom, rgb(13 12 26 / 0.3) 0%, rgb(13 12 26 / 0) 16%);
-  }
-  .a24__inner { position: relative; height: 100%; display: flex; align-items: flex-end; padding-bottom: 52px; }
-  .a24__list { display: flex; flex-direction: column; min-width: 0; max-width: calc(100% - 56px); }
-  .a24__item {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: 14px;
-    max-width: 100%;
-    color: #ffffff;
-    transition: opacity var(--dur-colour) var(--ease-colour);
-  }
-  .a24__title {
-    font-family: var(--font-body);
-    font-weight: 500;
-    font-size: clamp(40px, 4vw, 72px);
-    line-height: 0.94;
-    letter-spacing: -0.035em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-bottom: 0.06em;
-  }
-  .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
-  .a24__list li:first-child .a24__item { opacity: 0.55; }
-  .a24__list[data-hot] .a24__item { opacity: 0.55; }
-  .a24__list[data-hot] .a24__item.is-hot { opacity: 1; }
-
-  .a24__list li {
-    animation: a24-rise 600ms var(--ease-out) both;
-    animation-delay: calc(var(--i) * 70ms - var(--i) * var(--i) * 6ms);
-  }
-  @keyframes a24-rise { from { opacity: 0; transform: translateY(14px); } }
-
-  .a24__down {
-    position: absolute;
-    right: var(--page-pad);
-    bottom: 52px;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 56px;
-    margin-right: -14px;
-    color: #ffffff;
-    transition: transform var(--dur-colour) var(--ease-out);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .a24__down:hover { transform: translateY(4px); }
-  }
-
-  /* ---------- Phone: Apple TV ---------- */
-  .atv { display: none; }
-
-  @media (max-width: 767px) {
-    .a24 { display: none; }
-    .atv { display: block; position: relative; padding-bottom: 28px; }
-    .atv__track {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      overscroll-behavior-x: contain;
-      scrollbar-width: none;
-    }
-    .atv__track::-webkit-scrollbar { display: none; }
-    .atv__slide {
-      position: relative;
-      flex: 0 0 100%;
-      min-height: 80svh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-    .atv__art { position: absolute; inset: 0; background: var(--glow-hero), var(--bg); }
-    .atv__art img { width: 100%; height: 100%; object-fit: cover; }
-    .atv__art::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to bottom, rgb(13 12 26 / 0) 40%, rgb(13 12 26 / 0.72) 70%, var(--bg) 100%),
-        linear-gradient(to bottom, rgb(13 12 26 / 0.45) 0%, rgb(13 12 26 / 0) 16%);
-    }
-    .atv__body {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 0 var(--page-pad) 0;
-    }
-    .atv__kicker {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--accent-text);
-    }
-    .atv__title {
-      margin-top: 8px;
-      font-family: var(--font-display); font-variation-settings: var(--font-display-axes);
-      font-weight: 900;
-      font-size: 44px;
-      line-height: 0.92;
-      letter-spacing: -0.005em;
-      text-transform: uppercase;
-      color: #ffffff;
-      text-wrap: balance;
-      overflow-wrap: anywhere;
-    }
-    .atv__meta {
-      margin-top: 14px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px 10px;
-      font-size: 17px;
-      color: rgb(255 255 255 / 0.8);
-    }
-    .atv__actions { margin-top: 22px; display: flex; align-items: center; gap: 12px; }
-    .atv__actions :global(.atv__play) { min-width: 160px; font-size: 20px; }
-    .atv__dots { display: flex; justify-content: center; margin-top: 20px; }
-    /* 44px tall hit area around an 8px dot; the negative margin keeps the drawn spacing */
-    .atv__dot { display: grid; place-items: center; height: 44px; min-width: 24px; padding-inline: 8px; margin: -10px -3px; }
-    .atv__dot span {
-      display: block;
-      width: 8px;
-      height: 8px;
-      border-radius: var(--radius-full);
-      background: rgb(255 255 255 / 0.4);
-      transition: width var(--dur-colour) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
-    }
-    .atv__dot.is-active span { width: 24px; background: #ffffff; }
-  }
-
   /* ---------- Rows below the hero ---------- */
   .row { padding-top: var(--space-section); }
   .row:last-of-type { padding-bottom: var(--space-section); }
@@ -361,11 +82,7 @@ const credit = (f: (typeof finds)[number]) => (f.clip?.creator ? `Clip by ${f.cl
     .row__list::-webkit-scrollbar { display: none; }
     .row__list > li { flex: 0 0 72%; min-width: 0; scroll-snap-align: start; }
     /* Apple TV: the next row follows the dots closely */
-    .hero + .row { padding-top: var(--space-6); }
+    :global(.hero) + .row { padding-top: var(--space-6); }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .a24__list li { animation-name: a24-fade; }
-    @keyframes a24-fade { from { opacity: 0; } }
-  }
 </style>

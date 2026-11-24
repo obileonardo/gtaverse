@@ -117,3 +117,25 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | OS6 | **thevicefiles.com is the only domain in the repo** (docs and schema `$id`s); repo links point to github.com/obileonardo/thevicefiles. | One address; no personal domain in public files. |
 | OS7 | **No AI analysis of Rockstar images**, including reading colours from official art. Values sampled from Rockstar's share image were removed from `research/gta6-design-language.md`; values read from the site's CSS and cited fan measurements stay. | Rockstar ToS 2.3 and CONTENT-GUIDE rule 5, applied to analysis as well as generation. |
 | OS8 | **CI and Dependabot:** every pull request and push to `staging` and `main` runs a frozen install, `pnpm validate`, `pnpm build` and an asset guard; Dependabot opens weekly npm and Actions updates into `staging`. Repository settings are prepared in `docs/release/STAGE-B-SETTINGS.md` and applied only after the owner approves. | The validator gate cannot be skipped, third-party assets cannot slip in, and settings changes stay the owner's call. |
+
+## 2026-11-24: home hero modes (owner decisions)
+
+| # | Decision | Why |
+|---|---|---|
+| H1 | The home hero background has three modes, **trailer, key art and line art**, switched by three circles at the top right. They rotate on their own; the active circle's ring is the timer; choosing a circle stops the rotation. The YouTube clip thumbnails are no longer the hero background. | Owner, 24 Nov 2026: the creators' clips as hero art "feels boring". |
+| H2 | The trailer and key art are **Rockstar's official downloads** (`GTAVI_Videos.zip`, `GTAVI_Artwork_Wallpapers.zip`), re-encoded for the web by the build and credited "Trailer and art: Rockstar Games". Never committed; built at deploy like the map tiles (docs/HERO.md). | Decision 5 allows official media inside content with a credit; owner approved the downloads. |
+| H3 | **Narrow exception to OS7:** the agent may view the official trailer clips and wallpapers only to choose the loop moments and crops. Nothing is generated from them (no AI upscaling, style transfer or derived art), and no other Rockstar imagery, the map or tiles are viewed. | Owner approval, 24 Nov 2026. Choosing a crop needs eyes on the frame. |
+| H4 | The find list stays; hovering a line shows that find's clip thumbnail in a small tilted frame beside it (first tap shows it on touch screens, second tap opens). Spoiler and mature finds never show a thumbnail. | Owner brief. |
+
+## 2026-11-24: slice decisions (home hero modes, open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| HS1 | The official videos zip holds no full trailer: eight character clips of 1 to 1.5 s (silent) and a 33 s animated cover art. The "trailer" is the eight clips cut together with hard cuts (Lucia, Cal, Boobie, Brian, Real Dimez, Raul, DreQuan, Jason), 9 s, looping. | The closest thing to a trailer in the official files. Re-hosting a YouTube trailer is never allowed (decision 8). |
+| HS2 | The animated cover art is never shown: it is built on the GTA VI and Rockstar logos. Only its music is used, as the trailer's sound (24 s from 0:04, faded in and out), fetched only when a visitor turns sound on. The agent could not listen to it: **the owner should check it has no voice over.** | Decision 6 (no logos as branding). The character clips have no audio track. |
+| HS3 | Key art: five logo-free wallpapers (Jason and Lucia on the car, Jason and Lucia at dusk, Cal Hampton, Real Dimez, Boobie Ike), the landscape file on desktop and Rockstar's own phone file on phones. Postcards (lettered), the cover art and the album art (logos), the motel and robbery pieces were left out. | Art first, no logos, no lettering competing with the find list. |
+| HS4 | The landscape MP4 lands at CRF 31 (3.4 MB) to stay inside the 2 to 4 MB band; the clips are fast moving and grainy. Browsers that play AV1 get a 2.3 MB WebM instead. | Owner's size band. If it looks soft on a big screen, a 1280 wide reel at CRF 26 is the alternative. |
+| HS5 | The line art is drawn by our own small canvas renderer (about 4 KB compressed, loaded only when needed), not Three.js. | The look is perspective hairlines and a slow camera; Three.js would add about 150 KB for the same picture. |
+| HS6 | The coastline is traced by code from the cached official map (colour classes, no person or AI looks at the map) and written to the git-ignored `public/media/hero/coast.json`; it is never committed, because it is a shape derived from Rockstar's map. | docs/MAP.md, OS7. |
+| HS7 | Video encoding uses the `ffmpeg-static` dev dependency (ffmpeg 6.0 with libx264 and SVT-AV1); its binary downloads on the first `pnpm media:build`, not on install. | Homebrew's ffmpeg on the build Mac has no libx264, VP9 or AV1 encoder; the brief allowed ffmpeg-static. |
+| HS8 | D3 is superseded for the hero background: home art is now the official reel, key art and our line art. The YouTube thumbnail still appears in the peek frame and the NEON sub bar. | H1. |
