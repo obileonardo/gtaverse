@@ -1,0 +1,264 @@
+---
+// Home 015, GTAverse (board r2: Justin Jefferson 005, Love; phone Justin Jefferson M002, Love).
+// Desktop: the games in release order as tilted portrait cards along a track over a faint giant word, moved sideways by
+// native vertical scroll on a sticky stage (no scroll-jacking: the page scrolls as normal, the track follows it).
+// Each card is the game's official cover art as-is (owner answer Q1, credited) in a 6px frame of the GTA VI sunrise
+// gradient at full strength (Q5) with Justin Jefferson's notch on the right edge; without built art, the game's plate.
+// Under each card: the short name and "year · N connections". Release years sit faint under the track, a ruler below.
+// Phone: the M002 carousel, one card at 66% with the next peeking, a round arrow inside, a pager under it.
+// Reduced motion, no JavaScript or a narrow window: the track is a plain horizontal scroller.
+import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import GamePlate from '../games/GamePlate.astro';
+import { connections } from '../../lib/content';
+import { games, connectionCount, TRADEMARK_LINE } from '../../lib/games';
+import { gameArt } from '../../lib/menu';
+
+interface Props { index?: string }
+const { index = '015' } = Astro.props;
+const list = [...games].sort((a, b) => a.year - b.year || a.name.localeCompare(b.name)).map((g, i, all) => ({
+  g,
+  art: gameArt(g),
+  count: connectionCount(g.id),
+  firstOfYear: i === 0 || all[i - 1].year !== g.year,
+}));
+const anyArt = list.some((x) => x.art);
+---
+<section class="ch15" aria-labelledby="ch15-title" data-ch15>
+  <div class="container"><ChapterHead index={index} label="GTAverse" id="ch15-title" /></div>
+  <div class="container"><p class="ch15__lede">{list.length} Rockstar games in release order, {list[0].g.year} to {list[list.length - 1].g.year}, and the {connections.length} connections that run between them and GTA VI.</p></div>
+
+  <div class="ch15__track" data-ch15-track>
+    <div class="ch15__stage">
+      <p class="ch15__word" aria-hidden="true" data-ch15-word>GTAverse</p>
+      <ol class="ch15__rail" role="list" data-ch15-rail>
+        {list.map(({ g, art, count, firstOfYear }, i) => (
+          <li class="ch15__item" style={`--i: ${i}`}>
+            {firstOfYear && <span class="ch15__year" aria-hidden="true">{g.year}</span>}
+            <a class="ch15__card" href={`/gtaverse/games/${g.id}`} data-ch15-card={i}>
+              <span class="ch15__frame">
+                <span class="ch15__art">
+                  {art ? (
+                    <picture>
+                      {art.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="(max-width: 767px) 66vw, 240px" />)}
+                      <img src={art.src} alt="" loading="lazy" decoding="async" style={`object-position: ${art.position}`} />
+                    </picture>
+                  ) : <span class="ch15__plate"><GamePlate game={g} size="sheet" /></span>}
+                </span>
+              </span>
+              <span class="ch15__go" aria-hidden="true"><Icon name="arrow-right" size={24} /></span>
+              <span class="ch15__name">{g.short_name}</span>
+              <span class="ch15__stat">{g.year} · {count} {count === 1 ? 'connection' : 'connections'}</span>
+            </a>
+          </li>
+        ))}
+        <li class="ch15__item ch15__item--end">
+          <Button href="/gtaverse" variant="quiet" size="l" iconEnd="chevron-right">All {connections.length} connections</Button>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="container ch15__after">
+    <div class="ch15__dots" aria-hidden="true">{list.map((_, i) => <span class:list={['ch15__dot', { 'is-active': i === 0 }]}></span>)}</div>
+    <Button href="/gtaverse" variant="quiet" size="l" iconEnd="chevron-right" class="ch15__all-phone">All {connections.length} connections</Button>
+    <p class="ch15__credit">{anyArt ? 'Cover art: Rockstar Games. ' : ''}{TRADEMARK_LINE}</p>
+  </div>
+</section>
+
+<style>
+  .ch15 { padding-top: var(--space-chapter); overflow-x: clip; }
+  .ch15__lede { margin-top: var(--space-4); max-width: var(--measure); font-size: var(--text-body); line-height: 1.5; color: var(--text-2); }
+
+  /* ---------- Default: a horizontal scroller (phone, reduced motion, no JavaScript) ---------- */
+  .ch15__track { margin-top: var(--space-6); }
+  .ch15__stage { position: relative; }
+  .ch15__word {
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.86;
+    color: var(--text-1);
+    padding-block: 0.06em;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+  }
+  .ch15__rail {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: var(--space-6) var(--gutter) var(--space-4);
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .ch15__rail::-webkit-scrollbar { display: none; }
+  .ch15__item { position: relative; flex: 0 0 auto; scroll-snap-align: start; }
+  .ch15__item--end { display: flex; align-items: center; padding-inline: var(--space-8); }
+  .ch15__card { --w: 230px; position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: var(--w); }
+  .ch15__frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 0.72;
+    padding: 6px;
+    border-radius: var(--radius-s);
+    background: var(--frame-card);
+    clip-path: polygon(0 0, 100% 0, 100% 56%, calc(100% - var(--cut-s)) calc(56% + var(--cut-s)), calc(100% - var(--cut-s)) calc(74% - var(--cut-s)), 100% 74%, 100% 100%, 0 100%);
+  }
+  .ch15__art { position: relative; display: block; width: 100%; height: 100%; border-radius: 3px; overflow: hidden; background: var(--logo-plate); clip-path: polygon(0 0, 100% 0, 100% 55%, calc(100% - var(--cut-s)) calc(55% + var(--cut-s)), calc(100% - var(--cut-s)) calc(75% - var(--cut-s)), 100% 75%, 100% 100%, 0 100%); }
+  .ch15__art img { width: 100%; height: 100%; object-fit: cover; }
+  .ch15__plate { display: grid; place-items: center; width: 100%; height: 100%; background: var(--glow-hero), var(--logo-plate); }
+  .ch15__go { position: absolute; right: 18px; top: calc(var(--w) / 0.72 - 74px); display: none; place-items: center; width: 56px; height: 56px; border-radius: var(--radius-full); background: var(--glass-fill); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: var(--border-w) solid var(--glass-border); color: var(--text-1); }
+  .ch15__name { margin-top: var(--space-3); font-family: var(--font-mono); font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-1); text-align: center; line-height: 1.4; }
+  .ch15__stat { font-family: var(--font-mono); font-size: var(--text-mono-caps); text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-2); text-align: center; line-height: 1.4; }
+  .ch15__year { display: none; }
+  .ch15__word { display: none; }
+
+  .ch15__after { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); margin-top: var(--space-6); }
+  .ch15__dots { display: none; }
+  .ch15__credit { font-size: var(--text-caption); color: var(--text-3); }
+
+  /* ---------- Phone (Justin Jefferson M002) ---------- */
+  @media (max-width: 767px) {
+    .ch15 { clip-path: polygon(0 24px, 100% 0, 100% 100%, 0 100%); padding-top: calc(var(--space-chapter) + 24px); }
+    .ch15__word { display: block; margin: var(--space-4) var(--gutter) 0; font-size: min(15vw, 58px); }
+    .ch15__rail { gap: var(--space-4); padding-top: var(--space-4); }
+    .ch15__card { --w: 66vw; }
+    .ch15__go { display: grid; }
+    .ch15__item--end { display: none; }
+    .ch15__dots { display: flex; align-self: center; gap: 18px; align-items: center; height: 24px; }
+    .ch15__dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--text-3); transition: width var(--dur-morph) var(--ease-out); }
+    .ch15__dot.is-active { width: 18px; background: var(--text-1); }
+  }
+  @media (min-width: 768px) { .ch15__all-phone { display: none; } }
+
+  /* ---------- Desktop and tablet: the sticky stage, moved by scroll ---------- */
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    :global(html.js) .ch15__track { height: var(--track-h, 300svh); margin-top: 0; }
+    :global(html.js) .ch15__stage { position: sticky; top: 0; height: 100svh; min-height: 640px; overflow: hidden; }
+    :global(html.js) .ch15__word {
+      display: block;
+      position: absolute;
+      left: var(--gutter);
+      top: 6%;
+      font-size: 26svh;
+      opacity: 0.06;
+      will-change: transform;
+    }
+    :global(html.js) .ch15__rail {
+      display: block;
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      padding: 0;
+      will-change: transform;
+      /* The ruler: a 1px tick every 24px along the bottom. */
+      background: repeating-linear-gradient(to right, rgb(255 255 255 / 0.06) 0 1px, transparent 1px 24px) left calc(100% - 0px) / 100% 18px no-repeat;
+    }
+    :global(html[data-theme='light']) .ch15__rail { background-image: repeating-linear-gradient(to right, rgb(47 47 47 / 0.12) 0 1px, transparent 1px 24px); }
+    :global(html.js) .ch15__item {
+      --sp: max(30vw, 300px);
+      --ch: min(320px, 36svh);
+      position: absolute;
+      left: calc(var(--gutter) + var(--i) * var(--sp));
+      top: calc(14svh + var(--off, 0px));
+    }
+    :global(html.js) .ch15__item:nth-child(4n + 2) { --off: 28svh; }
+    :global(html.js) .ch15__item:nth-child(4n + 3) { --off: 7.5svh; }
+    :global(html.js) .ch15__item:nth-child(4n + 4) { --off: 24svh; }
+    :global(html.js) .ch15__item--end { --i: var(--n); top: 44svh; padding: 0; }
+    :global(html.js) .ch15__card { --w: calc(var(--ch) * 0.72); }
+    :global(html.js) .ch15__frame { rotate: calc(var(--tilt) * -1); transition: rotate var(--dur-card-lift) var(--ease-out), translate var(--dur-card-lift) var(--ease-out); }
+    :global(html.js) .ch15__item:nth-child(even) .ch15__frame { rotate: var(--tilt); }
+    /* The year under its first card, in thin outline numerals, on one band near the bottom. */
+    :global(html.js) .ch15__year {
+      display: block;
+      position: absolute;
+      /* In the gap before its card (Justin Jefferson's yard numbers sit between the cards). */
+      left: calc((var(--sp) - var(--w, 230px)) / -2);
+      top: calc(72svh - 14svh - var(--off, 0px));
+      translate: -50% 0;
+      font-family: var(--font-display);
+      font-variation-settings: var(--font-display-axes);
+      font-weight: 100;
+      font-size: 96px;
+      line-height: 1;
+      color: transparent;
+      -webkit-text-stroke: 1px rgb(255 255 255 / 0.2);
+      padding-block: 0.08em;
+      pointer-events: none;
+    }
+    :global(html[data-theme='light']) .ch15__year { -webkit-text-stroke-color: rgb(47 47 47 / 0.25); }
+    :global(html.js) .ch15__item { --w: calc(min(320px, 36svh) * 0.72); }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ch15__card:hover .ch15__frame { rotate: 0deg !important; translate: 0 -6px; }
+  }
+  .ch15__card:active .ch15__frame { scale: 0.98; }
+  .ch15__card:focus-visible { outline: none; }
+  .ch15__card:focus-visible .ch15__frame { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-ch15]')) {
+    const track = root.querySelector<HTMLElement>('[data-ch15-track]')!;
+    const rail = root.querySelector<HTMLElement>('[data-ch15-rail]')!;
+    const word = root.querySelector<HTMLElement>('[data-ch15-word]')!;
+    const items = [...rail.children] as HTMLElement[];
+    rail.style.setProperty('--n', String(items.length - 1));
+    const sticky = matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
+    let overflow = 0;
+    let ratio = 2.5; // the track moves 2.5px sideways for each 1px of page scroll
+
+    const measure = () => {
+      if (!sticky.matches) { track.style.removeProperty('--track-h'); rail.style.transform = ''; word.style.transform = ''; return; }
+      const last = items[items.length - 1];
+      const right = last.offsetLeft + last.offsetWidth;
+      const gutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 128;
+      overflow = Math.max(0, right + gutter - innerWidth);
+      track.style.setProperty('--track-h', `${innerHeight + overflow / ratio}px`);
+      update();
+    };
+    const progress = () => {
+      const range = track.offsetHeight - innerHeight;
+      return range > 0 ? Math.min(Math.max(-track.getBoundingClientRect().top / range, 0), 1) : 0;
+    };
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (!sticky.matches) return;
+      const p = progress();
+      rail.style.transform = `translate3d(${(-p * overflow).toFixed(1)}px, 0, 0)`;
+      // The faint word drifts at a fraction of the track's speed (parallax).
+      word.style.transform = `translate3d(${(-p * overflow * 0.06).toFixed(1)}px, 0, 0)`;
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', measure);
+    sticky.addEventListener('change', measure);
+    measure();
+
+    // Keyboard: a focused card is brought into view by scrolling the page to its place on the track (no animation).
+    rail.addEventListener('focusin', (e) => {
+      if (!sticky.matches || !overflow) return;
+      const item = (e.target as HTMLElement).closest<HTMLElement>('.ch15__item');
+      if (!item) return;
+      const want = Math.min(Math.max((item.offsetLeft - innerWidth / 2 + item.offsetWidth / 2) / overflow, 0), 1);
+      const range = track.offsetHeight - innerHeight;
+      window.scrollTo({ top: window.scrollY + track.getBoundingClientRect().top + want * range, behavior: 'auto' });
+    });
+
+    // Phone pager: the dot of the card nearest the start of the scroller.
+    const dots = [...root.querySelectorAll<HTMLElement>('.ch15__dot')];
+    rail.addEventListener('scroll', () => {
+      if (sticky.matches) return;
+      const first = items[0];
+      const step = (items[1]?.offsetLeft ?? 0) - first.offsetLeft || 1;
+      const i = Math.round(rail.scrollLeft / step);
+      dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
+    }, { passive: true });
+  }
+</script>

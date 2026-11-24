@@ -1,0 +1,60 @@
+---
+// The head every round 2 home chapter opens on (owner answer Q3, 24 Nov 2026): a 1px rule across the content width,
+// then the mono index with its 6px square bullet, then the bracket label (the menu's "[ The guide ]" voice).
+// heading: true makes the label the chapter's h2; pass false when the chapter has its own visible title (then pass
+// that title's id to the section's aria-labelledby).
+// Motion: on first view the rule draws from left to right (clip-path, --dur-reveal on --ease-reveal) and the index
+// and label rise 8px (--dur-reveal-group). Never on back navigation; reduced motion fades only.
+interface Props { index: string; label: string; id?: string; heading?: boolean; count?: number; class?: string }
+const { index, label, id, heading = true, count, class: className } = Astro.props;
+const Tag = heading ? 'h2' : 'p';
+---
+<div class:list={['chead', className]} data-fv>
+  <span class="chead__rule" aria-hidden="true"></span>
+  <p class="chead__index" aria-hidden="true"><span class="chead__bullet"></span>{index}</p>
+  <Tag class="chead__label" id={id}><span aria-hidden="true">[&nbsp;</span>{label}<span aria-hidden="true">&nbsp;]</span>{count !== undefined && <sup class="chead__count">{count}</sup>}</Tag>
+</div>
+
+<style>
+  .chead { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chead__rule { display: block; height: 1px; background: var(--rule-soft); margin-bottom: var(--space-3); }
+  .chead__index {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-3);
+  }
+  .chead__bullet { width: 6px; height: 6px; background: currentColor; flex: none; }
+  .chead__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-2);
+  }
+  .chead__count { margin-left: 4px; font-size: var(--text-mono-caps); color: var(--text-3); vertical-align: top; position: relative; top: -0.3em; }
+
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) .chead__rule { clip-path: inset(0 100% 0 0); }
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) :is(.chead__index, .chead__label) { opacity: 0; }
+  .chead[data-fv='in'] .chead__rule { animation: chead-draw var(--dur-reveal) var(--ease-reveal) both; }
+  .chead[data-fv='in'] .chead__index { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 120ms both; }
+  .chead[data-fv='in'] .chead__label { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 170ms both; }
+  @keyframes chead-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+  @keyframes chead-rise { from { opacity: 0; translate: 0 8px; } }
+  @keyframes chead-fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .chead[data-fv='in'] :is(.chead__rule, .chead__index, .chead__label) { animation: chead-fade var(--dur-fade-reduced) var(--ease-colour) both; }
+  }
+  :global(html.rv-off) .chead :is(.chead__rule, .chead__index, .chead__label) { clip-path: none !important; opacity: 1 !important; }
+</style>
+
+<script>
+  import { initFirstView } from './first-view';
+  initFirstView();
+</script>
