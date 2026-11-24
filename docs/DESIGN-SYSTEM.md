@@ -83,6 +83,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `--glow-hero` | sunrise radial at 35% | at 16 to 28% | hero moments, items without art |
 | `--badge-verify-*` | `#FBC7E4` fill, pink edge, navy text | same | multi-source verification |
 | `--level-1` to `--level-5` | mint, lavender, pink, peach, amber | | wanted level columns (explainer) |
+| `--blip-collectible`, `-ink`, `-key` | GTA coral `#F76685`, navy glyph and keyline | same (fixed) | collectible-layer map blip plates (IC9, `docs/ICONS.md`) |
 | `--logo-plate`, `--logo-plate-edge` | `#0D0C1A`, white 10% | same (fixed) | the plate behind an official game logo, the same in both themes (GS4) |
 | `--map-*` | navy ramp | GetYourGuide palette | map land, roads, water, park, labels, halos |
 

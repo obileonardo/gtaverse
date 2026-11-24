@@ -61,6 +61,12 @@
   --level-4: #f59289;
   --level-5: #ffa948;
 
+  /* Map blips: collectible-layer plates (owner pick, 24 Nov 2026: GTA coral from the GTA VI sunset ramp).
+     Navy glyph on coral 6.6:1; the navy keyline holds the coral plate off any map ground. */
+  --blip-collectible: #f76685;
+  --blip-collectible-ink: #0d0c1a;
+  --blip-collectible-key: #0d0c1a;
+
   /* Map (dark) */
   --map-land: #1f1f38;
   --map-road: #38365d;
@@ -289,6 +295,11 @@
   --overlay-fill: rgb(249 245 240 / 0.78);
   --art-fade: linear-gradient(to bottom, rgb(249 245 240 / 0) 55%, var(--bg) 100%);
   --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.28) 0%, rgb(244 113 124 / 0.2) 50%, rgb(233 99 199 / 0.16) 100%);
+
+  /* Map blips: coral keeps its hue; the keyline stays navy so the plate edge holds on cream (coral on cream is 2.7:1) */
+  --blip-collectible: #f76685;
+  --blip-collectible-ink: #0d0c1a;
+  --blip-collectible-key: #0d0c1a;
 
   --map-land: #f9f5f0;
   --map-road: #d8d8d6;
