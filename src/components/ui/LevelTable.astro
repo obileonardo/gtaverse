@@ -14,8 +14,9 @@ const { head, rows, caption, footnote, class: className } = Astro.props;
 const plain = (h: string) => h.replace(/<[^>]+>/g, '').trim();
 // A column is "short" (centred, Fiverr values) when every cell in it is 28 characters or fewer.
 const short = head.slice(1).map((_, c) => rows.every((r) => plain(r.cells[c] ?? '').length <= 28));
+const badges = rows.some((r) => r.badge);
 ---
-<div class:list={['ltable', className]}>
+<div class:list={['ltable', className]} data-levels={badges ? 'wait' : undefined}>
   <table class="ltable__table" role="table">
     {caption && <caption class="sr-only">{caption}</caption>}
     <thead role="rowgroup">
@@ -43,6 +44,24 @@ const short = head.slice(1).map((_, c) => rows.every((r) => plain(r.cells[c] ?? 
   {footnote && <p class="ltable__foot" set:html={footnote} />}
 </div>
 
+<script>
+  // The level badges light up in order, level 1 to 5, the first time the table is in view (motion study item 12):
+  // each fades and grows from 0.9, 60ms after the one above. Once, never on a back navigation.
+  const tables = [...document.querySelectorAll<HTMLElement>('[data-levels="wait"]')];
+  const back = document.documentElement.classList.contains('nav-back');
+  if (tables.length && (back || !('IntersectionObserver' in window))) tables.forEach((t) => (t.dataset.levels = 'skip'));
+  else if (tables.length) {
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      const t = en.target as HTMLElement;
+      t.querySelectorAll<HTMLElement>('.ltable__badge').forEach((b, k) => b.style.setProperty('--k', String(k)));
+      t.dataset.levels = 'lit';
+      io.unobserve(t);
+    }), { rootMargin: '0px 0px -15% 0px' });
+    tables.forEach((t) => io.observe(t));
+  }
+</script>
+
 <style>
   .ltable {
     padding: var(--space-6);
@@ -68,6 +87,17 @@ const short = head.slice(1).map((_, c) => rows.every((r) => plain(r.cells[c] ?? 
   .ltable__badge :global(.icon) { position: relative; color: var(--on-accent); }
 
   .ltable__foot { margin-top: var(--space-8); color: var(--text-3); font-size: var(--text-body-s); }
+
+  @media screen {
+    :global(html.js:not(.rv-off)) .ltable[data-levels='wait'] .ltable__badge { opacity: 0; scale: 0.9; }
+  }
+  .ltable[data-levels='lit'] .ltable__badge { animation: level-in 200ms var(--ease-out) calc(var(--k, 0) * 60ms) both; }
+  @keyframes level-in { from { opacity: 0; scale: 0.9; } }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js:not(.rv-off)) .ltable[data-levels='wait'] .ltable__badge { scale: 1; }
+    .ltable[data-levels='lit'] .ltable__badge { animation: level-fade var(--dur-fade-reduced) var(--ease-colour) both; }
+    @keyframes level-fade { from { opacity: 0; } }
+  }
 
   @media (max-width: 767px) {
     .ltable { padding: var(--space-4) var(--space-2); border-radius: var(--radius-l); margin-inline: calc(var(--space-2) * -1); }
