@@ -26,6 +26,9 @@
 /prd
   X-Robots-Tag: noindex, nofollow
 
-# The design system's review pages (the icon sheet) are never for search either.
+# The design system (/design) and its review pages (the icon sheet) are never for search either.
+/design
+  X-Robots-Tag: noindex, nofollow
+
 /design/*
   X-Robots-Tag: noindex, nofollow

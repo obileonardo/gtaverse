@@ -1,0 +1,78 @@
+/*
+  Layout of the design system page (/design) only: its tables, specimen frames and sub headings. Every colour, size,
+  radius and curve is a token; the components shown on the page bring their own styles. Prefixed ds- so nothing here
+  can reach a component.
+*/
+
+.ds-h3 { font-size: var(--text-h2); font-weight: 700; line-height: 1.2; }
+/* Notes are 14px: --measure-short keeps them near 70 characters a line. */
+.ds-note { max-width: var(--measure-short); color: var(--text-2); font-size: var(--text-body-s); line-height: 1.5; }
+.ds-note + .ds-note { margin-top: var(--space-2); }
+.ds-note code, .ds-list code, .ds-spec__notes code { font-family: var(--font-mono); font-size: 0.92em; color: var(--text-1); overflow-wrap: anywhere; }
+.ds-block { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+/* Lists of rules: a hairline between items, a mono number */
+.ds-list { display: flex; flex-direction: column; max-width: 820px; }
+.ds-list > li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: var(--space-3); padding-block: var(--space-4); border-top: var(--border-w) solid var(--border-1); }
+.ds-list > li:last-child { border-bottom: var(--border-w) solid var(--border-1); }
+.ds-list__n { padding-top: 3px; color: var(--text-3); font-family: var(--font-mono); font-size: var(--text-mono-caps); }
+.ds-list__t { font-weight: 600; }
+.ds-list__d { max-width: var(--measure-short); margin-top: var(--space-1); color: var(--text-2); font-size: var(--text-body-s); line-height: 1.5; }
+
+/* Tables are LevelTable (the one table style); these are the small pieces drawn inside its cells. */
+.ds-sw { display: inline-flex; align-items: center; gap: var(--space-2); vertical-align: middle; }
+.ds-sw__chip { flex: none; display: inline-block; width: 44px; height: 28px; border-radius: var(--radius-s); border: var(--border-w) solid var(--border-1); background: var(--bg); overflow: hidden; }
+.ds-sw__chip > span { display: block; width: 100%; height: 100%; }
+.ds-sw__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-sw__v { font-family: var(--font-mono); font-size: var(--text-mono-caps); color: var(--text-2); overflow-wrap: anywhere; text-align: left; }
+.ds-tok { font-family: var(--font-mono); font-size: var(--text-mono-caps); color: var(--text-1); overflow-wrap: anywhere; }
+.ds-mono { font-family: var(--font-mono); font-size: var(--text-mono-caps); color: var(--text-2); overflow-wrap: anywhere; }
+.ds-dim { color: var(--text-3); }
+.ds-ratio { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-mono); font-size: var(--text-mono-caps); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Specimen: one live component, its file, its notes and its props */
+.ds-spec { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.ds-spec__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.ds-spec__name { font-size: var(--text-h2); font-weight: 700; line-height: 1.2; }
+.ds-spec__file { color: var(--text-3); font-family: var(--font-mono); font-size: var(--text-mono-caps); overflow-wrap: anywhere; }
+.ds-stage { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-8); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--bg); min-width: 0; }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.ds-row--top { align-items: flex-start; }
+.ds-cell { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.ds-cap { color: var(--text-3); font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.02em; }
+.ds-spec__notes { max-width: var(--measure-short); color: var(--text-2); font-size: var(--text-body-s); line-height: 1.55; white-space: pre-line; }
+.ds-props summary { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; color: var(--text-1); font-size: var(--text-label); font-weight: 600; cursor: pointer; list-style: none; }
+.ds-props summary::-webkit-details-marker { display: none; }
+.ds-props summary .icon { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+.ds-props[open] summary .icon { transform: rotate(180deg); }
+.ds-code { margin: var(--space-2) 0 0; padding: var(--space-4); overflow-x: auto; border-radius: var(--radius-m); background: var(--surface-2); color: var(--text-1); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; white-space: pre; tab-size: 2; scrollbar-width: thin; }
+
+/* Grids of cards and swatches */
+.ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-4); }
+.ds-grid--wide { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.ds-tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-l); border: var(--border-w) solid var(--border-1); background: var(--surface-1); min-width: 0; }
+.ds-tile__t { font-weight: 600; }
+.ds-tile__d { color: var(--text-2); font-size: var(--text-body-s); line-height: 1.5; }
+
+@media (max-width: 767px) {
+  .ds-stage { padding: var(--space-4); gap: var(--space-5); border-radius: var(--radius-l); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-props summary .icon { transition: none; }
+}
+
+/* The map specimens (MapSpecimens.tsx): the list row in a list column, the drawer and toast on a stand-in stage */
+.ds-map { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: var(--space-8); align-items: start; }
+.ds-map__col { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.ds-map__rows { padding-inline: var(--space-4); border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--bg); }
+.ds-map__stage { position: relative; height: 680px; overflow: hidden; border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); background: var(--map-land); }
+.ds-map__controls { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+@media (max-width: 1199px) {
+  .ds-map { grid-template-columns: minmax(0, 1fr); }
+}
+/* The drawer is the desktop surface; on the phone a find opens in the sheet. */
+.ds-map__desk { display: contents; }
+@media (max-width: 767px) {
+  .ds-map__stage { height: 360px; }
+  .ds-map__desk { display: none; }
+}

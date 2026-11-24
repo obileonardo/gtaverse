@@ -28,6 +28,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/layouts/Base.astro` | Page shell: fonts, theme script, header, footer, search and sharing tags. Props `title`, `description`, `layout` (`page` or `bare`), `sub`, and (optional) `jsonLd`, `breadcrumbs`, `ogType`, `noindex` |
 | `src/components/site/PageHead.astro` | List page head: display caps title, mono count, lede, optional breadcrumb trail (finders, region and category hubs) |
 | `src/components/site/DocPage.astro` | Policy page: the explainer's reading column with a rail of the policy pages (about, editorial policy, corrections, takedowns) |
+| `src/components/site/ContentsRail.astro` | "On this page": the contents rail (sticky at 1024 and wider, a closed disclosure below) with the travelling marker and the reading progress line. The explainers and `/design` use it; the page places it |
 | `src/components/FindGrid.astro` | The finds index card grid as a component (hubs) |
 | `src/components/site/Header.astro` | The NEON island, the full screen menu with its art panel (desktop columns, phone sheet), the theme toggles, the sub bar |
 | `src/components/site/Footer.astro` | Footer with the legal disclaimer and takedown address (legal copy: keep word for word) |
@@ -246,6 +247,10 @@ The map is a React island, and Astro components cannot render inside it. `ui.tsx
 ## Art and stills
 
 The home hero's background is the exception: Rockstar's official trailer clips and wallpapers, built at deploy and credited, and our own line art (docs/HERO.md, decisions H1 to H4). The header menu's art panel is the second: each game's official cover art and the same hero wallpapers, built at deploy and credited under the panel (decisions M2, M3). Everywhere else the only art on open pages is the creator's own YouTube thumbnail (`findStill()`), served by YouTube, never re-hosted. Spoiler and mature finds never show art outside their reveal (`showcaseable()`). Shorts are skipped (portrait thumbnails). Anything without art gets `--glow-hero`.
+
+## The design system page (`/design`)
+
+`/design` is this document, live: built from the code on every build, noindex and out of the sitemap, the route list and the SEO check (`public/_headers` and `scripts/check-seo.mjs` cover `/design` and `/design/*`). Tokens are read from `tokens.css` (with their use from this file's tables when the CSS has no comment), contrast is computed, components are the real components with their props and notes read from their own sources, and every motion demo plays the real tokens. Its parts live in `src/components/design/`; specimens that need a page of their own (the timeline, whose headline is always an h1, and the map's parts, whose stylesheet uses global class names) sit in frames at `/design/timeline` and `/design/map-parts` (`Frame.astro`). A "Demo data / Worst case" switch (`?data=worst`) swaps text-bearing specimens to the longest values in our content. The icon sheet is `/design/icons`. A new token or component shows up there on the next build; a new component needs a specimen in `ComponentsSection.astro`.
 
 ## Known decisions open to the owner
 

@@ -1,0 +1,181 @@
+---
+// The design system: a living page built from the code. Tokens are read from src/styles/tokens.css, components are
+// the real components rendered live, props and notes come from their own sources, so a change in code shows here on
+// the next build. A review page, never for search: noindex, out of the sitemap, the route list and the SEO check
+// (decision IC6), with X-Robots-Tag on /design and /design/* (public/_headers). Rules: docs/DESIGN-SYSTEM.md.
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/site/PageHead.astro';
+import ContentsRail from '../../components/site/ContentsRail.astro';
+import Button from '../../components/ui/Button.astro';
+import Verification from '../../components/Verification.astro';
+import Section from '../../components/design/Section.astro';
+import ColourSection from '../../components/design/ColourSection.astro';
+import TypeSection from '../../components/design/TypeSection.astro';
+import LayoutSection from '../../components/design/LayoutSection.astro';
+import MotionSection from '../../components/design/MotionSection.astro';
+import ComponentsSection from '../../components/design/ComponentsSection.astro';
+import { glyphs, type GlyphName } from '../../icons/family';
+import { blipSvg, iconSvg } from '../../icons/render';
+import { trustPages } from '../../lib/trust';
+import { colours } from '../../components/design/tokens';
+import '../../components/design/design.css';
+
+const sections = [
+  { id: 'principles', label: 'Principles' },
+  { id: 'colour', label: 'Colour' },
+  { id: 'type', label: 'Type' },
+  { id: 'layout', label: 'Layout' },
+  { id: 'motion', label: 'Motion' },
+  { id: 'icons', label: 'Icons' },
+  { id: 'components', label: 'Components' },
+  { id: 'imagery', label: 'Line art and imagery' },
+  { id: 'content', label: 'Content rules' },
+];
+
+const principles: [string, string, string][] = [
+  ['Dark first', 'Night navy #0D0C1A is the ground. Light is a full theme the visitor can choose, never the default; without a saved choice the page follows the system.', 'Decisions 17, D7'],
+  ['One edge: the 128 px gutter', 'Page content, header-aligned content, the home hero and the footer share one left and right edge: 128 at 1440 and wider, stepping down to 16 on the phone.', 'Decision L1'],
+  ['Fully rounded controls', 'Buttons, chips and pills are rounded-full. Badges, cards and sheets take the radius of their size class.', 'Design system rules'],
+  ['No shadows', 'Elevation is a surface step and a 1px border, never a box shadow.', 'Design system rules'],
+  ['No bounce, two slides never overlap', 'No bounce or overshoot, no twitching. Arriving and leaving use different curves and leaving takes 60 to 75% of the entrance. An exit and an entrance never slide at the same time; fades may overlap briefly.', 'Decision M1'],
+  ['Text never clips', 'A box that clips holds every glyph whole: descenders (g, j, p, q, y) and accented capitals (É, Ñ), also mid-animation. Clip sideways only, or move the clip to a padded wrapper.', 'Decision L4'],
+  ['One implementation per component', 'One button, chip, badge, card, tab, table and rail. A page that needs something new adds it to the system first. The map’s React twins render the same classes.', 'Owner house style'],
+  ['Never by colour alone', 'Every state carries a word or an icon too. Text is 12 px or more; touch targets are 44 px or more on the phone.', 'Design system rules'],
+  ['Our own marks', 'No Rockstar logo, no GTAArtDeco or Pricedown, no game logo as our brand. Icons are our own drawings.', 'Decisions 6, 7, GS1'],
+];
+
+const blipPreview: GlyphName[] = (Object.keys(glyphs) as GlyphName[]).filter((n) => glyphs[n].group === 'blip').slice(0, 6);
+const uiPreview: GlyphName[] = ['menu', 'search', 'filter', 'layers', 'share', 'close'].filter((n) => n in glyphs) as GlyphName[];
+const glyphCount = Object.keys(glyphs).length;
+const tokenCount = colours.length;
+---
+<Base title="Design system" description="The Vice Files design system: tokens, type, layout, motion, icons and every shared component, live from the code." noindex>
+  <PageHead title="Design system">
+    <p>The Vice Files, built from one set of tokens and one implementation of each component. Everything below is rendered from the code on each build: the {tokenCount} colour tokens, the type and spacing scales, the motion curves and the live components, so this page cannot drift from the site.</p>
+    <p>Switch the theme with the toggle in the header to see every specimen on the other ground.</p>
+  </PageHead>
+
+  <div class="ds">
+    <ContentsRail items={sections} title="Contents" class="ds__rail" />
+
+    <div class="ds__main">
+      <Section id="principles" n={1} title="Principles" lede="The owner’s rules that shape every screen. They are not up for a per-page exception; a change to one is a decision in docs/DECISIONS.md first.">
+        <ol class="ds-list">
+          {principles.map(([t, d, src], i) => (
+            <li>
+              <span class="ds-list__n tabular">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <p class="ds-list__t">{t}</p>
+                <p class="ds-list__d">{d} <span class="ds-dim">({src})</span></p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Section>
+
+      <Section id="colour" n={2} title="Colour" lede="GTA night navy, GTA pink and the sunrise glow, with three greys of text. Colour is the exception: hierarchy comes from type, weight, space and the greys.">
+        <ColourSection />
+      </Section>
+
+      <Section id="type" n={3} title="Type" lede="Big Shoulders for caps titles, Inter for everything you read, Geist Mono for numbers that line up, Newsreader for lore only.">
+        <TypeSection />
+      </Section>
+
+      <Section id="layout" n={4} title="Layout" lede="One container, one gutter, a 4 px spacing base, and the floating header island.">
+        <LayoutSection />
+      </Section>
+
+      <Section id="motion" n={5} title="Motion" lede="Motion explains where things come from and where they go. Every demo below runs on the real tokens; press a button to play it.">
+        <MotionSection />
+      </Section>
+
+      <Section id="icons" n={6} title="Icons" lede={`One family of ${glyphCount} original glyphs drawn with the Capsa glyph method, in GTA VI’s map blip and HUD language. Solid is the default set; Line is the setting.`}>
+        <div class="ds-grid ds-grid--wide">
+          <div class="ds-tile">
+            <p class="ds-tile__t">Blips and collectible layers</p>
+            <p class="ds-tile__d">Map blips sit on plates with a dark keyline so they hold over any map. Collectible layers wear GTA coral (<code>--blip-collectible</code>) in both themes.</p>
+            <div class="ds-icons" aria-hidden="true">
+              {blipPreview.map((n) => <span set:html={blipSvg(n, { size: 32 })} />)}
+            </div>
+          </div>
+          <div class="ds-tile">
+            <p class="ds-tile__t">Controls: solid and line</p>
+            <p class="ds-tile__d">Controls stay calm and reuse Capsa’s own drawings. Solid is the default; Line is a site setting, never a per-place choice.</p>
+            <div class="ds-icons" aria-hidden="true">
+              {uiPreview.map((n) => <span set:html={iconSvg(n, { size: 24 })} />)}
+            </div>
+            <div class="ds-icons ds-icons--2" aria-hidden="true">
+              {uiPreview.map((n) => <span set:html={iconSvg(n, { size: 24, set: 'line' })} />)}
+            </div>
+          </div>
+          <div class="ds-tile">
+            <p class="ds-tile__t">The current item is solid</p>
+            <p class="ds-tile__d">In the header menu the current item switches to its Solid drawing inside the current pill (IC7; the icon sheet shows it). Icons take the colour of their text: primary for the current item and actions, secondary for support, the accent only on the one main action.</p>
+          </div>
+        </div>
+        <div class="ds-row">
+          <Button href="/design/icons" variant="secondary" size="l" iconEnd="arrow-right">Open the icon sheet</Button>
+          <p class="ds-note">Every glyph in both sets at 16, 20, 24 and 32 px, blips on a stand-in map, plates, pins and states. Rules: docs/ICONS.md.</p>
+        </div>
+      </Section>
+
+      <Section id="components" n={7} title="Components" lede="Every shared component, live, in its states. One instance each, from the real component; props and notes are read from its source.">
+        <ComponentsSection />
+      </Section>
+
+      <Section id="imagery" n={8} title="Line art and imagery" lede="What may appear as a picture on the site, and how it is credited.">
+        <ol class="ds-list">
+          <li><span class="ds-list__n">01</span><div><p class="ds-list__t">Official Rockstar media, inside content, with a credit</p><p class="ds-list__d">The home hero’s trailer clips and key art are Rockstar’s official downloads, re-encoded at deploy, never committed, credited “Trailer and art: Rockstar Games”. The Leonida map is the official map, credited “Map © Rockstar Games”. <span class="ds-dim">(Decisions 5, H2)</span></p></div></li>
+          <li><span class="ds-list__n">02</span><div><p class="ds-list__t">No AI on Rockstar images</p><p class="ds-list__d">No AI processing of Rockstar content: no upscaling, style transfer, derived art, tracing or colour sampling. The narrow exceptions are written down: viewing the official clips and wallpapers only to choose loops and crops (H3), viewing official game logos only to size them (GS2), and code-only pixel counts for the map (M3D4). <span class="ds-dim">(OS7, docs/LEGAL.md)</span></p></div></li>
+          <li><span class="ds-list__n">03</span><div><p class="ds-list__t">Our own line art</p><p class="ds-list__d">The hero’s line art mode is drawn by our own canvas renderer: perspective hairlines and a slow camera. The coastline it traces is derived by code from the official map, so that file is never committed. <span class="ds-dim">(HS5, HS6)</span></p></div></li>
+          <li><span class="ds-list__n">04</span><div><p class="ds-list__t">Creator stills only through their clip</p><p class="ds-list__d">Everywhere else, the only art is the creator’s own YouTube thumbnail, loaded from YouTube through the clip and never re-hosted. Shorts are skipped. Spoiler and mature finds never show art outside their reveal. Anything without art gets the sunrise glow. <span class="ds-dim">(Decisions 8, D3)</span></p></div></li>
+          <li><span class="ds-list__n">05</span><div><p class="ds-list__t">Game logos identify games, never our brand</p><p class="ds-list__d">Official game logos appear only through GamePlate, unaltered, on the fixed dark plate, beside the game’s name, with “Game logos are trademarks of Rockstar Games and Take-Two Interactive”. Never the Rockstar logo, never in the wordmark, favicon, cards or hero. <span class="ds-dim">(GS1 to GS4)</span></p></div></li>
+          <li><span class="ds-list__n">06</span><div><p class="ds-list__t">Social cards are text only</p><p class="ds-list__d">Every page’s Open Graph card is drawn at build on the navy ground with the glow, in our type. Never Rockstar art or a YouTube still.</p></div></li>
+        </ol>
+      </Section>
+
+      <Section id="content" n={9} title="Content rules" lede="Trust is the product. Every fact has a source, every finder gets credit, and nothing gives the story away unasked.">
+        <div class="ds-grid ds-grid--wide">
+          <div class="ds-tile">
+            <p class="ds-tile__t">Verification levels</p>
+            <p class="ds-tile__d">Four levels on every find and connection, each with its own icon so it never relies on colour. A rumour stays a draft until a second independent source arrives.</p>
+            <div class="ds-row">
+              <Verification level="multi-source" />
+              <Verification level="single-source" />
+              <Verification level="rumor" />
+              <Verification level="debunked" />
+            </div>
+          </div>
+          <div class="ds-tile">
+            <p class="ds-tile__t">Credits</p>
+            <p class="ds-tile__d">“Found by [creator] · [platform link]” on every find, the clip credited under the player, “Image © Rockstar Games” where an official image is used, and the Game Checklists credit on every collectible. A creator’s request to change or remove a credit is honoured within 48 hours.</p>
+          </div>
+          <div class="ds-tile">
+            <p class="ds-tile__t">Spoilers and mature content</p>
+            <p class="ds-tile__d">Story-gated finds are flagged and hidden by default; their clips sit behind a reveal and load nothing until opened. “I’m on Chapter N” opens what the visitor has played past. Mature content never opens by itself.</p>
+          </div>
+          <div class="ds-tile">
+            <p class="ds-tile__t">Sources</p>
+            <p class="ds-tile__d">Every GTA VI fact needs a source URL; explainers cite each claim with [n]. Never link piracy, leaks or pre-release material, and never feature money glitches.</p>
+          </div>
+        </div>
+        <div class="ds-row">
+          {trustPages.map((p) => <Button href={p.href} variant="quiet" size="m" iconEnd="arrow-right">{p.label}</Button>)}
+        </div>
+      </Section>
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* The contents rail on the left (sticky), the chapters on the right. Below 1024 the rail is a disclosure on top. */
+  .ds { display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: var(--space-16); margin-top: var(--space-16); }
+  .ds__main { min-width: 0; }
+  .ds__main > :global(.dsec:first-child) { padding-top: 0; border-top: 0; }
+  .ds-icons { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); color: var(--text-1); }
+  .ds-icons--2 { margin-top: 0; color: var(--text-2); }
+  .ds-icons :global(svg) { display: block; }
+  @media (max-width: 1023px) {
+    .ds { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-12); margin-top: var(--space-10); }
+  }
+</style>

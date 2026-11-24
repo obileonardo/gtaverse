@@ -1,0 +1,41 @@
+---
+// A bare page for a specimen that /design shows in an iframe: one that needs a page of its own (its own heading level,
+// its own stylesheet, or its own viewport width). It wears the theme of the page that frames it (/design sets it again
+// when the theme changes) and follows its "Demo data / Worst case" switch. Never for search: noindex, and its path is
+// under /design/* (out of the sitemap and the SEO check, X-Robots-Tag in public/_headers).
+import { Font } from 'astro:assets';
+import '../../styles/base.css';
+import './design.css';
+interface Props { title: string }
+const { title } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-theme="dark" data-data="demo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <base target="_top" />
+    <title>{title} | The Vice Files design system</title>
+    <script is:inline>
+      (function () {
+        var t = 'dark';
+        try { t = (parent !== window && parent.document.documentElement.dataset.theme) || new URLSearchParams(location.search).get('theme') || 'dark'; } catch (e) {}
+        document.documentElement.dataset.theme = t === 'light' ? 'light' : 'dark';
+      })();
+    </script>
+    <Font cssVariable="--font-display-src" preload />
+    <Font cssVariable="--font-body-src" preload />
+    <Font cssVariable="--font-mono-src" />
+    <Font cssVariable="--font-serif-src" />
+  </head>
+  <body class="ds-frame-body">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  html, body.ds-frame-body { min-height: 0; background: var(--bg); }
+  body.ds-frame-body { padding: 1px 0; }
+  html[data-data='demo'] [data-case='worst'], html[data-data='worst'] [data-case='demo'] { display: none; }
+</style>

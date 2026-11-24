@@ -8,6 +8,7 @@ import Badge from '../../components/ui/Badge.astro';
 import Chip from '../../components/ui/Chip.astro';
 import Icon from '../../components/ui/Icon.astro';
 import LevelTable from '../../components/ui/LevelTable.astro';
+import ContentsRail from '../../components/site/ContentsRail.astro';
 import { explainers } from '../../lib/content';
 import { explainerParts, sourceName, type Explainer } from '../../lib/explainers';
 import { formatDate } from '../../lib/finds';
@@ -43,21 +44,7 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
         </p>
       </header>
 
-      {headings.length > 1 && (
-        <nav class="toc" aria-labelledby="toc-title">
-          <details class="toc__box" data-toc>
-            <summary class="toc__summary"><span id="toc-title" class="toc__title">On this page</span><Icon name="chevron-down" size={16} class="toc__chevron" /></summary>
-            <ul class="toc__list" data-rail>
-              {headings.map((h) => <li><a href={`#${h.slug}`} data-rail-link={h.slug}>{h.text}</a></li>)}
-              <li class="toc__track" aria-hidden="true"><span class="toc__progress"></span><span class="toc__marker" data-rail-marker></span></li>
-            </ul>
-          </details>
-          <script is:inline>
-            // Desktop: the contents rail is always open, before first paint. Phone and tablet: a closed disclosure.
-            (function () { var d = document.currentScript.previousElementSibling; if (matchMedia('(min-width: 1024px)').matches) d.open = true; })();
-          </script>
-        </nav>
-      )}
+      {headings.length > 1 && <ContentsRail items={headings.map((h) => ({ id: h.slug, label: h.text }))} />}
 
       <div class="prose doc__body">
         {segments.map((s) => s.type === 'html'
@@ -87,51 +74,6 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
 <script>
   import { initChapter } from '../../lib/chapter';
   initChapter(); // inline "Spoiler:" blocks open by themselves once the visitor's chapter has reached them
-
-  // "On this page": open as a rail on desktop, a disclosure below; follow the window across the breakpoint.
-  const toc = document.querySelector<HTMLDetailsElement>('[data-toc]');
-  const wide = matchMedia('(min-width: 1024px)');
-  wide.addEventListener('change', () => { if (toc) toc.open = wide.matches; });
-  // On the phone, choosing a section closes the disclosure so the section is what you see.
-  toc?.addEventListener('click', (e) => { if (!wide.matches && (e.target as HTMLElement).closest('a')) toc.open = false; });
-
-  // Contents rail: mark the section being read. A 2px accent marker travels beside the current item (motion study
-  // item 12): transform only, on --ease-crit; a click on the rail moves it at once while the page scrolls natively.
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-rail-link]')];
-  const targets = links.map((a) => document.getElementById(a.dataset.railLink!)).filter((t): t is HTMLElement => !!t);
-  const marker = document.querySelector<HTMLElement>('[data-rail-marker]');
-  let markerPlaced = false;
-  let jumpUntil = 0;
-  const placeMarker = (a: HTMLAnchorElement | undefined, instant = false) => {
-    if (!marker || !a) return;
-    if (instant || !markerPlaced) { marker.classList.add('is-instant'); void marker.offsetWidth; }
-    marker.style.transform = `translateY(${a.offsetTop + 6}px) scaleY(${Math.max(1, a.offsetHeight - 12)})`;
-    marker.classList.add('is-on');
-    if (instant || !markerPlaced) requestAnimationFrame(() => marker.classList.remove('is-instant'));
-    markerPlaced = true;
-  };
-  document.querySelector('[data-rail]')?.addEventListener('click', (e) => {
-    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('[data-rail-link]');
-    if (!a) return;
-    links.forEach((l) => l.toggleAttribute('aria-current', l === a));
-    placeMarker(a, true);
-    jumpUntil = performance.now() + 1200; // the sections the page scrolls past on the way do not pull the marker
-  });
-  addEventListener('resize', () => placeMarker(links.find((a) => a.hasAttribute('aria-current')), true), { passive: true });
-  if (targets.length) {
-    const visible = new Set<string>();
-    const mark = () => {
-      const current = targets.find((t) => visible.has(t.id)) ?? null;
-      if (!current || performance.now() < jumpUntil) return;
-      links.forEach((a) => a.toggleAttribute('aria-current', a.dataset.railLink === current.id));
-      placeMarker(links.find((a) => a.dataset.railLink === current.id));
-    };
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => (en.isIntersecting ? visible.add(en.target.id) : visible.delete(en.target.id)));
-      mark();
-    }, { rootMargin: '-15% 0px -60% 0px' });
-    targets.forEach((t) => io.observe(t));
-  }
 
   // One key fact per explainer (<mark data-draw> in its markdown) gets a marker stroke that draws once, the first
   // time it is 30% in view. Without JavaScript, or on a back navigation, it is a plain underline.
@@ -224,54 +166,8 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
   .doc__chips li:target :global(.chip) { border-color: var(--accent); }
   .doc__source-list { display: flex; flex-direction: column; gap: var(--space-1); color: var(--text-3); font-size: var(--text-caption); }
   .doc__updated { padding-top: var(--space-5); border-top: var(--border-w) solid var(--border-1); color: var(--text-2); font-size: var(--text-body-s); }
-  @media (hover: hover) and (pointer: fine) {
-    .toc__list a:hover { color: var(--text-1); }
-  }
-
-  /* On this page: the Obvious contents rail on desktop, a disclosure on smaller screens (one element). */
-  .toc { position: absolute; top: 0; bottom: 0; right: max(0px, calc((100% - 960px) / 2)); width: 200px; }
-  .toc__box { position: sticky; top: calc(var(--island-top) + var(--island-h) + var(--space-8)); display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
-  .toc__summary { display: flex; align-items: center; justify-content: space-between; list-style: none; cursor: default; }
-  .toc__summary::-webkit-details-marker { display: none; }
-  .toc__title { color: var(--text-3); font-size: var(--text-label-caps); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
-  .toc :global(.toc__chevron) { display: none; color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
-  .toc__list { display: flex; flex-direction: column; margin-top: var(--space-4); border-left: var(--border-w) solid var(--border-1); }
-  .toc__list a {
-    position: relative;
-    display: block;
-    padding: 6px 0 6px var(--space-4);
-    color: var(--text-2);
-    font-size: var(--text-body-s);
-    line-height: 1.35;
-    transition: color var(--dur-colour) var(--ease-colour);
-  }
-  .toc__list a[aria-current] { color: var(--text-1); }
-  /* Without the script: the current item's 1px mark. With it: the travelling marker below. */
-  :global(html:not(.motion)) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
-  .toc__list { position: relative; }
-  .toc__track { position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; pointer-events: none; }
-  /* Reading progress: a fill down the rail's line, driven by the page's own scroll (off the main thread). */
-  .toc__progress { position: absolute; inset: 0 auto 0 0; width: 1px; background: var(--text-3); transform-origin: 50% 0; transform: scaleY(0); display: none; }
-  @supports (animation-timeline: scroll()) {
-    .toc__progress { display: block; animation-name: toc-progress; animation-timing-function: linear; animation-fill-mode: both; }
-    /* Its own rule: a minifier must never fold the timeline into the animation shorthand (that drops it). */
-    .toc__track .toc__progress { animation-timeline: scroll(root block); }
-  }
-  @keyframes toc-progress { to { transform: scaleY(1); } }
-  .toc__marker {
-    position: absolute;
-    top: 0;
-    left: -0.5px;
-    width: 2px;
-    height: 1px;
-    border-radius: var(--radius-full);
-    background: var(--accent);
-    transform-origin: 50% 0;
-    opacity: 0;
-    transition: transform 240ms var(--ease-crit), opacity 120ms var(--ease-colour);
-  }
-  .toc__marker:global(.is-on) { opacity: 1; }
-  .toc__marker:global(.is-instant) { transition: none; }
+  /* On this page (site/ContentsRail.astro): lifted into the right column beside the reading column, sticky inside it. */
+  .doc :global(.toc) { position: absolute; top: 0; bottom: 0; right: max(0px, calc((100% - 960px) / 2)); }
 
   /* The key fact: an ink stroke under the phrase, drawn once (stroke-dashoffset), in the accent. */
   .doc__body :global(mark[data-draw]) { position: relative; background: none; color: inherit; text-decoration: underline 2px var(--accent); text-underline-offset: 5px; }
@@ -281,17 +177,8 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
   .doc__body :global(mark[data-draw='done'] .draw path) { stroke-dashoffset: 0; transition: stroke-dashoffset 600ms var(--ease-in-out); }
 
   @media (max-width: 1023px) {
-    .toc__track { display: none; }
-    :global(html.motion) .toc__list a[aria-current]::before { content: ''; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--accent); }
     .doc { grid-template-columns: minmax(0, 712px); }
-    .toc { position: static; width: auto; margin-top: var(--space-6); }
-    .toc__box { position: static; display: block; padding: 0; border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); background: var(--surface-1); }
-    .toc__summary { min-height: 48px; padding-inline: var(--space-4); cursor: pointer; }
-    .toc__title { color: var(--text-1); }
-    .toc :global(.toc__chevron) { display: block; }
-    .toc__box[open] :global(.toc__chevron) { transform: rotate(180deg); }
-    .toc__list { margin: 0 var(--space-4) var(--space-4); }
-    .toc__list a { min-height: 44px; display: flex; align-items: center; }
+    .doc :global(.toc) { position: static; margin-top: var(--space-6); }
   }
   @media (max-width: 767px) {
     .doc__title { font-size: 32px; }
@@ -299,9 +186,6 @@ const crumbs = [{ name: 'Home', href: '/' }, { name: 'Explainers', href: '/expla
     .doc__body { font-size: 17px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .toc__list a, .toc :global(.toc__chevron) { transition: none; }
-    .toc__marker { transition: opacity 120ms var(--ease-colour); }
-    .toc__progress { display: none; }
     .doc__body :global(mark[data-draw='done'] .draw path) { transition: none; }
   }
 </style>
