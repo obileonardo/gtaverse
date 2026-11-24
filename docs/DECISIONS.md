@@ -214,3 +214,11 @@ Dated log. Newest at the bottom. "Owner" decisions are settled and not reopened 
 | IC5 | `rockstar-crossover` gets its own glyph (two overlapping worlds); the wanted `star` is no longer a category icon. `github` is an original branch glyph, not GitHub's mark. | No Rockstar or GitHub mark is redrawn; a star meant both "wanted" and "crossover". |
 | IC6 | `/design/icons` is a noindex review page, excluded from the sitemap, the route list and the SEO check, with `X-Robots-Tag: noindex` on `/design/*`. | It is a design system page, not content. |
 | IC7 | No component is rewired in this slice. The migration plan is in `docs/ICONS.md`; whether the current menu item keeps switching to a filled icon or shows its state by colour alone is an owner decision. | The Motion pass is editing the same components. |
+
+## 2026-11-24: logo directions (open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| LG1 | Seven logo directions are shortlisted in Figma (docs/LOGO.md): Case File, Filed Pin, The Seal, Unfolded, Marked, Postcard, Cracked. None is chosen; the header keeps its text wordmark until the owners pick. | The owner reviewed in rounds and kept these seven. |
+| LG2 | Every direction uses our own palette, pink `#F976B0` on navy `#0D0C1A` (owner instruction), and only original marks and open-licence Google Fonts. | Decisions 6 and GS1: nothing that reads as official or borrows a Rockstar mark or font. |
+| LG3 | The logo files live in Figma, not in the repository. The chosen logo will ship as SVG markup in code, like the icons (IC3); a favicon file needs an allowlist entry in the CI asset guard. | The asset guard blocks committed images, `.svg` included. |
