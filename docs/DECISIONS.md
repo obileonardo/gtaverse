@@ -323,5 +323,5 @@ The owner asked for every inconsistency the `/design` page surfaced to be fixed 
 
 | # | Decision | Why |
 |---|---|---|
-| RC1 | `prd/wrangler.jsonc` is removed. The owner deleted the `vicefiles-prd` Worker on 24 Nov 2026; the PRD page (`prd/public/index.html`) stays and is served by the main site at `/prd` (`src/pages/prd.html.ts`), noindex through `public/_headers`. This closes the open part of SF10. `prd/public/_headers` belonged to the deleted Worker and is now unused; it is kept until the owner decides. | Dead deploy config invites a deploy that recreates the old Worker. |
+| RC1 | `prd/wrangler.jsonc` is removed. The owner deleted the `vicefiles-prd` Worker on 24 Nov 2026; the PRD page (`prd/public/index.html`) stays and is served by the main site at `/prd` (`src/pages/prd.html.ts`), noindex through `public/_headers`. This closes the open part of SF10. `prd/public/_headers` belonged to the deleted Worker and was removed on the owner's go on 24 Nov 2026. | Dead deploy config invites a deploy that recreates the old Worker. |
 | RC2 | CI also runs `pnpm test`. | The unit tests (nearby finds, line art, icons, logo) were only run by hand. |
