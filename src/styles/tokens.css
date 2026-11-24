@@ -17,6 +17,7 @@
   --surface-3: #2f2e52;     /* hover, current row */
   --border-1: #38365d;      /* 1px separators and card edges (replaces every shadow) */
   --border-2: #433f6a;      /* strong outlines */
+  --rule-soft: rgb(255 255 255 / 0.08); /* round 2: HUXLEY 007, 009, 013 ruled cells, a page rule quieter than a card edge */
   --frame: #1d002e;         /* letterbox behind clips */
   --icon-cut: #0d0c1a;      /* the cut inside solid icons; set it to the ground the icon sits on */
 
@@ -68,12 +69,7 @@
 
   /* Map (dark) */
   --map-land: #1f1f38;
-  --map-halo: rgb(13 12 26 / 0.8);
-
-  /* Ruled pages (round 2, HUXLEY 007, 009, 013): a hairline half as strong as --border-1, for chapter rules, ruled
-     cells and lists. --border-1 reads as a card edge; this reads as a ruled page. */
-  --rule-soft: rgb(255 255 255 / 0.08);
-}
+  --map-halo: rgb(13 12 26 / 0.8);}
 
 [data-scheme='dark'] { color: var(--text-1); }
 
@@ -104,18 +100,11 @@
   --text-mono-caps: 12px;
   --text-stat: 20px;
 
-  /* Round 2 (home chapters): Unseen Studio's and Joby's chapter titles, Justin Jefferson's manifesto, HUXLEY 007's
-     mono name. Phone values below. */
-  --text-section: clamp(44px, 4.2vw, 80px);  /* Inter 500 to 600 chapter titles (60 at 1440) */
-  --text-manifesto: clamp(64px, 6.7vw, 128px); /* Big Shoulders 900 caps manifesto (96 at 1440: Big Shoulders is wider than Justin Jefferson's face, so this keeps their three to four lines) */
-  --text-mono-display: 64px;                  /* Geist Mono 300 caps names (the type spotlight) */
-
   --leading-display: 0.92;
   --leading-tight: 1.15;
   --leading-body: 1.45;
   --tracking-display: -0.015em;
   --tracking-caps: 0.12em;
-  --tracking-wide: 0.2em;   /* spaced mono caps labels (Coda's pill, Justin Jefferson's stat lines) */
 
   /* ---------- Spacing (4pt base) ---------- */
   --space-1: 4px;
@@ -129,7 +118,6 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-section: 96px;
-  --space-chapter: 160px;   /* between home chapters (A24 150, Justin Jefferson 170 at 1440); 96 on the phone */
 
   /* The gutter (owner decision, 24 Nov 2026): the left and right edge every page shares, header-aligned content,
      the hero and the footer. 128px at 1440 and wider, stepping down at 1280, 1024 and 768, 16px on the phone. */
@@ -163,11 +151,6 @@
   --radius-xl: 20px;
   --radius-sheet: 32px;
   --radius-full: 9999px;
-
-  /* ---------- The cut (round 2): one signature shape, a 45 degree chamfer, used only where a Love shows one ---------- */
-  --cut-s: 12px;  /* bracket marks on an active tile, a card notch */
-  --cut-m: 24px;  /* phone art panels */
-  --cut-l: 56px;  /* desktop art panels (BitcoinOS) */
 
   /* ---------- Borders (no box shadows anywhere) ---------- */
   --border-w: 1px;
@@ -221,6 +204,20 @@
   /* ---------- Z layers ---------- */
   --z-header: 50;
   --z-overlay: 70;
+
+  /* ---------- Round 2: home chapters and footer (board analysis tokens-r2.md, 24 Nov 2026) ---------- */
+  --rule-dotted: radial-gradient(circle, var(--text-3) 1px, transparent 1.5px) 0 50% / 11px 4px repeat-x; /* Eat Hungry Tiger */
+  --frame-card: linear-gradient(135deg, #ffdf80, #f4717c 50%, #e963c7); /* Q5: the sunrise stops at full strength */
+  --text-section: clamp(44px, 4.2vw, 80px);   /* Unseen Studio, Joby: Inter chapter titles */
+  --text-manifesto: clamp(64px, 6.7vw, 128px); /* Justin Jefferson 012: 96 at 1440 (Big Shoulders is wider than their face; this keeps three lines in 880px) */
+  --text-stat-xl: clamp(88px, 9.4vw, 180px);   /* Coda: one number per screen */
+  --text-mono-display: 64px;                   /* HUXLEY 007: a name in light mono caps */
+  --tracking-wide: 0.2em;                      /* spaced mono caps labels (Coda pill, Justin Jefferson stat lines) */
+  --cut-s: 12px;                               /* card notch, bracket length */
+  --cut-m: 24px;
+  --cut-l: 56px;
+  --tilt: 2.5deg;                              /* Justin Jefferson 005: cards tilted alternately */
+  --space-chapter: 160px;                      /* the gap between home chapters */
 }
 
 /* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
@@ -242,12 +239,13 @@
     --text-mono: 17px;
     --gutter: 16px;
     --space-section: 64px;
-    --space-chapter: 96px;
-    --text-section: 40px;
-    --text-manifesto: 56px;
-    --text-mono-display: 32px;
     --island-top: 8px;
     --radius-xl: 28px;
+    --text-section: 40px;
+    --text-manifesto: 56px;
+    --text-stat-xl: 64px;
+    --text-mono-display: 32px;
+    --space-chapter: 96px;
   }
 }
 
@@ -288,6 +286,7 @@
   --glass-border: rgb(47 47 47 / 0.12);
   --glass-hover: rgb(47 47 47 / 0.08);
   --glass-hover-soft: rgb(47 47 47 / 0.04);
+  --rule-soft: rgb(47 47 47 / 0.1);
 
   --glow-hero: radial-gradient(62.79% 100% at 50% 0%, rgb(255 223 128 / 0.28) 0%, rgb(244 113 124 / 0.2) 50%, rgb(233 99 199 / 0.16) 100%);
 
@@ -298,6 +297,4 @@
 
   --map-land: #f9f5f0;
   --map-halo: rgb(249 245 240 / 0.85);
-
-  --rule-soft: rgb(47 47 47 / 0.1);
 }

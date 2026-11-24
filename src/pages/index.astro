@@ -17,6 +17,13 @@ import Manifesto from '../components/home/Manifesto.astro';
 import ByType from '../components/home/ByType.astro';
 import TheMap from '../components/home/TheMap.astro';
 import CollectibleLayers from '../components/home/CollectibleLayers.astro';
+import Chapter009Numbers from '../components/home/Chapter009Numbers.astro';
+import Chapter010Regions from '../components/home/Chapter010Regions.astro';
+import Chapter011Made from '../components/home/Chapter011Made.astro';
+import Chapter012Finders from '../components/home/Chapter012Finders.astro';
+import Chapter013Explainers from '../components/home/Chapter013Explainers.astro';
+import Chapter014Leads from '../components/home/Chapter014Leads.astro';
+import Chapter015Gtaverse from '../components/home/Chapter015Gtaverse.astro';
 import { finds } from '../lib/content';
 import { findStill } from '../lib/media';
 import { addedThisWeek } from '../lib/feed';
@@ -29,7 +36,7 @@ const featured = [...safe.filter((f) => findStill(f)), ...safe.filter((f) => !fi
 const lead = featured[0];
 const leadStill = lead ? findStill(lead) : null;
 
-// 001 to 008 (this file's chapters); 009 to 015 and the footer are composed below.
+// What 001 to 008 show (src/lib/home.ts); 009 to 015 read their own data.
 const spot = spotlightFinds(featured);
 const filters = selectedFilters([...featured, ...spot]);
 const shownAbove = [...featured, ...spot, ...filters[0].finds];
@@ -54,14 +61,20 @@ const layers = layerCards();
     <ByType index={6} types={typeEntries()} />
     <TheMap index={7} regions={topRegions()} />
     <CollectibleLayers index={8} layers={layers} total={collectibleTotal} />
-    {/* 009 By the numbers to 015 GTAverse: Home builder B's chapters (src/components/home/), wired in once that
-        branch is merged. Placeholder: renders nothing. */}
   </div>
+  {/* 009 to 015 each open with their own --space-chapter of room above and add nothing below. */}
+  <Chapter009Numbers />
+  <Chapter010Regions />
+  <Chapter011Made />
+  <Chapter012Finders />
+  <Chapter013Explainers />
+  <Chapter014Leads />
+  <Chapter015Gtaverse />
 </Base>
 
 <style>
-  /* Chapters sit --space-chapter apart (160, 96 on the phone); the last one keeps the same room above the footer. */
-  .chapters { display: flex; flex-direction: column; gap: var(--space-chapter); padding-block: var(--space-chapter); }
+  /* Chapters sit --space-chapter apart (160, 96 on the phone). */
+  .chapters { display: flex; flex-direction: column; gap: var(--space-chapter); padding-top: var(--space-chapter); }
   .chapters > :global(*) { min-width: 0; }
   /* Apple TV on the phone: the first chapter follows the hero's dots closely. */
   @media (max-width: 767px) {

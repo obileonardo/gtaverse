@@ -1,82 +1,81 @@
 ---
-// The opener of every home chapter (owner answer Q3 B, round 2): a 1px rule across the content width, then a mono
-// index ("001", with a 6px square bullet) 8px above the chapter's bracket label ("[ Spotlight ]"), Geist Mono caps.
-// A24's "Recently added" rule and label, with kprverse's index. Use it once per chapter, inside the chapter's
-// .container so the rule spans the content box.
-//   index   the chapter number (1 to 15), printed as 001
-//   label   the words inside the brackets
-//   count   an optional mono superscript after the label (A24 / NEON count)
-//   as      the label's tag: 'h2' (default) when the label is the chapter's heading, 'p' when the chapter has its own
-//           visible headline (then pass that headline's id as the section's aria-labelledby)
-//   id      the label's id, for aria-labelledby
+// The head every round 2 home chapter opens on (owner answer Q3 B, 24 Nov 2026): a 1px rule across the content
+// width, then the mono index with its 6px square bullet, 8px above the bracket label (the menu's "[ The guide ]"
+// voice), Geist Mono caps. A24's "Recently added" rule and label, with kprverse's index. Use it once per chapter,
+// inside the chapter's .container so the rule spans the content box. One implementation for chapters 001 to 015.
+//   index    the chapter number: 1 prints as 001; a string ("009") prints as given
+//   label    the words inside the brackets
+//   count    an optional mono superscript after the label (A24 / NEON count)
+//   heading  true (default): the label is the chapter's h2. false: a <p>, when the chapter has its own visible title
+//            (then pass that title's id to the section's aria-labelledby)
+//   id       the label's id, for aria-labelledby
 // Slot "end": links at the right end of the label row (Linear's "All updates").
-// Motion: on first view the rule draws left to right (scaleX from the left: a composited transform, where a clip-path
-// draw cost a frame in twelve while scrolling; --dur-reveal on --ease-reveal) and the index and
-// label rise 8px (--dur-reveal-group); never on a back navigation; reduced motion fades them only.
+// Motion (first-view.ts, never on a back navigation): the rule draws from the left (scaleX, a composited transform;
+// a clip-path draw cost a frame in twelve while scrolling) over --dur-reveal on --ease-reveal, and the index and label
+// rise 8px (--dur-reveal-group). Reduced motion: they fade only.
 import { pad3 } from '../../lib/home';
-interface Props { index: number; label: string; count?: number; as?: 'h2' | 'p'; id?: string; class?: string }
-const { index, label, count, as: Tag = 'h2', id, class: className } = Astro.props;
+interface Props { index: number | string; label: string; id?: string; heading?: boolean; count?: number; class?: string }
+const { index, label, id, heading = true, count, class: className } = Astro.props;
+const Tag = heading ? 'h2' : 'p';
+const num = typeof index === 'number' ? pad3(index) : index;
 ---
-<header class:list={['ch-head', className]} data-ch-head>
-  <span class="ch-head__rule" aria-hidden="true"></span>
-  <div class="ch-head__row">
-    <div class="ch-head__ids">
-      <p class="ch-head__index" aria-hidden="true"><span class="ch-head__dot"></span>{pad3(index)}</p>
-      <Tag class="ch-head__label" id={id}><span aria-hidden="true">[ </span>{label}<span aria-hidden="true"> ]</span>{count !== undefined && <sup class="ch-head__count">{count}</sup>}</Tag>
+<div class:list={['chead', className]} data-fv>
+  <span class="chead__rule" aria-hidden="true"></span>
+  <div class="chead__row">
+    <div class="chead__ids">
+      <p class="chead__index" aria-hidden="true"><span class="chead__bullet"></span>{num}</p>
+      <Tag class="chead__label" id={id}><span aria-hidden="true">[&nbsp;</span>{label}<span aria-hidden="true">&nbsp;]</span>{count !== undefined && <sup class="chead__count">{count}</sup>}</Tag>
     </div>
-    {Astro.slots.has('end') && <div class="ch-head__end"><slot name="end" /></div>}
+    {Astro.slots.has('end') && <div class="chead__end"><slot name="end" /></div>}
   </div>
-</header>
-
-<script>
-  // One observer for every chapter head on the page: each draws once, the first time it comes into view.
-  const heads = [...document.querySelectorAll<HTMLElement>('[data-ch-head]')];
-  const back = document.documentElement.classList.contains('nav-back');
-  if (back || !('IntersectionObserver' in window)) heads.forEach((h) => (h.dataset.in = 'skip'));
-  else {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        (e.target as HTMLElement).dataset.in = 'in';
-        io.unobserve(e.target);
-      }
-    }, { rootMargin: '0px 0px -10% 0px' });
-    heads.forEach((h) => io.observe(h));
-  }
-</script>
+</div>
 
 <style>
-  .ch-head { position: relative; display: grid; gap: var(--space-3); padding-top: var(--space-3); }
-  .ch-head__rule { position: absolute; inset: 0 0 auto; height: 1px; background: var(--rule-soft); transform-origin: left center; }
-  .ch-head__row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
-  .ch-head__ids { display: grid; gap: var(--space-2); }
-  .ch-head__index, .ch-head__label {
+  .chead { display: flex; flex-direction: column; }
+  .chead__rule { display: block; height: 1px; margin-bottom: var(--space-3); background: var(--rule-soft); transform-origin: left center; }
+  .chead__row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
+  .chead__ids { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chead__index {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .chead__bullet { width: 6px; height: 6px; background: currentColor; flex: none; }
+  .chead__label {
     font-family: var(--font-mono);
     font-size: var(--text-mono-caps);
     font-weight: 400;
-    line-height: 1.35;
-    letter-spacing: 0.1em;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-2);
   }
-  .ch-head__index { display: flex; align-items: center; gap: var(--space-2); color: var(--text-3); font-variant-numeric: tabular-nums; }
-  .ch-head__dot { width: 6px; height: 6px; background: currentColor; flex: none; }
-  .ch-head__label { color: var(--text-2); }
-  .ch-head__count { margin-left: 6px; font-size: var(--text-mono-caps); letter-spacing: 0.02em; color: var(--text-3); vertical-align: top; position: relative; top: -0.3em; }
-  .ch-head__end { display: flex; align-items: center; gap: var(--space-5); }
+  .chead__count { margin-left: 4px; font-size: var(--text-mono-caps); color: var(--text-3); vertical-align: top; position: relative; top: -0.3em; }
+  .chead__end { display: flex; align-items: center; gap: var(--space-5); }
 
-  /* First view (motion study item 8's rules): hidden only under html.js, so print, screenshots and no-JS show it. */
-  @media screen {
-    :global(html.js:not(.rv-off)) .ch-head:not([data-in]) .ch-head__rule { transform: scaleX(0); }
-    :global(html.js:not(.rv-off)) .ch-head:not([data-in]) .ch-head__ids { opacity: 0; translate: 0 8px; }
-  }
-  .ch-head[data-in='in'] .ch-head__rule { animation: ch-rule var(--dur-reveal) var(--ease-reveal) both; }
-  .ch-head[data-in='in'] .ch-head__ids { animation: ch-rise var(--dur-reveal-group) var(--ease-reveal) 80ms both; }
-  @keyframes ch-rule { from { transform: scaleX(0); } }
-  @keyframes ch-rise { from { opacity: 0; translate: 0 8px; } }
-  @keyframes ch-fade { from { opacity: 0; } }
+  /* Hidden start states only under html.js, so print, screenshots without JavaScript and no-JS show the head. */
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) .chead__rule { transform: scaleX(0); }
+  :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) :is(.chead__index, .chead__label) { opacity: 0; }
+  .chead[data-fv='in'] .chead__rule { animation: chead-draw var(--dur-reveal) var(--ease-reveal) both; }
+  .chead[data-fv='in'] .chead__index { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 120ms both; }
+  .chead[data-fv='in'] .chead__label { animation: chead-rise var(--dur-reveal-group) var(--ease-reveal) 170ms both; }
+  @keyframes chead-draw { from { transform: scaleX(0); } }
+  @keyframes chead-rise { from { opacity: 0; translate: 0 8px; } }
+  @keyframes chead-fade { from { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) {
-    :global(html.js:not(.rv-off)) .ch-head:not([data-in]) .ch-head__rule { transform: none; opacity: 0; }
-    :global(html.js:not(.rv-off)) .ch-head:not([data-in]) .ch-head__ids { translate: none; }
-    .ch-head[data-in='in'] .ch-head__rule, .ch-head[data-in='in'] .ch-head__ids { animation: ch-fade var(--dur-fade-reduced) linear both; }
+    :global(html.js) .chead[data-fv]:not([data-fv='in'], [data-fv='skip']) .chead__rule { transform: none; opacity: 0; }
+    .chead[data-fv='in'] :is(.chead__rule, .chead__index, .chead__label) { animation: chead-fade var(--dur-fade-reduced) var(--ease-colour) both; }
   }
+  :global(html.rv-off) .chead :is(.chead__rule, .chead__index, .chead__label) { transform: none !important; opacity: 1 !important; }
 </style>
+
+<script>
+  import { initFirstView } from './first-view';
+  initFirstView();
+</script>

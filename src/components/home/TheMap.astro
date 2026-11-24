@@ -52,7 +52,7 @@ const pins = firstPins.filter((p) => p.pin.y / mapInfo.image.height > band.top +
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 ---
 <section class="mp" aria-labelledby="mp-title" data-mp>
-  <div class="container"><ChapterHead index={index} label="The map" as="p" /></div>
+  <div class="container"><ChapterHead index={index} label="The map" heading={false} /></div>
   <div class="mp__band">
     <div class="container mp__grid">
       <div class="mp__col">
