@@ -18,10 +18,9 @@ import Button from '../components/ui/Button.astro';
     min-height: calc(100svh - var(--island-top) - var(--island-h) - var(--space-16) - var(--space-section) - 160px);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* on the gutter, the edge every page shares */
     justify-content: center;
     gap: var(--space-5);
-    text-align: center;
   }
   .wasted__word {
     font-family: var(--font-display);
@@ -40,6 +39,7 @@ import Button from '../components/ui/Button.astro';
   :global(html.js:not(.nav-back)) .wasted__line { animation: wasted-fade 300ms var(--ease-colour) 600ms both; }
   :global(html.js:not(.nav-back)) .wasted :global(.wasted__go) { animation: wasted-fade 300ms var(--ease-colour) 780ms both; }
   /* Wide tracking without animating letter-spacing: the word is stretched sideways and eased back. */
+  .wasted__word { transform-origin: 0 50%; }
   @keyframes wasted-in { from { opacity: 0; filter: blur(12px); transform: scale(1.06) scaleX(1.18); } }
   @keyframes wasted-fade { from { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) {
