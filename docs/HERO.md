@@ -14,6 +14,8 @@ Code: `src/components/home/Hero.astro` (markup and styles), `hero-stage.ts` (mod
 
 When a mode is chosen, key art and line art keep moving to their next image or shot every 8 or 10 s; the trailer keeps looping.
 
+The stage runs 160px past the bottom of the hero (`--hero-fade`) and fades out there, into the gap before the first chapter, so the hero melts into the page instead of ending on an edge (LR11). The scrims over the finds list are measured from the hero's bottom, as before. The phone's stage is 80svh and already ends in the navy.
+
 ## Loading rules
 
 - The poster (the loop's first frame, AVIF or WebP, responsive) is in the HTML and paints first. The video is `preload="none"` and gets its sources only after the page has loaded and while the hero is on screen; AV1 WebM first, H.264 MP4 as the fallback. Phones (767 px and narrower) get a 720 x 1280 crop of the loop, framed shot by shot, and portrait posters and wallpapers.

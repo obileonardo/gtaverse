@@ -137,16 +137,20 @@ const initial = (s: string) => s.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
   }
   .spot__media, .spot__player { position: absolute; inset: 0; }
   .spot__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
-  /* Two scrims so both text columns read: up from the bottom left, and in from the right. */
+  /* The readout mask (LR12, Chime, 25 Nov 2026): one radial mask over the whole still. Clear in the middle, where
+     the creator's picture is, and darkening out to the edges and corners, where our text sits, so the stills' own big
+     type never fights ours. */
   .spot__media::after {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(to top, rgb(13 12 26 / 0.86), rgb(13 12 26 / 0) 62%),
-      linear-gradient(to right, rgb(13 12 26 / 0.6), rgb(13 12 26 / 0) 46%),
-      linear-gradient(to left, rgb(13 12 26 / 0.72), rgb(13 12 26 / 0) 40%);
+    background: radial-gradient(ellipse var(--spot-mask-size) at var(--spot-mask-at), rgb(var(--scrim-rgb) / 0) 0%, rgb(var(--scrim-rgb) / 0.2) 30%, rgb(var(--scrim-rgb) / 0.6) 58%, rgb(var(--scrim-rgb) / 0.86) 82%, rgb(var(--scrim-rgb) / 0.92) 100%);
   }
+  /* The clear middle sits in the strip between the two text columns, as wide as that strip allows (measured: the
+     text holds 4 to 41% and 79 to 96% of the width at 1440, more on narrower panels). */
+  .spot__media { --spot-mask-size: 27% 70%; --spot-mask-at: 60% 30%; }
+  @media (max-width: 1439px) { .spot__media { --spot-mask-size: 23% 65%; --spot-mask-at: 61% 28%; } }
+  @media (max-width: 1279px) { .spot__media { --spot-mask-size: 14% 50%; --spot-mask-at: 63% 26%; } }
   .spot__player { z-index: 2; display: none; background: var(--frame); }
   .spot__player :global(iframe) { width: 100%; height: 100%; border: 0; }
   .spot__panel[data-playing] .spot__player { display: block; }

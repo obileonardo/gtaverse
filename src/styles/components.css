@@ -328,3 +328,19 @@
   @media (prefers-reduced-motion: reduce) {
     .clip__play { transition: none; }
   }
+
+/* ---------- Fades (LR11): an edge of a picture or a band dissolves into the page ----------
+   A mask, so whatever is behind shows through: the page's ground in either theme. Eased stops, not a straight ramp,
+   so the edge never reads as a line. The length is --fade-length (160px), set per use. */
+  .fade-top, .fade-bottom, .fade-y {
+    --fade-stops: transparent 0, rgb(0 0 0 / 0.06) calc(var(--fade-length) * 0.14), rgb(0 0 0 / 0.22) calc(var(--fade-length) * 0.3), rgb(0 0 0 / 0.5) calc(var(--fade-length) * 0.5), rgb(0 0 0 / 0.78) calc(var(--fade-length) * 0.7), rgb(0 0 0 / 0.94) calc(var(--fade-length) * 0.86), #000 var(--fade-length);
+  }
+  .fade-top { -webkit-mask-image: linear-gradient(to bottom, var(--fade-stops)); mask-image: linear-gradient(to bottom, var(--fade-stops)); }
+  .fade-bottom { -webkit-mask-image: linear-gradient(to top, var(--fade-stops)); mask-image: linear-gradient(to top, var(--fade-stops)); }
+  .fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, var(--fade-stops)), linear-gradient(to top, var(--fade-stops));
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to bottom, var(--fade-stops)), linear-gradient(to top, var(--fade-stops));
+    mask-composite: intersect;
+  }
+

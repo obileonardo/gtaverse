@@ -10,7 +10,9 @@ import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const GREY_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPIyMgAAAQ6AeWbcTrTAAAAAElFTkSuQmCC';
+const GREY_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPIyMgAAAJ0ATlrZlCVAAAAAElFTkSuQmCC';
+// Pure white: the worst case behind white text, for contrast checks (contrast.mjs).
+const WHITE_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC';
 
 export function findChromium() {
   if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
@@ -77,7 +79,7 @@ export async function launch() {
 }
 
 // Opens one tab. Returns helpers bound to it.
-export async function openPage(browser, { width, height, blockMedia = true, reducedMotion = false }) {
+export async function openPage(browser, { width, height, blockMedia = true, reducedMotion = false, fill = 'grey' }) {
   const { send, listeners } = browser;
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
@@ -100,7 +102,7 @@ export async function openPage(browser, { width, height, blockMedia = true, redu
     } catch {}
     try {
       if (!blocked) await s('Fetch.continueRequest', { requestId });
-      else if (resourceType === 'Image') await s('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'image/png' }], body: GREY_PNG });
+      else if (resourceType === 'Image') await s('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'image/png' }], body: fill === 'white' ? WHITE_PNG : GREY_PNG });
       else await s('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' });
     } catch {}
   }

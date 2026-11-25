@@ -230,6 +230,11 @@
   --cut-l: 56px;
   --tilt: 2.5deg;                              /* Justin Jefferson 005: cards tilted alternately */
   --space-chapter: 160px;                      /* the gap between home chapters */
+
+  /* ---------- Masks (landing refresh phase 2, LR11 and LR12) ---------- */
+  --scrim-rgb: 13 12 26; /* the night navy, as a triplet for scrims and readout masks */
+  --scrim-read: 0.8;     /* a navy pill behind small text on a picture (the map card's credit): AA over any tile */
+  --fade-length: 160px;  /* how far .fade-top and .fade-bottom run */
 }
 
 /* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
