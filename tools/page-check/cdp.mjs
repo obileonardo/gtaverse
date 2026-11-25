@@ -30,6 +30,8 @@ export function findChromium() {
 export async function launch() {
   const profile = mkdtempSync(join(tmpdir(), 'page-check-'));
   const proc = spawn(findChromium(), ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars', '--mute-audio', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  // A stopped run (Ctrl-C, or a memory guard's SIGTERM) takes its browser with it, so no Chromium is left running.
+  for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, () => { proc.kill(); process.exit(130); });
   const wsUrl = await new Promise((resolve, reject) => {
     let buf = '';
     const t = setTimeout(() => reject(new Error('Chromium did not start')), 30000);
