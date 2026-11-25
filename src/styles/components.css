@@ -274,6 +274,9 @@
      wide digits (9, 8, 6) at large sizes with tight tracking (Chime, 25 Nov 2026). */
   .roll__cell { display: inline-grid; overflow: hidden; overflow: visible clip; }
   .roll__glyph { grid-area: 1 / 1; }
+  /* A centred number changing length (roll.ts, align 'centre'): the old and new numbers share one cell, each centred. */
+  .roll[data-roll-align='centre'] { display: inline-grid; justify-items: center; }
+  .roll[data-roll-align='centre'] > .roll__cells { grid-area: 1 / 1; }
 
 /* ---------- Copy link (motion study item 11): the link turns into a check, the label rolls to "Copied" ---------- */
   /* Markup: .copy > .copy__icons (.copy__from, .copy__to) and, with a label, .copy__label (.copy__l--from,
