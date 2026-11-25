@@ -10,7 +10,13 @@ import { fileURLToPath } from 'node:url';
 import { launch, openPage, parseArgs } from './cdp.mjs';
 
 const args = parseArgs(process.argv.slice(2), { url: 'http://localhost:4321/', widths: '375,768,1280,1440,1920', themes: 'dark,light', settle: '900', label: 'shots' });
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'shots', String(args.label));
+// The label names one folder inside tools/shots/, which is emptied before each run: a plain name only, never a path.
+const label = String(args.label);
+if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(label) || label.includes('..')) {
+  console.error(`--label must be a plain folder name (letters, digits, ".", "_", "-"), got: ${label}`);
+  process.exit(2);
+}
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'shots', label);
 const browser = await launch();
 try {
   for (const theme of String(args.themes).split(',')) {

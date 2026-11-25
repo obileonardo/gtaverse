@@ -1,7 +1,7 @@
 // A small headless Chromium driver over the DevTools protocol, with no dependencies (Node 22 WebSocket).
 // Used by clip-audit.mjs and shots.mjs. Chromium: CHROMIUM_PATH, else the newest Playwright Chromium.
 //
-// blockMedia: Rockstar material never reaches the page (CLAUDE.md rule 2). Same-origin /media/ and /map/,
+// blockMedia: Rockstar material never reaches the page (PROJECT.md, Limits: no AI processing of Rockstar content). Same-origin /media/ and /map/,
 // and every cross-origin request except fonts, are blocked. Blocked images become a flat grey pixel,
 // so layouts keep their boxes and screenshots are safe to look at.
 

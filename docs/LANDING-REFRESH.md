@@ -1,6 +1,6 @@
 # Landing refresh: handoff to Obi (25 Nov 2026)
 
-From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. Chime built phases 0 to 2 with Claude Code; Obi takes phases 3 to 9 while Chime moves on to the design system. Decisions LR1 to LR12 are in `docs/DECISIONS.md` (open to owner review). The full plan with every item is the PDF sent with this handoff (`landing-refresh-handoff.pdf`).
+From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. Chime built phases 0 to 2; Obi takes phases 3 to 9 while Chime moves on to the design system. Decisions LR1 to LR12 are in `docs/DECISIONS.md` (open to owner review). The full plan with every item is the PDF sent with this handoff (`landing-refresh-handoff.pdf`).
 
 ## Status
 
@@ -19,7 +19,7 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 
 ## The checks (`tools/page-check/`)
 
-No new dependencies: headless Chromium (Playwright's cached build, or `CHROMIUM_PATH`) over the DevTools protocol. Rockstar media, map tiles and clip stills are blocked in every tool, so no Rockstar material reaches a page or a screenshot (CLAUDE.md rule 2). Run them against `pnpm dev`.
+No new dependencies: headless Chromium (Playwright's cached build, or `CHROMIUM_PATH`) over the DevTools protocol. Rockstar media, map tiles and clip stills are blocked in every tool, so no Rockstar material reaches a page or a screenshot (PROJECT.md, Limits: no AI processing of Rockstar content). Run them against `pnpm dev`.
 
 - `node tools/page-check/clip-audit.mjs`: every line of text whose glyph ink is cut by a box that clips it, at 375, 768, 1280, 1440 and 1920, both themes. It measures the ink (canvas metrics, tabular figures included), not the layout box. Exit 1 on a settled cut. Phase 1 took the home page from 6 cuts to 0.
 - `node tools/page-check/contrast.mjs`: turns every picture pure white (the worst case) and measures each line against the background right behind its letters. AA is 4.5:1, or 3:1 for large text. Limits: it can still flag a line that has a drawn marker or underline within 2px of its letters, and it skips text too faint to change the screenshot. Trust it for text over pictures (Spotlight passes at 1280, 1440 and 1920); read its other hits by hand.
