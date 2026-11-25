@@ -10,7 +10,7 @@ import { MapCanvas, type MapApi } from './MapCanvas';
 import type { Map3DApi } from './three/Map3D';
 import { useFound } from './found';
 import { readUrl, writeUrl, type MapView } from './url';
-import { searchRank } from './search';
+import { describeSearch, searchRank, setSearchCorpus } from './search';
 import { Sheet, type SnapPoint } from './Sheet';
 import { DrawerContent, SheetContent } from './FindDetail';
 import { BasemapMenu, FilterMenu, menuAt, type MenuAt } from './Menus';
@@ -97,6 +97,7 @@ function CollectibleCard({ item, layer, onClose }: { item: MapCollectible; layer
 }
 
 export default function MapApp({ finds, categories, regions, meta, layers, collectiblesUrl }: Props) {
+  setSearchCorpus(finds); // search.ts: words that match no find are left out of a question
   const [phone, setPhone] = useState(false);
   const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [search, setSearch] = useState('');
@@ -499,6 +500,16 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
     </span>
   );
 
+  // How a question was read (search.ts), shown under the count: a money question says how the list is sorted, and
+  // words that were left out are named, so "how do I make money fast" shows it searched for money only.
+  const read = search.trim() ? describeSearch(search) : null;
+  const searchNote = read && (read.money || read.ignored.length > 0) && (
+    <p className="mlist__note">
+      {read.money && <>Finds that pay money, biggest amount first. </>}
+      {read.ignored.length > 0 && <>Left out: <strong>{read.ignored.join(', ')}</strong>.</>}
+    </p>
+  );
+
   const listTab = (
     <>
       <div className="mlist__head">
@@ -507,6 +518,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
         </h3>
         {sortControl}
       </div>
+      {searchNote}
       {pinnedTotal > 0 && (
         <label className="mswitch mlist__inview">
           <input type="checkbox" role="switch" checked={onlyInView} onChange={() => setOnlyInView(!onlyInView)} />
@@ -626,7 +638,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
             <label className="msearch">
               <Icon name="search" size={20} />
               <span className="sr-only">Search finds</span>
-              <input ref={searchRef} type="search" placeholder="Search finds, places, finders" value={search} enterKeyHint="search" autoComplete="off" onChange={(e) => setSearchFlip(e.target.value)} />
+              <input ref={searchRef} type="search" placeholder="Search or ask: where can I get guns?" value={search} enterKeyHint="search" autoComplete="off" onChange={(e) => setSearchFlip(e.target.value)} />
               {search && <button type="button" className="msearch__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
             </label>
             <Tabs id="mappanel" label="Map panel" selected={tab} onSelect={setTab} tabs={[{ id: 'legend', label: 'Legend' }, { id: 'list', label: 'List' }]}>
@@ -722,6 +734,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
           </div>
           <div className="map-list__scroll">
             <div className="mlist__head mlist__head--phone">{sortControl}</div>
+            {searchNote}
             {listed.length ? list : empty}
           </div>
         </Sheet>
@@ -786,7 +799,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
             <label className="map-search">
               <Icon name="search" size={22} />
               <span className="sr-only">Search finds</span>
-              <input ref={searchRef} type="search" placeholder="Search finds" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
+              <input ref={searchRef} type="search" placeholder="Search or ask a question" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
               {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
             </label>
           </div>
