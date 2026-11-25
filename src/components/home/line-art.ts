@@ -672,9 +672,12 @@ export function createLineArt(canvas: HTMLCanvasElement, coast?: { aspect: numbe
     const r = norm(cross(f, [0, 1, 0]));
     const u = cross(r, f);
     const wide = w >= 768;
+    // Framed on the hero, not the whole canvas: the canvas runs --line-bottom past the hero into its fade (LR11),
+    // and that extra height must not move or scale the drawing behind the finds list.
+    const frameH = Math.max(1, h - bandBottom);
     // Horizontal field of view holds at 16:9, so a phone sees the subject whole.
-    let focal = (0.5 * Math.min(w, (h * 16) / 9)) / Math.tan(((cam.fov * Math.PI) / 180) / 2);
-    let cy = h * (wide ? 0.42 : 0.36);
+    let focal = (0.5 * Math.min(w, (frameH * 16) / 9)) / Math.tan(((cam.fov * Math.PI) / 180) / 2);
+    let cy = frameH * (wide ? 0.42 : 0.36);
     const cx = w * (wide ? 0.64 : 0.5);
     if (shot.fit) {
       // Measured once per shot and size, from the finished drawing at its first moment, so the framing holds still.
