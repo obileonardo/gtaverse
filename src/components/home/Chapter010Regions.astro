@@ -126,7 +126,10 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__still { display: block; aspect-ratio: 148 / 202; overflow: hidden; background: var(--surface-2); }
   .ch10__still img, .ch10__slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: scale var(--dur-card-lift) var(--ease-out); }
   .ch10__glow { display: grid; place-items: center; width: 100%; height: 100%; background: var(--glow-hero), var(--surface-2); padding: 6px; text-align: center; }
-  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 16px; line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
+  /* A long label ("REAL-WORLD REFERENCE") ran past a 68px tile at 1024 (LR2): the type follows the tile's width,
+     16px at most and never under 12. */
+  .ch10__glow { container-type: inline-size; }
+  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: clamp(12px, 20cqi, 16px); line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
   .ch10__cap { font-size: var(--text-label-caps); font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.35; color: var(--text-1); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
   .ch10__sub { font-size: var(--text-label-caps); line-height: 1.35; text-transform: uppercase; color: var(--text-3); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
 
@@ -176,6 +179,10 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__slide a { display: block; width: 100%; height: 100%; overflow: hidden; }
   .ch10__slide:not(.is-on) { scale: 0.52; opacity: 0.35; clip-path: inset(0 19%); }
   .ch10__slide.is-far { opacity: 0.2; }
+  /* The neighbours show only their middle (the inset above), which would cut a placeholder's label mid-word:
+     their labels fade out, and the focused slide's label fades in once it is whole. */
+  .ch10__slide .ch10__glow span { transition: opacity 200ms var(--ease-colour) 300ms; }
+  .ch10__slide:not(.is-on) .ch10__glow span { opacity: 0; transition-delay: 0ms; transition-duration: 140ms; }
   .ch10__slide.is-gone { opacity: 0; pointer-events: none; }
 
   /* First view: panel A's tiles rise with a short stagger once (non-uniform, capped at five). */
@@ -191,7 +198,8 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     .ch10__b { margin-top: 0; }
     .ch10__a { gap: var(--space-4); }
     .ch10__track { height: 300px; }
-    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0; top: 0; bottom: auto; font-size: 160px; text-align: start; }
+    /* right 0.1em: the tight line box (0.8) is narrower than the glyphs, so at the edge their ink was cut. */
+    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0.1em; top: 0; bottom: auto; font-size: 160px; text-align: start; }
   }
   @media (max-width: 767px) {
     .ch10__a, .ch10__b { padding: var(--space-4); }

@@ -140,7 +140,10 @@
   --btn-h-xl: 56px;
   --ctrl-size: 44px;
   --ctrl-size-xl: 52px;
-  --island-w: 336px;
+  /* 40% wider than the first 336 (owner review, 25 Nov 2026): more room between the logo and the icons. It steps down
+     where the hero needs the room beside it: 400 from 1024 to 1279, 336 from 768 to 1023 (470 there covered a mode
+     button). Below 768 the header spans the screen less its margins instead (Header.astro). LR7. */
+  --island-w: 470px;
   --island-h: 48px;
   --island-sub-h: 44px;
   --island-top: 32px;
@@ -231,8 +234,8 @@
 
 /* The gutter steps down with the window (desktop at 1440 and up keeps 128px). */
 @media (max-width: 1439px) { :root { --gutter: 96px; } }
-@media (max-width: 1279px) { :root { --gutter: 64px; } }
-@media (max-width: 1023px) { :root { --gutter: 40px; } }
+@media (max-width: 1279px) { :root { --gutter: 64px; --island-w: 400px; } }
+@media (max-width: 1023px) { :root { --gutter: 40px; --island-w: 336px; } }
 
 /* Phone sizes: only where the Loves differ */
 @media (max-width: 767px) {

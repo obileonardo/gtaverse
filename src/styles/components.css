@@ -270,7 +270,9 @@
 /* ---------- Rolling number (scripts/motion/roll.ts): only the digits that change roll ---------- */
   .roll { display: inline-flex; font-variant-numeric: tabular-nums; }
   .roll__cells { display: inline-flex; }
-  .roll__cell { display: inline-grid; overflow: hidden; overflow: clip; }
+  /* The roll travels up and down, so each cell clips top and bottom only. Clipping sideways too shaved the ink of
+     wide digits (9, 8, 6) at large sizes with tight tracking (Chime, 25 Nov 2026). */
+  .roll__cell { display: inline-grid; overflow: hidden; overflow: visible clip; }
   .roll__glyph { grid-area: 1 / 1; }
 
 /* ---------- Copy link (motion study item 11): the link turns into a check, the label rolls to "Copied" ---------- */

@@ -346,12 +346,12 @@ const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.pe
   }
   /* The caption never reaches under the centred island and its sub bar: it keeps 24px clear of the island's right
      edge. Beside the circles it also clears the buttons (three circles and the sound toggle's kept place, 206px);
-     that leaves room for the longest credit line (284px) only from 1680px. */
-  @media (min-width: 1680px) {
+     that leaves room for the longest credit line (284px) only from 1780px (with the 470px island, LR7). */
+  @media (min-width: 1780px) {
     .hero__credit { max-width: min(320px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 206px - 12px - 24px)); }
   }
   /* Below that the caption goes under the circles, right aligned, as on the phone. */
-  @media (min-width: 768px) and (max-width: 1679px) {
+  @media (min-width: 768px) and (max-width: 1779px) {
     .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
     .hero__credit { max-width: min(300px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px)); }
   }
@@ -451,6 +451,9 @@ const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.pe
     overflow: hidden;
     overflow: clip visible;
     text-overflow: ellipsis;
+    /* Tight tracking lets the last glyph's ink pass its box; 0.05em of room inside the clip, given back outside. */
+    padding-inline-end: 0.05em;
+    margin-inline-end: -0.05em;
   }
   .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
   .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
