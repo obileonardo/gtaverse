@@ -3,8 +3,7 @@
 Status as of 2026-11-24 (evening). Update this file whenever something moves between states.
 
 ## Waiting on owner
-- **Release `staging` to `main`.** Approved by the owner once Stage C passes. Stage C (issue #61) is the final release check: its pull request records the verdict and evidence. `main` is still the two-file first commit and `staging` is 29 commits ahead with nothing to merge back, so the release is a fast-forward through a pull request into `main` (only the owner can merge it, ruleset "main moves only on the owner's go").
-- **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for the `main` release and for Chime's first pins. Today every page is `noindex`.
+- **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for Chime's first pins (the `main` release is done). Today every page is `noindex`.
 - **Mailboxes.** Send a test message to takedown@thevicefiles.com and conduct@thevicefiles.com and record that both arrive. Not done yet; `docs/LEGAL.md`, `SECURITY.md` and the Code of Conduct send people there.
 - Confirm or change the open slice decisions in [DECISIONS.md](DECISIONS.md), including RC1 and RC2 from Stage C.
 - Answer the open questions below.
@@ -53,8 +52,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Nothing.
 
 ## Pushed, not live
-- The Stage C pull request (issue #61): docs, the dead `prd/wrangler.jsonc` removed, and `pnpm test` added to CI. No change to the built site.
-- `main` does not have the site yet (see "Release `staging` to `main`").
+- Fact-check of the 14 bookmark candidates and the 5 draft explainers (issue #63, PR #64): 4 new draft finds, explainer corrections and 12 conflicts, waiting on Chime's review. Nothing in it is published.
 
 ## Live
 - thevicefiles.com serves `staging` through the `thevicefiles` Worker (Cloudflare static assets): home, map, finds, explainers, the GTAverse, hubs, `/design` and the PRD at `/prd`. Every page is `noindex` until launch.
@@ -67,6 +65,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Dependabot's first update (#21, `@types/leaflet`) is merged, through CI.
 - The old `vicefiles-prd` Worker was deleted on 24 Nov 2026; the PRD is served by the main site at https://thevicefiles.com/prd.
 - Owner decisions on 24 Nov 2026: `prd/public/_headers` removed (RC1); the 11 old merged or closed branches deleted from GitHub; the rockstarworld.elvisobi.com redirect kept; fork pull request approval stays at first-time contributors.
+- Stage C passed (GO, #62) and `staging` was released to `main` on 25 Nov 2026. Releases from `staging` to `main` are merge commits from now on (decision RC3); `staging` stays squash-only.
 - 26 old agent worktrees were deleted on 24 Nov 2026.
 - Map labels and pins: Chime places them by hand (owner's choice; see "Asked, not built").
 - Pick a logo: done. Case File by Chime, implemented from Chime's SVGs (decisions LG5, LG6; [LOGO.md](LOGO.md)). Chime may polish it later.

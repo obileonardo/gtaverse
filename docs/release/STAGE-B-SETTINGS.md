@@ -2,6 +2,8 @@
 
 **Status, 2026-11-24 (Stage C, issue #61):** sections 1 to 5 are applied. Read back through the GitHub API, every setting matches this file. The optional fork approval policy in section 3 was not applied (it is still `first_time_contributors`), and the `vicefiles-prd` Worker with its domain routes was deleted by the owner, so the PRD notes at the end are closed (the PRD is served by the main site at `/prd`).
 
+**Changed 2026-11-25 (decision RC3 in DECISIONS.md):** section 1 and section 4 are superseded for `main`. Merge commits are allowed at repository level, used only for `staging` to `main` releases. Ruleset 27944180 is now "Protect staging" (staging only, squash only). Ruleset 27945451 is now "Protect main: releases from staging only" with the full protection (update, deletion, force push, pull request with code owner review, merge method `merge`, required check "Validate and build").
+
 Prepared 2026-11-24 for the owner. When written, nothing in this file had been applied. Each setting lists what it is today (read through the GitHub API on 2026-11-24), the exact command to change it, and why. Apply them after the Stage B pull request is approved, in the order below. Every command needs `gh` signed in as a repository admin.
 
 The repository: `obileonardo/thevicefiles`. Findings refer to [STAGE-A-AUDIT.md](STAGE-A-AUDIT.md).
