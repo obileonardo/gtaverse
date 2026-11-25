@@ -51,6 +51,8 @@ const Tag = href ? 'a' : 'div';
     background: var(--surface-2);
   }
   .card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
+  /* A still that failed to load shows the no-image glow (Base.astro marks it data-failed). */
+  .card__media:has(> img[data-failed]) { background: var(--glow-hero), var(--surface-1); }
   .card__glow {
     position: absolute;
     inset: 0;

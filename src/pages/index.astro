@@ -25,7 +25,7 @@ import Chapter013Explainers from '../components/home/Chapter013Explainers.astro'
 import Chapter014Leads from '../components/home/Chapter014Leads.astro';
 import Chapter015Gtaverse from '../components/home/Chapter015Gtaverse.astro';
 import { finds } from '../lib/content';
-import { findStill } from '../lib/media';
+import { findStill, findClipLabels } from '../lib/media';
 import { addedThisWeek } from '../lib/feed';
 import { spotlightFinds, selectedFilters, newThisWeek, clipFinds, typeEntries, topRegions, layerCards, collectibleTotal } from '../lib/home';
 import { website, organization } from '../lib/seo';
@@ -48,7 +48,7 @@ const layers = layerCards();
   title="The Vice Files"
   layout="bare"
   jsonLd={[website(), organization()]}
-  sub={lead ? { href: `/finds/${lead.slug}`, label: 'Watch the clip', image: leadStill?.thumb } : undefined}
+  sub={lead ? { href: `/finds/${lead.slug}`, label: findClipLabels(lead).bar, image: leadStill?.thumb } : undefined}
 >
   <Hero featured={featured} />
 
