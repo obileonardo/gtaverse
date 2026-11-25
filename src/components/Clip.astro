@@ -1,10 +1,14 @@
 ---
 // Shows a thumbnail first; the creator's player loads only when tapped (fast, no tracking on load).
+// YouTube plays in youtube-nocookie. X and Reddit video posts play in the platform's own post embed, which then
+// grows the frame to the post's height. An X or Reddit photo post shows its first photo, linked to the post. A post
+// the clip cache (pnpm clips:resolve) does not know yet, or a text post, keeps the "Watch on" link box.
 // Spoiler and mature clips stay hidden behind a gate until the visitor chooses to reveal them.
 // The media fills its box at 16:9 (pass a different ratio with `ratio`); `caption={false}` drops the credit line
 // when the page shows the credit elsewhere.
 import type { Clip } from '../lib/content';
-import { youtubeId, ytThumb, ytEmbed } from '../lib/clip';
+import { youtubeId, ytThumb, ytEmbed, clipStill, clipEmbed } from '../lib/clip';
+import { clipMediaOf } from '../lib/media';
 import Icon from './ui/Icon.astro';
 import ChapterControl from './ChapterControl.astro';
 // chapterGate: the find's chapter_gate. A spoiler clip (never a mature one) opens by itself when the visitor's
@@ -13,6 +17,11 @@ interface Props { clip: NonNullable<Clip>; title: string; spoiler?: boolean; mat
 const { clip, title, spoiler = false, mature = false, chapterGate = null, caption = true, ratio = '16 / 9', class: className } = Astro.props;
 const gated = spoiler || mature;
 const yt = clip.platform === 'youtube' ? youtubeId(clip.url) : null;
+const media = yt ? null : clipMediaOf(clip);
+const post = yt ? null : clipEmbed(clip, media); // an X or Reddit video post's player (dark; the theme is set on tap)
+const still = yt ? null : clipStill(clip, media);
+const photo = !yt && !post && media?.kind === 'photo' && still ? still : null;
+const sizes = '(max-width: 767px) 100vw, 880px';
 const platform = ({ youtube: 'YouTube', x: 'X', reddit: 'Reddit', tiktok: 'TikTok' } as Record<string, string>)[clip.platform] ?? clip.platform;
 const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 'Mature';
 ---
@@ -33,6 +42,16 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
           <img src={gated ? undefined : ytThumb(yt)} data-src={gated ? ytThumb(yt) : undefined} alt="" width="480" height="360" loading="lazy" decoding="async" />
           <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
         </button>
+      ) : post ? (
+        <button type="button" class:list={['clip-play', { 'clip-play--glow': !still }]} data-embed={post} data-post aria-label={`Play clip: ${title}`}>
+          {still && <img src={gated ? undefined : still.src} data-src={gated ? still.src : undefined} srcset={gated ? undefined : still.srcset} data-srcset={gated ? still.srcset : undefined} sizes={sizes} alt="" width={media?.width ?? 1280} height={media?.height ?? 720} loading="lazy" decoding="async" />}
+          <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
+        </button>
+      ) : photo ? (
+        <a class="clip__photo" href={clip.url} rel="noopener" target="_blank" aria-label={`View the photo on ${platform}: ${title}`}>
+          <img src={gated ? undefined : photo.src} data-src={gated ? photo.src : undefined} srcset={gated ? undefined : photo.srcset} data-srcset={gated ? photo.srcset : undefined} sizes={sizes} alt="" width={media?.width ?? 1280} height={media?.height ?? 720} loading="lazy" decoding="async" />
+          <span class="clip__view" aria-hidden="true">View on {platform}<Icon name="arrow-up-right" size={16} /></span>
+        </a>
       ) : (
         <a class="clip__out" href={clip.url} rel="noopener" target="_blank">
           <span class="clip__out-label">Watch on {platform}</span>
@@ -47,17 +66,35 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
 </figure>
 <script>
   import { initChapter, revealClip } from '../lib/chapter';
+  import { embedForTheme, postEmbedOrigins, postHeight, type Theme } from '../lib/clip';
+  // X and Reddit post embeds report their height; the frame grows to fit the post, never below its own ratio.
+  const posts = new Map<MessageEventSource, HTMLElement>();
+  addEventListener('message', (e) => {
+    if (!postEmbedOrigins.includes(e.origin) || !e.source) return;
+    const frame = posts.get(e.source);
+    const h = postHeight(e.data);
+    if (!frame || !h) return;
+    frame.style.aspectRatio = 'auto';
+    frame.style.height = `${Math.ceil(h)}px`;
+  });
+  const themeOf = (el: HTMLElement): Theme =>
+    (el.closest<HTMLElement>('[data-scheme]')?.dataset.scheme ?? document.documentElement.dataset.theme) === 'light' ? 'light' : 'dark';
   document.querySelectorAll<HTMLElement>('.clip').forEach((fig) => {
     fig.querySelector('.clip-reveal')?.addEventListener('click', () => revealClip(fig, true));
     const btn = fig.querySelector<HTMLButtonElement>('.clip-play');
     btn?.addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = btn.dataset.embed!;
+      const isPost = btn.hasAttribute('data-post');
+      f.src = isPost ? embedForTheme(btn.dataset.embed!, themeOf(fig)) : btn.dataset.embed!;
       f.title = btn.getAttribute('aria-label') ?? 'Clip';
-      f.allow = 'autoplay; encrypted-media; picture-in-picture';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
       f.allowFullscreen = true;
       f.width = '560'; f.height = '315';
+      const frame = fig.querySelector<HTMLElement>('.clip__frame');
+      // An X post card is at most 550 wide: centred in a wider frame.
+      if (isPost && f.src.startsWith('https://platform.twitter.com/')) f.className = 'clip__post-x';
       btn.replaceWith(f);
+      if (isPost && frame && f.contentWindow) posts.set(f.contentWindow, frame);
     });
   });
   initChapter();
@@ -80,10 +117,39 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
   .clip__frame:has(> .clip__gate) { display: grid; grid-template-columns: minmax(0, 1fr); aspect-ratio: auto; }
   .clip__frame:has(> .clip__gate)::before { content: ''; grid-area: 1 / 1; padding-top: calc(100% / (var(--clip-ratio))); }
   .clip__frame:has(> .clip__gate) > .clip__gate { position: relative; inset: auto; grid-area: 1 / 1; }
-  .clip-body, .clip-play, .clip__out { position: absolute; inset: 0; }
-  .clip-play { display: block; width: 100%; height: 100%; }
-  .clip-play img { width: 100%; height: 100%; object-fit: cover; }
+  .clip-body, .clip-play, .clip__out, .clip__photo { position: absolute; inset: 0; }
+  .clip-play, .clip__photo { display: block; width: 100%; height: 100%; }
+  .clip-play img, .clip__photo img { width: 100%; height: 100%; object-fit: cover; }
+  /* A post player with no poster, or a still that failed to load: the sunrise glow, as everywhere without art. */
+  .clip-play--glow, .clip-play:has(> img[data-failed]), .clip__photo:has(> img[data-failed]) { background: var(--glow-hero), var(--surface-1); }
+  /* "View on X" on a photo post: the play circle's dark glass as a pill in the corner, so the photo stays clear. */
+  .clip__view {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--btn-h-s);
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-full);
+    background: rgb(13 12 26 / 0.56);
+    border: var(--border-w) solid rgb(255 255 255 / 0.16);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    color: #fff;
+    font-size: var(--text-label);
+    font-weight: 600;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour);
+  }
+  .clip__photo:active .clip__view { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) {
+    .clip__photo:hover .clip__view { background: rgb(13 12 26 / 0.72); }
+  }
   .clip-body :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .clip-body :global(iframe.clip__post-x) { left: 50%; width: min(100%, 550px); translate: -50% 0; }
+  /* The post card brings its own edge and ground. */
+  .clip__frame:has(:global(iframe.clip__post-x)) { background: transparent; border-color: transparent; }
   .clip__out {
     display: flex;
     align-items: center;
@@ -128,6 +194,6 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
   .clip__caption { font-size: var(--text-caption); color: var(--text-2); }
   .clip__caption a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
-    .clip-reveal { transition: none; }
+    .clip-reveal, .clip__view { transition: none; }
   }
 </style>

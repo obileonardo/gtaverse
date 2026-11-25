@@ -20,6 +20,7 @@ import { gamesOfFind } from '../../lib/games';
 import { splitSpoiler } from '../../lib/spoiler';
 import { finds, type Find } from '../../lib/content';
 import { findStill, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { ytThumb } from '../../lib/clip';
 import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
 import { nearbyFinds, hasRegionHub, hasCategoryHub } from '../../lib/hubs';
 import { regionById, categoryById } from '../../lib/content';
@@ -203,7 +204,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
                       <li>
                         <a class="shot" href={o.url} rel="noopener" target="_blank">
                           <span class:list={['shot__media', { 'shot__media--glow': gated }]}>
-                            {!gated && <img src={`https://i.ytimg.com/vi/${o.id}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" />}
+                            {!gated && <img src={ytThumb(o.id!, 'mq')} alt="" width="320" height="180" loading="lazy" decoding="async" />}
                             {gated && <span class="mono-caps">Spoiler</span>}
                           </span>
                           <span class="shot__label">{o.creator} <Icon name="arrow-up-right" size={14} /></span>
@@ -328,7 +329,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
   /* ---------- Art ---------- */
   .find__art { position: absolute; inset: 0 0 auto; z-index: -1; overflow: hidden; background: var(--bg); }
   .find__art img { width: 100%; height: 100%; object-fit: cover; }
-  .find__art--glow { background: var(--glow-hero), var(--bg); }
+  .find__art--glow, .find__art:has(> img[data-failed]) { background: var(--glow-hero), var(--bg); }
   .find__scrim { position: absolute; inset: 0; }
 
   .find__title {

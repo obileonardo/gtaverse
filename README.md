@@ -19,6 +19,7 @@ pnpm install      # install dependencies
 pnpm map:fetch    # optional: download Rockstar's official Leonida map into .cache/map/ and verify it
 pnpm map:tiles    # optional: cut it into tiles in public/map/
 pnpm logos:fetch  # official game logos and the menu's cover art into public/media/ (git-ignored); run before every deploy build
+pnpm clips:resolve # the stills of X and Reddit clips (image URLs only) into content/generated/clip-media.json; commit it
 pnpm dev          # local dev server
 pnpm build        # validate the content, then build the static site into dist/
 ```

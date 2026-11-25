@@ -174,6 +174,8 @@ html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: n
   html.js img[data-in]:not([data-instant]) { animation: img-in var(--dur-image-in) var(--ease-colour) both; }
 }
 @keyframes img-in { from { opacity: 0; } }
+/* A decorative still that failed to load (Base.astro marks it data-failed): hidden, never the broken-image icon. */
+img[data-failed] { visibility: hidden; }
 
 /* ---------- One-shot reveal for card walls and list rows (motion study item 8) ----------
    site-motion.ts marks each card or row data-rv="in" (with its --rv-delay) the first time it comes into view, or

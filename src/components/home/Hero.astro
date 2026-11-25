@@ -14,8 +14,7 @@ import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import Verification from '../Verification.astro';
 import type { Find } from '../../lib/content';
-import { youtubeId, ytThumb, isShort } from '../../lib/clip';
-import { categoryLabel, regionLabel } from '../../lib/media';
+import { categoryLabel, regionLabel, findStill } from '../../lib/media';
 
 interface Props { featured: Find[] }
 const { featured } = Astro.props;
@@ -44,13 +43,9 @@ const modes = [
 ].filter(Boolean) as { id: string; label: string; icon: 'play' | 'image' | 'wire' }[];
 const credits = { trailer: trailer?.credit ?? 'Trailer: Rockstar Games', keyart: 'Art: Rockstar Games', line: 'Line art: The Vice Files' };
 
-// The peek frame shows the find's own YouTube thumbnail, loaded from YouTube. Never for spoiler or mature finds, never
-// for Shorts (portrait thumbnails); those show the sunrise glow instead.
-const thumb = (f: Find) => {
-  if (f.spoiler || f.mature || !f.clip || f.clip.platform !== 'youtube' || isShort(f.clip.url)) return undefined;
-  const id = youtubeId(f.clip.url);
-  return id ? ytThumb(id, 'hq') : undefined;
-};
+// The peek frame shows the find's own clip still (YouTube, X or Reddit), loaded from the platform (findStill). Never
+// for spoiler or mature finds, never for Shorts (portrait thumbnails); those show the sunrise glow instead.
+const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.peek);
 ---
 <section class="hero" data-scheme="dark" data-hero aria-labelledby="home-title" data-mode={modes[0].id}>
   <div class="container hero__label">

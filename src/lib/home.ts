@@ -30,8 +30,13 @@ export function spotSources(f: Find, n = 3): SpotSource[] {
   return picked.slice(0, n).map((s) => ({ type: sourceKind(s)!, name: outletName(s) }));
 }
 
-/** The Spotlight: six safe finds with a still that the hero does not already show, in content order. */
-export const spotlightFinds = (hero: Find[], n = 6) => finds.filter((f) => showcaseable(f) && !hero.includes(f)).slice(0, n);
+// The Spotlight and Watch the clips play the clip in place, inside a fixed 16:9 frame. An X or Reddit post embed is a
+// whole post card that needs its own height (Clip.astro grows its frame for it), so those two chapters keep to
+// YouTube clips; X and Reddit stills show on every other surface.
+const playsInPlace = (f: Find) => showcaseable(f) && f.clip?.platform === 'youtube';
+
+/** The Spotlight: six safe finds with a YouTube still that the hero does not already show, in content order. */
+export const spotlightFinds = (hero: Find[], n = 6) => finds.filter((f) => playsInPlace(f) && !hero.includes(f)).slice(0, n);
 
 // ---------- 002 Selected finds ----------
 
@@ -68,7 +73,7 @@ export function ageLabel(d: string | undefined, today = new Date()) {
 // ---------- 004 Watch the clips ----------
 
 /** Every safe find with a YouTube still, in content order: the clips the chapter can play. */
-export const clipFinds = () => finds.filter(showcaseable);
+export const clipFinds = () => finds.filter(playsInPlace);
 
 // ---------- 006 By type ----------
 
