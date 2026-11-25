@@ -287,20 +287,28 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     });
 
     // The swap (LR13): the shown area's tiles and carousel fade out over --dur-swap-out, and only then does the new
-    // area arrive (its tiles rise, its carousel fades in over --dur-swap-in). A second choice while the old one is
-    // still leaving retargets that same fade, so nothing pops back. Keyboard choices and reduced motion swap at once.
+    // area arrive (its tiles rise, its carousel fades in over --dur-swap-in). The fade starts from wherever the shown
+    // area is (it may still be arriving), so nothing jumps up first. A further choice while it is leaving retargets
+    // that same fade; choosing the leaving area again plays the fade back, so it never pops. Keyboard choices and
+    // reduced motion swap at once.
     const css = (prop: string) => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
     const ms = tokenMs;
     let leaving: Animation[] = [];
     let target = 0;
+    const shownIndex = () => grids.findIndex((g) => !g.hidden);
     const show = (i: number, still: boolean) => {
-      grids.forEach((g, k) => { g.hidden = k !== i; g.classList.toggle('is-swap', k === i && !still); });
+      leaving.forEach((a) => a.cancel());
+      leaving = [];
+      grids.forEach((g, k) => {
+        g.hidden = k !== i;
+        g.classList.remove('is-swap');
+        // Restart the tiles' rise even if this grid was already showing (reflow between remove and add).
+        if (k === i && !still) { void g.offsetWidth; g.classList.add('is-swap'); }
+      });
       cars.forEach((c, k) => {
         c.hidden = k !== i;
         if (k === i) { place(c, startOf(c), true); if (!still) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') }); }
       });
-      leaving.forEach((a) => a.cancel());
-      leaving = [];
     };
 
     const select = (i: number, byKey = false) => {
@@ -310,11 +318,24 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       area = i;
       target = i;
       if (byKey || reduceMotion()) show(i, true);
-      else if (!leaving.length) {
-        const shown = [grids.find((g) => !g.hidden), cars.find((c) => !c.hidden)].filter((el): el is HTMLElement => !!el);
-        const anims = shown.map((el) => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms('--dur-swap-out', 180), easing: css('--ease-standard'), fill: 'forwards' }));
+      else if (leaving.length) {
+        // Already leaving: run the fade forwards to a new area, or backwards to the one that is leaving.
+        const back = i === shownIndex();
+        leaving.forEach((a) => { if ((a.playbackRate < 0) !== back) a.reverse(); });
+      } else {
+        const from = shownIndex();
+        const shown = [grids[from], cars[from]].filter((el): el is HTMLElement => !!el);
+        const anims = shown.map((el) => {
+          const o = Math.min(1, parseFloat(getComputedStyle(el).opacity) || 0);
+          el.getAnimations().forEach((a) => a.cancel());
+          return el.animate([{ opacity: o }, { opacity: 0 }], { duration: Math.max(1, ms('--dur-swap-out', 180) * o), easing: css('--ease-standard'), fill: 'forwards' });
+        });
         leaving = anims;
-        Promise.all(anims.map((a) => a.finished)).then(() => { if (leaving === anims) show(target, false); }, () => {});
+        Promise.all(anims.map((a) => a.finished)).then(() => {
+          if (leaving !== anims) return;
+          if (target === from) { anims.forEach((a) => a.cancel()); leaving = []; }
+          else show(target, false);
+        }, () => {});
       }
       nums.forEach((n, k) => { n.classList.toggle('is-active', k === i); n.setAttribute('aria-pressed', String(k === i)); });
       roll(count, pad(i + 1), { dir, instant: byKey });

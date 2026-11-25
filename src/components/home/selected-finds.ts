@@ -30,7 +30,16 @@ export function initSelectedFinds(root: HTMLElement) {
     // A swap already in flight finishes where it is.
     leaving.forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.hidden = true; el.style.cssText = el.style.order ? `order:${el.style.order}` : ''; });
     leaving = [];
-    items.forEach((el) => el.getAnimations().forEach((a) => a.finish()));
+    // Moves in flight finish where they are going (the FLIP below measures final places), but a card still fading in
+    // keeps its opacity and carries on from it: finishing it would jump it to full (#80 review N1).
+    const midFade = new Map<HTMLElement, number>();
+    items.forEach((el) => {
+      const anims = el.getAnimations();
+      if (!anims.length) return;
+      const o = parseFloat(getComputedStyle(el).opacity);
+      if (o < 0.999) midFade.set(el, o);
+      anims.forEach((a) => a.finish());
+    });
 
     const before = new Map<HTMLElement, DOMRect>();
     const gridBox = grid!.getBoundingClientRect();
@@ -76,7 +85,9 @@ export function initSelectedFinds(root: HTMLElement) {
       el.style.width = `${r.width}px`;
       el.style.pointerEvents = 'none';
       leaving.push(el);
-      const a = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: out, easing: v('--ease-standard', 'ease'), fill: 'forwards' });
+      // A card leaving while it was still fading in leaves from where it was, never from full.
+      const from = midFade.get(el) ?? 1;
+      const a = el.animate([{ opacity: from }, { opacity: 0 }], { duration: Math.max(1, out * from), easing: v('--ease-standard', 'ease'), fill: 'forwards' });
       a.finished.then(() => {
         el.hidden = true;
         el.style.position = el.style.left = el.style.top = el.style.width = el.style.pointerEvents = '';
@@ -84,7 +95,12 @@ export function initSelectedFinds(root: HTMLElement) {
         a.cancel();
       }, () => {});
     });
-    // Staying cards glide from where they were (FLIP: measure, invert, play).
+    // Staying cards glide from where they were (FLIP: measure, invert, play); one that was still fading in goes on
+    // fading from where it was.
+    stays.forEach((el) => {
+      const o = midFade.get(el);
+      if (o !== undefined) el.animate([{ opacity: o }, { opacity: 1 }], { duration: ms('--dur-morph', 280), easing: v('--ease-out', 'ease-out') });
+    });
     stays.forEach((el) => {
       const a = before.get(el)!, b = el.getBoundingClientRect();
       const dx = a.left - b.left, dy = a.top - b.top;
