@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { xStatusId, redditPost, clipKey, clipStill, clipEmbed, embedForTheme, postHeight, type ClipMedia } from '../../src/lib/clip.ts';
+import { xStatusId, redditPost, clipKey, clipStill, clipEmbed, clipVerb, clipLabels, embedForTheme, postHeight, type ClipMedia } from '../../src/lib/clip.ts';
 
 test('xStatusId reads x.com and twitter.com status URLs', () => {
   assert.equal(xStatusId('https://x.com/GTAWikiOfficial/status/2123073257867968617'), '2123073257867968617');
@@ -84,6 +84,21 @@ test('clipEmbed: YouTube always, X and Reddit only for a cached video post', () 
   assert.equal(clipEmbed(xClip, xPhoto), null);
   assert.equal(clipEmbed(rClip, text), null);
   assert.equal(clipEmbed(xClip, null), null);
+});
+
+test('clipVerb and clipLabels: play a video, view a photo, read a text post', () => {
+  assert.equal(clipVerb({ platform: 'youtube', url: 'https://youtu.be/Mj_beVHUJE4' }), 'play');
+  assert.equal(clipVerb(xClip, xVideo), 'play');
+  assert.equal(clipVerb(xClip, xPhoto), 'view');
+  assert.equal(clipVerb(rClip, text), 'read');
+  assert.equal(clipVerb(xClip, null), 'play'); // not resolved yet: the link box, labelled as a clip
+  assert.equal(clipVerb(xClip, { ...xPhoto, thumb: null }), 'play');
+  assert.equal(clipVerb({ platform: 'youtube', url: 'https://youtu.be/Mj_beVHUJE4' }, text), 'play');
+  const play = clipLabels('play'), view = clipLabels('view'), read = clipLabels('read');
+  assert.deepEqual([play.action, play.bar, play.reveal, play.revealBar, play.spoiler, play.on, play.icon], ['Play clip', 'Watch the clip', 'Reveal clip', 'Reveal the clip', 'Spoiler clip', 'Watch on', 'play']);
+  assert.deepEqual([view.action, view.bar, view.reveal, view.revealBar, view.spoiler, view.on, view.icon], ['View photo', 'View the photo', 'Reveal photo', 'Reveal the photo', 'Spoiler photo', 'View on', 'image']);
+  assert.deepEqual([read.action, read.bar, read.reveal, read.revealBar, read.spoiler, read.on, read.icon], ['Read the post', 'Read the post', 'Reveal post', 'Reveal the post', 'Spoiler post', 'Read on', 'article']);
+  for (const l of [play, view, read]) for (const s of Object.values(l)) assert.doesNotMatch(s, /[\u2013\u2014]/);
 });
 
 test('embedForTheme switches X and Reddit embeds and leaves YouTube alone', () => {

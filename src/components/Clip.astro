@@ -7,7 +7,7 @@
 // The media fills its box at 16:9 (pass a different ratio with `ratio`); `caption={false}` drops the credit line
 // when the page shows the credit elsewhere.
 import type { Clip } from '../lib/content';
-import { youtubeId, ytThumb, ytEmbed, clipStill, clipEmbed } from '../lib/clip';
+import { youtubeId, ytThumb, ytEmbed, clipStill, clipEmbed, clipVerb, clipLabels } from '../lib/clip';
 import { clipMediaOf } from '../lib/media';
 import Icon from './ui/Icon.astro';
 import ChapterControl from './ChapterControl.astro';
@@ -22,6 +22,7 @@ const post = yt ? null : clipEmbed(clip, media); // an X or Reddit video post's 
 const still = yt ? null : clipStill(clip, media);
 const photo = !yt && !post && media?.kind === 'photo' && still ? still : null;
 const sizes = '(max-width: 767px) 100vw, 880px';
+const labels = clipLabels(yt ? 'play' : clipVerb(clip, media)); // "Watch on X", "View on X", "Read on Reddit"
 const platform = ({ youtube: 'YouTube', x: 'X', reddit: 'Reddit', tiktok: 'TikTok' } as Record<string, string>)[clip.platform] ?? clip.platform;
 const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 'Mature';
 ---
@@ -30,8 +31,8 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
     {gated && (
       <div class="clip__gate">
         <span class="clip__gate-label mono-caps">{gateLabel}</span>
-        <p class="clip__gate-text">{spoiler ? 'This clip shows the secret before you find it yourself.' : 'This clip shows mature content.'}</p>
-        <button type="button" class="clip-reveal">{spoiler ? 'Reveal spoiler clip' : 'Show clip'}</button>
+        <p class="clip__gate-text">{spoiler ? `This ${labels.noun} shows the secret before you find it yourself.` : `This ${labels.noun} shows mature content.`}</p>
+        <button type="button" class="clip-reveal">{spoiler ? `Reveal spoiler ${labels.noun}` : `Show ${labels.noun}`}</button>
         {spoiler && !mature && <ChapterControl compact />}
       </div>
     )}
@@ -54,7 +55,7 @@ const gateLabel = spoiler && mature ? 'Spoiler, mature' : spoiler ? 'Spoiler' : 
         </a>
       ) : (
         <a class="clip__out" href={clip.url} rel="noopener" target="_blank">
-          <span class="clip__out-label">Watch on {platform}</span>
+          <span class="clip__out-label">{labels.on} {platform}</span>
           <Icon name="arrow-up-right" size={20} />
         </a>
       )}

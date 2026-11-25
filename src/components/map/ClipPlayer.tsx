@@ -3,7 +3,7 @@
 // spoiler and mature clips behind a reveal. An X or Reddit photo post shows its photo with a link to the post; any
 // other clip opens the creator's post. A find with no clip shows the sunrise glow with its type in display caps.
 import { useEffect, useRef, useState } from 'react';
-import { embedForTheme, postEmbedOrigins, postHeight } from '../../lib/clip';
+import { clipLabels, embedForTheme, postEmbedOrigins, postHeight } from '../../lib/clip';
 import { Icon } from './ui';
 import { platformLabel, type MapFind } from './types';
 import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
@@ -34,6 +34,8 @@ export function ClipPlayer({ find, variant, chapter = 'none' }: { find: MapFind;
 
   const theme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
   const reason = find.spoiler ? 'spoiler' : 'mature';
+  const labels = clipLabels(clip?.verb ?? 'play');
+  const noun = labels.noun;
   return (
     <figure className={`clip-frame clip-frame--${variant}`} style={postH ? { aspectRatio: 'auto', height: Math.ceil(postH) } : undefined}>
       {playing && embed ? (
@@ -53,7 +55,7 @@ export function ClipPlayer({ find, variant, chapter = 'none' }: { find: MapFind;
           {!revealed ? (
             <button type="button" className="clip-frame__reveal btn btn--glass btn--m" onClick={() => setRevealed(true)}>
               <Icon name="clip" size={20} />
-              <span className="btn__label">{find.spoiler ? 'Reveal spoiler clip' : 'Show mature clip'}</span>
+              <span className="btn__label">{find.spoiler ? `Reveal spoiler ${noun}` : `Show mature ${noun}`}</span>
             </button>
           ) : embed ? (
             <button type="button" className="clip-frame__play" onClick={() => setPlaying(true)} aria-label={`Play clip: ${find.title}`}>
@@ -61,13 +63,13 @@ export function ClipPlayer({ find, variant, chapter = 'none' }: { find: MapFind;
             </button>
           ) : clip ? (
             <a className="clip-frame__reveal btn btn--glass btn--m" href={clip.url} target="_blank" rel="noopener">
-              <span className="btn__label">{clip.photo ? 'View on' : 'Watch on'} {platformLabel(clip.platform)}</span>
+              <span className="btn__label">{labels.on} {platformLabel(clip.platform)}</span>
               <Icon name="arrow-up-right" size={20} />
             </a>
           ) : null}
         </>
       )}
-      {hidden && !revealed && <figcaption className="sr-only">This clip is hidden because it is marked {reason}.</figcaption>}
+      {hidden && !revealed && <figcaption className="sr-only">This {noun} is hidden because it is marked {reason}.</figcaption>}
     </figure>
   );
 }

@@ -3,7 +3,7 @@
 // that `pnpm clips:resolve` writes. Shorts are skipped: their thumbnails are portrait and crop badly.
 // A find without a still falls back to the sunrise glow (--glow-hero) in the components.
 import { regionById, categoryById, type Find } from './content';
-import { clipKey, clipStill, clipEmbed, youtubeId, ytThumb, type ClipMedia, type ClipRef, type Still } from './clip';
+import { clipKey, clipStill, clipEmbed, clipVerb, clipLabels, youtubeId, ytThumb, type ClipMedia, type ClipRef, type Still } from './clip';
 import type { IconName } from '../components/ui/icons';
 
 export type { Still };
@@ -23,12 +23,15 @@ export const clipMedia = (f: Find) => clipMediaOf(f.clip);
 /** The still of a find's clip, or null. Every surface that shows clip art reads it from here. */
 export const findStill = (f: Find): Still | null => clipStill(f.clip, clipMedia(f));
 
+/** The labels for a find's clip ("Play clip", "View photo", "Read the post"; src/lib/clip.ts clipLabels). */
+export const findClipLabels = (f: Find) => clipLabels(f.clip ? clipVerb(f.clip, clipMedia(f)) : 'play');
+
 /** The player URL of a find's clip (dark theme; the client swaps the theme on tap), or null when it has none. */
 export const findEmbed = (f: Find) => (f.clip ? clipEmbed(f.clip, clipMedia(f)) : null);
 
 /**
  * A find's clip as the map's island needs it (MapFind.clip): the thumbnail for the drawer (YouTube's even for a
- * Short, as Clip.astro shows it), the player to load on tap, and whether it is a photo post (shown, linked).
+ * Short, as Clip.astro shows it), the player to load on tap, and its verb (play, view a photo, read a post).
  */
 export const mapClip = (f: Find) => {
   if (!f.clip) return null;
@@ -41,7 +44,7 @@ export const mapClip = (f: Find) => {
     yt,
     thumb: yt ? ytThumb(yt) : clipStill(f.clip, media)?.thumb ?? null,
     embed: clipEmbed(f.clip, media),
-    photo: !yt && media?.kind === 'photo' && !!media.thumb,
+    verb: clipVerb(f.clip, media),
   };
 };
 

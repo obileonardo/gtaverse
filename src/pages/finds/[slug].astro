@@ -19,7 +19,7 @@ import GameChips from '../../components/games/GameChips.astro';
 import { gamesOfFind } from '../../lib/games';
 import { splitSpoiler } from '../../lib/spoiler';
 import { finds, type Find } from '../../lib/content';
-import { findStill, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { findStill, findClipLabels, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
 import { ytThumb } from '../../lib/clip';
 import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
 import { nearbyFinds, hasRegionHub, hasCategoryHub } from '../../lib/hubs';
@@ -53,10 +53,12 @@ const tabs = [
   ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
   { id: 'details', label: 'Details' },
 ];
+// "Play clip", or "View photo" and "Read the post" for X and Reddit photo and text posts (src/lib/clip.ts clipLabels).
+const labels = findClipLabels(find);
 const sub = mapHref
   ? { href: mapHref, label: 'Open on the map', image: still?.thumb }
   : find.clip
-    ? { href: '#tabs', label: gated ? 'Reveal the clip' : 'Watch the clip', image: still?.thumb }
+    ? { href: '#tabs', label: gated ? labels.revealBar : labels.bar, image: still?.thumb }
     : undefined;
 const loreConfidence: Record<string, string> = { canon: 'Canon', strong: 'Strong', speculative: 'Speculative', debunked: 'Debunked' };
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -81,8 +83,8 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
       <header class="find__hero">
         {find.clip && (
           <a class:list={['find__trailer', { 'find__trailer--solid': !still }]} href="#tabs" data-open-tab="clips">
-            <Icon name="play" size={20} />
-            <span>{gated ? 'Spoiler clip' : 'Play clip'}</span>
+            <Icon name={labels.icon} size={20} />
+            <span>{gated ? labels.spoiler : labels.action}</span>
           </a>
         )}
         <h1 class="find__title">{find.title}</h1>
@@ -105,7 +107,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
         <!-- Desktop: Disney white pill and circle -->
         <div class="find__actions find__actions--web">
           {find.clip ? (
-            <Button href="#tabs" variant="inverse" size="l" icon="play" data-open-tab="clips">{gated ? 'Reveal clip' : 'Play clip'}</Button>
+            <Button href="#tabs" variant="inverse" size="l" icon={labels.icon} data-open-tab="clips">{gated ? labels.reveal : labels.action}</Button>
           ) : (
             <Button href="#tabs" variant="inverse" size="l" icon="pin" data-open-tab="details">How to find it</Button>
           )}
@@ -122,9 +124,9 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
         <div class="find__actions find__actions--phone">
           {find.clip ? (
             <a class="pill pill--primary" href="#tabs" data-open-tab="clips">
-              <span class="pill__icon" aria-hidden="true"><Icon name="play" size={20} /></span>
+              <span class="pill__icon" aria-hidden="true"><Icon name={labels.icon} size={20} /></span>
               <span class="pill__text">
-                <span class="pill__title">{gated ? 'Reveal clip' : 'Play clip'}</span>
+                <span class="pill__title">{gated ? labels.reveal : labels.action}</span>
                 {find.clip?.creator && <span class="pill__sub">Clip by {find.clip.creator}</span>}
               </span>
             </a>
@@ -250,7 +252,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
                   </div>
                   {who.url && (
                     <div class="about__actions">
-                      <Button href={who.url} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener">{who.kind === 'finder' ? 'View post' : `Watch on ${who.platform}`}</Button>
+                      <Button href={who.url} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener">{who.kind === 'finder' ? 'View post' : `${labels.on} ${who.platform}`}</Button>
                     </div>
                   )}
                 </section>

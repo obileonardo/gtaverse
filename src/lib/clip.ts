@@ -68,6 +68,36 @@ export const clipEmbed = (clip: ClipRef, media?: ClipMedia | null, theme: Theme 
   return null;
 };
 
+/**
+ * What tapping a clip does, for its labels: play a video (YouTube, an X or Reddit video post, or a post the cache does
+ * not know yet), view a photo (an X or Reddit photo post) or read a post (a Reddit or X text post).
+ */
+export type ClipVerb = 'play' | 'view' | 'read';
+export const clipVerb = (clip: ClipRef, media?: ClipMedia | null): ClipVerb => {
+  if (clip.platform !== 'x' && clip.platform !== 'reddit') return 'play';
+  if (media?.kind === 'photo' && media.thumb) return 'view';
+  if (media?.kind === 'text') return 'read';
+  return 'play';
+};
+
+/**
+ * The copy for each verb, in the site's two styles: `action` for buttons and pills ("Play clip"), `bar` for the
+ * sentence-style links ("Watch the clip"), the gated forms, the find hero chip, the "on X" link and the icon.
+ */
+export const clipLabels = (verb: ClipVerb) => {
+  const noun = verb === 'play' ? 'clip' : verb === 'view' ? 'photo' : 'post';
+  return {
+    noun,
+    action: verb === 'play' ? 'Play clip' : verb === 'view' ? 'View photo' : 'Read the post',
+    bar: verb === 'play' ? 'Watch the clip' : verb === 'view' ? 'View the photo' : 'Read the post',
+    reveal: `Reveal ${noun}`,
+    revealBar: `Reveal the ${noun}`,
+    spoiler: `Spoiler ${noun}`,
+    on: verb === 'play' ? 'Watch on' : verb === 'view' ? 'View on' : 'Read on',
+    icon: (verb === 'play' ? 'play' : verb === 'view' ? 'image' : 'article') as 'play' | 'image' | 'article',
+  };
+};
+
 /** Origins whose iframes may ask the clip frame to grow to their post's height (X and Reddit post cards). */
 export const postEmbedOrigins = ['https://platform.twitter.com', 'https://embed.reddit.com'];
 

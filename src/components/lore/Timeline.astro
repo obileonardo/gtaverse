@@ -22,7 +22,7 @@ import Icon from '../ui/Icon.astro';
 import Clip from '../Clip.astro';
 import type { IconName } from '../ui/icons';
 import { moments, years, trackLayout, confidenceLabel, typeLabel } from '../../lib/lore';
-import { categoryLabel } from '../../lib/media';
+import { categoryLabel, findClipLabels } from '../../lib/media';
 import { cardImage } from '../../lib/finds';
 import { sourceName } from '../../lib/explainers';
 import GameChips from '../games/GameChips.astro';
@@ -130,8 +130,8 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
             {cf?.clip && (
               <div class="moment__watch">
                 <a class="watch" href={`/finds/${cf.slug}#tabs`} data-watch>
-                  <span class="watch__icon" aria-hidden="true"><Icon name="play" size={12} /></span>
-                  {cf.spoiler || cf.mature ? 'Reveal the clip' : 'Watch the clip'}
+                  <span class="watch__icon" aria-hidden="true"><Icon name={findClipLabels(cf).icon} size={12} /></span>
+                  {cf.spoiler || cf.mature ? findClipLabels(cf).revealBar : findClipLabels(cf).bar}
                 </a>
                 <p class="watch__credit">Clip by {cf.clip.creator ?? 'an unknown creator'}, from <a href={`/finds/${cf.slug}`}>{cf.title}</a></p>
               </div>

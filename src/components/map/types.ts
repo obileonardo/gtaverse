@@ -3,6 +3,7 @@
 import type { IconName } from '../ui/icons';
 import { matchesSearch } from './search';
 import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
+import type { ClipVerb } from '../../lib/clip';
 
 export type MapFind = {
   slug: string;
@@ -22,9 +23,9 @@ export type MapFind = {
   where: string | null;
   area: string | null; // the find's area text, for search
   still: string | null; // the clip still of the creator's own post: YouTube (never a Short), X or Reddit
-  // thumb: the drawer's picture; embed: the player to load on tap (null: link to the post); photo: an X or Reddit
-  // photo post, shown and linked to the post (src/lib/media.ts mapClip).
-  clip: { platform: string; url: string; creator: string | null; yt: string | null; thumb: string | null; embed: string | null; photo: boolean } | null;
+  // thumb: the drawer's picture; embed: the player to load on tap (null: link to the post); verb: play, view (an X or
+  // Reddit photo post, shown and linked) or read (a text post) for its labels (src/lib/media.ts mapClip).
+  clip: { platform: string; url: string; creator: string | null; yt: string | null; thumb: string | null; embed: string | null; verb: ClipVerb } | null;
   sources: { type: string; url: string; creator: string | null }[];
   finder: { handle: string; platform: string; url: string | null } | null;
   updated: string | null;

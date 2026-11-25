@@ -14,7 +14,7 @@ import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import Verification from '../Verification.astro';
 import type { Find } from '../../lib/content';
-import { categoryLabel, regionLabel, findStill } from '../../lib/media';
+import { categoryLabel, regionLabel, findStill, findClipLabels } from '../../lib/media';
 
 interface Props { featured: Find[] }
 const { featured } = Astro.props;
@@ -177,7 +177,7 @@ const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.pe
                 <Verification level={f.verification} />
               </div>
               <div class="atv__actions">
-                <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon="play" class="atv__play">Play clip</Button>
+                <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon={findClipLabels(f).icon} class="atv__play">{findClipLabels(f).action}</Button>
                 <Button href="/map" variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
               </div>
             </div>
