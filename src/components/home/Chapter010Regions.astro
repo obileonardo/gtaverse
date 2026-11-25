@@ -181,14 +181,14 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__slide.is-far { opacity: 0.2; }
   /* The neighbours show only their middle (the inset above), which would cut a placeholder's label mid-word:
      their labels fade out, and the focused slide's label fades in once it is whole. */
-  .ch10__slide .ch10__glow span { transition: opacity 200ms var(--ease-colour) 300ms; }
-  .ch10__slide:not(.is-on) .ch10__glow span { opacity: 0; transition-delay: 0ms; transition-duration: 140ms; }
+  .ch10__slide .ch10__glow span { transition: opacity var(--dur-swap-in) var(--ease-colour) 300ms; }
+  .ch10__slide:not(.is-on) .ch10__glow span { opacity: 0; transition-delay: 0ms; transition-duration: var(--dur-swap-out); }
   .ch10__slide.is-gone { opacity: 0; pointer-events: none; }
 
   /* First view: panel A's tiles rise with a short stagger once (non-uniform, capped at five). */
   :global(html.js) .ch10:not([data-fv-in]) .ch10__grid:not([hidden]) li { opacity: 0; }
   .ch10[data-fv-in='in'] .ch10__grid li { animation: ch10-rise var(--dur-reveal-group) var(--ease-reveal) calc(var(--i) * 40ms - var(--i) * var(--i) * 3ms) both; }
-  .ch10 .ch10__grid.is-swap li { animation: ch10-in 280ms var(--ease-out) calc(var(--i) * 30ms) both; }
+  .ch10 .ch10__grid.is-swap li { animation: ch10-in var(--dur-swap-in) var(--ease-out) calc(var(--i) * 30ms) both; }
   @keyframes ch10-rise { from { opacity: 0; translate: 0 12px; } }
   @keyframes ch10-in { from { opacity: 0; } }
 
@@ -219,6 +219,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <script>
   import { roll, rollInit } from '../../scripts/motion/roll';
   import { onFirstView, reduceMotion } from './first-view';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   const pad = (n: number) => String(n).padStart(2, '0');
   for (const root of document.querySelectorAll<HTMLElement>('[data-ch10]')) {
@@ -285,16 +286,36 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       });
     });
 
+    // The swap (LR13): the shown area's tiles and carousel fade out over --dur-swap-out, and only then does the new
+    // area arrive (its tiles rise, its carousel fades in over --dur-swap-in). A second choice while the old one is
+    // still leaving retargets that same fade, so nothing pops back. Keyboard choices and reduced motion swap at once.
+    const css = (prop: string) => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+    const ms = tokenMs;
+    let leaving: Animation[] = [];
+    let target = 0;
+    const show = (i: number, still: boolean) => {
+      grids.forEach((g, k) => { g.hidden = k !== i; g.classList.toggle('is-swap', k === i && !still); });
+      cars.forEach((c, k) => {
+        c.hidden = k !== i;
+        if (k === i) { place(c, startOf(c), true); if (!still) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') }); }
+      });
+      leaving.forEach((a) => a.cancel());
+      leaving = [];
+    };
+
     const select = (i: number, byKey = false) => {
       i = (i + grids.length) % grids.length;
       if (i === area) return;
       const dir = i > area ? 1 : -1;
       area = i;
-      grids.forEach((g, k) => { g.hidden = k !== i; g.classList.toggle('is-swap', k === i && !byKey); });
-      cars.forEach((c, k) => {
-        c.hidden = k !== i;
-        if (k === i) { place(c, startOf(c), true); if (!byKey && !reduceMotion()) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'cubic-bezier(0.455, 0.03, 0.515, 0.955)' }); }
-      });
+      target = i;
+      if (byKey || reduceMotion()) show(i, true);
+      else if (!leaving.length) {
+        const shown = [grids.find((g) => !g.hidden), cars.find((c) => !c.hidden)].filter((el): el is HTMLElement => !!el);
+        const anims = shown.map((el) => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms('--dur-swap-out', 180), easing: css('--ease-standard'), fill: 'forwards' }));
+        leaving = anims;
+        Promise.all(anims.map((a) => a.finished)).then(() => { if (leaving === anims) show(target, false); }, () => {});
+      }
       nums.forEach((n, k) => { n.classList.toggle('is-active', k === i); n.setAttribute('aria-pressed', String(k === i)); });
       roll(count, pad(i + 1), { dir, instant: byKey });
       name.textContent = names[i];

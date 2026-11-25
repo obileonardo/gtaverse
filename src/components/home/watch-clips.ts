@@ -5,9 +5,10 @@
 // spring (or back to the top of the rail for a clip that is not on it). The stack never reorders. "Play" loads the
 // creator's player in the card (click to load). Keyboard choices swap at once; reduced motion fades, nothing travels.
 import { Spring, loop, springToken, reducedMotion } from '../../scripts/motion/spring';
+import { tokenMs } from '../../scripts/motion/tokens';
 
 type Clip = { slug: string; title: string; summary: string; creator: string; url: string; embed: string; src: string; srcset: string; thumb: string };
-const ms = (name: string, fallback: number) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
+const ms = (name: string, fallback: number) => tokenMs(name, fallback);
 const v = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 
 export function initWatchClips(root: HTMLElement) {

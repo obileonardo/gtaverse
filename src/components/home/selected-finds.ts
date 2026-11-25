@@ -5,8 +5,10 @@
 // fade and rise 8px from 120ms over 280ms. Chosen from the keyboard the grid swaps at once (keyboard actions never
 // animate). Reduced motion: a short crossfade, nothing travels.
 
+import { tokenMs } from '../../scripts/motion/tokens';
+
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const ms = (name: string, fallback: number) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
+const ms = (name: string, fallback: number) => tokenMs(name, fallback);
 const v = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 
 export function initSelectedFinds(root: HTMLElement) {

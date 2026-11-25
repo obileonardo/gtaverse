@@ -195,7 +195,10 @@
   --dur-page-in: 280ms;      /* view transition: new page rises 8px and fades in, after the old one */
   --dur-morph: 280ms;        /* one surface changing shape: island to menu, chip widening, copy button */
   --dur-morph-out: 180ms;
+  --dur-swap-out: 180ms;     /* content swapping in one place (Spotlight, By type, Regions): the old leaves first (64%) */
+  --dur-swap-in: 280ms;      /* then the new arrives, starting only once the old is gone (LR13) */
   --dur-roll: 280ms;         /* a digit or word rolling to a new value */
+  --dur-roll-l: 480ms;       /* a display number rolling (the home stats): longer, so the eye can follow it (LR14) */
   --dur-reveal: 640ms;       /* title lines, once per page */
   --dur-reveal-group: 480ms; /* cards and rows the first time they enter view */
   --dur-image-in: 240ms;     /* a still fading in when it has decoded */

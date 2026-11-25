@@ -1,6 +1,6 @@
 // Home chapter 006, By type (ByType.astro).
 // Choosing a type (a tile, the arrows, or on the phone a swipe of the info cards) crossfades the still and the ruled
-// cells in place (old out 140ms, new in 240ms, --ease-colour, in CSS) and the accent brackets travel to the tile on
+// cells in place (old out --dur-swap-out, new in --dur-swap-in, the cells only after the old ones are gone; in CSS) and the accent brackets travel to the tile on
 // the travel spring (one element moving between targets). The pager on the still cycles that type's stills. Arrow
 // keys move along the strip at once, with no motion (keyboard actions never animate).
 import { Spring, loop, springToken, reducedMotion } from '../../scripts/motion/spring';

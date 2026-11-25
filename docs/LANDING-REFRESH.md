@@ -9,7 +9,7 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 | 0 | Setup and checks: `tools/page-check/` | Done (this PR) |
 | 1 | No cut text, map headline on two lines, By type arrows, wider island, card spacing, centred stats roll | Done (this PR), LR1 to LR10 |
 | 2 | Hero fades into the page, radial readout mask on Spotlight, footer fades | Done (this PR), LR11, LR12 |
-| 3 | Motion polish: pink highlight that follows the scroll on the manifesto, smoother transitions | Next |
+| 3 | Motion polish: pink highlight that follows the scroll on the manifesto, smoother transitions | Built (#79), LR13 to LR16 |
 | 4 | GTAverse dashed path that lights up each card | To do |
 | 5 | Map and regions behaviour | To do |
 | 6 | Smart search bar on the home page (after #76) | To do |
@@ -44,7 +44,7 @@ No new dependencies: headless Chromium (Playwright's cached build, or `CHROMIUM_
 
 ## Notes for working on this
 
-- The work started on `claude/chime-workspace` (staging plus #74 to #76); this PR is the same commits cherry-picked onto `staging`.
+- The work started on Chime's workspace branch (staging plus #74 to #76); #77 is the same commits cherry-picked onto `staging`.
 - `pnpm` runs through `corepack pnpm` if it is not on the PATH.
 - The home page is heavy to audit: run one page-check tool at a time and stop `pnpm dev` before `pnpm build` on a machine near its memory limit.
 - Phase 3's manifesto highlight: the words are already spans with a line index (`Manifesto.astro`); reveal a pink band behind each word with `clip-path` driven by a rAF-throttled scroll position (native scroll, no scroll-jacking); reduced motion shows it fully highlighted.

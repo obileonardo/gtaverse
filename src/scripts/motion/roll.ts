@@ -7,6 +7,8 @@
 // Used by the map's result count (React, through a ref), the GTAverse year on the phone ruler and the home stats.
 // Styles: .roll in src/styles/components.css.
 
+import { tokenMs } from './tokens';
+
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const cssVar = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 
@@ -47,8 +49,9 @@ export function rollInit(el: HTMLElement, value: string) {
  * Rolls `el` to `value`. dir: 1 rolls up (the number rose), -1 rolls down; by default it is read from the numbers.
  * instant: swap with no motion (keyboard moves). Reduced motion: the changed characters crossfade.
  * align 'centre': a centred number that changes length rolls as a whole, old and new on one centre line.
+ * long: a display number, rolled over --dur-roll-l instead of --dur-roll.
  */
-export function roll(el: HTMLElement, value: string, opts: { dir?: 1 | -1; instant?: boolean; align?: 'end' | 'centre' } = {}) {
+export function roll(el: HTMLElement, value: string, opts: { dir?: 1 | -1; instant?: boolean; align?: 'end' | 'centre'; long?: boolean } = {}) {
   const prev = el.dataset.value;
   if (prev === undefined || !el.querySelector('.roll__cells')) { rollInit(el, value); return; }
   if (prev === value) return;
@@ -59,7 +62,8 @@ export function roll(el: HTMLElement, value: string, opts: { dir?: 1 | -1; insta
   el.dataset.value = value;
   el.querySelector('.sr-only')!.textContent = value;
   const cells = el.querySelector<HTMLElement>('.roll__cells')!;
-  const dur = parseFloat(cssVar('--dur-roll', '280ms')) || 280;
+  // A display number (long: the home stats) rolls over --dur-roll-l, slow enough for the eye to follow it.
+  const dur = opts.long ? tokenMs('--dur-roll-l', 480) : tokenMs('--dur-roll', 280);
   const ease = cssVar('--ease-out', 'cubic-bezier(0.23, 1, 0.32, 1)');
   const still = opts.instant || reduce();
   // Centred numbers (the home stats) that change length roll as a whole: the old number leaves and the new one
