@@ -23,6 +23,8 @@ const stats = [
   { value: creditTotals.outlets, label: 'Outlets cited', short: 'Outlets', glyph: 'article' as const },
 ];
 const pad = (n: number) => String(n).padStart(2, '0');
+// Counts are grouped as the site writes numbers in prose (1,284, never 1284); the roll moves the comma like any glyph.
+const count = (n: number) => new Intl.NumberFormat('en-GB').format(n);
 ---
 <section class="ch9" aria-labelledby="ch9-title" style={`--steps: ${stats.length}`}>
   <div class="container"><ChapterHead index={index} label="By the numbers" id="ch9-title" /></div>
@@ -31,7 +33,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     {stats.map((s) => (
       <li class="ch9__row">
         <span class="ch9__row-label">{s.label}</span>
-        <span class="ch9__row-num">{s.value}</span>
+        <span class="ch9__row-num">{count(s.value)}</span>
         <span class="ch9__row-glyph" aria-hidden="true">
           {s.glyph === 'blip' ? <Fragment set:html={blipSvg('stunt', { size: 40 })} /> : <Icon name={s.glyph} size={40} stroke={1.25} />}
         </span>
@@ -57,7 +59,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         </defs>
         <path d="M1 620 C 1 250 300 1 700 1 C 1100 1 1399 250 1399 620" stroke="currentColor" stroke-width="1" stroke-dasharray="6 7" vector-effect="non-scaling-stroke" mask="url(#ch9-mask)" />
       </svg>
-      <p class="ch9__num" data-ch9-num>{stats[0].value}</p>
+      <p class="ch9__num" data-ch9-num>{count(stats[0].value)}</p>
       <p class="ch9__label" data-ch9-label>{stats[0].label}</p>
       <div class="ch9__dots">
         {stats.map((s, i) => (
@@ -66,7 +68,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       </div>
     </div>
   </div>
-  <script type="application/json" data-ch9-data set:html={JSON.stringify(stats.map((s) => ({ value: String(s.value), label: s.label })))} />
+  <script type="application/json" data-ch9-data set:html={JSON.stringify(stats.map((s) => ({ value: count(s.value), label: s.label })))} />
 </section>
 
 <style>

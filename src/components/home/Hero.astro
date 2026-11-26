@@ -177,7 +177,7 @@ const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.pe
                 <Verification level={f.verification} />
               </div>
               <div class="atv__actions">
-                <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon={findClipLabels(f).icon} class="atv__play">{findClipLabels(f).action}</Button>
+                <Button href={`/finds/${f.slug}?tab=clips#tabs`} variant="inverse" size="l" icon={findClipLabels(f).icon} class="atv__play">{findClipLabels(f).action}</Button>
                 <Button href="/map" variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
               </div>
             </div>

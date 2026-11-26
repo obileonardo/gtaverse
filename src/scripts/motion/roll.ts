@@ -58,7 +58,9 @@ export function roll(el: HTMLElement, value: string, opts: { dir?: 1 | -1; insta
   // A whole-number roll still in flight (below) is finished where it is: only its newest number stays.
   const groups = el.querySelectorAll<HTMLElement>('.roll__cells');
   groups.forEach((g, k) => { if (k < groups.length - 1) g.remove(); });
-  const dir = opts.dir ?? (parseFloat(value) < parseFloat(prev) ? -1 : 1);
+  // Grouped numbers ("1,284") compare by their digits.
+  const num = (v: string) => parseFloat(v.replace(/,/g, ''));
+  const dir = opts.dir ?? (num(value) < num(prev) ? -1 : 1);
   el.dataset.value = value;
   el.querySelector('.sr-only')!.textContent = value;
   const cells = el.querySelector<HTMLElement>('.roll__cells')!;
