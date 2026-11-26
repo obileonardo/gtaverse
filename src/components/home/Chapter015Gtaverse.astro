@@ -233,10 +233,13 @@ const anyArt = list.some((x) => x.art);
       display: block;
       position: absolute;
       z-index: -1;
-      left: -72px;
-      right: -72px;
-      top: -72px;
-      height: calc(var(--w) / 0.72 + 144px);
+      /* 72px beyond the frame, or half the gap to the next card where that is less (tablet), so it never lies over
+         a neighbour. */
+      --g: min(72px, calc((var(--sp) - var(--w)) / 2));
+      left: calc(var(--g) * -1);
+      right: calc(var(--g) * -1);
+      top: calc(var(--g) * -1);
+      height: calc(var(--w) / 0.72 + var(--g) * 2);
       background: var(--blip-glow);
       opacity: 0;
       pointer-events: none;
@@ -340,7 +343,7 @@ const anyArt = list.some((x) => x.art);
         const bb = box(button, rail);
         const ex = bb.x - 16;
         const ey = bb.y + bb.h / 2;
-        if (ex > last.r + 32) {
+        if (ex >= last.r + 24) {
           curve(last.r, last.cy, ex, ey);
           d += ` H${n(ex)}`;
           dots.push([ex, ey, 4]);
@@ -366,13 +369,16 @@ const anyArt = list.some((x) => x.art);
     };
 
     // Lights the cards the pen has reached. A 12px band behind each dot keeps a card from flickering when the scroll
-    // settles on it. The glow plays only when a card lights by scrolling, at most two at once (a jump lights quietly).
-    let quietUntil = 0;
-    let quietFrames = 0;
+    // settles on it. The glow plays only when a card lights by scrolling, at most two at once (a jump lights quietly),
+    // and only once: `is-glow` comes off when its animation ends and whenever the state is set quietly, so a glow layer
+    // that is hidden and shown again (a resize across 768px, reduced motion turned on and off) has nothing to replay.
+    let isQuiet = false;
+    let quietTill = 0;
+    let quietLoop = 0;
     const light = (pen: number) => {
       const next = lit.map((on, i) => (on ? pen >= arrive[i] - Math.min(12, (arrive[i] - startX) / 2) : pen >= arrive[i]));
       const fresh = next.filter((on, i) => on && !lit[i]).length;
-      const glow = !quietFrames && fresh <= 2;
+      const glow = !isQuiet && fresh <= 2;
       next.forEach((on, i) => {
         if (on === lit[i]) return;
         lit[i] = on;
@@ -380,21 +386,32 @@ const anyArt = list.some((x) => x.art);
         cards[i].classList.toggle('is-glow', on && glow);
       });
     };
-    // The next state change happens without a fade (first paint, resize, keyboard). Held for two frames, so the
-    // browser has styled the change before the fades come back.
-    const quiet = () => {
+    // State changes happen without a fade or a glow for a while (first paint, back navigation, resize, keyboard):
+    // at least two frames, so the browser has styled the change, and at least `ms`, so a scroll position the browser
+    // restores after loading lands quietly too.
+    const quiet = (ms = 0) => {
+      for (const c of cards) c.classList.remove('is-glow');
       root.setAttribute('data-ch15-instant', '');
-      quietFrames = 2;
-      const id = ++quietUntil;
+      isQuiet = true;
+      quietTill = Math.max(quietTill, performance.now() + ms);
+      let frames = 2;
+      const id = ++quietLoop;
       const tick = () => {
-        if (id !== quietUntil) return;
-        if (--quietFrames > 0) { requestAnimationFrame(tick); return; }
+        if (id !== quietLoop) return;
+        if (--frames > 0 || performance.now() < quietTill) { requestAnimationFrame(tick); return; }
+        isQuiet = false;
         root.removeAttribute('data-ch15-instant');
       };
       requestAnimationFrame(tick);
     };
+    const glowDone = (e: AnimationEvent) => {
+      if (e.animationName === 'ch15-glow') (e.target as HTMLElement).closest('.ch15__card')?.classList.remove('is-glow');
+    };
+    root.addEventListener('animationend', glowDone);
+    root.addEventListener('animationcancel', glowDone);
 
     const measure = () => {
+      quiet();
       route();
       if (!sticky.matches) {
         track.style.removeProperty('--track-h'); rail.style.transform = ''; word.style.transform = '';
@@ -406,7 +423,6 @@ const anyArt = list.some((x) => x.art);
       const gutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 128;
       overflow = Math.max(0, right + gutter - innerWidth);
       track.style.setProperty('--track-h', `${innerHeight + overflow / ratio}px`);
-      quiet();
       update();
     };
     let ticking = false;
@@ -430,7 +446,12 @@ const anyArt = list.some((x) => x.art);
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', measure);
     sticky.addEventListener('change', measure);
+    // First paint and a page restored by Back: the state is set, never played. The browser may restore the scroll
+    // position after the script runs (and again at load), so the quiet spell outlasts that.
+    quiet(1000);
     measure();
+    addEventListener('load', () => { quiet(600); update(); });
+    addEventListener('pageshow', (e) => { if (e.persisted) { quiet(600); measure(); } });
     // The end button's place depends on the web font; draw again once it has loaded.
     document.fonts?.ready.then(measure);
 
