@@ -148,7 +148,8 @@ const standfirst = parts?.standfirst.replace(/<[^>]+>/g, '').replace(/\s*\d+\s*$
   .ch13__tags { display: flex; gap: var(--space-3); }
   .ch13__tag { height: 44px; padding-inline: 20px; font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; color: #fff; cursor: inherit; pointer-events: none; }
   .ch13__card-title { max-width: 14em; font-size: var(--text-display-m); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-transform: uppercase; text-wrap: balance; padding-block: 0.06em; }
-  /* With the pointer tilt running (card-tilt.ts, LR46) the art holds still: a card never tilts and zooms at once. */
+  /* While the card tilts toward a mouse (card-tilt.ts sets data-tilt, LR46) the art holds still: a card never tilts and
+     zooms at once. At rest, without room to tilt, with a pen, reduced motion or no script, the zoom is as before. */
   @media (hover: hover) and (pointer: fine) {
     .ch13__card:not([data-tilt]):hover .ch13__card-art img { scale: 1.02; }
   }

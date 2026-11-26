@@ -67,7 +67,8 @@ const short = (label: string) => label.replace(/^Collectible /, '').replace(/ an
 
   @media (hover: hover) and (pointer: fine) {
     .cl__card:hover { border-color: var(--border-2); }
-    /* With the pointer tilt running (card-tilt.ts, LR46) the blip stays put: a card never tilts and lifts at once. */
+    /* While the card tilts toward a mouse (card-tilt.ts sets data-tilt, LR46) the blip stays put: a card never tilts and
+       lifts at once. Without room to tilt (the phone scroller), with a pen, reduced motion or no script, it lifts as before. */
     .cl__card:not([data-tilt]):hover .cl__blip { transform: translateY(-4px); }
   }
 

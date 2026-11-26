@@ -275,9 +275,21 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
       raf = requestAnimationFrame(frame);
     },
     pause() { if (!running) return; running = false; cancelAnimationFrame(raf); pausedAt = performance.now(); },
+    /**
+     * Back on screen after a pause. Away for less than the intro's length: it carries on from where it stopped. Away
+     * past the time it would have ended: it shows the finished drawing at once (the intro is over, never half drawn),
+     * and the figure is free to turn (phase 8, #94 review B1 and P1). Either way the pause is cleared.
+     */
     resume() {
-      if (running || still || !startedAt || time() >= END) return;
-      if (pausedAt) { startedAt += performance.now() - pausedAt; pausedAt = 0; }
+      if (running || still || !startedAt) return;
+      if (pausedAt) {
+        const late = time() >= END; // time() still counts the pause
+        if (late) startedAt = performance.now() - END * 1000;
+        else startedAt += performance.now() - pausedAt;
+        pausedAt = 0;
+        if (late) { draw(END); return; }
+      }
+      if (time() >= END) return;
       running = true;
       raf = requestAnimationFrame(frame);
     },
