@@ -114,7 +114,7 @@ export function initPeek(hero: HTMLElement) {
       current = item;
       items.forEach((a) => a.classList.toggle('is-hot', a === item));
       list.dataset.hot = 'true';
-      if (subbar) subbar.href = `/finds/${item.dataset.slug}`;
+      if (subbar) subbar.href = `/finds/${item.dataset.slug}?tab=clips#tabs`;
       if (subImg && item.dataset.peekThumb) subImg.src = item.dataset.peekThumb.replace('/hqdefault', '/mqdefault');
     };
     const openAt = (t: { x: number; y: number; origin: string }, instant: boolean) => {

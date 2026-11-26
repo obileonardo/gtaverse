@@ -21,7 +21,8 @@ import { gameArt, linkArt, type MenuArt } from '../../lib/menu';
 import { byNewest } from '../../lib/feed';
 import { categoryLabel, regionLabel } from '../../lib/media';
 import { submitFindLink } from '../../lib/issues';
-export interface SubBar { href: string; label: string; image?: string | null }
+/** openTab: on a find page, the tab the bar opens in place (the page's [data-open-tab] handler). Without JavaScript the find page shows only its first tab (Tabs.astro), so the link lands there. */
+export interface SubBar { href: string; label: string; image?: string | null; openTab?: string }
 interface Props { sub?: SubBar }
 const { sub } = Astro.props;
 const path = Astro.url.pathname;
@@ -178,7 +179,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </nav>
 
     {sub && (
-      <a class="subbar" href={sub.href} data-subbar>
+      <a class="subbar" href={sub.href} data-subbar data-open-tab={sub.openTab}>
         <span class="subbar__thumb" aria-hidden="true">{sub.image && <img src={sub.image} alt="" width="96" height="54" loading="eager" decoding="async" data-subbar-img />}</span>
         <span class="subbar__label" data-subbar-label>{sub.label}</span>
         <Icon name="arrow-right" size={16} class="subbar__arrow" />

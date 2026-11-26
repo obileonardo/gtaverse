@@ -8,10 +8,15 @@
 // there are none yet, so there is no route. Under it, PamPam's card frames the map's own base (the official tiles
 // built at deploy for /map, shown as they are, credited) with the map's chrome drawn on top; it falls back to the
 // coast drawing when the tiles are not built. Behaviour and motion: the-map.ts.
+// Region rows and the drawing (LR23): hovering or focusing a row lights that region's pinned finds on the drawing and
+// shows a tag with the region's name and how many of its finds are pinned. The collectible dots belong to no region
+// (Game Checklists' positions carry none, regions have no outline and the map's place labels are not recorded yet),
+// so they never light up: only real find pins do, and there are none until Chime places them.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ChapterHead from './ChapterHead.astro';
 import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
 import mapInfo from '../../../content/map.json';
 import { finds } from '../../lib/content';
 import { type RegionRow, collectiblePins, layerCards } from '../../lib/home';
@@ -28,11 +33,14 @@ const fr = mapInfo.grid.frame;
 const fw = fr.x1 - fr.x0;
 const aspect = (fr.y1 - fr.y0) / fw;
 const VB = 1000;
-const dots = collectiblePins
+const path = (pts: { x: number; y: number }[]) => pts
   .map((p) => [((p.x - fr.x0) / fw) * VB, ((p.y - fr.y0) / fw) * VB])
   .filter(([x, y]) => x >= 0 && y >= 0 && x <= VB && y <= VB * aspect)
   .map(([x, y]) => `M${x.toFixed(1)} ${y.toFixed(1)}h0`)
   .join('');
+const dots = path(collectiblePins);
+// Each listed region's pinned finds, drawn in their own group so the region's row can light them (LR23).
+const regionPins = regions.map((r) => ({ id: r.id, d: path(finds.filter((f) => f.pin && f.region_ids.includes(r.id)).map((f) => f.pin!)) }));
 const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'));
 
 // The preview: the map's zoom 3 tiles (public/map/, built at deploy) shown at 256 CSS px each, so the whole map is
@@ -60,7 +68,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
         <ul class="mp__list" role="list" data-mp-list>
           {regions.map((r, i) => (
             <li>
-              <a class="mp__row" href={`/map?region=${r.id}`} data-mp-row data-active={i === 0 ? '' : undefined}>
+              <a class="mp__row" href={`/map?region=${r.id}`} data-mp-row={r.id} data-active={i === 0 ? '' : undefined}>
                 <span class="mp__name">{r.name}</span>
                 <span class="mp__parent">{r.parent}</span>
                 <span class="mp__more"><span>{plural(r.count, 'find', 'finds')} · {r.pinned} pinned so far</span></span>
@@ -76,7 +84,21 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
           <svg class="mp__svg" viewBox={`0 0 ${VB} ${Math.round(VB * aspect)}`} preserveAspectRatio="xMaxYMin meet" aria-hidden="true" focusable="false">
             <g class="mp__coast" data-mp-coast></g>
             <path class="mp__dots" d={dots} />
+            {regionPins.filter((p) => p.d).map((p) => (
+              <g class="mp__pins" data-mp-pins={p.id} data-active={p.id === regions[0]?.id ? '' : undefined}>
+                <path class="mp__pin" d={p.d} />
+                <path class="mp__pin mp__pin--lit" d={p.d} />
+              </g>
+            ))}
           </svg>
+        </span>
+        <span class="mp__tags" aria-hidden="true">
+          {regions.map((r, i) => (
+            <span class="mp__tag" data-mp-tag={r.id} data-active={i === 0 ? '' : undefined}>
+              <span class="mp__tag-name">{r.name}</span>
+              <span class="mp__tag-note">{r.pinned === 0 ? 'Nothing pinned here yet' : `${plural(r.pinned, 'find', 'finds')} pinned`}</span>
+            </span>
+          ))}
         </span>
       </a>
     </div>
@@ -85,7 +107,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   <div class="container">
     <a class="pv" href="/map">
       <div class="pv__head">
-        <p class="pv__title">Open the map</p>
+        <span class="btn btn--primary btn--xl pv__btn">Open the map<Icon name="arrow-right" size={24} /></span>
         <p class="pv__lede">Filter by type, turn on {layers.length} collectible layers, mark what you found.</p>
       </div>
       <div class="pv__band" data-scheme="dark">
@@ -158,13 +180,29 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   .mp__art[data-in='in'] .mp__svg { animation: mp-draw 1600ms var(--ease-in-out) both; }
   @keyframes mp-draw { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
 
-  /* PamPam's card: 60% of the content box, a tinted head band over the framed product. */
+  /* A region's pins and tag (LR23). Find pins sit over the collectible dots, brighter and larger; the active row's
+     pins are lit in --accent-ink. The tag names the active region while the pointer or focus is in the list. Both
+     swap like LR13: the old fades out over --dur-swap-out, then the new fades in over --dur-swap-in, opacity only. */
+  .mp__pin { fill: none; stroke: var(--text-2); stroke-width: 7px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .mp__pin--lit { stroke: var(--accent-ink); opacity: 0; transition: opacity var(--dur-swap-out) var(--ease-standard); }
+  .mp__pins[data-active] .mp__pin--lit { opacity: 1; transition: opacity var(--dur-swap-in) var(--ease-out) var(--dur-swap-out); }
+  .mp__tags { position: absolute; left: 4%; top: 0; display: grid; max-width: 92%; pointer-events: none; opacity: 0; transition: opacity var(--dur-swap-out) var(--ease-standard); }
+  .mp[data-engaged] .mp__tags { opacity: 1; transition: opacity var(--dur-swap-in) var(--ease-out); }
+  .mp__tag { grid-area: 1 / 1; display: grid; gap: var(--space-1); opacity: 0; transition: opacity var(--dur-swap-out) var(--ease-standard); }
+  .mp__tag[data-active] { opacity: 1; transition: opacity var(--dur-swap-in) var(--ease-out) var(--dur-swap-out); }
+  .mp__tag-name { font-family: var(--font-mono); font-size: var(--text-mono-caps); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.4; color: var(--text-1); }
+  .mp__tag-note { font-size: var(--text-caption); line-height: 1.4; color: var(--text-3); }
+
+  /* PamPam's card: 60% of the content box. Its head is the chapter's main button ("Open the map", the primary pill)
+     beside one line on what the map does; the framed product under it is the supporting picture (LR24). The whole
+     card is the link; the pill is drawn, not a second control. */
   .pv { display: block; width: min(100%, 710px); margin: var(--space-16) auto 0; border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); overflow: hidden; background: var(--surface-1); transition: transform var(--dur-press) var(--ease-out); }
   .pv:active { transform: scale(0.99); }
-  .pv__head { padding: var(--space-8) var(--space-10) var(--space-6); display: grid; gap: var(--space-2); }
-  .pv__title { font-size: var(--text-h1); font-weight: 600; line-height: var(--leading-tight); letter-spacing: -0.01em; }
-  .pv__lede { font-size: var(--text-body); color: var(--text-2); max-width: 44ch; }
-  .pv__band { position: relative; aspect-ratio: 1.7; overflow: hidden; background: var(--map-land); container-type: inline-size; }
+  .pv__head { padding: var(--space-6) var(--space-6) var(--space-6) var(--space-8); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lede btn'; align-items: center; gap: var(--space-6); }
+  .pv__btn { grid-area: btn; }
+  .pv__btn :global(.icon) { transition: transform var(--dur-press) var(--ease-out); }
+  .pv__lede { grid-area: lede; font-size: var(--text-body); line-height: 1.45; color: var(--text-2); max-width: 36ch; }
+  .pv__band { position: relative; aspect-ratio: 2; overflow: hidden; background: var(--map-land); container-type: inline-size; }
   .pv__map { position: absolute; left: 50%; top: 50%; width: 101.7%; aspect-ratio: 722 / 988; translate: -50% calc(var(--cy) * -100%); overflow: hidden; }
   .pv__map img { position: absolute; max-width: none; }
   .pv__pin { position: absolute; translate: -50% -100%; display: flex; }
@@ -192,6 +230,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   .pv__credit { position: absolute; right: var(--space-3); bottom: var(--space-2); font-size: 12px; color: rgb(255 255 255 / 0.92); padding: 2px 8px; border-radius: var(--radius-xs); background: rgb(var(--scrim-rgb) / var(--scrim-read)); }
 
   @media (hover: hover) and (pointer: fine) {
+    .pv:hover .pv__btn :global(.icon) { transform: translateX(3px); }
     .mp__row:hover .mp__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
   }
 
@@ -200,14 +239,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
     .mp__col { min-width: 280px; }
   }
 
-  /* Phone (Justin Jefferson M010): the coast bleeds off the right edge, the headline in four lines of condensed caps
-     at the bottom left, one wide pink pill; the region list follows. PamPam's card is the desktop's way in only. */
+  /* Phone (Justin Jefferson M010): the coast bleeds off the right edge, the headline in condensed caps under it, one
+     wide pink pill; the region list follows. PamPam's card is the desktop's way in only. The drawing has its own band
+     above the headline (LR26): it sat behind the headline, the pill and the first row (the meeting: "looks broken"),
+     so it now ends where the text starts. About a sixth of the coast still runs off the right edge. */
   @media (max-width: 767px) {
     .mp__band { margin-top: var(--space-6); }
-    .mp__grid { display: block; min-height: 0; }
-    .mp__art { position: absolute; top: 0; right: 0; width: 70%; height: 520px; margin: 0; }
-    .mp__tilt { inset: 0 -30% 0 0; transform: none; }
-    .mp__col { padding-top: 240px; min-width: 0; }
+    .mp__grid { display: flex; flex-direction: column; min-height: 0; gap: 0; }
+    .mp__art { position: relative; order: -1; height: 360px; margin: 0 calc(-1 * var(--page-pad)) 0 0; }
+    .mp__tilt { inset: 0 -12% 0 0; transform: none; }
+    .mp__col { padding-top: var(--space-6); min-width: 0; }
     .mp__title { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-l); line-height: 0.95; letter-spacing: var(--tracking-display); text-transform: uppercase; max-width: 6.2em; white-space: normal; }
     .mp__stop, .mp__br { display: none; }
     .mp__cta { display: block; order: 2; margin-top: var(--space-6); }
@@ -220,7 +261,11 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   @media (prefers-reduced-motion: reduce) {
     :global(html.js:not(.rv-off)) .mp__art:not([data-in]) .mp__svg { clip-path: none; opacity: 0; }
     .mp__art[data-in='in'] .mp__svg { animation: mp-fade var(--dur-fade-reduced) linear both; }
-    .pv { transition: none; }
+    .pv, .pv__btn :global(.icon) { transition: none; }
+    .mp__tags, .mp__tag, .mp__pin--lit, .mp[data-engaged] .mp__tags, .mp__tag[data-active], .mp__pins[data-active] .mp__pin--lit { transition: opacity var(--dur-fade-reduced) linear; }
+    .pv:hover .pv__btn :global(.icon) { transform: none; }
   }
+  /* Keyboard choices never animate: a row reached by Tab swaps its line, pins and tag at once. */
+  .mp[data-key] :is(.mp__more, .mp__tags, .mp__tag, .mp__pin--lit) { transition: none; }
   @keyframes mp-fade { from { opacity: 0; } }
 </style>

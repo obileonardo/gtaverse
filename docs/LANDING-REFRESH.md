@@ -10,8 +10,8 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 | 1 | No cut text, map headline on two lines, By type arrows, wider island, card spacing, centred stats roll | Done (this PR), LR1 to LR10 |
 | 2 | Hero fades into the page, radial readout mask on Spotlight, footer fades | Done (this PR), LR11, LR12 |
 | 3 | Motion polish: pink highlight that follows the scroll on the manifesto, smoother transitions | Built (#79, #80), LR13 to LR17 |
-| 4 | GTAverse dashed path that lights up each card | To do |
-| 5 | Map and regions behaviour | To do |
+| 4 | GTAverse dashed path that lights up each card | Built (#85, #88), LR18 to LR22 |
+| 5 | Map and regions behaviour | Built (#86, #87), LR23 to LR27; "Open the map" signed off by Obi on 26 Nov 2026 |
 | 6 | Smart search bar on the home page (after #76) | Built (#84), LR28 to LR32 |
 | 7 | Five redesigns from Mobbin references (Chime picks from a reference board) | To do |
 | 8 | Jason and Lucia react to the cursor (needs a decision like L5) | To do |
@@ -39,7 +39,7 @@ No new dependencies: headless Chromium (Playwright's cached build, or `CHROMIUM_
 2. **Hero at 768px:** the trailer's sound toggle (shown while the trailer plays) overlaps the island by about 30px (was so before).
 3. **Hero titles, intro and credit over a very bright frame:** below AA when the frame is pure white. The hero's scrims are unchanged on purpose (no overlay behind the text). If a bright frame reads badly, a radial at the hero's bottom left is the fix.
 4. **Island width:** 470 from 1280, 400 from 1024, 336 below 1024, because 470 covered a hero mode button at 768. At 1024 the hero intro beside it is 224px wide.
-5. **Phone map teaser:** the coast still bleeds off the right edge (its documented phone design); unclipped on tablet and desktop only.
+5. **Phone map teaser:** the coast still bleeds off the right edge (its documented phone design); unclipped on tablet and desktop only. Since phase 5 (LR26) the drawing has its own band above the headline, so the bleed no longer sits behind any text.
 6. **`--text-3` on `--surface-1`** measures about 4.46:1 for some labels (the regions tile caption, the footer cell labels), just under AA.
 
 ## Notes for working on this
