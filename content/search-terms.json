@@ -1,8 +1,13 @@
 {
-  "note": "Our own words that people type for a find type or a place, so map search finds them (docs/MAP.md, Search). Written by The Vice Files; never copied from another site's list. Keys are ids from content/categories.json (kind find) and content/regions.json. Lower case, plain words or short phrases.",
+  "note": "Our own words that people type for a find type, a place or a topic, so map search finds them (docs/MAP.md, Search). Written by The Vice Files; never copied from another site's list. Keys are ids from content/categories.json (kind find) and content/regions.json. Lower case, plain words or short phrases.",
+  "topics": {
+    "money": ["money", "cash", "dollars", "dollar", "bucks", "loot", "payout", "reward", "rewards", "paid", "pays", "stash", "rich"],
+    "cannot-die": ["immortal", "invincible", "unkillable", "bulletproof", "survives", "cannot die", "never dies"],
+    "funny": ["funny", "hilarious", "joke", "jokes", "prank", "comedy", "gag"]
+  },
   "categories": {
     "easter-egg": ["easter egg", "egg", "secret", "hidden", "reference", "joke", "nod", "tribute"],
-    "paranormal": ["ufo", "alien", "aliens", "ghost", "ghosts", "haunted", "spooky", "creepy", "cryptid", "bigfoot", "skunk ape", "monster", "supernatural", "mystery", "abduction", "cult", "satan", "devil"],
+    "paranormal": ["ufo", "alien", "aliens", "ghost", "ghosts", "haunted", "spooky", "scary", "horror", "creepy", "cryptid", "bigfoot", "skunk ape", "monster", "supernatural", "mystery", "abduction", "cult", "satan", "devil"],
     "npc": ["npc", "character", "person", "people", "pedestrian", "stranger", "encounter", "random event", "cameo"],
     "secret-location": ["secret", "hidden", "bunker", "cave", "room", "interior", "place", "spot", "location", "hideout"],
     "real-world-reference": ["real life", "real world", "parody", "florida", "miami", "meme", "news", "celebrity", "brand"],
