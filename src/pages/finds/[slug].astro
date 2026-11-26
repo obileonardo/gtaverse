@@ -304,7 +304,9 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
   // keys on the tab row), ?tab=<id> is written with replaceState, so a reload or a copied address opens the same tab
   // and Back is not filled with tab changes. The first tab is the page's default, so it clears the parameter.
   const tabEls = [...document.querySelectorAll<HTMLElement>('[role="tab"][id^="find-tab-"]')];
-  const tabHref = (id: string) => (tabEls[0]?.id === `find-tab-${id}` ? '#tabs' : `?tab=${encodeURIComponent(id)}#tabs`);
+  // Every link names its own tab whatever the address says now: the first tab is the page's path with no query
+  // (a bare #tabs would keep a ?tab= the page has written), the others ?tab=<id>, which replaces any query.
+  const tabHref = (id: string) => (tabEls[0]?.id === `find-tab-${id}` ? `${location.pathname}#tabs` : `?tab=${encodeURIComponent(id)}#tabs`);
   const keepTab = (hash?: string) => {
     const on = tabEls.find((t) => t.getAttribute('aria-selected') === 'true');
     if (!on) return;
