@@ -1,36 +1,49 @@
 // Unit tests for the home page's example questions (content/search-terms.json, examples; src/lib/ask.ts, LR30).
-// Each one is a link to /map?q=..., so each must list finds on the map with its default filters (spoilers and mature
-// hidden). The build leaves out an example that lists nothing; this test fails on it so it gets fixed. Run: pnpm test.
+// Each one is a link to /map?q=..., so each must list finds on the map as the map opens that link. This runs the same
+// check the build runs (checkExamples): the map's own fields (src/lib/map-fields.ts, which src/pages/map.astro uses),
+// its search and its filter with the default filters. The build leaves out an example that lists nothing; this test
+// fails on it so it gets fixed. Run: pnpm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { matchesSearch, searchRank, setSearchCorpus, moneyAmount } from '../../src/components/map/search.ts';
-import type { MapFind } from '../../src/components/map/types.ts';
+import { checkExamples, exampleQuestions } from '../../src/lib/ask.ts';
+import { searchFields } from '../../src/lib/map-fields.ts';
+import { searchRank, moneyAmount, setSearchCorpus } from '../../src/components/map/search.ts';
+import { defaultFilters, passes, type MapFind } from '../../src/components/map/types.ts';
+import type { Find } from '../../src/lib/content.ts';
 
-type Raw = { slug: string; title: string; status: string; category: string; spoiler: boolean; mature: boolean; summary: string; location_description: string | null; area: string | null; region_ids: string[]; first_finder: { handle: string } | null; clip: { creator: string | null } | null; sources: { creator: string | null }[] };
-const raw: Raw[] = JSON.parse(readFileSync(new URL('../../content/finds.json', import.meta.url), 'utf8'));
-const terms: { examples?: string[] } = JSON.parse(readFileSync(new URL('../../content/search-terms.json', import.meta.url), 'utf8'));
-// Only the fields search reads; the map page fills the rest.
-const finds = raw.filter((f) => f.status === 'published').map((f) => ({
-  slug: f.slug, title: f.title, category: f.category, categoryLabel: f.category.replace(/-/g, ' '), regionLabel: '',
-  summary: f.summary, where: f.location_description, area: f.area, regionIds: f.region_ids,
-  finder: f.first_finder, clip: f.clip, sources: f.sources, spoiler: f.spoiler, mature: f.mature,
-})) as unknown as MapFind[];
-setSearchCorpus(finds);
-// What the map lists for a /map?q= link with its default filters: no spoilers, no mature finds, best match first.
-const listed = (q: string) => finds.filter((f) => !f.spoiler && !f.mature && matchesSearch(f, q)).sort((a, b) => searchRank(b, q) - searchRank(a, q));
+// The published finds, as src/lib/content.ts gives them to the site.
+const finds = (JSON.parse(readFileSync(new URL('../../content/finds.json', import.meta.url), 'utf8')) as Find[]).filter((f) => f.status === 'published');
+const schema = JSON.parse(readFileSync(new URL('../../schema/search-terms.schema.json', import.meta.url), 'utf8'));
+const count = (q: string) => checkExamples(finds, [q])[0].count;
 
-test('there are example questions to show', () => {
-  assert.ok((terms.examples ?? []).length >= 3, 'at least three examples');
+test('there are as many example questions as the schema asks for, and no repeats', () => {
+  const qs = exampleQuestions();
+  assert.ok(qs.length >= schema.properties.examples.minItems, `at least ${schema.properties.examples.minItems} examples`);
+  assert.equal(new Set(qs).size, qs.length);
 });
 
-for (const q of terms.examples ?? []) {
+for (const q of exampleQuestions()) {
   test(`example "${q}" lists finds on the map`, () => {
-    assert.ok(listed(q).length > 0, `"${q}" lists nothing: reword it or remove it`);
+    assert.ok(count(q) > 0, `"${q}" lists nothing on /map: reword it or remove it`);
   });
 }
 
-test('"Where can I get 200k?" lists the finds that pay money first', () => {
-  const out = listed('Where can I get 200k?');
+test('an example of filler words only counts as listing nothing (it would list the whole map)', () => {
+  assert.equal(count('Where can I get it?'), 0);
+  assert.equal(count('xyzzy plugh'), 0);
+});
+
+test('the check counts what the map lists: place words read through the map\'s parent regions and type labels', () => {
+  // The map's fields give a find its parent regions and its type label, so these match what /map shows.
+  assert.ok(count('Downtown') >= 7, `Downtown: ${count('Downtown')}`);
+  assert.ok(count('Rare cars') >= 1, `Rare cars: ${count('Rare cars')}`);
+});
+
+test('"Where can I get 200k?" lists a find that pays money first', () => {
+  const q = 'Where can I get 200k?';
+  const mapFinds = finds.map(searchFields) as unknown as MapFind[];
+  setSearchCorpus(mapFinds);
+  const out = mapFinds.filter((f) => passes(f, defaultFilters, q)).sort((a, b) => searchRank(b, q) - searchRank(a, q));
   assert.ok(moneyAmount(out[0]) > 0, `${out[0]?.slug} names no dollar amount`);
 });

@@ -1,45 +1,31 @@
 // The home page's search band (components/home/AskBar.astro, LR28 to LR32): the example questions under the box.
-// They come from content/search-terms.json (examples), and each one is kept only if it lists at least one find on the
-// map as the map opens a /map?q= link: the map's own search (search.ts) through its own filter (types.ts, passes)
-// with the default filters, so spoilers and mature finds are hidden. A question that lists nothing is left out here,
-// at build time, and scripts/test/ask.test.ts fails on it so it gets fixed or removed.
-import terms from '../../content/search-terms.json';
-import { finds, regionById } from './content';
-import { categorySingular, regionLabel, mapClip } from './media';
-import { setSearchCorpus } from '../components/map/search';
-import { defaultFilters, passes, type MapFind } from '../components/map/types';
-
-// The fields search and the filter read, built the way src/pages/map.astro builds them for the map.
-const ancestors = (id: string): string[] => {
-  const out: string[] = [];
-  for (let r = regionById(id); r; r = r.parent ? regionById(r.parent) : undefined) out.push(r.id);
-  return out;
-};
-const searchable = finds.map((f) => ({
-  slug: f.slug,
-  title: f.title,
-  category: f.category,
-  categoryLabel: categorySingular(f.category),
-  regionIds: [...new Set(f.region_ids.flatMap(ancestors))].filter((id) => id !== 'leonida'),
-  regionLabel: regionLabel(f),
-  verification: f.verification,
-  spoiler: f.spoiler,
-  mature: f.mature,
-  summary: f.summary,
-  where: f.location_description ?? null,
-  area: f.area ?? null,
-  clip: mapClip(f),
-  sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
-  finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
-  chapterGate: f.chapter_gate ?? null,
-})) as unknown as MapFind[];
+// They come from content/search-terms.json (examples). Each is a link to /map?q=..., so each is kept only if the map
+// lists at least one find for it as it opens that link: the map's own fields (map-fields.ts), its own search
+// (search.ts) and its own filter (types.ts, passes) with the default filters, so spoilers and mature finds are hidden.
+// An example with no search word left once filler is dropped ("Where can I get it?") would list the whole map, so it
+// counts as listing nothing. Node's test runner loads this file too (scripts/test/ask.test.ts): it takes the finds as
+// an argument and imports nothing that only Astro understands.
+import terms from '../../content/search-terms.json' with { type: 'json' };
+import type { Find } from './content';
+import { searchFields } from './map-fields.ts';
+import { queryWords, setSearchCorpus } from '../components/map/search.ts';
+import { defaultFilters, passes, type MapFind } from '../components/map/types.ts';
 
 export type AskExample = { q: string; href: string; count: number };
 
-/** The example questions that list finds on the map, each with its /map link and how many finds it lists. */
-export function askExamples(): AskExample[] {
-  setSearchCorpus(searchable);
-  return ((terms as { examples?: string[] }).examples ?? [])
-    .map((q) => ({ q, href: `/map?${new URLSearchParams({ q })}`, count: searchable.filter((f) => passes(f, defaultFilters, q)).length }))
-    .filter((e) => e.count > 0);
+/** The example questions as written, in order. */
+export const exampleQuestions = (): string[] => (terms as { examples?: string[] }).examples ?? [];
+
+/** Every example with its /map link and how many finds the map lists for it (0 for one that lists nothing). */
+export function checkExamples(finds: Find[], questions = exampleQuestions()): AskExample[] {
+  const mapFinds = finds.map(searchFields) as unknown as MapFind[];
+  setSearchCorpus(mapFinds);
+  return questions.map((q) => ({
+    q,
+    href: `/map?${new URLSearchParams({ q })}`,
+    count: queryWords(q).length ? mapFinds.filter((f) => passes(f, defaultFilters, q)).length : 0,
+  }));
 }
+
+/** The examples the band shows: those that list finds on the map. `finds` is the published finds (lib/content). */
+export const askExamples = (finds: Find[]) => checkExamples(finds).filter((e) => e.count > 0);

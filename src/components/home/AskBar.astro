@@ -8,15 +8,18 @@
 //   that list finds on the map are shown (src/lib/ask.ts).
 // - No chapter number (LR28): it opens on the chapter rule and bracket label without an index, so 001 to 015 keep
 //   their numbers and Spotlight stays 001.
+// - One landmark: the search form, named by the band's label. The section itself carries no name, so screen readers
+//   do not announce "Ask the map" twice.
 // Motion: only the chapter head's own first view (ChapterHead) and the shared press scale on the button and chips.
 // The box's focus ring shows at once (keyboard actions never animate).
 import ChapterHead from './ChapterHead.astro';
 import Chip from '../ui/Chip.astro';
 import Icon from '../ui/Icon.astro';
 import { askExamples } from '../../lib/ask';
-const examples = askExamples();
+import { finds } from '../../lib/content';
+const examples = askExamples(finds);
 ---
-<section class="ask" aria-labelledby="ask-label">
+<section class="ask">
   <div class="container">
     <ChapterHead label="Ask the map" id="ask-label" />
     <form class="ask__form" action="/map" method="get" role="search" aria-labelledby="ask-label">
