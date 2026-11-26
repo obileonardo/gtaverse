@@ -1,5 +1,6 @@
 {
-  "note": "Our own words that people type for a find type, a place or a topic, so map search finds them (docs/MAP.md, Search). Written by The Vice Files; never copied from another site's list. Keys are ids from content/categories.json (kind find) and content/regions.json. Lower case, plain words or short phrases.",
+  "note": "Our own words that people type for a find type, a place or a topic, so map search finds them (docs/MAP.md, Search). Written by The Vice Files; never copied from another site's list. Keys are ids from content/categories.json (kind find) and content/regions.json. Lower case, plain words or short phrases. Examples are whole questions in sentence case, shown as chips on the home page.",
+  "examples": ["Where can I get 200k?", "Where can I get guns?", "The NPC you cannot snipe", "Where is Bigfoot?", "Funny finds"],
   "topics": {
     "money": ["money", "cash", "dollars", "dollar", "bucks", "loot", "payout", "reward", "rewards", "paid", "pays", "stash", "rich"],
     "cannot-die": ["immortal", "invincible", "unkillable", "bulletproof", "survives", "cannot die", "never dies"],

@@ -176,7 +176,7 @@ These round-trip, so a view can be shared and survives a reload (`src/components
 
 ### Search
 
-`src/components/map/search.ts`. It reads plain questions as well as keywords; the header menu's search box sends both here (`/map?q=`). Every word must match, at the start of a word, somewhere in a find: title, type, region, summary, location text, area, the finder's handle, the clip creator, the source creators, or one of our own words for its type, region or topic in `content/search-terms.json` (schema `schema/search-terms.schema.json`; we wrote every word, nothing is copied from another site). How a query is read:
+`src/components/map/search.ts`. It reads plain questions as well as keywords; the header menu's search box and the home page's search band ("Ask the map", with its example question chips from `examples` in `content/search-terms.json`) send both here (`/map?q=`). Every word must match, at the start of a word, somewhere in a find: title, type, region, summary, location text, area, the finder's handle, the clip creator, the source creators, or one of our own words for its type, region or topic in `content/search-terms.json` (schema `schema/search-terms.schema.json`; we wrote every word, nothing is copied from another site). How a query is read:
 
 1. Filler and question words ("where", "can", "I", "get", "the", "gta") are dropped, a leading @ is ignored, accents and case do not matter.
 2. A money amount ("200k", "$20,000") becomes the word "money", which matches every find whose text names a dollar amount. A bare number ("1886") stays a number.

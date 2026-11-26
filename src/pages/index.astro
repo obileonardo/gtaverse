@@ -9,6 +9,7 @@
 // find shown in an earlier chapter is skipped where a later one would repeat it.
 import Base from '../layouts/Base.astro';
 import Hero from '../components/home/Hero.astro';
+import AskBar from '../components/home/AskBar.astro';
 import Spotlight from '../components/home/Spotlight.astro';
 import SelectedFinds from '../components/home/SelectedFinds.astro';
 import NewThisWeek from '../components/home/NewThisWeek.astro';
@@ -53,6 +54,8 @@ const layers = layerCards();
   <Hero featured={featured} />
 
   <div class="chapters">
+    {/* The search band (LR28): unnumbered, so Spotlight stays 001. */}
+    <AskBar />
     <Spotlight index={1} finds={spot} />
     <SelectedFinds index={2} filters={filters} />
     <NewThisWeek index={3} finds={fresh} total={freshTotal} />

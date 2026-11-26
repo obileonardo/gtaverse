@@ -3,7 +3,8 @@
 // width, then the mono index with its 6px square bullet, 8px above the bracket label (the menu's "[ The guide ]"
 // voice), Geist Mono caps. A24's "Recently added" rule and label, with kprverse's index. Use it once per chapter,
 // inside the chapter's .container so the rule spans the content box. One implementation for chapters 001 to 015.
-//   index    the chapter number: 1 prints as 001; a string ("009") prints as given
+//   index    the chapter number: 1 prints as 001; a string ("009") prints as given. Leave it out for an unnumbered
+//            band (the search band after the hero, LR28): the rule and the label only
 //   label    the words inside the brackets
 //   count    an optional mono superscript after the label (A24 / NEON count)
 //   heading  true (default): the label is the chapter's h2. false: a <p>, when the chapter has its own visible title
@@ -14,16 +15,16 @@
 // a clip-path draw cost a frame in twelve while scrolling) over --dur-reveal on --ease-reveal, and the index and label
 // rise 8px (--dur-reveal-group). Reduced motion: they fade only.
 import { pad3 } from '../../lib/home';
-interface Props { index: number | string; label: string; id?: string; heading?: boolean; count?: number; class?: string }
+interface Props { index?: number | string; label: string; id?: string; heading?: boolean; count?: number; class?: string }
 const { index, label, id, heading = true, count, class: className } = Astro.props;
 const Tag = heading ? 'h2' : 'p';
-const num = typeof index === 'number' ? pad3(index) : index;
+const num = index === undefined ? null : typeof index === 'number' ? pad3(index) : index;
 ---
 <div class:list={['chead', className]} data-fv>
   <span class="chead__rule" aria-hidden="true"></span>
   <div class="chead__row">
     <div class="chead__ids">
-      <p class="chead__index" aria-hidden="true"><span class="chead__bullet"></span>{num}</p>
+      {num !== null && <p class="chead__index" aria-hidden="true"><span class="chead__bullet"></span>{num}</p>}
       <Tag class="chead__label" id={id}><span aria-hidden="true">[&nbsp;</span>{label}<span aria-hidden="true">&nbsp;]</span>{count !== undefined && <sup class="chead__count">{count}</sup>}</Tag>
     </div>
     {Astro.slots.has('end') && <div class="chead__end"><slot name="end" /></div>}
