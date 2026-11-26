@@ -1,11 +1,16 @@
 # Now
 
-Status as of 2026-11-24 (evening). Update this file whenever something moves between states.
+Status as of 2026-11-26. Update this file whenever something moves between states.
 
 ## Waiting on owner
-- **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for Chime's first pins (the `main` release is done). Today every page is `noindex`.
+- **Review stop: landing refresh phases 0 to 3** (Chime's plan, before phases 4 and 5). Live on thevicefiles.com since 26 Nov 2026. The sections with Rockstar pictures (hero art and trailer, Spotlight stills, By type stills, Regions stills, Watch the clips) can only be checked by the owner; grey-block before and after screenshots of the rest are in issue #81's pull request.
+- **Merge the content pull requests** #69, then #73, then #64 once Chime has checked and approved each (plan on each PR, 26 Nov 2026). Each is refreshed from `staging`, reviewed, and merged by the owner with `gh pr merge <n> --squash --admin --match-head-commit <sha>`.
+- **Release `staging` to `main`** after #81's pull request merges (RC3, merge commit). `main` is behind by #67, #71, #77, #80, #75 and more.
+- **Phases 8 and 9** need decisions first: a cursor exception for Jason and Lucia (like L5), and whether to override the no-cursor-effects rule for game cursors.
+- **Find titles have no length limit.** An 86-character title still fits the Spotlight on five lines; set a soft limit in the validator, or leave it?
+- **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for Chime's first pins. Today every page is `noindex`.
 - **Mailboxes.** Send a test message to takedown@thevicefiles.com and conduct@thevicefiles.com and record that both arrive. Not done yet; `docs/LEGAL.md`, `SECURITY.md` and the Code of Conduct send people there.
-- Confirm or change the open slice decisions in [DECISIONS.md](DECISIONS.md), including RC1 and RC2 from Stage C.
+- Confirm or change the open slice decisions in [DECISIONS.md](DECISIONS.md), newest first: RG2 to RG5, LR1 to LR17, P8, SR1 and SR2, CM1 and CM2, RC2 and RC3.
 - Answer the open questions below.
 
 ## Chime's first queue (research conflicts)
@@ -47,18 +52,29 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - "Missables before Tourist Trap" spoiler-gated checklist guide.
 - Daily update pipeline from research/gta6-sources.md section 9.
 - Follow-up on leads from public community posts (X, GTAForums, YouTube).
+- **Landing refresh phases 4 to 9** ([LANDING-REFRESH.md](LANDING-REFRESH.md)): the GTAverse dashed path, map and regions behaviour, search on the home page (after #76), five Mobbin redesigns (Chime picks a reference for each), Jason and Lucia, game cursors.
+- **Chime's six open items** from the handoff (LANDING-REFRESH.md, "Open items found on the way"), each the owner's call: Spotlight buttons overlap at 1024 to 1100px, the sound toggle overlaps the island at 768, hero text over a white frame, the hero intro width at 1024 and 1280, the phone map teaser's coast, `--text-3` on `--surface-1`.
+- The map's "Sort: Newest" label stays while a search orders by match (`MapApp.tsx`, from Chime's handoff).
+- Non-blocking findings carried from the reviews of #77 and #80 (listed in their review comments).
 
 ## Built, not pushed
 - Nothing.
 
 ## Pushed, not live
-- Fact-check of the 14 bookmark candidates and the 5 draft explainers (issue #63, PR #64): 4 new draft finds, explainer corrections and 12 conflicts, waiting on Chime's review. Nothing in it is published.
+- #64: fact-check of the 14 bookmark candidates and the 5 draft explainers (issue #63): 4 new draft finds, explainer corrections and 12 conflicts. Waiting on Chime (4 clips to watch, 2 images to view).
+- #69: clips for 35 published finds (issue #68). Waiting on Chime's check.
+- #73: 4 draft finds from the X bookmarks, round 2 (issue #72). Waiting on Chime's check.
+- #74 (two find summaries corrected and reworded) and #76 (search reads plain questions): second review running after a first-round fail.
+- Issue #81: the review-stop gaps for phases 0 to 3 (this file's update is part of it).
 
 ## Live
 - thevicefiles.com serves `staging` through the `thevicefiles` Worker (Cloudflare static assets): home, map, finds, explainers, the GTAverse, hubs, `/design` and the PRD at `/prd`. Every page is `noindex` until launch.
 - The Case File logo by Chime (#60) is in the header, the Open Graph cards and the favicons.
 - Map tiles, the hero trailer loop and key art, game logos and cover art are built at deploy from Rockstar's official files and never committed.
 - 892 collectible locations in 12 layers, transcribed from the Game Checklists maps and credited to them (decisions C1 to C7).
+- X and Reddit clip stills and tap-to-play players (#71).
+- Landing refresh phases 0 to 3 (#77 by Chime, #80): no cut text, the hero fade, the Spotlight readout mask, the manifesto highlighter, smoother stats and clean swaps. #80 also fixed scripted motion that was instant in production (LR17). Deployed 26 Nov 2026 from `staging` ae5eb59.
+- Find pages open on Details, then Clips, Related, Nearby (#75, decision P8). Merged after that deploy; live at the next deploy.
 
 ## Resolved
 - Stage B (#20): licences, contributor files, CI and Dependabot are merged; the repository settings in [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md) are applied and read back as matching on 24 Nov 2026.
@@ -67,6 +83,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Owner decisions on 24 Nov 2026: `prd/public/_headers` removed (RC1); the 11 old merged or closed branches deleted from GitHub; the rockstarworld.elvisobi.com redirect kept; fork pull request approval stays at first-time contributors.
 - Stage C passed (GO, #62) and `staging` was released to `main` on 25 Nov 2026. Releases from `staging` to `main` are merge commits from now on (decision RC3); `staging` stays squash-only.
 - 26 old agent worktrees were deleted on 24 Nov 2026.
+- Chime's workspace branch (with a private preview link and a handoff note) was deleted from the public repository on 26 Nov 2026, on the owner's go; a local backup ref was kept.
 - Map labels and pins: Chime places them by hand (owner's choice; see "Asked, not built").
 - Pick a logo: done. Case File by Chime, implemented from Chime's SVGs (decisions LG5, LG6; [LOGO.md](LOGO.md)). Chime may polish it later.
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).
