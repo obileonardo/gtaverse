@@ -638,7 +638,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
             <label className="msearch">
               <Icon name="search" size={20} />
               <span className="sr-only">Search finds</span>
-              <input ref={searchRef} type="search" placeholder="Search or ask: where can I get guns?" value={search} enterKeyHint="search" autoComplete="off" onChange={(e) => setSearchFlip(e.target.value)} />
+              <input ref={searchRef} type="search" placeholder="Search or ask a question" value={search} enterKeyHint="search" autoComplete="off" onChange={(e) => setSearchFlip(e.target.value)} />
               {search && <button type="button" className="msearch__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
             </label>
             <Tabs id="mappanel" label="Map panel" selected={tab} onSelect={setTab} tabs={[{ id: 'legend', label: 'Legend' }, { id: 'list', label: 'List' }]}>
@@ -799,7 +799,7 @@ export default function MapApp({ finds, categories, regions, meta, layers, colle
             <label className="map-search">
               <Icon name="search" size={22} />
               <span className="sr-only">Search finds</span>
-              <input ref={searchRef} type="search" placeholder="Search or ask a question" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
+              <input ref={searchRef} type="search" placeholder="Search or ask" value={search} enterKeyHint="search" autoComplete="off" onFocus={() => setListSnap('full')} onChange={(e) => setSearchFlip(e.target.value)} />
               {search && <button type="button" className="map-search__clear" aria-label="Clear search" onClick={() => { setSearchFlip(''); searchRef.current?.focus(); }}><Icon name="close" size={18} /></button>}
             </label>
           </div>
