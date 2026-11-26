@@ -1,8 +1,9 @@
 // Data the map island receives from src/pages/map.astro, and the pure helpers that filter it.
 // Kept free of content imports so the island bundle carries only what the map needs.
 import type { IconName } from '../ui/icons';
-import { matchesSearch } from './search';
-import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
+import { matchesSearch } from './search.ts';
+import { isUnlocked, type ChapterSetting } from '../../lib/chapter.ts';
+import type { ClipVerb } from '../../lib/clip';
 
 export type MapFind = {
   slug: string;
@@ -21,8 +22,10 @@ export type MapFind = {
   summary: string;
   where: string | null;
   area: string | null; // the find's area text, for search
-  still: string | null; // YouTube thumbnail of the creator's own post (never a Short)
-  clip: { platform: string; url: string; creator: string | null; yt: string | null } | null;
+  still: string | null; // the clip still of the creator's own post: YouTube (never a Short), X or Reddit
+  // thumb: the drawer's picture; embed: the player to load on tap (null: link to the post); verb: play, view (an X or
+  // Reddit photo post, shown and linked) or read (a text post) for its labels (src/lib/media.ts mapClip).
+  clip: { platform: string; url: string; creator: string | null; yt: string | null; thumb: string | null; embed: string | null; verb: ClipVerb } | null;
   sources: { type: string; url: string; creator: string | null }[];
   finder: { handle: string; platform: string; url: string | null } | null;
   updated: string | null;

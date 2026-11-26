@@ -14,8 +14,7 @@ import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import Verification from '../Verification.astro';
 import type { Find } from '../../lib/content';
-import { youtubeId, ytThumb, isShort } from '../../lib/clip';
-import { categoryLabel, regionLabel } from '../../lib/media';
+import { categoryLabel, regionLabel, findStill, findClipLabels } from '../../lib/media';
 
 interface Props { featured: Find[] }
 const { featured } = Astro.props;
@@ -44,13 +43,9 @@ const modes = [
 ].filter(Boolean) as { id: string; label: string; icon: 'play' | 'image' | 'wire' }[];
 const credits = { trailer: trailer?.credit ?? 'Trailer: Rockstar Games', keyart: 'Art: Rockstar Games', line: 'Line art: The Vice Files' };
 
-// The peek frame shows the find's own YouTube thumbnail, loaded from YouTube. Never for spoiler or mature finds, never
-// for Shorts (portrait thumbnails); those show the sunrise glow instead.
-const thumb = (f: Find) => {
-  if (f.spoiler || f.mature || !f.clip || f.clip.platform !== 'youtube' || isShort(f.clip.url)) return undefined;
-  const id = youtubeId(f.clip.url);
-  return id ? ytThumb(id, 'hq') : undefined;
-};
+// The peek frame shows the find's own clip still (YouTube, X or Reddit), loaded from the platform (findStill). Never
+// for spoiler or mature finds, never for Shorts (portrait thumbnails); those show the sunrise glow instead.
+const thumb = (f: Find) => (f.spoiler || f.mature ? undefined : findStill(f)?.peek);
 ---
 <section class="hero" data-scheme="dark" data-hero aria-labelledby="home-title" data-mode={modes[0].id}>
   <div class="container hero__label">
@@ -58,7 +53,7 @@ const thumb = (f: Find) => {
   </div>
 
   <div
-    class="stage"
+    class="stage fade-bottom"
     data-stage
     aria-hidden="true"
     data-trailer-seconds={trailer?.seconds}
@@ -182,7 +177,7 @@ const thumb = (f: Find) => {
                 <Verification level={f.verification} />
               </div>
               <div class="atv__actions">
-                <Button href={`/finds/${f.slug}`} variant="inverse" size="l" icon="play" class="atv__play">Play clip</Button>
+                <Button href={`/finds/${f.slug}?tab=clips#tabs`} variant="inverse" size="l" icon={findClipLabels(f).icon} class="atv__play">{findClipLabels(f).action}</Button>
                 <Button href="/map" variant="glass" size="l" icon="pin" iconOnly label="Open the map" />
               </div>
             </div>
@@ -249,11 +244,15 @@ const thumb = (f: Find) => {
   .hero__label h1 { margin: 0; }
 
   /* ---------- Stage: the three modes ---------- */
+  /* The art runs on below the hero, into the gap before the first chapter, and fades out there (.fade-bottom over
+     --hero-fade, LR11): the hero melts into the next section, and nothing behind the finds list changes. */
+  .hero { --hero-fade: 160px; }
   .stage {
+    --fade-length: var(--hero-fade);
     position: absolute;
     inset: 0 0 auto 0;
-    height: 100svh;
-    min-height: 640px;
+    height: calc(100svh + var(--hero-fade));
+    min-height: calc(640px + var(--hero-fade));
     overflow: hidden;
     background: var(--bg);
   }
@@ -281,7 +280,7 @@ const thumb = (f: Find) => {
   .stage__line { background: var(--bg); }
   /* The free band for the line art (line-art.ts reads these in px): below the island, its sub bar, the intro and the
      caption, so a drawing never runs under them. Phone: the island, the circles and a two line caption. */
-  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; --line-top: 150px; --line-bottom: 0px; }
+  .stage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; --line-top: 150px; --line-bottom: var(--hero-fade); }
   @media (max-width: 767px) { .stage__canvas { --line-top: 176px; } }
 
   /* Dispersed, monochrome: keeps the white type at AA over any frame without reading as a band. */
@@ -290,7 +289,8 @@ const thumb = (f: Find) => {
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(to top, rgb(13 12 26 / 0.62) 0%, rgb(13 12 26 / 0.26) 34%, rgb(13 12 26 / 0) 58%),
+      /* Measured from the hero's bottom, not the stage's: the art below it is the fade. */
+      linear-gradient(to top, rgb(13 12 26 / 0.62) 0, rgb(13 12 26 / 0.62) var(--hero-fade), rgb(13 12 26 / 0.26) calc(var(--hero-fade) + (100% - var(--hero-fade)) * 0.34), rgb(13 12 26 / 0) calc(var(--hero-fade) + (100% - var(--hero-fade)) * 0.58)),
       linear-gradient(to right, rgb(13 12 26 / 0.35) 0%, rgb(13 12 26 / 0) 52%),
       linear-gradient(to bottom, rgb(13 12 26 / 0.36) 0%, rgb(13 12 26 / 0) 18%),
       radial-gradient(32% 22% at 100% 0%, rgb(13 12 26 / 0.5) 0%, rgb(13 12 26 / 0) 100%);
@@ -351,12 +351,12 @@ const thumb = (f: Find) => {
   }
   /* The caption never reaches under the centred island and its sub bar: it keeps 24px clear of the island's right
      edge. Beside the circles it also clears the buttons (three circles and the sound toggle's kept place, 206px);
-     that leaves room for the longest credit line (284px) only from 1680px. */
-  @media (min-width: 1680px) {
+     that leaves room for the longest credit line (284px) only from 1780px (with the 470px island, LR7). */
+  @media (min-width: 1780px) {
     .hero__credit { max-width: min(320px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 206px - 12px - 24px)); }
   }
   /* Below that the caption goes under the circles, right aligned, as on the phone. */
-  @media (min-width: 768px) and (max-width: 1679px) {
+  @media (min-width: 768px) and (max-width: 1779px) {
     .hero__controls { flex-direction: column; align-items: flex-end; gap: 8px; }
     .hero__credit { max-width: min(300px, calc(50vw - var(--island-w) / 2 - var(--page-pad) - 24px)); }
   }
@@ -456,6 +456,9 @@ const thumb = (f: Find) => {
     overflow: hidden;
     overflow: clip visible;
     text-overflow: ellipsis;
+    /* Tight tracking lets the last glyph's ink pass its box; 0.05em of room inside the clip, given back outside. */
+    padding-inline-end: 0.05em;
+    margin-inline-end: -0.05em;
   }
   .a24__sup { margin-top: 0.2em; flex: none; color: #ffffff; font-size: 13px; }
   .a24__list:not([data-hot]) li:first-child .a24__item { opacity: 0.55; }
@@ -536,6 +539,8 @@ const thumb = (f: Find) => {
   .atv { display: none; }
 
   @media (max-width: 767px) {
+    /* The phone's stage already ends in the navy (its scrim below), so it needs no fade past the hero. */
+    .hero { --hero-fade: 0px; }
     .stage { height: 80svh; min-height: 0; }
     .stage__art img { object-position: var(--focus-portrait); }
     .stage__scrim {

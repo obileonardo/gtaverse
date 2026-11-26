@@ -176,7 +176,15 @@ These round-trip, so a view can be shared and survives a reload (`src/components
 
 ### Search
 
-`src/components/map/search.ts`. Every word must match somewhere in a find: title, type, region, summary, location text, area, the finder's handle, the clip creator, the source creators, or one of our own words for its type or region in `content/search-terms.json` (schema `schema/search-terms.schema.json`; we wrote every word, nothing is copied from another site). Filler words ("where", "the", "gta") are dropped, a leading @ is ignored, accents and case do not matter. Results order: title matches, then matches in the find's own text, then synonym-only matches. Examples measured on the build: "where is the ufo" lists the Port Gellhorn UFO first; "@ProfessorMikeX" and "seepa" list that finder's finds; "everglades" lists Grassrivers finds; a query with no match shows the empty state with "Reset filters".
+`src/components/map/search.ts`. It reads plain questions as well as keywords; the header menu's search box and the home page's search band ("Ask the map", with its example question chips from `examples` in `content/search-terms.json`) send both here (`/map?q=`). Every word must match, at the start of a word, somewhere in a find: title, type, region, summary, location text, area, the finder's handle, the clip creator, the source creators, or one of our own words for its type, region or topic in `content/search-terms.json` (schema `schema/search-terms.schema.json`; we wrote every word, nothing is copied from another site). How a query is read:
+
+1. Filler and question words ("where", "can", "I", "get", "the", "gta") are dropped, a leading @ is ignored, accents and case do not matter.
+2. A money amount ("200k", "$20,000") becomes the word "money", which matches every find whose text names a dollar amount. A bare number ("1886") stays a number.
+3. A word also matches its singular ("guns" finds "gun") and every word of its topic group (`topics`: "cash" finds "loot").
+4. A word that is in no find is left out. If no find matches every remaining word, words that are not one of our type, place or topic words are left out until something matches. The list names the words it left out ("Left out: make, fast"), and a money question says "Finds that pay money, biggest amount first".
+5. Order: title matches, then type matches ("guns" lists weapons first), then the find's own text, then synonym-only matches. A money question lists the biggest dollar amount first.
+
+No AI service is involved: it runs in the browser on our own data, so it cannot invent an answer. Examples, checked by `scripts/test/search.test.ts` against the published finds: "Where can I get 200k?" lists the money finds with Hyde Island's $20,000 first; "Where can I get guns?" lists every weapon find first; "Where can I see the NPC you cannot snipe?" lists the immortal sniper NPC; "where is the ufo" lists the Port Gellhorn UFO first; "@ProfessorMikeX" and "seepa" list that finder's finds; "everglades" lists Grassrivers finds; a query with no match shows the empty state with "Reset filters".
 
 ### Found tracker
 

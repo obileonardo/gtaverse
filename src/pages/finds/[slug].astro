@@ -3,7 +3,7 @@
 // left and bottom scrim, the title, badges, meta and synopsis sit in a left column, then a white pill and a circle,
 // then underline tabs over a 16:9 grid. Phone is the Disney+ iOS page at its own size: art on the top half with the
 // Google TV Trailer chip, centred caps title and badges, Google TV stacked pills, Disney icon actions, caps tabs.
-// Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
+// Tabs in order Details, Clips, Related, Nearby. Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
 // Mindtrip tips ("How to find it") and the Mindtrip author card, retitled for the finder or the clip's creator.
 // Spoiler and mature finds never show art outside their reveal.
 import Base from '../../layouts/Base.astro';
@@ -19,7 +19,8 @@ import GameChips from '../../components/games/GameChips.astro';
 import { gamesOfFind } from '../../lib/games';
 import { splitSpoiler } from '../../lib/spoiler';
 import { finds, type Find } from '../../lib/content';
-import { findStill, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { findStill, findClipLabels, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { ytThumb } from '../../lib/clip';
 import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
 import { nearbyFinds, hasRegionHub, hasCategoryHub } from '../../lib/hubs';
 import { regionById, categoryById } from '../../lib/content';
@@ -46,16 +47,20 @@ const related = relatedFinds(find, 10 - Math.min(lore.length, 4), near.map((h) =
 const howTo = tips(find.location_description);
 const mapHref = find.pin ? `/map?find=${find.slug}` : null;
 const hasClips = Boolean(find.clip) || others.length > 0;
+// Details first: most visitors come to read where the find is and how to get it, then to watch the clip; related
+// and nearby finds come last (decision P8). The first tab is the one open when the page loads.
 const tabs = [
+  { id: 'details', label: 'Details' },
+  ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
   { id: 'related', label: 'Related' },
   ...(near.length > 0 ? [{ id: 'nearby', label: 'Nearby' }] : []),
-  ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
-  { id: 'details', label: 'Details' },
 ];
+// "Play clip", or "View photo" and "Read the post" for X and Reddit photo and text posts (src/lib/clip.ts clipLabels).
+const labels = findClipLabels(find);
 const sub = mapHref
   ? { href: mapHref, label: 'Open on the map', image: still?.thumb }
   : find.clip
-    ? { href: '#tabs', label: gated ? 'Reveal the clip' : 'Watch the clip', image: still?.thumb }
+    ? { href: '?tab=clips#tabs', openTab: 'clips', label: gated ? labels.revealBar : labels.bar, image: still?.thumb }
     : undefined;
 const loreConfidence: Record<string, string> = { canon: 'Canon', strong: 'Strong', speculative: 'Speculative', debunked: 'Debunked' };
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -80,8 +85,8 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
       <header class="find__hero">
         {find.clip && (
           <a class:list={['find__trailer', { 'find__trailer--solid': !still }]} href="#tabs" data-open-tab="clips">
-            <Icon name="play" size={20} />
-            <span>{gated ? 'Spoiler clip' : 'Play clip'}</span>
+            <Icon name={labels.icon} size={20} />
+            <span>{gated ? labels.spoiler : labels.action}</span>
           </a>
         )}
         <h1 class="find__title">{find.title}</h1>
@@ -104,7 +109,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
         <!-- Desktop: Disney white pill and circle -->
         <div class="find__actions find__actions--web">
           {find.clip ? (
-            <Button href="#tabs" variant="inverse" size="l" icon="play" data-open-tab="clips">{gated ? 'Reveal clip' : 'Play clip'}</Button>
+            <Button href="#tabs" variant="inverse" size="l" icon={labels.icon} data-open-tab="clips">{gated ? labels.reveal : labels.action}</Button>
           ) : (
             <Button href="#tabs" variant="inverse" size="l" icon="pin" data-open-tab="details">How to find it</Button>
           )}
@@ -121,9 +126,9 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
         <div class="find__actions find__actions--phone">
           {find.clip ? (
             <a class="pill pill--primary" href="#tabs" data-open-tab="clips">
-              <span class="pill__icon" aria-hidden="true"><Icon name="play" size={20} /></span>
+              <span class="pill__icon" aria-hidden="true"><Icon name={labels.icon} size={20} /></span>
               <span class="pill__text">
-                <span class="pill__title">{gated ? 'Reveal clip' : 'Play clip'}</span>
+                <span class="pill__title">{gated ? labels.reveal : labels.action}</span>
                 {find.clip?.creator && <span class="pill__sub">Clip by {find.clip.creator}</span>}
               </span>
             </a>
@@ -203,7 +208,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
                       <li>
                         <a class="shot" href={o.url} rel="noopener" target="_blank">
                           <span class:list={['shot__media', { 'shot__media--glow': gated }]}>
-                            {!gated && <img src={`https://i.ytimg.com/vi/${o.id}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" />}
+                            {!gated && <img src={ytThumb(o.id!, 'mq')} alt="" width="320" height="180" loading="lazy" decoding="async" />}
                             {gated && <span class="mono-caps">Spoiler</span>}
                           </span>
                           <span class="shot__label">{o.creator} <Icon name="arrow-up-right" size={14} /></span>
@@ -249,7 +254,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
                   </div>
                   {who.url && (
                     <div class="about__actions">
-                      <Button href={who.url} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener">{who.kind === 'finder' ? 'View post' : `Watch on ${who.platform}`}</Button>
+                      <Button href={who.url} variant="outline" size="m" iconEnd="arrow-up-right" target="_blank" rel="noopener">{who.kind === 'finder' ? 'View post' : `${labels.on} ${who.platform}`}</Button>
                     </div>
                   )}
                 </section>
@@ -290,6 +295,11 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
 </Base>
 
 <script>
+  // A link can ask for a tab with ?tab=<id>: the timeline's "Watch the clip", the home hero's "Play clip", the island's
+  // clip bar on the home page and on this page all send ?tab=clips#tabs (the page opens on Details since P8).
+  // Unknown ids are ignored and the page keeps its first tab.
+  const wanted = new URLSearchParams(location.search).get('tab');
+  if (wanted) document.getElementById(`find-tab-${wanted}`)?.click();
   // Links and pills that open a tab: select the tab, then bring the tab row into view.
   document.querySelectorAll<HTMLElement>('[data-open-tab]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -328,7 +338,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
   /* ---------- Art ---------- */
   .find__art { position: absolute; inset: 0 0 auto; z-index: -1; overflow: hidden; background: var(--bg); }
   .find__art img { width: 100%; height: 100%; object-fit: cover; }
-  .find__art--glow { background: var(--glow-hero), var(--bg); }
+  .find__art--glow, .find__art:has(> img[data-failed]) { background: var(--glow-hero), var(--bg); }
   .find__scrim { position: absolute; inset: 0; }
 
   .find__title {

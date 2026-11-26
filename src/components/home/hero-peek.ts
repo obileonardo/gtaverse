@@ -1,8 +1,9 @@
 // The peek card. Desktop: it follows the cursor over the A24 stack (owner decision, 24 Nov 2026), showing the clip
 // thumbnail of the line under the pointer; moving to another line swaps the picture with a short crossfade. Keyboard
 // focus places it beside the focused line. Touch (no hover): the first tap on a line shows the card, a second tap
-// opens the find. The phone's Apple TV slides do the same with a frame above the title. Thumbnails come from YouTube
-// and only for finds that are safe to show (Hero.astro leaves data-peek-thumb out for spoiler, mature and Shorts).
+// opens the find. The phone's Apple TV slides do the same with a frame above the title. Thumbnails come from the
+// clip's platform (YouTube, X or Reddit) and only for finds that are safe to show (Hero.astro leaves data-peek-thumb
+// out for spoiler, mature and Shorts).
 import { Spring, loop, reducedMotion, springToken } from '../../scripts/motion/spring';
 
 export function initPeek(hero: HTMLElement) {
@@ -113,7 +114,7 @@ export function initPeek(hero: HTMLElement) {
       current = item;
       items.forEach((a) => a.classList.toggle('is-hot', a === item));
       list.dataset.hot = 'true';
-      if (subbar) subbar.href = `/finds/${item.dataset.slug}`;
+      if (subbar) subbar.href = `/finds/${item.dataset.slug}?tab=clips#tabs`;
       if (subImg && item.dataset.peekThumb) subImg.src = item.dataset.peekThumb.replace('/hqdefault', '/mqdefault');
     };
     const openAt = (t: { x: number; y: number; origin: string }, instant: boolean) => {

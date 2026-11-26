@@ -22,7 +22,7 @@ import Icon from '../ui/Icon.astro';
 import Clip from '../Clip.astro';
 import type { IconName } from '../ui/icons';
 import { moments, years, trackLayout, confidenceLabel, typeLabel } from '../../lib/lore';
-import { categoryLabel } from '../../lib/media';
+import { categoryLabel, findClipLabels } from '../../lib/media';
 import { cardImage } from '../../lib/finds';
 import { sourceName } from '../../lib/explainers';
 import GameChips from '../games/GameChips.astro';
@@ -129,9 +129,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
             </figure>
             {cf?.clip && (
               <div class="moment__watch">
-                <a class="watch" href={`/finds/${cf.slug}#tabs`} data-watch>
-                  <span class="watch__icon" aria-hidden="true"><Icon name="play" size={12} /></span>
-                  {cf.spoiler || cf.mature ? 'Reveal the clip' : 'Watch the clip'}
+                <a class="watch" href={`/finds/${cf.slug}?tab=clips#tabs`} data-watch>
+                  <span class="watch__icon" aria-hidden="true"><Icon name={findClipLabels(cf).icon} size={12} /></span>
+                  {cf.spoiler || cf.mature ? findClipLabels(cf).revealBar : findClipLabels(cf).bar}
                 </a>
                 <p class="watch__credit">Clip by {cf.clip.creator ?? 'an unknown creator'}, from <a href={`/finds/${cf.slug}`}>{cf.title}</a></p>
               </div>
@@ -583,8 +583,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
       overflow: hidden;
     }
     .ruler__now { color: var(--text-2); }
-    .ruler__prev { justify-self: start; margin-left: -18px; color: var(--text-3); opacity: 0.3; }
-    .ruler__next { justify-self: end; margin-right: -18px; color: var(--text-3); opacity: 0.3; }
+    /* The neighbouring years sit whole at the edges, faint (they hung 18px outside and were cut mid-number, LR3). */
+    .ruler__prev { justify-self: start; color: var(--text-3); opacity: 0.3; }
+    .ruler__next { justify-self: end; color: var(--text-3); opacity: 0.3; }
 
     .panels { touch-action: pan-y; padding-top: var(--space-12); }
     .moment {

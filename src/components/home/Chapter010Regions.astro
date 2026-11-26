@@ -7,6 +7,8 @@
 // Areas: Leonida's counties and regions (the regions whose parent is the state) that hold at least one find that is
 // safe to show with a still, most finds first. Finds of an area are its own and its sub-areas'. Spoiler and mature
 // finds never show here. A find without a still shows the sunrise glow with its category (Card rule).
+// The faint giant word is the chosen area's name (LR25): it swaps with the tiles and the carousel (LR13), and is sized
+// to fit the content box (desktop) or the stage's height (tablet and phone, where it stands on its side).
 import ChapterHead from './ChapterHead.astro';
 import Icon from '../ui/Icon.astro';
 import { finds, regions, type Find } from '../../lib/content';
@@ -34,7 +36,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <section class="ch10" aria-labelledby="ch10-title" data-ch10>
   <div class="container"><ChapterHead index={index} label="Regions" id="ch10-title" /></div>
   <div class="ch10__stage container">
-    <p class="ch10__word" aria-hidden="true" data-ch10-word>{state?.name ?? 'Leonida'}</p>
+    <p class="ch10__word" aria-hidden="true" data-ch10-word style={`--chars: ${(areas[0]?.name ?? state?.name ?? 'Leonida').length}`}><span class="ch10__wordtext" data-ch10-wordtext>{areas[0]?.name ?? state?.name ?? 'Leonida'}</span></p>
 
     <div class="ch10__a">
       <div class="ch10__grids">
@@ -95,7 +97,9 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <style>
   .ch10 { padding-top: var(--space-chapter); overflow-x: clip; }
   .ch10__stage { position: relative; display: grid; grid-template-columns: 48fr 4fr 48.5fr; align-items: start; margin-top: var(--space-12); padding-bottom: var(--space-16); }
-  /* The faint word: Big Shoulders 100, as wide as the content box, behind both panels (Olha's "GALLERY"). */
+  /* The faint word: Big Shoulders 100, at most as wide as the content box, behind both panels (Olha's "GALLERY").
+     It names the chosen area, so its size follows the name: the script fits it (fitWord); without the script the
+     estimate below keeps a long name inside the box (Big Shoulders 100 caps average under 0.45em). */
   .ch10__word {
     position: absolute;
     left: var(--gutter);
@@ -105,6 +109,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     font-variation-settings: var(--font-display-axes);
     font-weight: 100;
     font-size: clamp(160px, 31vw, 480px);
+    font-size: min(clamp(160px, 31vw, 480px), calc((100vw - 2 * var(--gutter)) / (var(--chars, 7) * 0.45)));
     line-height: 0.8;
     text-transform: uppercase;
     text-align: center;
@@ -115,6 +120,9 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     white-space: nowrap;
     padding-block: 0.1em;
   }
+  /* fitWord measures the name at the full size, then sets the size that fits (inline style). */
+  .ch10__word.is-measure { font-size: clamp(160px, 31vw, 480px); }
+  .ch10__wordtext { display: inline-block; }
   .ch10__a, .ch10__b { position: relative; background: var(--surface-1); padding: var(--space-6); min-width: 0; }
   .ch10__a { grid-column: 1; display: flex; flex-direction: column; aspect-ratio: 830 / 460; }
   .ch10__b { grid-column: 3; margin-top: 112px; display: flex; flex-direction: column; container-type: inline-size; overflow: clip visible; }
@@ -126,7 +134,10 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__still { display: block; aspect-ratio: 148 / 202; overflow: hidden; background: var(--surface-2); }
   .ch10__still img, .ch10__slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: scale var(--dur-card-lift) var(--ease-out); }
   .ch10__glow { display: grid; place-items: center; width: 100%; height: 100%; background: var(--glow-hero), var(--surface-2); padding: 6px; text-align: center; }
-  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 16px; line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
+  /* A long label ("REAL-WORLD REFERENCE") ran past a 68px tile at 1024 (LR2): the type follows the tile's width,
+     16px at most and never under 12. */
+  .ch10__glow { container-type: inline-size; }
+  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: clamp(12px, 20cqi, 16px); line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
   .ch10__cap { font-size: var(--text-label-caps); font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.35; color: var(--text-1); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
   .ch10__sub { font-size: var(--text-label-caps); line-height: 1.35; text-transform: uppercase; color: var(--text-3); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
 
@@ -176,12 +187,16 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__slide a { display: block; width: 100%; height: 100%; overflow: hidden; }
   .ch10__slide:not(.is-on) { scale: 0.52; opacity: 0.35; clip-path: inset(0 19%); }
   .ch10__slide.is-far { opacity: 0.2; }
+  /* The neighbours show only their middle (the inset above), which would cut a placeholder's label mid-word:
+     their labels fade out, and the focused slide's label fades in once it is whole. */
+  .ch10__slide .ch10__glow span { transition: opacity var(--dur-swap-in) var(--ease-colour) 300ms; }
+  .ch10__slide:not(.is-on) .ch10__glow span { opacity: 0; transition-delay: 0ms; transition-duration: var(--dur-swap-out); }
   .ch10__slide.is-gone { opacity: 0; pointer-events: none; }
 
   /* First view: panel A's tiles rise with a short stagger once (non-uniform, capped at five). */
   :global(html.js) .ch10:not([data-fv-in]) .ch10__grid:not([hidden]) li { opacity: 0; }
   .ch10[data-fv-in='in'] .ch10__grid li { animation: ch10-rise var(--dur-reveal-group) var(--ease-reveal) calc(var(--i) * 40ms - var(--i) * var(--i) * 3ms) both; }
-  .ch10 .ch10__grid.is-swap li { animation: ch10-in 280ms var(--ease-out) calc(var(--i) * 30ms) both; }
+  .ch10 .ch10__grid.is-swap li { animation: ch10-in var(--dur-swap-in) var(--ease-out) calc(var(--i) * 30ms) both; }
   @keyframes ch10-rise { from { opacity: 0; translate: 0 12px; } }
   @keyframes ch10-in { from { opacity: 0; } }
 
@@ -191,7 +206,8 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     .ch10__b { margin-top: 0; }
     .ch10__a { gap: var(--space-4); }
     .ch10__track { height: 300px; }
-    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0; top: 0; bottom: auto; font-size: 160px; text-align: start; }
+    /* right 0.1em: the tight line box (0.8) is narrower than the glyphs, so at the edge their ink was cut. */
+    .ch10__word, .ch10__word.is-measure { writing-mode: vertical-rl; left: auto; right: 0.1em; top: 0; bottom: auto; font-size: 160px; text-align: start; }
   }
   @media (max-width: 767px) {
     .ch10__a, .ch10__b { padding: var(--space-4); }
@@ -211,6 +227,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <script>
   import { roll, rollInit } from '../../scripts/motion/roll';
   import { onFirstView, reduceMotion } from './first-view';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   const pad = (n: number) => String(n).padStart(2, '0');
   for (const root of document.querySelectorAll<HTMLElement>('[data-ch10]')) {
@@ -277,16 +294,84 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       });
     });
 
+    // The swap (LR13): the shown area's tiles and carousel fade out over --dur-swap-out, and only then does the new
+    // area arrive (its tiles rise, its carousel fades in over --dur-swap-in). Every change of mind starts from where
+    // the shown area is right now: another area fades it on down to 0, choosing it again brings it back up to 1. Each
+    // fade reads the current opacity first, so nothing ever jumps, and only the latest choice acts (turn). Keyboard
+    // choices and reduced motion swap at once.
+    const css = (prop: string) => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+    const ms = tokenMs;
+    let target = 0;
+    let turn = 0;
+    const shownIndex = () => grids.findIndex((g) => !g.hidden);
+    // The faint word names the shown area, so it leaves and arrives with that area's tiles and carousel (LR25).
+    const word = root.querySelector<HTMLElement>('[data-ch10-word]')!;
+    const wordText = root.querySelector<HTMLElement>('[data-ch10-wordtext]')!;
+    const stage = word.offsetParent instanceof HTMLElement ? word.offsetParent : root;
+    // Sizes the word so the whole name fits: the content box's width, or the stage's height when it stands on its side.
+    const fitWord = () => {
+      word.style.fontSize = '';
+      word.classList.add('is-measure');
+      const cs = getComputedStyle(word);
+      const vertical = cs.writingMode.startsWith('vertical');
+      const full = parseFloat(cs.fontSize);
+      const box = wordText.getBoundingClientRect();
+      const natural = vertical ? box.height : box.width;
+      const room = (vertical ? stage.clientHeight : word.clientWidth) * 0.96;
+      word.classList.remove('is-measure');
+      if (natural > 0 && room > 0) word.style.fontSize = `${Math.floor(Math.min(full, (full * room) / natural))}px`;
+    };
+    const setWord = (i: number) => {
+      wordText.textContent = names[i];
+      word.style.setProperty('--chars', String(names[i].length));
+      fitWord();
+    };
+    fitWord();
+    document.fonts?.ready.then(fitWord, () => {});
+    let fitting = false;
+    new ResizeObserver(() => { if (!fitting) { fitting = true; requestAnimationFrame(() => { fitting = false; fitWord(); }); } }).observe(stage);
+    const shownEls = () => { const k = shownIndex(); return [grids[k], cars[k], wordText].filter((el): el is HTMLElement => !!el); };
+    // Fades `el` from its current opacity to `to`, over the part of `full` that distance needs.
+    const fadeTo = (el: HTMLElement, to: 0 | 1, full: number, ease: string) => {
+      const from = Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity) || 0));
+      el.getAnimations().forEach((a) => a.cancel());
+      return el.animate([{ opacity: from }, { opacity: to }], { duration: Math.max(1, full * Math.abs(to - from)), easing: ease, fill: 'forwards' });
+    };
+    const show = (i: number, still: boolean) => {
+      turn++;
+      grids.forEach((g, k) => {
+        g.getAnimations().forEach((a) => a.cancel());
+        g.hidden = k !== i;
+        g.classList.remove('is-swap');
+        if (k === i && !still) { void g.offsetWidth; g.classList.add('is-swap'); }
+      });
+      cars.forEach((c, k) => {
+        c.getAnimations().forEach((a) => a.cancel());
+        c.hidden = k !== i;
+        if (k === i) { place(c, startOf(c), true); if (!still) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') }); }
+      });
+      wordText.getAnimations().forEach((a) => a.cancel());
+      setWord(i);
+      if (!still) wordText.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') });
+    };
+
     const select = (i: number, byKey = false) => {
       i = (i + grids.length) % grids.length;
       if (i === area) return;
       const dir = i > area ? 1 : -1;
       area = i;
-      grids.forEach((g, k) => { g.hidden = k !== i; g.classList.toggle('is-swap', k === i && !byKey); });
-      cars.forEach((c, k) => {
-        c.hidden = k !== i;
-        if (k === i) { place(c, startOf(c), true); if (!byKey && !reduceMotion()) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'cubic-bezier(0.455, 0.03, 0.515, 0.955)' }); }
-      });
+      target = i;
+      if (byKey || reduceMotion()) show(i, true);
+      else if (i === shownIndex()) {
+        // Back to the area that is still on screen (leaving, or arriving): bring it back up from where it is.
+        const t = ++turn;
+        const anims = shownEls().map((el) => fadeTo(el, 1, ms('--dur-swap-in', 280), css('--ease-out')));
+        Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) anims.forEach((a) => a.cancel()); }, () => {});
+      } else {
+        const t = ++turn;
+        const anims = shownEls().map((el) => fadeTo(el, 0, ms('--dur-swap-out', 180), css('--ease-standard')));
+        Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) show(target, false); }, () => {});
+      }
       nums.forEach((n, k) => { n.classList.toggle('is-active', k === i); n.setAttribute('aria-pressed', String(k === i)); });
       roll(count, pad(i + 1), { dir, instant: byKey });
       name.textContent = names[i];
@@ -295,7 +380,6 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     root.querySelectorAll<HTMLButtonElement>('[data-ch10-step]').forEach((b) => b.addEventListener('click', (e) => select(area + Number(b.dataset.ch10Step), e.detail === 0)));
 
     // The faint word drifts at a tenth of the scroll speed on desktop only (transform, no layout).
-    const word = root.querySelector<HTMLElement>('[data-ch10-word]')!;
     const wide = matchMedia('(min-width: 1024px)');
     let ticking = false;
     const drift = () => {

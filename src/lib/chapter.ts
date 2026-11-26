@@ -51,10 +51,13 @@ export const onChapterChange = (fn: (s: ChapterSetting) => void) =>
 export const revealClip = (fig: HTMLElement, focus = false) => {
   const body = fig.querySelector<HTMLElement>('.clip-body');
   if (!body || !body.hidden) return;
-  body.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => { img.src = img.dataset.src!; });
+  body.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => {
+    if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+    img.src = img.dataset.src!;
+  });
   body.hidden = false;
   fig.querySelector('.clip__gate')?.remove();
-  if (focus) fig.querySelector<HTMLElement>('.clip-play, .clip__out')?.focus();
+  if (focus) fig.querySelector<HTMLElement>('.clip-play, .clip__photo, .clip__out')?.focus();
 };
 
 /** Applies the setting to everything on the page that carries a chapter gate. Only ever un-gates. */

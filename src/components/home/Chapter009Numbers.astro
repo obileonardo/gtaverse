@@ -23,6 +23,8 @@ const stats = [
   { value: creditTotals.outlets, label: 'Outlets cited', short: 'Outlets', glyph: 'article' as const },
 ];
 const pad = (n: number) => String(n).padStart(2, '0');
+// Counts are grouped as the site writes numbers in prose (1,284, never 1284); the roll moves the comma like any glyph.
+const count = (n: number) => new Intl.NumberFormat('en-GB').format(n);
 ---
 <section class="ch9" aria-labelledby="ch9-title" style={`--steps: ${stats.length}`}>
   <div class="container"><ChapterHead index={index} label="By the numbers" id="ch9-title" /></div>
@@ -31,7 +33,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     {stats.map((s) => (
       <li class="ch9__row">
         <span class="ch9__row-label">{s.label}</span>
-        <span class="ch9__row-num">{s.value}</span>
+        <span class="ch9__row-num">{count(s.value)}</span>
         <span class="ch9__row-glyph" aria-hidden="true">
           {s.glyph === 'blip' ? <Fragment set:html={blipSvg('stunt', { size: 40 })} /> : <Icon name={s.glyph} size={40} stroke={1.25} />}
         </span>
@@ -57,7 +59,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         </defs>
         <path d="M1 620 C 1 250 300 1 700 1 C 1100 1 1399 250 1399 620" stroke="currentColor" stroke-width="1" stroke-dasharray="6 7" vector-effect="non-scaling-stroke" mask="url(#ch9-mask)" />
       </svg>
-      <p class="ch9__num" data-ch9-num>{stats[0].value}</p>
+      <p class="ch9__num" data-ch9-num>{count(stats[0].value)}</p>
       <p class="ch9__label" data-ch9-label>{stats[0].label}</p>
       <div class="ch9__dots">
         {stats.map((s, i) => (
@@ -66,7 +68,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       </div>
     </div>
   </div>
-  <script type="application/json" data-ch9-data set:html={JSON.stringify(stats.map((s) => ({ value: String(s.value), label: s.label })))} />
+  <script type="application/json" data-ch9-data set:html={JSON.stringify(stats.map((s) => ({ value: count(s.value), label: s.label })))} />
 </section>
 
 <style>
@@ -166,6 +168,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <script>
   import { roll, rollInit } from '../../scripts/motion/roll';
   import { reduceMotion } from './first-view';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   for (const root of document.querySelectorAll<HTMLElement>('.ch9')) {
     const track = root.querySelector<HTMLElement>('[data-ch9]')!;
@@ -179,37 +182,44 @@ const pad = (n: number) => String(n).padStart(2, '0');
     let step = 0;
     let labelOut: Animation | null = null;
     let labelIn: Animation | null = null;
+    const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const ms = tokenMs;
 
     const show = (i: number) => {
       if (i === step) return;
       const dir = i > step ? 1 : -1;
       step = i;
-      roll(num, data[i].value, { dir });
+      // The number rolls over --dur-roll-l (LR14); the label swaps in the same time: the old one fully leaves over
+      // --dur-swap-out, then the new one rises over --dur-swap-in (LR13). Never two labels at once.
+      roll(num, data[i].value, { dir, align: 'centre', long: true });
       roll(counter, String(i + 1).padStart(2, '0'), { dir });
       dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
-      // The label crossfades: the old one leaves in 120ms, the new one arrives in 200ms (exit 60% of the entrance).
       labelOut?.cancel();
       labelIn?.cancel();
       const next = data[i].label;
-      if (reduceMotion()) { label.textContent = next; labelIn = label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' }); return; }
-      const out = label.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+      if (reduceMotion()) { label.textContent = next; labelIn = label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-fade-reduced', 150), easing: 'linear' }); return; }
+      const out = label.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms('--dur-swap-out', 180), easing: css('--ease-standard'), fill: 'forwards' });
       labelOut = out;
       out.finished.then(() => {
         label.textContent = next;
-        labelIn = label.animate([{ opacity: 0, transform: `translateY(${6 * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        labelIn = label.animate([{ opacity: 0, transform: `translateY(${6 * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-out') });
         out.cancel();
       }, () => {});
     };
 
     // Native scroll moves the step: the track is (steps - 1) screens of 80svh taller than the stage.
     const range = () => track.offsetHeight - window.innerHeight;
+    const EDGE = 0.12;
     let ticking = false;
     const update = () => {
       ticking = false;
       if (!track.offsetParent) return;
       const top = track.getBoundingClientRect().top;
       const p = Math.min(Math.max(-top / Math.max(range(), 1), 0), 0.9999);
-      show(Math.floor(p * data.length));
+      // A dead zone at each step edge (LR15): a small scroll back across an edge, or a trackpad settling on it, does
+      // not flip the number there and back. The step changes once the position is 12% of a step past the edge.
+      const at = p * data.length;
+      if (at >= step + 1 + EDGE || at < step - EDGE) show(Math.floor(at));
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', update);

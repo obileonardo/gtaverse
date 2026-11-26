@@ -91,7 +91,14 @@ const ldJson = (o: object) => JSON.stringify(o).replace(/</g, '\\u003c');
           if (!t || t.tagName !== 'IMG' || t.hasAttribute('data-in')) return;
           if (first || !t.decode) show(t); else t.decode().then(function () { show(t); }, function () { show(t); });
         }, true);
-        document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG') show(t); }, true);
+        // A remote still that fails (a removed post, a blocked CDN): a decorative image hides instead of showing the
+        // broken-image icon, so its frame's own ground (the glow or the surface) shows through.
+        document.addEventListener('error', function (e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'IMG') return;
+          if (t.getAttribute('alt') === '' && t.getAttribute('src')) t.setAttribute('data-failed', '');
+          show(t);
+        }, true);
         // If the motion script never runs, reveal everything that waits for it.
         setTimeout(function () { if (!d.classList.contains('motion')) d.classList.add('rv-off'); }, 2500);
         // Page transitions: a move between game hubs slides from the side of the game chosen (site-motion.ts sets

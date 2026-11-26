@@ -296,6 +296,9 @@
 
 /* List tab: Sweatpals' count heading, Hypelist's sort trigger, rows */
 :where(.vf-map) .mlist__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+/* How a search question was read (MapApp searchNote): which words were left out. */
+:where(.vf-map) .mlist__note { margin: 4px 0 8px; font-size: var(--text-caption); line-height: 1.4; color: var(--text-3); }
+:where(.vf-map) .mlist__note strong { color: var(--text-2); font-weight: 600; }
 :where(.vf-map) .mlist__h { margin: 0; font-size: 15px; font-weight: 600; line-height: 22px; }
 :where(.vf-map) .msort__btn { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 10px 0 12px; border-radius: var(--radius-full); border: var(--border-w) solid var(--border-1); background: var(--surface-2); color: var(--text-1); font-size: var(--text-caption); font-weight: 600; white-space: nowrap; transition: background-color var(--dur-colour) var(--ease-colour), scale var(--dur-press) var(--ease-out); }
 :where(.vf-map) .msort__btn:active { scale: 0.97; }

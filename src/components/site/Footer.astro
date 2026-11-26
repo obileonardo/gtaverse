@@ -28,7 +28,7 @@ const cells: { title: string; links: L[] }[] = [
 const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.'];
 ---
 <footer class="site-footer" data-footer>
-  <section class="ft-close" data-scheme="dark" aria-label="How it is made">
+  <section class="ft-close fade-y" data-scheme="dark" aria-label="How it is made">
     {scene ? (
       <picture class="ft-close__art" aria-hidden="true">
         {scene.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="100vw" />)}
@@ -44,8 +44,8 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
       <span class="ft-close__dot" aria-hidden="true"></span>
       <a class="ft-close__by" href="/about">The Vice Files, how it is made</a>
     </div>
-    {scene && <p class="ft-close__credit">{scene.credit}</p>}
   </section>
+  {scene && <p class="ft-close__credit">{scene.credit}</p>}
 
   <div class="container ft-main">
     <a class="ft-mark" href="/" aria-label="The Vice Files, home">
@@ -98,7 +98,7 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
   </div>
 
   {strip && (
-    <div class="ft-strip" data-scheme="dark">
+    <div class="ft-strip fade-top" data-scheme="dark">
       <picture class="ft-strip__art" aria-hidden="true">
         {strip.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="max(250vw, 1600px)" />)}
         <img src={strip.src} alt="" loading="lazy" decoding="async" />
@@ -112,7 +112,9 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
   .site-footer { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
   /* ---------- 1. Closing line over a scene (HUXLEY 014) ---------- */
-  .ft-close { position: relative; isolation: isolate; display: grid; place-items: center; height: 400px; overflow: hidden; background: var(--bg); }
+  /* Both ends dissolve into the page (.fade-y, LR11), so the dark band reads as part of the page in either theme
+     instead of a slab with hard edges. The fades stay clear of the lines, which sit in the middle 150px. */
+  .ft-close { --fade-length: 96px; position: relative; isolation: isolate; display: grid; place-items: center; height: 400px; overflow: hidden; background: var(--bg); }
   .ft-close__art, .ft-close__glow { position: absolute; inset: 0; z-index: -1; }
   .ft-close__art img { width: 100%; height: 100%; object-fit: cover; }
   .ft-close__art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(13 12 26 / 0.62), rgb(13 12 26 / 0.74) 60%, rgb(13 12 26 / 0.96)); }
@@ -129,7 +131,10 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
   .ft-close__line { display: flex; flex-direction: column; align-items: center; font-family: var(--font-mono); font-weight: 400; font-size: 36px; line-height: 1.14; letter-spacing: 0.02em; text-transform: uppercase; text-align: center; color: rgb(255 255 255 / 0.92); }
   .ft-close__dot { width: 4px; height: 4px; background: rgb(255 255 255 / 0.92); margin-top: var(--space-2); }
   .ft-close__by { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(255 255 255 / 0.72); }
-  .ft-close__credit, .ft-strip__credit { position: absolute; right: var(--gutter); bottom: var(--space-3); font-size: var(--text-caption); color: rgb(255 255 255 / 0.72); }
+  .ft-strip__credit { position: absolute; right: var(--gutter); bottom: var(--space-3); font-size: var(--text-caption); color: rgb(255 255 255 / 0.72); }
+  /* The band's art credit is a caption under the band, in the page's own text colour: the band now fades out at
+     both ends (LR11), and a credit inside it would fade with it. */
+  .ft-close__credit { padding: var(--space-2) var(--gutter) 0; text-align: right; font-size: var(--text-caption); color: var(--text-3); }
 
   /* ---------- 2. Wordmark (HUXLEY 014, Eat Hungry Tiger): one word fitted to the content width ---------- */
   .ft-main { padding-top: var(--space-6); }
@@ -187,11 +192,11 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
   @media (hover: hover) and (pointer: fine) { .ft-credits__row a:hover { text-decoration-color: currentColor; } }
 
   /* ---------- 6. Art strip (Kacio Felipe C04): the wallpaper, fading up into the ground ---------- */
-  .ft-strip { position: relative; height: 200px; overflow: hidden; }
+  /* The art fades up into the page with a mask (.fade-top, LR11): what shows through is the page's own ground in either
+     theme, on eased stops. It was a navy overlay, a hard coded colour that stayed navy in the light theme. */
+  .ft-strip { --fade-length: 150px; position: relative; height: 200px; overflow: hidden; }
   /* Cropped to the skyline and the water at the left of the wallpaper (the picture is placed, never altered). */
   .ft-strip__art img { position: absolute; left: 0; top: 50%; width: max(250%, 1600px); max-width: none; height: auto; translate: 0 -54%; }
-  .ft-strip::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, var(--page-bg, #0d0c1a), rgb(13 12 26 / 0) 70%); pointer-events: none; }
-  :global(html[data-theme='light']) .ft-strip { --page-bg: #f9f5f0; }
   .ft-strip__art { position: absolute; inset: 0; }
   .ft-strip__credit { z-index: 2; }
 
@@ -220,10 +225,11 @@ const lines = ['No source link, no fact.', 'Credit the finder.', 'Our own words.
     .ft-credits__row { grid-template-columns: minmax(0, 1fr); gap: 0; }
   }
   @media (max-width: 767px) {
-    .ft-close { height: 280px; }
+    /* 280px tall with the lines and the link filling about 180 of it: shorter fades keep them clear. */
+    .ft-close { height: 280px; --fade-length: 48px; }
     .ft-close__line { font-size: 20px; line-height: 1.25; }
     .ft-close__box { padding-block: var(--space-3); }
-    .ft-close__credit { right: var(--gutter); }
+
     .ft-legal { font-size: var(--text-body-s); }
     .ft-credits { margin-top: var(--space-16); }
     .ft-strip { height: 120px; }
