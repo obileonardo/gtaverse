@@ -166,6 +166,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <script>
   import { roll, rollInit } from '../../scripts/motion/roll';
   import { reduceMotion } from './first-view';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   for (const root of document.querySelectorAll<HTMLElement>('.ch9')) {
     const track = root.querySelector<HTMLElement>('[data-ch9]')!;
@@ -179,37 +180,44 @@ const pad = (n: number) => String(n).padStart(2, '0');
     let step = 0;
     let labelOut: Animation | null = null;
     let labelIn: Animation | null = null;
+    const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const ms = tokenMs;
 
     const show = (i: number) => {
       if (i === step) return;
       const dir = i > step ? 1 : -1;
       step = i;
-      roll(num, data[i].value, { dir, align: 'centre' });
+      // The number rolls over --dur-roll-l (LR14); the label swaps in the same time: the old one fully leaves over
+      // --dur-swap-out, then the new one rises over --dur-swap-in (LR13). Never two labels at once.
+      roll(num, data[i].value, { dir, align: 'centre', long: true });
       roll(counter, String(i + 1).padStart(2, '0'), { dir });
       dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
-      // The label crossfades: the old one leaves in 120ms, the new one arrives in 200ms (exit 60% of the entrance).
       labelOut?.cancel();
       labelIn?.cancel();
       const next = data[i].label;
-      if (reduceMotion()) { label.textContent = next; labelIn = label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' }); return; }
-      const out = label.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+      if (reduceMotion()) { label.textContent = next; labelIn = label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-fade-reduced', 150), easing: 'linear' }); return; }
+      const out = label.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms('--dur-swap-out', 180), easing: css('--ease-standard'), fill: 'forwards' });
       labelOut = out;
       out.finished.then(() => {
         label.textContent = next;
-        labelIn = label.animate([{ opacity: 0, transform: `translateY(${6 * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        labelIn = label.animate([{ opacity: 0, transform: `translateY(${6 * dir}px)` }, { opacity: 1, transform: 'none' }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-out') });
         out.cancel();
       }, () => {});
     };
 
     // Native scroll moves the step: the track is (steps - 1) screens of 80svh taller than the stage.
     const range = () => track.offsetHeight - window.innerHeight;
+    const EDGE = 0.12;
     let ticking = false;
     const update = () => {
       ticking = false;
       if (!track.offsetParent) return;
       const top = track.getBoundingClientRect().top;
       const p = Math.min(Math.max(-top / Math.max(range(), 1), 0), 0.9999);
-      show(Math.floor(p * data.length));
+      // A dead zone at each step edge (LR15): a small scroll back across an edge, or a trackpad settling on it, does
+      // not flip the number there and back. The step changes once the position is 12% of a step past the edge.
+      const at = p * data.length;
+      if (at >= step + 1 + EDGE || at < step - EDGE) show(Math.floor(at));
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', update);

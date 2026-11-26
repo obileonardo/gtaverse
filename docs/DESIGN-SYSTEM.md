@@ -137,7 +137,9 @@ Motion, part 2 (the motion study's tokens, 24 Nov 2026):
 | `--ease-crit` | `linear(...)`, a critically damped spring from rest | CSS indicators that should feel like the springs (contents marker) |
 | `--dur-page-out` / `--dur-page-in` | 180 / 280ms (exit 64%) | page transitions: the old page fades, the new one rises 8px, fades overlap by 60ms |
 | `--dur-morph` / `--dur-morph-out` | 280 / 180ms (exit 64%) | one surface changing shape (menu from the island, chip check, copy button), and most exits |
+| `--dur-swap-out` / `--dur-swap-in` | 180 / 280ms (exit 64%) | content swapping in one place (Spotlight text, By type cells, Regions): the old leaves, and the new starts only once it is gone (LR13); pictures may crossfade on the same pair |
 | `--dur-roll` | 280ms | a digit or word rolling to a new value |
+| `--dur-roll-l` | 480ms | a display number rolling (the home stats), long enough to follow (LR14) |
 | `--dur-reveal` / `--dur-reveal-group` | 640 / 480ms | title lines once per page; cards and rows on first view |
 | `--dur-image-in` | 240ms | a still fading in once decoded |
 | `--dur-theme` | 520ms | the theme circle |

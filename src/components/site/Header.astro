@@ -189,6 +189,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 <script>
   import { travellingPill } from '../../scripts/motion/pill';
+  import { tokenMs } from '../../scripts/motion/tokens';
   const header = document.querySelector<HTMLElement>('[data-header]');
   if (header) {
     const openBtn = header.querySelector<HTMLButtonElement>('[data-menu-open]')!;
@@ -201,7 +202,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     const desktop = matchMedia('(min-width: 1280px)');
     const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
     const css = getComputedStyle(document.documentElement);
-    const ms = (name: string, fallback: number) => parseFloat(css.getPropertyValue(name)) || fallback;
+    const ms = (name: string, fallback: number) => tokenMs(name, fallback);
     let closeTimer = 0;
 
     // ---------- Art panel. Pictures sit stacked; the new one fades in on top of the old, which stays fully visible

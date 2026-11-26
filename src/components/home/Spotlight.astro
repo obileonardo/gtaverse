@@ -226,11 +226,12 @@ const initial = (s: string) => s.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
   :global(.spot__close) { position: absolute; top: var(--space-4); right: var(--space-4); z-index: 3; display: none; }
   .spot__panel[data-playing] :global(.spot__close) { display: inline-flex; }
 
-  /* The text swap (direction-aware, never two at once): the old text fades by 160ms in place, the new text arrives
-     from the side of the move from 120ms over 280ms. --dir is set by spotlight.ts before a slide becomes active. */
-  .spot__text { opacity: 0; visibility: hidden; translate: calc(var(--dir, 1) * 24px) 0; transition: opacity 160ms var(--ease-standard), translate 0s linear 160ms, visibility 0s linear 160ms; }
-  .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: 0 0; transition: opacity 280ms var(--ease-out) 120ms, translate 280ms var(--ease-out) 120ms, visibility 0s; }
-  .spot__panel[data-playing] .spot__text { opacity: 0; translate: 0 0; transition: opacity 160ms var(--ease-standard); }
+  /* The text swap (direction-aware, never two at once, LR13): the old text fades in place over --dur-swap-out; only
+     once it is gone does the new text arrive from the side of the move, over --dur-swap-in. --dir is set by
+     spotlight.ts before a slide becomes active. */
+  .spot__text { opacity: 0; visibility: hidden; translate: calc(var(--dir, 1) * 24px) 0; transition: opacity var(--dur-swap-out) var(--ease-standard), translate 0s linear var(--dur-swap-out), visibility 0s linear var(--dur-swap-out); }
+  .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: 0 0; transition: opacity var(--dur-swap-in) var(--ease-out) var(--dur-swap-out), translate var(--dur-swap-in) var(--ease-out) var(--dur-swap-out), visibility 0s; }
+  .spot__panel[data-playing] .spot__text { opacity: 0; translate: 0 0; transition: opacity var(--dur-swap-out) var(--ease-standard); }
   .spot__panel[data-playing] .spot__text :is(a, button) { pointer-events: none; visibility: hidden; }
 
   .spot__pager { display: flex; justify-content: center; margin-top: var(--space-6); }

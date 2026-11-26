@@ -97,8 +97,9 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
   }
   .bt__media { position: relative; aspect-ratio: 1.1; overflow: hidden; background: var(--surface-1); }
   .bt__lead, .bt__lead img, .bt__glow { position: absolute; inset: 0; }
-  .bt__lead { opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
-  .bt__lead[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  /* The still crossfades on the swap tokens (pictures may overlap: a gap would flash the empty frame). */
+  .bt__lead { opacity: 0; visibility: hidden; transition: opacity var(--dur-swap-out) var(--ease-colour), visibility 0s linear var(--dur-swap-out); }
+  .bt__lead[data-active] { opacity: 1; visibility: visible; transition: opacity var(--dur-swap-in) var(--ease-colour), visibility 0s; }
   .bt__lead img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
   .bt__lead img[data-active] { opacity: 1; }
   .bt__glow { background: var(--glow-hero), var(--surface-1); }
@@ -112,8 +113,9 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
 
   /* The ruled cells */
   .bt__panels { display: grid; border-left: var(--border-w) solid var(--rule-soft); min-width: 0; }
-  .bt__panel { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
-  .bt__panel[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  /* The text cells never show two types at once (LR13): the old cells leave over --dur-swap-out, then the new arrive. */
+  .bt__panel { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-swap-out) var(--ease-colour), visibility 0s linear var(--dur-swap-out); }
+  .bt__panel[data-active] { opacity: 1; visibility: visible; transition: opacity var(--dur-swap-in) var(--ease-colour) var(--dur-swap-out), visibility 0s; }
   .bt__name {
     padding: var(--space-8) var(--space-12) var(--space-6);
     border-bottom: var(--border-w) solid var(--rule-soft);
