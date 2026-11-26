@@ -15,7 +15,7 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 | 6 | Smart search bar on the home page (after #76) | Built (#84), LR28 to LR32 |
 | 7 | Five redesigns from Mobbin references (Chime picks from a reference board) | To do |
 | 8 | Jason and Lucia react to the cursor (needs a decision like L5) | To do |
-| 9 | Custom cursors with trails (only if Obi signs off) | To do |
+| 9 | Custom cursors with trails (only if Obi signs off) | Built, signed off by Obi on 26 Nov 2026 (LR48); LR49 to LR52 |
 
 ## The checks (`tools/page-check/`)
 
