@@ -3,9 +3,9 @@
 Status as of 2026-11-26. Update this file whenever something moves between states.
 
 ## Waiting on owner
-- **Review stop: landing refresh phases 0 to 3** (Chime's plan, before phases 4 and 5). Live on thevicefiles.com since 26 Nov 2026. The sections with Rockstar pictures (hero art and trailer, Spotlight stills, By type stills, Regions stills, Watch the clips) can only be checked by the owner; grey-block before and after screenshots of the rest are in issue #81's pull request.
+- **Review stop: landing refresh phases 0 to 3** (Chime's plan, before phases 4 and 5). Live on thevicefiles.com since 26 Nov 2026. The sections with Rockstar pictures (hero art and trailer, Spotlight stills, By type stills, Regions stills, Watch the clips) can only be checked by the owner; grey-block before and after screenshots of the rest are on the owner's private review board (images stay out of the repository: the CI asset guard blocks them).
 - **Merge the content pull requests** #69, then #73, then #64 once Chime has checked and approved each (plan on each PR, 26 Nov 2026). Each is refreshed from `staging`, reviewed, and merged by the owner with `gh pr merge <n> --squash --admin --match-head-commit <sha>`.
-- **Release `staging` to `main`** after #81's pull request merges (RC3, merge commit). `main` is behind by #67, #71, #77, #80, #75 and more.
+- **Release `staging` to `main`** after #81's pull request merges (RC3, merge commit). `main` is behind by #67, #71, #77, #80, #75 and #76.
 - **Phases 8 and 9** need decisions first: a cursor exception for Jason and Lucia (like L5), and whether to override the no-cursor-effects rule for game cursors.
 - **Find titles have no length limit.** An 86-character title still fits the Spotlight on five lines; set a soft limit in the validator, or leave it?
 - **Launch.** Flipping `site.indexable` to `true` in `src/lib/site.ts` (search engines in, sitemap and robots open) waits for Chime's first pins. Today every page is `noindex`.
@@ -64,7 +64,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - #64: fact-check of the 14 bookmark candidates and the 5 draft explainers (issue #63): 4 new draft finds, explainer corrections and 12 conflicts. Waiting on Chime (4 clips to watch, 2 images to view).
 - #69: clips for 35 published finds (issue #68). Waiting on Chime's check.
 - #73: 4 draft finds from the X bookmarks, round 2 (issue #72). Waiting on Chime's check.
-- #74 (two find summaries corrected and reworded) and #76 (search reads plain questions): second review running after a first-round fail.
+- #74 (two find summaries corrected and reworded): Chime's third version, 7004cc9, is in review after two fails (copied wording, then a wrong fact).
 - Issue #81: the review-stop gaps for phases 0 to 3 (this file's update is part of it).
 
 ## Live
@@ -74,7 +74,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - 892 collectible locations in 12 layers, transcribed from the Game Checklists maps and credited to them (decisions C1 to C7).
 - X and Reddit clip stills and tap-to-play players (#71).
 - Landing refresh phases 0 to 3 (#77 by Chime, #80): no cut text, the hero fade, the Spotlight readout mask, the manifesto highlighter, smoother stats and clean swaps. #80 also fixed scripted motion that was instant in production (LR17). Deployed 26 Nov 2026 from `staging` ae5eb59.
-- Find pages open on Details, then Clips, Related, Nearby (#75, decision P8). Merged after that deploy; live at the next deploy.
+- Find pages open on Details, then Clips, Related, Nearby (#75, decision P8), and search reads plain questions (#76, SR1 and SR2). Both merged after that deploy; live at the next deploy.
 
 ## Resolved
 - Stage B (#20): licences, contributor files, CI and Dependabot are merged; the repository settings in [release/STAGE-B-SETTINGS.md](release/STAGE-B-SETTINGS.md) are applied and read back as matching on 24 Nov 2026.
@@ -83,7 +83,7 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Owner decisions on 24 Nov 2026: `prd/public/_headers` removed (RC1); the 11 old merged or closed branches deleted from GitHub; the rockstarworld.elvisobi.com redirect kept; fork pull request approval stays at first-time contributors.
 - Stage C passed (GO, #62) and `staging` was released to `main` on 25 Nov 2026. Releases from `staging` to `main` are merge commits from now on (decision RC3); `staging` stays squash-only.
 - 26 old agent worktrees were deleted on 24 Nov 2026.
-- Chime's workspace branch (with a private preview link and a handoff note) was deleted from the public repository on 26 Nov 2026, on the owner's go; a local backup ref was kept.
+- Chime's workspace branch (with a private preview link and an instructions file) was deleted from the public repository on 26 Nov 2026 on the owner's go; Chime re-created it the same morning, and it was deleted again on the owner's go, with issue #83 telling Chime why. Both versions are kept as local backup refs.
 - Map labels and pins: Chime places them by hand (owner's choice; see "Asked, not built").
 - Pick a logo: done. Case File by Chime, implemented from Chime's SVGs (decisions LG5, LG6; [LOGO.md](LOGO.md)). Chime may polish it later.
 - Icon style: GTA-native-style near-identical original lookalikes for this project, overriding the Capsa default (decision 18).

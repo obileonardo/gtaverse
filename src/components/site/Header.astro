@@ -21,7 +21,7 @@ import { gameArt, linkArt, type MenuArt } from '../../lib/menu';
 import { byNewest } from '../../lib/feed';
 import { categoryLabel, regionLabel } from '../../lib/media';
 import { submitFindLink } from '../../lib/issues';
-/** openTab: on a find page, the tab the bar opens in place (the page's [data-open-tab] handler); href still works without JavaScript. */
+/** openTab: on a find page, the tab the bar opens in place (the page's [data-open-tab] handler). Without JavaScript the find page shows only its first tab (Tabs.astro), so the link lands there. */
 export interface SubBar { href: string; label: string; image?: string | null; openTab?: string }
 interface Props { sub?: SubBar }
 const { sub } = Astro.props;
