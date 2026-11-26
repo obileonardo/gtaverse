@@ -7,6 +7,10 @@
 // Under each card: the short name and "year · N connections". Release years sit faint under the track, a ruler below.
 // Phone: the M002 carousel, one card at 66% with the next peeking, a round arrow inside, a pager under it.
 // Reduced motion, no JavaScript or a narrow window: the track is a plain horizontal scroller.
+// The route (landing refresh phase 4, LR18 to LR22): a dashed line in the style of logo direction 4 runs behind the
+// cards through each card's centre. On the scrolled stage every card starts grey; as you scroll the route draws on, and
+// the card it reaches takes its colour back with one short glow. Scrolling back undoes it. Phone, reduced motion and the
+// plain scroller: the cards stay in colour and the route is drawn whole, still.
 import ChapterHead from './ChapterHead.astro';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
@@ -37,6 +41,7 @@ const anyArt = list.some((x) => x.art);
           <li class="ch15__item" style={`--i: ${i}`}>
             {firstOfYear && <span class="ch15__year" aria-hidden="true">{g.year}</span>}
             <a class="ch15__card" href={`/gtaverse/games/${g.id}`} data-ch15-card={i}>
+              <span class="ch15__glow" aria-hidden="true"></span>
               <span class="ch15__frame">
                 <span class="ch15__art">
                   {art ? (
@@ -46,6 +51,7 @@ const anyArt = list.some((x) => x.art);
                     </picture>
                   ) : <span class="ch15__plate"><GamePlate game={g} size="sheet" /></span>}
                 </span>
+                <span class="ch15__grey" aria-hidden="true"></span>
               </span>
               <span class="ch15__go" aria-hidden="true"><Icon name="arrow-right" size={24} /></span>
               <span class="ch15__name">{g.short_name}</span>
@@ -56,6 +62,7 @@ const anyArt = list.some((x) => x.art);
         <li class="ch15__item ch15__item--end">
           <Button href="/gtaverse" variant="quiet" size="l" iconEnd="chevron-right">All {connections.length} connections</Button>
         </li>
+        <li class="ch15__route" aria-hidden="true"><svg class="ch15__path" data-ch15-path width="0" height="0" focusable="false"><path class="ch15__line" d="" /><g class="ch15__stops"></g></svg></li>
       </ol>
     </div>
   </div>
@@ -87,6 +94,8 @@ const anyArt = list.some((x) => x.art);
     user-select: none;
   }
   .ch15__rail {
+    position: relative;
+    isolation: isolate;
     display: flex;
     gap: var(--space-4);
     overflow-x: auto;
@@ -99,8 +108,9 @@ const anyArt = list.some((x) => x.art);
   .ch15__rail::-webkit-scrollbar { display: none; }
   .ch15__item { position: relative; flex: 0 0 auto; scroll-snap-align: start; }
   .ch15__item--end { display: flex; align-items: center; padding-inline: var(--space-8); }
-  .ch15__card { --w: 230px; position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: var(--w); }
+  .ch15__card { --w: 230px; position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: var(--w); }
   .ch15__frame {
+    position: relative;
     display: block;
     width: 100%;
     aspect-ratio: 0.72;
@@ -117,6 +127,17 @@ const anyArt = list.some((x) => x.art);
   .ch15__stat { font-family: var(--font-mono); font-size: var(--text-mono-caps); text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-2); text-align: center; line-height: 1.4; }
   .ch15__year { display: none; }
   .ch15__word { display: none; }
+
+  /* The route (logo direction 4): thin pink dashes behind the cards, a small dot where it meets each card, a last dot
+     at the end. Drawn by the script from the cards' own boxes; low opacity, so it is seen without shouting. */
+  .ch15__route { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; }
+  .ch15__path { display: block; max-width: none; overflow: visible; opacity: 0.5; }
+  .ch15__line { fill: none; stroke: var(--accent-ink); stroke-width: 1.5; stroke-dasharray: 6 8; stroke-linecap: round; }
+  .ch15__stops { fill: var(--accent-ink); }
+  /* Grey until the route arrives: a neutral layer that takes the colour out of the frame and the art beneath it
+     (saturation blend), so lighting a card only fades this layer's opacity. Shown on the scrolled stage only. */
+  .ch15__grey { position: absolute; inset: 0; background: var(--inverse-fill); mix-blend-mode: saturation; opacity: 0; pointer-events: none; }
+  .ch15__glow { display: none; }
 
   .ch15__after { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); margin-top: var(--space-6); }
   .ch15__dots { display: none; }
@@ -194,6 +215,34 @@ const anyArt = list.some((x) => x.art);
     }
     :global(html[data-theme='light']) .ch15__year { -webkit-text-stroke-color: rgb(47 47 47 / 0.25); }
     :global(html.js) .ch15__item { --w: calc(min(320px, 36svh) * 0.72); }
+
+    /* The route travels: the script reveals it with a clip-path edge (its own layer, so only the route repaints). */
+    :global(html.js) .ch15__route { will-change: transform; }
+    :global(html.js) .ch15__grey { opacity: 1; transition: opacity calc(var(--dur-crossfade) * 0.64) var(--ease-standard); }
+    :global(html.js) .ch15__card.is-lit .ch15__grey { opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
+    /* A focused card is always in colour, at once (keyboard actions never animate). */
+    :global(html.js) .ch15__card:focus-visible .ch15__grey { opacity: 0; transition: none; }
+    /* First paint, a resize, or a keyboard jump: the state is set without a fade. */
+    :global(html.js) .ch15[data-ch15-instant] .ch15__grey { transition: none; }
+    /* The glow: a pre-drawn pink disc (the map's --blip-glow gradient, never a shadow) behind the frame, played once
+       as the card lights: up quickly, then out. Opacity only. */
+    :global(html.js) .ch15__glow {
+      display: block;
+      position: absolute;
+      z-index: -1;
+      left: -72px;
+      right: -72px;
+      top: -72px;
+      height: calc(var(--w) / 0.72 + 144px);
+      background: var(--blip-glow);
+      opacity: 0;
+      pointer-events: none;
+    }
+    :global(html.js) .ch15__card.is-glow .ch15__glow { animation: ch15-glow var(--dur-ping) var(--ease-out); }
+  }
+  @keyframes ch15-glow {
+    25% { opacity: 1; }
+    to { opacity: 0; }
   }
   @media (hover: hover) and (pointer: fine) {
     .ch15__card:hover .ch15__frame { rotate: 0deg !important; translate: 0 -6px; }
@@ -204,42 +253,173 @@ const anyArt = list.some((x) => x.art);
 </style>
 
 <script>
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
+  // An element's box in the rail's own coordinates, to the subpixel: its screen box less the rail's (which carries
+  // the rail's transform), plus the rail's scroll. Only for boxes that are never transformed themselves.
+  const box = (el: HTMLElement, rail: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const o = rail.getBoundingClientRect();
+    return { x: r.left - o.left - rail.clientLeft + rail.scrollLeft, y: r.top - o.top - rail.clientTop + rail.scrollTop, w: r.width, h: r.height };
+  };
+
   for (const root of document.querySelectorAll<HTMLElement>('[data-ch15]')) {
     const track = root.querySelector<HTMLElement>('[data-ch15-track]')!;
     const rail = root.querySelector<HTMLElement>('[data-ch15-rail]')!;
     const word = root.querySelector<HTMLElement>('[data-ch15-word]')!;
-    const items = [...rail.children] as HTMLElement[];
+    const svg = root.querySelector<SVGSVGElement>('[data-ch15-path]')!;
+    const line = svg.querySelector<SVGPathElement>('.ch15__line')!;
+    const stops = svg.querySelector<SVGGElement>('.ch15__stops')!;
+    const items = ([...rail.children] as HTMLElement[]).filter((el) => el.classList.contains('ch15__item'));
+    const cards = [...rail.querySelectorAll<HTMLElement>('[data-ch15-card]')];
     rail.style.setProperty('--n', String(items.length - 1));
     const sticky = matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
     let overflow = 0;
     let ratio = 2.5; // the track moves 2.5px sideways for each 1px of page scroll
 
+    // ---------- The route: a dashed line through every card's centre ----------
+    // Straight across each card (hidden behind it, so it meets the card's edge at its middle), an S-curve with level
+    // ends through each gap, a dot where it meets each card and a last dot before "All connections".
+    let width = 0; // the drawing's width, in rail pixels
+    let startX = 0; // where the pen starts: the first card's centre
+    let endX = 0; // where it stops: the last dot
+    let arrive: number[] = []; // the pen position at which each card lights (its dot)
+    const lit = cards.map(() => false);
+    let clip = '';
+
+    const route = () => {
+      const pts = cards.map((c) => {
+        // The card link is never transformed (the frame inside it tilts and lifts on hover), and the frame is as wide
+        // as the card at its top, so the frame's untilted box is read from the card's.
+        const k = box(c, rail);
+        const f = c.querySelector<HTMLElement>('.ch15__frame')!;
+        const cy = k.y + f.offsetTop + f.offsetHeight / 2;
+        return { l: k.x, r: k.x + k.w, cx: k.x + k.w / 2, cy, w: k.w };
+      });
+      if (!pts.length || !pts[0].w) { line.setAttribute('d', ''); stops.replaceChildren(); width = 0; return; }
+      const n = (v: number) => v.toFixed(1);
+      const dots: [number, number, number][] = [];
+      let d = `M${n(pts[0].cx)} ${n(pts[0].cy)} H${n(pts[0].r)}`;
+      // Level runs of up to 12px either side of a gap keep each dot on a flat stretch of the line.
+      const curve = (x0: number, y0: number, x1: number, y1: number) => {
+        const run = Math.max(0, Math.min(12, (x1 - x0) / 4));
+        const a = x0 + run;
+        const b = x1 - run;
+        const k = (b - a) / 2;
+        d += ` H${n(a)} C${n(a + k)} ${n(y0)} ${n(b - k)} ${n(y1)} ${n(b)} ${n(y1)}`;
+      };
+      dots.push([pts[0].r + 8, pts[0].cy, 3]);
+      arrive = [pts[0].cx + 24];
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1];
+        const b = pts[i];
+        curve(a.r, a.cy, b.l, b.cy);
+        d += ` H${n(b.r)}`;
+        dots.push([b.l - 8, b.cy, 3]);
+        arrive.push(b.l - 8);
+      }
+      const last = pts[pts.length - 1];
+      startX = pts[0].cx;
+      endX = last.r;
+      let bottom = Math.max(...pts.map((p) => p.cy));
+      const end = items[items.length - 1];
+      const button = end.classList.contains('ch15__item--end') ? end.querySelector<HTMLElement>('a, button') : null;
+      if (button && button.offsetParent) {
+        const bb = box(button, rail);
+        const ex = bb.x - 16;
+        const ey = bb.y + bb.h / 2;
+        if (ex > last.r + 32) {
+          curve(last.r, last.cy, ex, ey);
+          d += ` H${n(ex)}`;
+          dots.push([ex, ey, 4]);
+          endX = ex + 4;
+          bottom = Math.max(bottom, ey);
+        }
+      }
+      width = Math.ceil(endX + 8);
+      const height = Math.ceil(bottom + 8);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      line.setAttribute('d', d);
+      stops.replaceChildren(...dots.map(([x, y, r]) => {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', n(x));
+        c.setAttribute('cy', n(y));
+        c.setAttribute('r', String(r));
+        return c;
+      }));
+    };
+
+    // Lights the cards the pen has reached. A 12px band behind each dot keeps a card from flickering when the scroll
+    // settles on it. The glow plays only when a card lights by scrolling, at most two at once (a jump lights quietly).
+    let quietUntil = 0;
+    let quietFrames = 0;
+    const light = (pen: number) => {
+      const next = lit.map((on, i) => (on ? pen >= arrive[i] - Math.min(12, (arrive[i] - startX) / 2) : pen >= arrive[i]));
+      const fresh = next.filter((on, i) => on && !lit[i]).length;
+      const glow = !quietFrames && fresh <= 2;
+      next.forEach((on, i) => {
+        if (on === lit[i]) return;
+        lit[i] = on;
+        cards[i].classList.toggle('is-lit', on);
+        cards[i].classList.toggle('is-glow', on && glow);
+      });
+    };
+    // The next state change happens without a fade (first paint, resize, keyboard). Held for two frames, so the
+    // browser has styled the change before the fades come back.
+    const quiet = () => {
+      root.setAttribute('data-ch15-instant', '');
+      quietFrames = 2;
+      const id = ++quietUntil;
+      const tick = () => {
+        if (id !== quietUntil) return;
+        if (--quietFrames > 0) { requestAnimationFrame(tick); return; }
+        root.removeAttribute('data-ch15-instant');
+      };
+      requestAnimationFrame(tick);
+    };
+
     const measure = () => {
-      if (!sticky.matches) { track.style.removeProperty('--track-h'); rail.style.transform = ''; word.style.transform = ''; return; }
+      route();
+      if (!sticky.matches) {
+        track.style.removeProperty('--track-h'); rail.style.transform = ''; word.style.transform = '';
+        svg.style.clipPath = ''; clip = '';
+        return;
+      }
       const last = items[items.length - 1];
       const right = last.offsetLeft + last.offsetWidth;
       const gutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 128;
       overflow = Math.max(0, right + gutter - innerWidth);
       track.style.setProperty('--track-h', `${innerHeight + overflow / ratio}px`);
+      quiet();
       update();
-    };
-    const progress = () => {
-      const range = track.offsetHeight - innerHeight;
-      return range > 0 ? Math.min(Math.max(-track.getBoundingClientRect().top / range, 0), 1) : 0;
     };
     let ticking = false;
     const update = () => {
       ticking = false;
       if (!sticky.matches) return;
-      const p = progress();
+      const top = track.getBoundingClientRect().top;
+      const range = track.offsetHeight - innerHeight;
+      const p = range > 0 ? clamp01(-top / range) : 0;
       rail.style.transform = `translate3d(${(-p * overflow).toFixed(1)}px, 0, 0)`;
       // The faint word drifts at a fraction of the track's speed (parallax).
       word.style.transform = `translate3d(${(-p * overflow * 0.06).toFixed(1)}px, 0, 0)`;
+      // The pen starts a fifth of a screen before the stage settles, so the first card lights as it arrives, and
+      // reaches the last dot as the track ends. It moves with the scroll in both directions.
+      if (!width) return;
+      const lead = innerHeight * 0.2;
+      const pen = startX + clamp01((lead - top) / (Math.max(range, 0) + lead)) * (endX - startX);
+      const c = `inset(-8px ${Math.max(0, width - pen).toFixed(1)}px -8px -8px)`;
+      if (c !== clip) { clip = c; svg.style.clipPath = c; }
+      light(pen);
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', measure);
     sticky.addEventListener('change', measure);
     measure();
+    // The end button's place depends on the web font; draw again once it has loaded.
+    document.fonts?.ready.then(measure);
 
     // Keyboard: a focused card is brought into view by scrolling the page to its place on the track (no animation).
     rail.addEventListener('focusin', (e) => {
@@ -248,8 +428,12 @@ const anyArt = list.some((x) => x.art);
       if (!item) return;
       const want = Math.min(Math.max((item.offsetLeft - innerWidth / 2 + item.offsetWidth / 2) / overflow, 0), 1);
       const range = track.offsetHeight - innerHeight;
+      quiet();
       window.scrollTo({ top: window.scrollY + track.getBoundingClientRect().top + want * range, behavior: 'auto' });
+      update();
     });
+    // Leaving a card by keyboard returns its grey at once too.
+    rail.addEventListener('focusout', () => { if (sticky.matches) quiet(); });
 
     // Phone pager: the dot of the card nearest the start of the scroller.
     const dots = [...root.querySelectorAll<HTMLElement>('.ch15__dot')];
