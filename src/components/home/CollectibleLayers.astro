@@ -23,7 +23,7 @@ const short = (label: string) => label.replace(/^Collectible /, '').replace(/ an
     <ChapterHead index={index} label="Collectible layers" count={layers.length} id="cl-label" />
     <ul class="cl__cards" role="list" data-reveal>
       {top.map((l) => (
-        <li class="cl__card">
+        <li class="cl__card" data-card-tilt>
           <p class="cl__row"><span class="cl__k">Layer</span><span class="cl__slash" aria-hidden="true">/</span><span class="cl__v">{short(l.label)}</span></p>
           <div class="cl__media"><span class="cl__blip" set:html={blipSvg(categoryGlyphs[l.id as keyof typeof categoryGlyphs], { size: 120 })} /></div>
           <h3 class="cl__name">{l.label}</h3>
@@ -67,7 +67,8 @@ const short = (label: string) => label.replace(/^Collectible /, '').replace(/ an
 
   @media (hover: hover) and (pointer: fine) {
     .cl__card:hover { border-color: var(--border-2); }
-    .cl__card:hover .cl__blip { transform: translateY(-4px); }
+    /* With the pointer tilt running (card-tilt.ts, LR46) the blip stays put: a card never tilts and lifts at once. */
+    .cl__card:not([data-tilt]):hover .cl__blip { transform: translateY(-4px); }
   }
 
   /* Phone: one card per screen, 84% wide, the next peeking, scrolling sideways with snap. */
@@ -93,3 +94,9 @@ const short = (label: string) => label.replace(/^Collectible /, '').replace(/ an
     .cl__card, .cl__blip { transition: none; }
   }
 </style>
+
+<script>
+  // Phase 8 (LR43, LR46): each layer card tilts a little toward a mouse pointer.
+  import { initCardTilt } from './card-tilt';
+  initCardTilt(document.querySelectorAll<HTMLElement>('.cl [data-card-tilt]'));
+</script>

@@ -176,6 +176,9 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
   const side = lead === 'jason' ? 1 : -1;
   let w = 0, h = 0, dpr = 1;
   let startedAt = 0, pausedAt = 0, running = false, still = false, raf = 0;
+  // The pointer's turn (landing refresh phase 8, LR44): radians added to the camera's angle round the figure, set by
+  // the chapter's spring (Chapter014Leads.astro). 0 is the figure at rest.
+  let turn = 0;
   let colours = { ink: '255 255 255', accent: '#f976b0' };
 
   const readColours = () => {
@@ -203,7 +206,7 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
   const camera = (t: number) => {
     const k = Math.min(t / TURN, 1);
     const e = 1 - (1 - k) * (1 - k);
-    const a = side * (0.62 - 0.3 * e);
+    const a = side * (0.62 - 0.3 * e) + turn;
     return { pos: [Math.sin(a) * 4, 1.1, Math.cos(a) * 4] as V3, target: [0, 0.88, 0] as V3, fov: 30 };
   };
 
@@ -277,6 +280,17 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
       if (pausedAt) { startedAt += performance.now() - pausedAt; pausedAt = 0; }
       running = true;
       raf = requestAnimationFrame(frame);
+    },
+    /** True while the draw-on and the camera turn run: the pointer's turn waits for it (never two movements). */
+    get busy() { return running || pausedAt > 0 || (!still && (!startedAt || time() < END)); },
+    /**
+     * Turns the figure by `rad` round its vertical axis (the camera orbits the other way) and redraws now. A positive
+     * value turns the figure's front toward the right of the screen. Ignored while the intro runs.
+     */
+    setTurn(rad: number) {
+      if (running) return;
+      turn = -rad;
+      draw(still ? Infinity : time());
     },
     /** The finished drawing at once (reduced motion, back navigation, no JS timing). */
     finish() { still = true; running = false; cancelAnimationFrame(raf); draw(Infinity); },

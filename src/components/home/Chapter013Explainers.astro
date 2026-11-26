@@ -42,7 +42,7 @@ const standfirst = parts?.standfirst.replace(/<[^>]+>/g, '').replace(/\s*\d+\s*$
       </div>
 
       {lead && (
-        <a class="ch13__card" data-scheme="dark" href={`/explainers/${lead.frontmatter.slug}`}>
+        <a class="ch13__card" data-scheme="dark" data-card-tilt href={`/explainers/${lead.frontmatter.slug}`}>
           {cardArt ? (
             <picture class="ch13__card-art">
               {cardArt.sources.map((s) => <source type={s.type} srcset={s.srcset} sizes="(max-width: 767px) 70vw, 1184px" />)}
@@ -148,8 +148,9 @@ const standfirst = parts?.standfirst.replace(/<[^>]+>/g, '').replace(/\s*\d+\s*$
   .ch13__tags { display: flex; gap: var(--space-3); }
   .ch13__tag { height: 44px; padding-inline: 20px; font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; color: #fff; cursor: inherit; pointer-events: none; }
   .ch13__card-title { max-width: 14em; font-size: var(--text-display-m); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-transform: uppercase; text-wrap: balance; padding-block: 0.06em; }
+  /* With the pointer tilt running (card-tilt.ts, LR46) the art holds still: a card never tilts and zooms at once. */
   @media (hover: hover) and (pointer: fine) {
-    .ch13__card:hover .ch13__card-art img { scale: 1.02; }
+    .ch13__card:not([data-tilt]):hover .ch13__card-art img { scale: 1.02; }
   }
   .ch13__card:active { scale: 0.995; transition: scale var(--dur-press) var(--ease-out); }
   .ch13__credit { margin-top: var(--space-3); font-size: var(--text-caption); color: var(--text-3); }
@@ -198,3 +199,9 @@ const standfirst = parts?.standfirst.replace(/<[^>]+>/g, '').replace(/\s*\d+\s*$
     .ch13__card-art img, .ch13__rtitle, .ch13__all :global(.icon) { transition: none; }
   }
 </style>
+
+<script>
+  // Phase 8 (LR43, LR46): the featured card (Jason and Lucia on the car) tilts a little toward a mouse pointer.
+  import { initCardTilt } from './card-tilt';
+  initCardTilt(document.querySelectorAll<HTMLElement>('.ch13 [data-card-tilt]'));
+</script>
