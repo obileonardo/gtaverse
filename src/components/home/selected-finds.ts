@@ -27,13 +27,24 @@ export function initSelectedFinds(root: HTMLElement) {
 
   function show(id: string, animate: boolean) {
     if (id === current) return;
-    // A swap already in flight finishes where it is.
-    leaving.forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.hidden = true; el.style.cssText = el.style.order ? `order:${el.style.order}` : ''; });
-    leaving = [];
+    const still = !animate || reduce();
+    const settle = (el: HTMLElement) => { el.getAnimations().forEach((a) => a.cancel()); el.style.cssText = el.style.order ? `order:${el.style.order}` : ''; };
+    // Cards still fading out from the last swap never jump (#80 review N7): one the new filter leaves out carries on
+    // fading from where it is; one it brings back stays on screen and fades back up from there, gliding from where
+    // it stands to its new slot like any card that stays. Chosen from the keyboard (or with reduced motion) they go
+    // at once, as every keyboard swap does.
+    const back = new Map<HTMLElement, number>();
+    const fading = new Set(leaving);
+    leaving.forEach((el) => {
+      if (still) { settle(el); el.hidden = true; }
+      else if (place(el, id) >= 0) back.set(el, parseFloat(getComputedStyle(el).opacity));
+    });
+    leaving = still ? [] : leaving.filter((el) => !back.has(el));
     // Moves in flight finish where they are going (the FLIP below measures final places), but a card still fading in
     // keeps its opacity and carries on from it: finishing it would jump it to full (#80 review N1).
-    const midFade = new Map<HTMLElement, number>();
+    const midFade = new Map<HTMLElement, number>(back);
     items.forEach((el) => {
+      if (!still && fading.has(el)) return;
       const anims = el.getAnimations();
       if (!anims.length) return;
       const o = parseFloat(getComputedStyle(el).opacity);
@@ -44,9 +55,12 @@ export function initSelectedFinds(root: HTMLElement) {
     const before = new Map<HTMLElement, DOMRect>();
     const gridBox = grid!.getBoundingClientRect();
     if (animate) items.forEach((el) => { if (!el.hidden) before.set(el, el.getBoundingClientRect()); });
+    // A card coming back rejoins the flow (measured above where it stood, out of the flow).
+    back.forEach((_, el) => settle(el));
 
     const stays: HTMLElement[] = [], enters: HTMLElement[] = [], exits: HTMLElement[] = [];
     items.forEach((el) => {
+      if (leaving.includes(el)) return; // still fading out, out of the flow
       const o = place(el, id);
       const was = !el.hidden;
       if (o >= 0) {
