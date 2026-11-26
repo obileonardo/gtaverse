@@ -129,7 +129,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
             </figure>
             {cf?.clip && (
               <div class="moment__watch">
-                <a class="watch" href={`/finds/${cf.slug}#tabs`} data-watch>
+                <a class="watch" href={`/finds/${cf.slug}?tab=clips#tabs`} data-watch>
                   <span class="watch__icon" aria-hidden="true"><Icon name={findClipLabels(cf).icon} size={12} /></span>
                   {cf.spoiler || cf.mature ? findClipLabels(cf).revealBar : findClipLabels(cf).bar}
                 </a>

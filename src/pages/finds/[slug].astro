@@ -3,7 +3,7 @@
 // left and bottom scrim, the title, badges, meta and synopsis sit in a left column, then a white pill and a circle,
 // then underline tabs over a 16:9 grid. Phone is the Disney+ iOS page at its own size: art on the top half with the
 // Google TV Trailer chip, centred caps title and badges, Google TV stacked pills, Disney icon actions, caps tabs.
-// Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
+// Tabs in order Details, Clips, Related, Nearby. Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
 // Mindtrip tips ("How to find it") and the Mindtrip author card, retitled for the finder or the clip's creator.
 // Spoiler and mature finds never show art outside their reveal.
 import Base from '../../layouts/Base.astro';
@@ -47,11 +47,13 @@ const related = relatedFinds(find, 10 - Math.min(lore.length, 4), near.map((h) =
 const howTo = tips(find.location_description);
 const mapHref = find.pin ? `/map?find=${find.slug}` : null;
 const hasClips = Boolean(find.clip) || others.length > 0;
+// Details first: most visitors come to read where the find is and how to get it, then to watch the clip; related
+// and nearby finds come last (decision P8). The first tab is the one open when the page loads.
 const tabs = [
+  { id: 'details', label: 'Details' },
+  ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
   { id: 'related', label: 'Related' },
   ...(near.length > 0 ? [{ id: 'nearby', label: 'Nearby' }] : []),
-  ...(hasClips ? [{ id: 'clips', label: 'Clips' }] : []),
-  { id: 'details', label: 'Details' },
 ];
 // "Play clip", or "View photo" and "Read the post" for X and Reddit photo and text posts (src/lib/clip.ts clipLabels).
 const labels = findClipLabels(find);
@@ -293,6 +295,10 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
 </Base>
 
 <script>
+  // A link from another page can ask for a tab with ?tab=<id> (the timeline's "Watch the clip" sends ?tab=clips#tabs).
+  // Unknown ids are ignored and the page keeps its first tab.
+  const wanted = new URLSearchParams(location.search).get('tab');
+  if (wanted) document.getElementById(`find-tab-${wanted}`)?.click();
   // Links and pills that open a tab: select the tab, then bring the tab row into view.
   document.querySelectorAll<HTMLElement>('[data-open-tab]').forEach((el) => {
     el.addEventListener('click', (e) => {
