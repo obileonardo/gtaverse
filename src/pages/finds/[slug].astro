@@ -60,7 +60,7 @@ const labels = findClipLabels(find);
 const sub = mapHref
   ? { href: mapHref, label: 'Open on the map', image: still?.thumb }
   : find.clip
-    ? { href: '#tabs', label: gated ? labels.revealBar : labels.bar, image: still?.thumb }
+    ? { href: '?tab=clips#tabs', openTab: 'clips', label: gated ? labels.revealBar : labels.bar, image: still?.thumb }
     : undefined;
 const loreConfidence: Record<string, string> = { canon: 'Canon', strong: 'Strong', speculative: 'Speculative', debunked: 'Debunked' };
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -295,7 +295,8 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
 </Base>
 
 <script>
-  // A link from another page can ask for a tab with ?tab=<id> (the timeline's "Watch the clip" sends ?tab=clips#tabs).
+  // A link can ask for a tab with ?tab=<id>: the timeline's "Watch the clip", the home hero's "Play clip", the island's
+  // clip bar on the home page and on this page all send ?tab=clips#tabs (the page opens on Details since P8).
   // Unknown ids are ignored and the page keeps its first tab.
   const wanted = new URLSearchParams(location.search).get('tab');
   if (wanted) document.getElementById(`find-tab-${wanted}`)?.click();
