@@ -6,6 +6,11 @@
 // its sources and an honest label for how sure we are." No grain (a pattern over reading text).
 // Motion: on first view the quote's lines (never letters) rise 16px and fade, 70ms apart (--stagger-hero), over
 // --dur-reveal on --ease-reveal, once. Reduced motion: one fade. Without JavaScript it simply shows.
+// Highlighter (phase 3, LR16; Chime: "black font with the pink background, it follows the scroll"): as the quote
+// crosses the screen, a pink band fills in behind its words one by one and each word turns navy on the pink. Native
+// scroll drives it (nothing hijacked, both directions). Each word's band is its ::after, a pink box holding a navy copy
+// of the word over the real text, revealed left to right with clip-path; the real text is never clipped, so screen
+// readers, selection and the clip audit see plain text. Reduced motion and no JavaScript: fully highlighted, still.
 import ChapterHead from './ChapterHead.astro';
 interface Props { index: number }
 const { index } = Astro.props;
@@ -19,7 +24,7 @@ const words = quote.split(' ');
     <figure class="mf__body" data-mf>
       <p class="mf__marks" aria-hidden="true">&ldquo; &rdquo;</p>
       <blockquote class="mf__quote">
-        <p><span class="sr-only">{quote}</span><span aria-hidden="true">{words.map((w, i) => <Fragment><span class="mf__w" data-w>{w}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>)}</span></p>
+        <p><span class="sr-only">{quote}</span><span aria-hidden="true">{words.map((w, i) => <Fragment><span class="mf__w" data-w data-text={w}>{w}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>)}</span></p>
       </blockquote>
       <figcaption class="mf__small">{small}</figcaption>
     </figure>
@@ -27,6 +32,37 @@ const words = quote.split(' ');
 </section>
 
 <script>
+  // The highlighter follows the quote through the screen: it starts when the quote's top reaches 85% of the viewport
+  // height and is complete when its bottom reaches 45%. Each word fills in turn (--hl from 0 to 1, set on the word
+  // itself). It only runs while the quote is near the screen, at most once a frame, and never under reduced motion
+  // (CSS then shows every word highlighted).
+  function highlight(fig: HTMLElement, words: HTMLElement[]) {
+    const quote = fig.querySelector<HTMLElement>('.mf__quote')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const last = words.map(() => -1);
+    let near = false, ticking = false;
+    const update = () => {
+      ticking = false;
+      if (reduce.matches) return;
+      const r = quote.getBoundingClientRect();
+      const vh = innerHeight;
+      const p = Math.min(Math.max((vh * 0.85 - r.top) / (vh * 0.4 + r.height), 0), 1);
+      words.forEach((w, i) => {
+        const hl = Math.round(Math.min(Math.max(p * words.length - i, 0), 1) * 1000) / 1000;
+        if (hl !== last[i]) { last[i] = hl; w.style.setProperty('--hl', String(hl)); }
+      });
+    };
+    const request = () => { if (near && !ticking) { ticking = true; requestAnimationFrame(update); } };
+    const reset = () => { words.forEach((w, i) => { w.style.removeProperty('--hl'); last[i] = -1; }); if (!reduce.matches) update(); };
+    reduce.addEventListener('change', reset);
+    addEventListener('scroll', request, { passive: true });
+    addEventListener('resize', request);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(([e]) => { near = e.isIntersecting; if (near) request(); else update(); }, { rootMargin: '25% 0px 25% 0px' }).observe(quote);
+    } else near = true;
+    update();
+  }
+
   // Lines are only known once the words are laid out: group the words by their top edge, give each line its delay,
   // then reveal the whole quote the first time it comes into view.
   document.querySelectorAll<HTMLElement>('[data-mf]').forEach((fig) => {
@@ -42,6 +78,7 @@ const words = quote.split(' ');
     };
     assign();
     addEventListener('resize', assign);
+    highlight(fig, words);
     if (document.documentElement.classList.contains('nav-back') || !('IntersectionObserver' in window)) { fig.dataset.in = 'skip'; return; }
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
@@ -76,7 +113,24 @@ const words = quote.split(' ');
     text-wrap: balance;
     color: var(--text-2);
   }
-  .mf__w { display: inline-block; }
+  /* The highlighter (LR16). --hl is 1 (fully highlighted) by default, for reduced motion and pages without JavaScript;
+     with JavaScript and motion it starts at 0 and the script moves it. The band is 0.08em wider than the word on each
+     side and 0.04em shorter than the line at the top and bottom, so neighbouring lines keep a hairline of ground. */
+  .mf__w { display: inline-block; position: relative; --hl: 1; }
+  .mf__w::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0 -0.08em;
+    padding-inline: 0.08em;
+    white-space: nowrap;
+    color: var(--on-accent);
+    background: var(--accent);
+    clip-path: inset(0.04em calc((1 - var(--hl)) * 100%) 0.04em 0);
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .mf__w { --hl: 0; }
+  }
   .mf__small { margin-top: var(--space-12); max-width: var(--measure-short); font-size: var(--text-body); line-height: 25px; color: var(--text-2); text-wrap: balance; }
   .mf__small a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; white-space: nowrap; }
 

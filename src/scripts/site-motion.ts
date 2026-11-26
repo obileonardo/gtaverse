@@ -2,6 +2,7 @@
 //   - card walls and list rows reveal once, the first time they come into view (item 8)
 //   - a move between game hubs tells the next page which side to arrive from (item 13)
 // The inline script in Base.astro handles what must run before first paint (html.js, image fades, pagereveal).
+import { tokenMs } from './motion/tokens';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -13,8 +14,8 @@ export function staggerDelay(i: number, step = 50, cap = 6) {
 }
 
 function cssNumber(name: string, fallback: number) {
-  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
-  return Number.isFinite(v) ? v : fallback;
+  // A stagger in ms, or a plain count; read with its unit (the minifier may write 50ms as .05s).
+  return tokenMs(name, fallback);
 }
 
 /** Item 8: card walls and list rows rise once on first view, never on a back navigation. */
