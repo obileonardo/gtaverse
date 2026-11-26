@@ -56,7 +56,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   <div class="mp__band">
     <div class="container mp__grid">
       <div class="mp__col">
-        <h2 class="mp__title" id="mp-title">Every find on one map<span class="mp__stop">.</span></h2>
+        <h2 class="mp__title" id="mp-title">Every find <br class="mp__br" />on one map<span class="mp__stop">.</span></h2>
         <ul class="mp__list" role="list" data-mp-list>
           {regions.map((r, i) => (
             <li>
@@ -118,10 +118,12 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 <style>
   .mp__band { position: relative; margin-top: var(--space-10); }
-  .mp__grid { position: relative; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: var(--space-10); min-height: 680px; }
-  .mp__col { position: relative; z-index: 1; display: flex; flex-direction: column; }
-  /* Joby's headline: two lines, 600, tight tracking and leading. */
-  .mp__title { font-size: var(--text-section); font-weight: 600; line-height: var(--leading-display); letter-spacing: -0.03em; padding-block: 0.06em; }
+  /* The column is as wide as the headline (at least 320px), so the headline never squeezes into more lines as the
+     type grows (it broke into four at desktop widths, Chime, 25 Nov 2026). */
+  .mp__grid { position: relative; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-10); min-height: 680px; }
+  .mp__col { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 320px; }
+  /* Joby's headline: exactly two lines ("Every find" / "on one map."), 600, tight tracking and leading. */
+  .mp__title { font-size: var(--text-section); font-weight: 600; line-height: var(--leading-display); letter-spacing: -0.03em; padding-block: 0.06em; white-space: nowrap; }
   .mp__list { margin-top: var(--space-12); }
   .mp__row {
     display: grid;
@@ -143,7 +145,9 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
   /* The drawing: our coast in 1px lines at about 40% of --text-3, the collectible dots fainter still, tilted. */
   .mp__art { position: relative; display: block; perspective: 1600px; margin-right: calc(-1 * var(--page-pad)); overflow: hidden; overflow: clip; }
-  .mp__tilt { position: absolute; inset: -4% -6% -46% 8%; display: block; transform: rotateX(28deg); transform-origin: 50% 30%; }
+  /* The whole coast stays in view, its right edge on the page margin (it ran 46% past the bottom and off the screen
+     on the right, Chime, 25 Nov 2026). -6% at the bottom is the most the tilt allows without a cut (measured). */
+  .mp__tilt { position: absolute; inset: 0 var(--page-pad) -6% 4%; display: block; transform: rotateX(28deg); transform-origin: 50% 30%; }
   .mp__svg { width: 100%; height: 100%; overflow: visible; }
   .mp__svg :global(.mp__coast path), .pv__fallback :global(.mp__coast path) { fill: none; stroke: var(--text-3); stroke-opacity: 0.55; stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
   .mp__dots { fill: none; stroke: var(--text-3); stroke-opacity: 0.45; stroke-width: 2.5px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -184,14 +188,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   .pv__panel ul { display: grid; gap: 6px; }
   .pv__panel li { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; line-height: 1.3; min-width: 0; white-space: nowrap; overflow: hidden; overflow: clip visible; text-overflow: ellipsis; }
   .pv__panel li span { display: flex; flex: none; }
-  .pv__credit { position: absolute; right: var(--space-3); bottom: var(--space-2); font-size: 12px; color: rgb(255 255 255 / 0.8); padding: 2px 8px; border-radius: var(--radius-xs); background: rgb(13 12 26 / 0.6); }
+  /* Over the map tiles: a navy pill at the readability strength (LR12), so it passes AA over any tile. */
+  .pv__credit { position: absolute; right: var(--space-3); bottom: var(--space-2); font-size: 12px; color: rgb(255 255 255 / 0.92); padding: 2px 8px; border-radius: var(--radius-xs); background: rgb(var(--scrim-rgb) / var(--scrim-read)); }
 
   @media (hover: hover) and (pointer: fine) {
     .mp__row:hover .mp__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
   }
 
   @media (max-width: 1023px) {
-    .mp__grid { grid-template-columns: 280px minmax(0, 1fr); min-height: 560px; }
+    .mp__grid { min-height: 560px; }
+    .mp__col { min-width: 280px; }
   }
 
   /* Phone (Justin Jefferson M010): the coast bleeds off the right edge, the headline in four lines of condensed caps
@@ -201,9 +207,9 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
     .mp__grid { display: block; min-height: 0; }
     .mp__art { position: absolute; top: 0; right: 0; width: 70%; height: 520px; margin: 0; }
     .mp__tilt { inset: 0 -30% 0 0; transform: none; }
-    .mp__col { padding-top: 240px; }
-    .mp__title { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-l); line-height: 0.95; letter-spacing: var(--tracking-display); text-transform: uppercase; max-width: 6.2em; }
-    .mp__stop { display: none; }
+    .mp__col { padding-top: 240px; min-width: 0; }
+    .mp__title { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-l); line-height: 0.95; letter-spacing: var(--tracking-display); text-transform: uppercase; max-width: 6.2em; white-space: normal; }
+    .mp__stop, .mp__br { display: none; }
     .mp__cta { display: block; order: 2; margin-top: var(--space-6); }
     .mp__cta :global(.btn) { width: 205px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.02em; }
     .mp__list { order: 3; margin-top: var(--space-8); }

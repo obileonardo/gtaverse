@@ -137,16 +137,20 @@ const initial = (s: string) => s.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
   }
   .spot__media, .spot__player { position: absolute; inset: 0; }
   .spot__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
-  /* Two scrims so both text columns read: up from the bottom left, and in from the right. */
+  /* The readout mask (LR12, Chime, 25 Nov 2026): one radial mask over the whole still. Clear in the middle, where
+     the creator's picture is, and darkening out to the edges and corners, where our text sits, so the stills' own big
+     type never fights ours. */
   .spot__media::after {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(to top, rgb(13 12 26 / 0.86), rgb(13 12 26 / 0) 62%),
-      linear-gradient(to right, rgb(13 12 26 / 0.6), rgb(13 12 26 / 0) 46%),
-      linear-gradient(to left, rgb(13 12 26 / 0.72), rgb(13 12 26 / 0) 40%);
+    background: radial-gradient(ellipse var(--spot-mask-size) at var(--spot-mask-at), rgb(var(--scrim-rgb) / 0) 0%, rgb(var(--scrim-rgb) / 0.2) 30%, rgb(var(--scrim-rgb) / 0.6) 58%, rgb(var(--scrim-rgb) / 0.86) 82%, rgb(var(--scrim-rgb) / 0.92) 100%);
   }
+  /* The clear middle sits in the strip between the two text columns, as wide as that strip allows (measured: the
+     text holds 4 to 41% and 79 to 96% of the width at 1440, more on narrower panels). */
+  .spot__media { --spot-mask-size: 27% 70%; --spot-mask-at: 60% 30%; }
+  @media (max-width: 1439px) { .spot__media { --spot-mask-size: 23% 65%; --spot-mask-at: 61% 28%; } }
+  @media (max-width: 1279px) { .spot__media { --spot-mask-size: 14% 50%; --spot-mask-at: 63% 26%; } }
   .spot__player { z-index: 2; display: none; background: var(--frame); }
   .spot__player :global(iframe) { width: 100%; height: 100%; border: 0; }
   .spot__panel[data-playing] .spot__player { display: block; }
@@ -222,11 +226,12 @@ const initial = (s: string) => s.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
   :global(.spot__close) { position: absolute; top: var(--space-4); right: var(--space-4); z-index: 3; display: none; }
   .spot__panel[data-playing] :global(.spot__close) { display: inline-flex; }
 
-  /* The text swap (direction-aware, never two at once): the old text fades by 160ms in place, the new text arrives
-     from the side of the move from 120ms over 280ms. --dir is set by spotlight.ts before a slide becomes active. */
-  .spot__text { opacity: 0; visibility: hidden; translate: calc(var(--dir, 1) * 24px) 0; transition: opacity 160ms var(--ease-standard), translate 0s linear 160ms, visibility 0s linear 160ms; }
-  .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: 0 0; transition: opacity 280ms var(--ease-out) 120ms, translate 280ms var(--ease-out) 120ms, visibility 0s; }
-  .spot__panel[data-playing] .spot__text { opacity: 0; translate: 0 0; transition: opacity 160ms var(--ease-standard); }
+  /* The text swap (direction-aware, never two at once, LR13): the old text fades in place over --dur-swap-out; only
+     once it is gone does the new text arrive from the side of the move, over --dur-swap-in. --dir is set by
+     spotlight.ts before a slide becomes active. */
+  .spot__text { opacity: 0; visibility: hidden; translate: calc(var(--dir, 1) * 24px) 0; transition: opacity var(--dur-swap-out) var(--ease-standard), translate 0s linear var(--dur-swap-out), visibility 0s linear var(--dur-swap-out); }
+  .spot__slide[data-active] .spot__text { opacity: 1; visibility: visible; translate: 0 0; transition: opacity var(--dur-swap-in) var(--ease-out) var(--dur-swap-out), translate var(--dur-swap-in) var(--ease-out) var(--dur-swap-out), visibility 0s; }
+  .spot__panel[data-playing] .spot__text { opacity: 0; translate: 0 0; transition: opacity var(--dur-swap-out) var(--ease-standard); }
   .spot__panel[data-playing] .spot__text :is(a, button) { pointer-events: none; visibility: hidden; }
 
   .spot__pager { display: flex; justify-content: center; margin-top: var(--space-6); }

@@ -126,7 +126,10 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__still { display: block; aspect-ratio: 148 / 202; overflow: hidden; background: var(--surface-2); }
   .ch10__still img, .ch10__slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: scale var(--dur-card-lift) var(--ease-out); }
   .ch10__glow { display: grid; place-items: center; width: 100%; height: 100%; background: var(--glow-hero), var(--surface-2); padding: 6px; text-align: center; }
-  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: 16px; line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
+  /* A long label ("REAL-WORLD REFERENCE") ran past a 68px tile at 1024 (LR2): the type follows the tile's width,
+     16px at most and never under 12. */
+  .ch10__glow { container-type: inline-size; }
+  .ch10__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: clamp(12px, 20cqi, 16px); line-height: 1; text-transform: uppercase; color: var(--text-1); padding-block: 0.15em; }
   .ch10__cap { font-size: var(--text-label-caps); font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.35; color: var(--text-1); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
   .ch10__sub { font-size: var(--text-label-caps); line-height: 1.35; text-transform: uppercase; color: var(--text-3); overflow: clip visible; white-space: nowrap; text-overflow: ellipsis; }
 
@@ -176,12 +179,16 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
   .ch10__slide a { display: block; width: 100%; height: 100%; overflow: hidden; }
   .ch10__slide:not(.is-on) { scale: 0.52; opacity: 0.35; clip-path: inset(0 19%); }
   .ch10__slide.is-far { opacity: 0.2; }
+  /* The neighbours show only their middle (the inset above), which would cut a placeholder's label mid-word:
+     their labels fade out, and the focused slide's label fades in once it is whole. */
+  .ch10__slide .ch10__glow span { transition: opacity var(--dur-swap-in) var(--ease-colour) 300ms; }
+  .ch10__slide:not(.is-on) .ch10__glow span { opacity: 0; transition-delay: 0ms; transition-duration: var(--dur-swap-out); }
   .ch10__slide.is-gone { opacity: 0; pointer-events: none; }
 
   /* First view: panel A's tiles rise with a short stagger once (non-uniform, capped at five). */
   :global(html.js) .ch10:not([data-fv-in]) .ch10__grid:not([hidden]) li { opacity: 0; }
   .ch10[data-fv-in='in'] .ch10__grid li { animation: ch10-rise var(--dur-reveal-group) var(--ease-reveal) calc(var(--i) * 40ms - var(--i) * var(--i) * 3ms) both; }
-  .ch10 .ch10__grid.is-swap li { animation: ch10-in 280ms var(--ease-out) calc(var(--i) * 30ms) both; }
+  .ch10 .ch10__grid.is-swap li { animation: ch10-in var(--dur-swap-in) var(--ease-out) calc(var(--i) * 30ms) both; }
   @keyframes ch10-rise { from { opacity: 0; translate: 0 12px; } }
   @keyframes ch10-in { from { opacity: 0; } }
 
@@ -191,7 +198,8 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     .ch10__b { margin-top: 0; }
     .ch10__a { gap: var(--space-4); }
     .ch10__track { height: 300px; }
-    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0; top: 0; bottom: auto; font-size: 160px; text-align: start; }
+    /* right 0.1em: the tight line box (0.8) is narrower than the glyphs, so at the edge their ink was cut. */
+    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0.1em; top: 0; bottom: auto; font-size: 160px; text-align: start; }
   }
   @media (max-width: 767px) {
     .ch10__a, .ch10__b { padding: var(--space-4); }
@@ -211,6 +219,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <script>
   import { roll, rollInit } from '../../scripts/motion/roll';
   import { onFirstView, reduceMotion } from './first-view';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   const pad = (n: number) => String(n).padStart(2, '0');
   for (const root of document.querySelectorAll<HTMLElement>('[data-ch10]')) {
@@ -277,16 +286,55 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       });
     });
 
+    // The swap (LR13): the shown area's tiles and carousel fade out over --dur-swap-out, and only then does the new
+    // area arrive (its tiles rise, its carousel fades in over --dur-swap-in). Every change of mind starts from where
+    // the shown area is right now: another area fades it on down to 0, choosing it again brings it back up to 1. Each
+    // fade reads the current opacity first, so nothing ever jumps, and only the latest choice acts (turn). Keyboard
+    // choices and reduced motion swap at once.
+    const css = (prop: string) => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+    const ms = tokenMs;
+    let target = 0;
+    let turn = 0;
+    const shownIndex = () => grids.findIndex((g) => !g.hidden);
+    const shownEls = () => { const k = shownIndex(); return [grids[k], cars[k]].filter((el): el is HTMLElement => !!el); };
+    // Fades `el` from its current opacity to `to`, over the part of `full` that distance needs.
+    const fadeTo = (el: HTMLElement, to: 0 | 1, full: number, ease: string) => {
+      const from = Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity) || 0));
+      el.getAnimations().forEach((a) => a.cancel());
+      return el.animate([{ opacity: from }, { opacity: to }], { duration: Math.max(1, full * Math.abs(to - from)), easing: ease, fill: 'forwards' });
+    };
+    const show = (i: number, still: boolean) => {
+      turn++;
+      grids.forEach((g, k) => {
+        g.getAnimations().forEach((a) => a.cancel());
+        g.hidden = k !== i;
+        g.classList.remove('is-swap');
+        if (k === i && !still) { void g.offsetWidth; g.classList.add('is-swap'); }
+      });
+      cars.forEach((c, k) => {
+        c.getAnimations().forEach((a) => a.cancel());
+        c.hidden = k !== i;
+        if (k === i) { place(c, startOf(c), true); if (!still) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') }); }
+      });
+    };
+
     const select = (i: number, byKey = false) => {
       i = (i + grids.length) % grids.length;
       if (i === area) return;
       const dir = i > area ? 1 : -1;
       area = i;
-      grids.forEach((g, k) => { g.hidden = k !== i; g.classList.toggle('is-swap', k === i && !byKey); });
-      cars.forEach((c, k) => {
-        c.hidden = k !== i;
-        if (k === i) { place(c, startOf(c), true); if (!byKey && !reduceMotion()) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'cubic-bezier(0.455, 0.03, 0.515, 0.955)' }); }
-      });
+      target = i;
+      if (byKey || reduceMotion()) show(i, true);
+      else if (i === shownIndex()) {
+        // Back to the area that is still on screen (leaving, or arriving): bring it back up from where it is.
+        const t = ++turn;
+        const anims = shownEls().map((el) => fadeTo(el, 1, ms('--dur-swap-in', 280), css('--ease-out')));
+        Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) anims.forEach((a) => a.cancel()); }, () => {});
+      } else {
+        const t = ++turn;
+        const anims = shownEls().map((el) => fadeTo(el, 0, ms('--dur-swap-out', 180), css('--ease-standard')));
+        Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) show(target, false); }, () => {});
+      }
       nums.forEach((n, k) => { n.classList.toggle('is-active', k === i); n.setAttribute('aria-pressed', String(k === i)); });
       roll(count, pad(i + 1), { dir, instant: byKey });
       name.textContent = names[i];

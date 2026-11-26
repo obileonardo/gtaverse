@@ -158,10 +158,11 @@ const reduced = baseDecls.find((d) => d.name === '--dur-fade-reduced')?.value ??
 <script>
   import { staggerDelay } from '../../scripts/site-motion';
   import { Spring, springToken, loop } from '../../scripts/motion/spring';
+  import { tokenMs } from '../../scripts/motion/tokens';
 
   const root = document.documentElement;
   const token = (name: string) => getComputedStyle(root).getPropertyValue(name).trim();
-  const msOf = (name: string, fallback: number) => { const v = parseFloat(token(name)); return Number.isFinite(v) ? v : fallback; };
+  const msOf = (name: string, fallback: number) => tokenMs(name, fallback);
   const osReduce = matchMedia('(prefers-reduced-motion: reduce)');
   let forced = false;
   const reduce = () => forced || osReduce.matches;

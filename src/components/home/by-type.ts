@@ -1,6 +1,6 @@
 // Home chapter 006, By type (ByType.astro).
 // Choosing a type (a tile, the arrows, or on the phone a swipe of the info cards) crossfades the still and the ruled
-// cells in place (old out 140ms, new in 240ms, --ease-colour, in CSS) and the accent brackets travel to the tile on
+// cells in place (old out --dur-swap-out, new in --dur-swap-in, the cells only after the old ones are gone; in CSS) and the accent brackets travel to the tile on
 // the travel spring (one element moving between targets). The pager on the still cycles that type's stills. Arrow
 // keys move along the strip at once, with no motion (keyboard actions never animate).
 import { Spring, loop, springToken, reducedMotion } from '../../scripts/motion/spring';
@@ -15,7 +15,6 @@ export function initByType(root: HTMLElement) {
   const brackets = root.querySelector<HTMLElement>('[data-bt-brackets]');
   const all = root.querySelector<HTMLAnchorElement>('[data-bt-all]');
   if (!tiles.length) return;
-  strip.style.setProperty('--n', String(tiles.length));
   let active = 0;
 
   const x = new Spring(0, springToken('travel', 0.3));
@@ -28,6 +27,10 @@ export function initByType(root: HTMLElement) {
   const place = (i: number, instant: boolean) => {
     if (!brackets) return;
     const { left, width } = tileBox(i);
+    // In a scrolling strip the chosen tile can be scrolled partly out of view: the brackets fade out there instead
+    // of sliding over the arrows, and fade back in once the whole tile is in view.
+    const s = strip.getBoundingClientRect(), r = tiles[i].getBoundingClientRect();
+    brackets.toggleAttribute('data-out', r.left < s.left - 1 || r.right > s.right + 1);
     brackets.style.width = `${width + 6}px`;
     const target = left - 3;
     if (instant || reducedMotion()) { x.set(target); brackets.style.transform = `translateX(${target}px)`; return; }
@@ -105,5 +108,13 @@ export function initByType(root: HTMLElement) {
 
   requestAnimationFrame(() => place(0, true));
   addEventListener('resize', () => place(active, true));
-  strip.addEventListener('scroll', () => place(active, true), { passive: true });
+  // Which sides of a scrolling strip have more tiles (the CSS fades those edges).
+  const edges = () => {
+    const start = strip.scrollLeft > 1, end = strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1;
+    if (start || end) strip.dataset.more = start && end ? 'both' : start ? 'start' : 'end';
+    else delete strip.dataset.more;
+  };
+  requestAnimationFrame(edges);
+  addEventListener('resize', edges);
+  strip.addEventListener('scroll', () => { place(active, true); edges(); }, { passive: true });
 }
