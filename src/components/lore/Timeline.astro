@@ -583,8 +583,9 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
       overflow: hidden;
     }
     .ruler__now { color: var(--text-2); }
-    .ruler__prev { justify-self: start; margin-left: -18px; color: var(--text-3); opacity: 0.3; }
-    .ruler__next { justify-self: end; margin-right: -18px; color: var(--text-3); opacity: 0.3; }
+    /* The neighbouring years sit whole at the edges, faint (they hung 18px outside and were cut mid-number, LR3). */
+    .ruler__prev { justify-self: start; color: var(--text-3); opacity: 0.3; }
+    .ruler__next { justify-self: end; color: var(--text-3); opacity: 0.3; }
 
     .panels { touch-action: pan-y; padding-top: var(--space-12); }
     .moment {

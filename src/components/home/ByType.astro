@@ -63,10 +63,7 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
       <Button href={`/categories/${types[0].id}`} variant="inverse" size="l" class="bt__viewall" data-bt-all>All {types[0].count}</Button>
     </div>
     <div class="bt__striprow">
-      <div class="bt__arrows">
-        <Button variant="outline" size="m" icon="chevron-left" iconOnly label="Previous type" data-bt-prev />
-        <Button variant="outline" size="m" icon="chevron-right" iconOnly label="Next type" data-bt-next />
-      </div>
+      <Button variant="outline" size="m" icon="chevron-left" iconOnly label="Previous type" class="bt__arrow" data-bt-prev />
       <div class="bt__stripwrap">
         <ul class="bt__strip" role="list" aria-label="Find types" data-bt-strip>
           {types.map((t, i) => (
@@ -80,6 +77,7 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
         </ul>
         <span class="bt__brackets" data-bt-brackets aria-hidden="true"></span>
       </div>
+      <Button variant="outline" size="m" icon="chevron-right" iconOnly label="Next type" class="bt__arrow" data-bt-next />
     </div>
   </div>
 </section>
@@ -99,8 +97,9 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
   }
   .bt__media { position: relative; aspect-ratio: 1.1; overflow: hidden; background: var(--surface-1); }
   .bt__lead, .bt__lead img, .bt__glow { position: absolute; inset: 0; }
-  .bt__lead { opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
-  .bt__lead[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  /* The still crossfades on the swap tokens (pictures may overlap: a gap would flash the empty frame). */
+  .bt__lead { opacity: 0; visibility: hidden; transition: opacity var(--dur-swap-out) var(--ease-colour), visibility 0s linear var(--dur-swap-out); }
+  .bt__lead[data-active] { opacity: 1; visibility: visible; transition: opacity var(--dur-swap-in) var(--ease-colour), visibility 0s; }
   .bt__lead img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
   .bt__lead img[data-active] { opacity: 1; }
   .bt__glow { background: var(--glow-hero), var(--surface-1); }
@@ -114,8 +113,9 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
 
   /* The ruled cells */
   .bt__panels { display: grid; border-left: var(--border-w) solid var(--rule-soft); min-width: 0; }
-  .bt__panel { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-colour), visibility 0s linear 140ms; }
-  .bt__panel[data-active] { opacity: 1; visibility: visible; transition: opacity 240ms var(--ease-colour), visibility 0s; }
+  /* The text cells never show two types at once (LR13): the old cells leave over --dur-swap-out, then the new arrive. */
+  .bt__panel { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-swap-out) var(--ease-colour), visibility 0s linear var(--dur-swap-out); }
+  .bt__panel[data-active] { opacity: 1; visibility: visible; transition: opacity var(--dur-swap-in) var(--ease-colour) var(--dur-swap-out), visibility 0s; }
   .bt__name {
     padding: var(--space-8) var(--space-12) var(--space-6);
     border-bottom: var(--border-w) solid var(--rule-soft);
@@ -146,20 +146,31 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
 
   .bt__under { display: none; }
 
-  /* The strip: two stacked round arrows, then one tile per type, 8 apart. */
-  .bt__striprow { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
-  .bt__arrows { display: grid; gap: var(--space-2); align-content: start; }
+  /* The strip: previous arrow, one tile per type 8 apart, next arrow; the arrows centred on the tiles (Chime, 25 Nov
+     2026: they were stacked on the left). */
+  .bt__striprow { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); }
+  .bt__striprow :global(.bt__arrow) { flex: none; }
   .bt__stripwrap { position: relative; flex: 1; min-width: 0; }
-  .bt__strip { display: grid; grid-template-columns: repeat(var(--n, 12), minmax(0, 1fr)); gap: var(--space-2); }
+  /* Each tile is at least as wide as its longest word and shares any spare room equally; when the tiles do not fit
+     (below about 1190) the strip scrolls sideways, as it does on tablets, and the arrows keep the chosen tile in view.
+     Twelve equal tiles cut most labels to "EASTER ..." below 1920 (LR9). */
+  /* A scroll container clips its children: 4px of room (cancelled by the margin) keeps the tiles' focus ring whole. */
+  .bt__strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(min-content, 1fr); gap: var(--space-2); padding: 4px; margin: -4px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .bt__strip::-webkit-scrollbar { display: none; }
+  /* While the strip scrolls, the side with more tiles fades out over 48px (set by by-type.ts), so the tile at the
+     edge reads as "more this way", not as a cut word. */
+  .bt__strip[data-more='end'] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
+  .bt__strip[data-more='start'] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent); }
+  .bt__strip[data-more='both'] { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
   .bt__tile {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(min-content, 1fr);
     justify-items: center;
     align-content: start;
     gap: var(--space-3);
     width: 100%;
     height: 112px;
-    padding: var(--space-4) var(--space-2) var(--space-2);
+    padding: var(--space-4) var(--space-1) var(--space-2);
     border: var(--border-w) solid var(--rule-soft);
     transition: background-color var(--dur-colour) var(--ease-colour), transform var(--dur-press) var(--ease-out);
   }
@@ -171,15 +182,14 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
     text-align: center;
     font-family: var(--font-mono);
     font-size: var(--text-mono-caps);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
     text-transform: uppercase;
+    text-wrap: balance;
     color: var(--text-2);
-    white-space: nowrap;
-    overflow: hidden;
-    overflow: clip visible;
-    text-overflow: ellipsis;
   }
   .bt__tile[aria-pressed='true'] .bt__tlabel { color: var(--text-1); }
+  .bt__brackets[data-out] { opacity: 0; }
   /* HUXLEY's corner brackets, in the accent (our cut-corner signature): four 8px L marks that travel between tiles. */
   .bt__brackets {
     --c: var(--accent-ink);
@@ -192,6 +202,7 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
     width: 0;
     pointer-events: none;
     will-change: transform;
+    transition: opacity 120ms var(--ease-colour);
     background:
       linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w),
       linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
@@ -209,9 +220,7 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
   }
 
   @media (max-width: 1023px) {
-    .bt__strip { display: flex; overflow-x: auto; scrollbar-width: none; }
-    .bt__strip::-webkit-scrollbar { display: none; }
-    .bt__strip li { flex: 0 0 96px; }
+    .bt__tile { min-width: 96px; }
     .bt__name { padding: var(--space-6) var(--space-8) var(--space-5); font-size: 44px; }
     .bt__copy { padding: var(--space-8); }
     .bt__meta div { padding: var(--space-5) var(--space-8); }
@@ -222,11 +231,10 @@ const fact = (t: TypeEntry) => `${plural(t.count, 'find', 'finds')}.${t.topRegio
   @media (max-width: 767px) {
     .container { display: flex; flex-direction: column; }
     .bt__striprow { order: 1; margin-top: var(--space-5); margin-inline: calc(-1 * var(--page-pad)); }
-    .bt__arrows { display: none; }
+    .bt__striprow :global(.bt__arrow) { display: none; }
     .bt__stripwrap { overflow: hidden; overflow: clip visible; }
-    .bt__strip { padding: 4px var(--page-pad); scroll-padding-inline: var(--page-pad); }
-    .bt__strip li { flex: 0 0 84px; }
-    .bt__tile { height: 104px; }
+    .bt__strip { padding: 4px var(--page-pad); margin: 0; scroll-padding-inline: var(--page-pad); }
+    .bt__tile { min-width: 84px; height: 104px; }
     .bt__brackets { height: calc(104px + 6px); top: 1px; }
     .bt__frame { order: 2; display: block; margin-top: var(--space-4); margin-inline: calc(-1 * var(--page-pad)); border: 0; }
     .bt__media { aspect-ratio: 16 / 9; }

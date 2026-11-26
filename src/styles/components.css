@@ -270,8 +270,13 @@
 /* ---------- Rolling number (scripts/motion/roll.ts): only the digits that change roll ---------- */
   .roll { display: inline-flex; font-variant-numeric: tabular-nums; }
   .roll__cells { display: inline-flex; }
-  .roll__cell { display: inline-grid; overflow: hidden; overflow: clip; }
+  /* The roll travels up and down, so each cell clips top and bottom only. Clipping sideways too shaved the ink of
+     wide digits (9, 8, 6) at large sizes with tight tracking (Chime, 25 Nov 2026). */
+  .roll__cell { display: inline-grid; overflow: hidden; overflow: visible clip; }
   .roll__glyph { grid-area: 1 / 1; }
+  /* A centred number changing length (roll.ts, align 'centre'): the old and new numbers share one cell, each centred. */
+  .roll[data-roll-align='centre'] { display: inline-grid; justify-items: center; }
+  .roll[data-roll-align='centre'] > .roll__cells { grid-area: 1 / 1; }
 
 /* ---------- Copy link (motion study item 11): the link turns into a check, the label rolls to "Copied" ---------- */
   /* Markup: .copy > .copy__icons (.copy__from, .copy__to) and, with a label, .copy__label (.copy__l--from,
@@ -323,3 +328,19 @@
   @media (prefers-reduced-motion: reduce) {
     .clip__play { transition: none; }
   }
+
+/* ---------- Fades (LR11): an edge of a picture or a band dissolves into the page ----------
+   A mask, so whatever is behind shows through: the page's ground in either theme. Eased stops, not a straight ramp,
+   so the edge never reads as a line. The length is --fade-length (160px), set per use. */
+  .fade-top, .fade-bottom, .fade-y {
+    --fade-stops: transparent 0, rgb(0 0 0 / 0.06) calc(var(--fade-length) * 0.14), rgb(0 0 0 / 0.22) calc(var(--fade-length) * 0.3), rgb(0 0 0 / 0.5) calc(var(--fade-length) * 0.5), rgb(0 0 0 / 0.78) calc(var(--fade-length) * 0.7), rgb(0 0 0 / 0.94) calc(var(--fade-length) * 0.86), #000 var(--fade-length);
+  }
+  .fade-top { -webkit-mask-image: linear-gradient(to bottom, var(--fade-stops)); mask-image: linear-gradient(to bottom, var(--fade-stops)); }
+  .fade-bottom { -webkit-mask-image: linear-gradient(to top, var(--fade-stops)); mask-image: linear-gradient(to top, var(--fade-stops)); }
+  .fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, var(--fade-stops)), linear-gradient(to top, var(--fade-stops));
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to bottom, var(--fade-stops)), linear-gradient(to top, var(--fade-stops));
+    mask-composite: intersect;
+  }
+

@@ -27,3 +27,6 @@ private/
 
 # Python bytecode (scripts/icons)
 __pycache__/
+
+# Screenshots and audit output from tools/page-check (never committed: may hold page renders)
+tools/shots/
