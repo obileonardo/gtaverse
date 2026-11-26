@@ -176,6 +176,9 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
   const side = lead === 'jason' ? 1 : -1;
   let w = 0, h = 0, dpr = 1;
   let startedAt = 0, pausedAt = 0, running = false, still = false, raf = 0;
+  // The pointer's turn (landing refresh phase 8, LR44): radians added to the camera's angle round the figure, set by
+  // the chapter's spring (Chapter014Leads.astro). 0 is the figure at rest.
+  let turn = 0;
   let colours = { ink: '255 255 255', accent: '#f976b0' };
 
   const readColours = () => {
@@ -203,7 +206,7 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
   const camera = (t: number) => {
     const k = Math.min(t / TURN, 1);
     const e = 1 - (1 - k) * (1 - k);
-    const a = side * (0.62 - 0.3 * e);
+    const a = side * (0.62 - 0.3 * e) + turn;
     return { pos: [Math.sin(a) * 4, 1.1, Math.cos(a) * 4] as V3, target: [0, 0.88, 0] as V3, fov: 30 };
   };
 
@@ -272,11 +275,34 @@ export function createLeadArt(canvas: HTMLCanvasElement, lead: Lead) {
       raf = requestAnimationFrame(frame);
     },
     pause() { if (!running) return; running = false; cancelAnimationFrame(raf); pausedAt = performance.now(); },
+    /**
+     * Back on screen after a pause. Away for less than the intro's length: it carries on from where it stopped. Away
+     * past the time it would have ended: it shows the finished drawing at once (the intro is over, never half drawn),
+     * and the figure is free to turn (phase 8, #94 review B1 and P1). Either way the pause is cleared.
+     */
     resume() {
-      if (running || still || !startedAt || time() >= END) return;
-      if (pausedAt) { startedAt += performance.now() - pausedAt; pausedAt = 0; }
+      if (running || still || !startedAt) return;
+      if (pausedAt) {
+        const late = time() >= END; // time() still counts the pause
+        if (late) startedAt = performance.now() - END * 1000;
+        else startedAt += performance.now() - pausedAt;
+        pausedAt = 0;
+        if (late) { draw(END); return; }
+      }
+      if (time() >= END) return;
       running = true;
       raf = requestAnimationFrame(frame);
+    },
+    /** True while the draw-on and the camera turn run: the pointer's turn waits for it (never two movements). */
+    get busy() { return running || pausedAt > 0 || (!still && (!startedAt || time() < END)); },
+    /**
+     * Turns the figure by `rad` round its vertical axis (the camera orbits the other way) and redraws now. A positive
+     * value turns the figure's front toward the right of the screen. Ignored while the intro runs.
+     */
+    setTurn(rad: number) {
+      if (running) return;
+      turn = -rad;
+      draw(still ? Infinity : time());
     },
     /** The finished drawing at once (reduced motion, back navigation, no JS timing). */
     finish() { still = true; running = false; cancelAnimationFrame(raf); draw(Infinity); },
