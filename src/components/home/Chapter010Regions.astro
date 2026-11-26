@@ -7,6 +7,8 @@
 // Areas: Leonida's counties and regions (the regions whose parent is the state) that hold at least one find that is
 // safe to show with a still, most finds first. Finds of an area are its own and its sub-areas'. Spoiler and mature
 // finds never show here. A find without a still shows the sunrise glow with its category (Card rule).
+// The faint giant word is the chosen area's name (LR25): it swaps with the tiles and the carousel (LR13), and is sized
+// to fit the content box (desktop) or the stage's height (tablet and phone, where it stands on its side).
 import ChapterHead from './ChapterHead.astro';
 import Icon from '../ui/Icon.astro';
 import { finds, regions, type Find } from '../../lib/content';
@@ -34,7 +36,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <section class="ch10" aria-labelledby="ch10-title" data-ch10>
   <div class="container"><ChapterHead index={index} label="Regions" id="ch10-title" /></div>
   <div class="ch10__stage container">
-    <p class="ch10__word" aria-hidden="true" data-ch10-word>{state?.name ?? 'Leonida'}</p>
+    <p class="ch10__word" aria-hidden="true" data-ch10-word style={`--chars: ${(areas[0]?.name ?? state?.name ?? 'Leonida').length}`}><span class="ch10__wordtext" data-ch10-wordtext>{areas[0]?.name ?? state?.name ?? 'Leonida'}</span></p>
 
     <div class="ch10__a">
       <div class="ch10__grids">
@@ -95,7 +97,9 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
 <style>
   .ch10 { padding-top: var(--space-chapter); overflow-x: clip; }
   .ch10__stage { position: relative; display: grid; grid-template-columns: 48fr 4fr 48.5fr; align-items: start; margin-top: var(--space-12); padding-bottom: var(--space-16); }
-  /* The faint word: Big Shoulders 100, as wide as the content box, behind both panels (Olha's "GALLERY"). */
+  /* The faint word: Big Shoulders 100, at most as wide as the content box, behind both panels (Olha's "GALLERY").
+     It names the chosen area, so its size follows the name: the script fits it (fitWord); without the script the
+     estimate below keeps a long name inside the box (Big Shoulders 100 caps average under 0.45em). */
   .ch10__word {
     position: absolute;
     left: var(--gutter);
@@ -105,6 +109,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     font-variation-settings: var(--font-display-axes);
     font-weight: 100;
     font-size: clamp(160px, 31vw, 480px);
+    font-size: min(clamp(160px, 31vw, 480px), calc((100vw - 2 * var(--gutter)) / (var(--chars, 7) * 0.45)));
     line-height: 0.8;
     text-transform: uppercase;
     text-align: center;
@@ -115,6 +120,9 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     white-space: nowrap;
     padding-block: 0.1em;
   }
+  /* fitWord measures the name at the full size, then sets the size that fits (inline style). */
+  .ch10__word.is-measure { font-size: clamp(160px, 31vw, 480px); }
+  .ch10__wordtext { display: inline-block; }
   .ch10__a, .ch10__b { position: relative; background: var(--surface-1); padding: var(--space-6); min-width: 0; }
   .ch10__a { grid-column: 1; display: flex; flex-direction: column; aspect-ratio: 830 / 460; }
   .ch10__b { grid-column: 3; margin-top: 112px; display: flex; flex-direction: column; container-type: inline-size; overflow: clip visible; }
@@ -199,7 +207,7 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     .ch10__a { gap: var(--space-4); }
     .ch10__track { height: 300px; }
     /* right 0.1em: the tight line box (0.8) is narrower than the glyphs, so at the edge their ink was cut. */
-    .ch10__word { writing-mode: vertical-rl; left: auto; right: 0.1em; top: 0; bottom: auto; font-size: 160px; text-align: start; }
+    .ch10__word, .ch10__word.is-measure { writing-mode: vertical-rl; left: auto; right: 0.1em; top: 0; bottom: auto; font-size: 160px; text-align: start; }
   }
   @media (max-width: 767px) {
     .ch10__a, .ch10__b { padding: var(--space-4); }
@@ -296,7 +304,33 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     let target = 0;
     let turn = 0;
     const shownIndex = () => grids.findIndex((g) => !g.hidden);
-    const shownEls = () => { const k = shownIndex(); return [grids[k], cars[k]].filter((el): el is HTMLElement => !!el); };
+    // The faint word names the shown area, so it leaves and arrives with that area's tiles and carousel (LR25).
+    const word = root.querySelector<HTMLElement>('[data-ch10-word]')!;
+    const wordText = root.querySelector<HTMLElement>('[data-ch10-wordtext]')!;
+    const stage = word.offsetParent instanceof HTMLElement ? word.offsetParent : root;
+    // Sizes the word so the whole name fits: the content box's width, or the stage's height when it stands on its side.
+    const fitWord = () => {
+      word.style.fontSize = '';
+      word.classList.add('is-measure');
+      const cs = getComputedStyle(word);
+      const vertical = cs.writingMode.startsWith('vertical');
+      const full = parseFloat(cs.fontSize);
+      const box = wordText.getBoundingClientRect();
+      const natural = vertical ? box.height : box.width;
+      const room = (vertical ? stage.clientHeight : word.clientWidth) * 0.96;
+      word.classList.remove('is-measure');
+      if (natural > 0 && room > 0) word.style.fontSize = `${Math.floor(Math.min(full, (full * room) / natural))}px`;
+    };
+    const setWord = (i: number) => {
+      wordText.textContent = names[i];
+      word.style.setProperty('--chars', String(names[i].length));
+      fitWord();
+    };
+    fitWord();
+    document.fonts?.ready.then(fitWord, () => {});
+    let fitting = false;
+    new ResizeObserver(() => { if (!fitting) { fitting = true; requestAnimationFrame(() => { fitting = false; fitWord(); }); } }).observe(stage);
+    const shownEls = () => { const k = shownIndex(); return [grids[k], cars[k], wordText].filter((el): el is HTMLElement => !!el); };
     // Fades `el` from its current opacity to `to`, over the part of `full` that distance needs.
     const fadeTo = (el: HTMLElement, to: 0 | 1, full: number, ease: string) => {
       const from = Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity) || 0));
@@ -316,6 +350,9 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
         c.hidden = k !== i;
         if (k === i) { place(c, startOf(c), true); if (!still) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') }); }
       });
+      wordText.getAnimations().forEach((a) => a.cancel());
+      setWord(i);
+      if (!still) wordText.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-swap-in', 280), easing: css('--ease-colour') });
     };
 
     const select = (i: number, byKey = false) => {
@@ -343,7 +380,6 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     root.querySelectorAll<HTMLButtonElement>('[data-ch10-step]').forEach((b) => b.addEventListener('click', (e) => select(area + Number(b.dataset.ch10Step), e.detail === 0)));
 
     // The faint word drifts at a tenth of the scroll speed on desktop only (transform, no layout).
-    const word = root.querySelector<HTMLElement>('[data-ch10-word]')!;
     const wide = matchMedia('(min-width: 1024px)');
     let ticking = false;
     const drift = () => {
