@@ -10,7 +10,7 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 | 1 | No cut text, map headline on two lines, By type arrows, wider island, card spacing, centred stats roll | Done (this PR), LR1 to LR10 |
 | 2 | Hero fades into the page, radial readout mask on Spotlight, footer fades | Done (this PR), LR11, LR12 |
 | 3 | Motion polish: pink highlight that follows the scroll on the manifesto, smoother transitions | Built (#79, #80), LR13 to LR17 |
-| 4 | GTAverse dashed path that lights up each card | To do |
+| 4 | GTAverse dashed path that lights up each card | Built (#85, #88), LR18 to LR22 |
 | 5 | Map and regions behaviour | Built (#86, #87), LR23 to LR27; "Open the map" signed off by Obi on 26 Nov 2026 |
 | 6 | Smart search bar on the home page (after #76) | To do |
 | 7 | Five redesigns from Mobbin references (Chime picks from a reference board) | To do |
