@@ -216,8 +216,11 @@ const anyArt = list.some((x) => x.art);
     :global(html[data-theme='light']) .ch15__year { -webkit-text-stroke-color: rgb(47 47 47 / 0.25); }
     :global(html.js) .ch15__item { --w: calc(min(320px, 36svh) * 0.72); }
 
-    /* The route travels: the script reveals it with a clip-path edge (its own layer, so only the route repaints). */
-    :global(html.js) .ch15__route { will-change: transform; }
+    /* The route travels: a window that clips it (overflow) slides right by transform while the drawing inside slides
+       back by the same amount, so the drawing stays put and only its revealed length changes. Both are composited
+       layers: revealing the route repaints nothing (LR20). */
+    :global(html.js) .ch15__route { overflow: hidden; will-change: transform; }
+    :global(html.js) .ch15__path { will-change: transform; }
     :global(html.js) .ch15__grey { opacity: 1; transition: opacity calc(var(--dur-crossfade) * 0.64) var(--ease-standard); }
     :global(html.js) .ch15__card.is-lit .ch15__grey { opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-colour); }
     /* A focused card is always in colour, at once (keyboard actions never animate). */
@@ -268,6 +271,7 @@ const anyArt = list.some((x) => x.art);
     const rail = root.querySelector<HTMLElement>('[data-ch15-rail]')!;
     const word = root.querySelector<HTMLElement>('[data-ch15-word]')!;
     const svg = root.querySelector<SVGSVGElement>('[data-ch15-path]')!;
+    const win = svg.parentElement as HTMLElement;
     const line = svg.querySelector<SVGPathElement>('.ch15__line')!;
     const stops = svg.querySelector<SVGGElement>('.ch15__stops')!;
     const items = ([...rail.children] as HTMLElement[]).filter((el) => el.classList.contains('ch15__item'));
@@ -285,7 +289,15 @@ const anyArt = list.some((x) => x.art);
     let endX = 0; // where it stops: the last dot
     let arrive: number[] = []; // the pen position at which each card lights (its dot)
     const lit = cards.map(() => false);
-    let clip = '';
+    // Shows the route up to `hidden` px from its right end (null: all of it, untouched by the scroll).
+    let shown = '';
+    const reveal = (hidden: number | null) => {
+      const v = hidden === null ? '' : hidden.toFixed(1);
+      if (v === shown) return;
+      shown = v;
+      win.style.transform = v ? `translate3d(-${v}px, 0, 0)` : '';
+      svg.style.transform = v ? `translate3d(${v}px, 0, 0)` : '';
+    };
 
     const route = () => {
       const pts = cards.map((c) => {
@@ -296,7 +308,7 @@ const anyArt = list.some((x) => x.art);
         const cy = k.y + f.offsetTop + f.offsetHeight / 2;
         return { l: k.x, r: k.x + k.w, cx: k.x + k.w / 2, cy, w: k.w };
       });
-      if (!pts.length || !pts[0].w) { line.setAttribute('d', ''); stops.replaceChildren(); width = 0; return; }
+      if (!pts.length || !pts[0].w) { line.setAttribute('d', ''); stops.replaceChildren(); width = 0; reveal(null); return; }
       const n = (v: number) => v.toFixed(1);
       const dots: [number, number, number][] = [];
       let d = `M${n(pts[0].cx)} ${n(pts[0].cy)} H${n(pts[0].r)}`;
@@ -341,6 +353,8 @@ const anyArt = list.some((x) => x.art);
       svg.setAttribute('width', String(width));
       svg.setAttribute('height', String(height));
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      win.style.width = `${width}px`;
+      win.style.height = `${height}px`;
       line.setAttribute('d', d);
       stops.replaceChildren(...dots.map(([x, y, r]) => {
         const c = document.createElementNS(SVG_NS, 'circle');
@@ -384,7 +398,7 @@ const anyArt = list.some((x) => x.art);
       route();
       if (!sticky.matches) {
         track.style.removeProperty('--track-h'); rail.style.transform = ''; word.style.transform = '';
-        svg.style.clipPath = ''; clip = '';
+        reveal(null);
         return;
       }
       const last = items[items.length - 1];
@@ -410,8 +424,7 @@ const anyArt = list.some((x) => x.art);
       if (!width) return;
       const lead = innerHeight * 0.2;
       const pen = startX + clamp01((lead - top) / (Math.max(range, 0) + lead)) * (endX - startX);
-      const c = `inset(-8px ${Math.max(0, width - pen).toFixed(1)}px -8px -8px)`;
-      if (c !== clip) { clip = c; svg.style.clipPath = c; }
+      reveal(Math.max(0, width - pen));
       light(pen);
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
