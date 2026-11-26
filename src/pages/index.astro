@@ -48,7 +48,7 @@ const layers = layerCards();
   title="The Vice Files"
   layout="bare"
   jsonLd={[website(), organization()]}
-  sub={lead ? { href: `/finds/${lead.slug}`, label: findClipLabels(lead).bar, image: leadStill?.thumb } : undefined}
+  sub={lead ? { href: `/finds/${lead.slug}?tab=clips#tabs`, label: findClipLabels(lead).bar, image: leadStill?.thumb } : undefined}
 >
   <Hero featured={featured} />
 
