@@ -346,6 +346,13 @@ The owner asked for every inconsistency the `/design` page surfaced to be fixed 
 | RC2 | CI also runs `pnpm test`. | The unit tests (nearby finds, line art, icons, logo) were only run by hand. |
 | RC3 | Releases from `staging` to `main` are merge commits; everything else stays squash-only. On 25 Nov 2026, on the owner's go: repository merge commits allowed; ruleset 27944180 renamed "Protect staging" (staging only, squash only); ruleset 27945451 renamed "Protect main: releases from staging only" (update, deletion, force push blocked, pull request with code owner review, merge method `merge` only, CI "Validate and build"); `main` reset once to `staging` (a819974), dropping the squash release commit c83804d (PR #66, same content). | A squash release leaves `main` with a commit `staging` lacks, so every later release conflicts (simulated: a README edit conflicted). A merge commit keeps `staging`'s history inside `main`, so the next release merges cleanly (simulated twice). |
 
+## 2026-11-25: search reads questions (open to owner review)
+
+| # | Decision | Why |
+|---|---|---|
+| SR1 | The one site search (header menu box and map search, `src/components/map/search.ts`) reads plain questions: question words are dropped, money amounts read as "money", plurals and topic groups match, matching is at the start of a word, and words that match nothing are left out and named under the list. Type matches rank above text mentions; money questions rank by the biggest dollar amount. Placeholders now say "Search or ask". | Chime, 25 Nov 2026: visitors should be able to ask "Where can I get 200k?" or "Where is the NPC you cannot snipe?" and see the finds. Every word of a question had to match before, so a question found nothing. |
+| SR2 | It is not an AI chat. It runs in the browser on our own content, with our own word lists (`content/search-terms.json`, new `topics` groups), so it costs nothing, works on the static site and cannot invent an answer. A chat backed by a language model is a separate owner decision (cost, an API key, server code, and the "no AI on Rockstar content" rule). | Chime picked this first, 25 Nov 2026. Trust is the product; a search that only shows our sourced finds keeps it. |
+
 ## 2026-11-25: X and Reddit clip media (open to owner review)
 
 | # | Decision | Why |
