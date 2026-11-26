@@ -1,8 +1,8 @@
 // Data the map island receives from src/pages/map.astro, and the pure helpers that filter it.
 // Kept free of content imports so the island bundle carries only what the map needs.
 import type { IconName } from '../ui/icons';
-import { matchesSearch } from './search';
-import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
+import { matchesSearch } from './search.ts';
+import { isUnlocked, type ChapterSetting } from '../../lib/chapter.ts';
 import type { ClipVerb } from '../../lib/clip';
 
 export type MapFind = {

@@ -1,0 +1,94 @@
+---
+// The home page's search band (landing refresh phase 6, LR28 to LR32): a slim band of its own right after the hero,
+// before Spotlight (owner's choice, 26 Nov 2026). The hero stays as it is.
+// - One box that takes a plain question or keywords and sends them to the map (/map?q=...), where the site's one
+//   search (src/components/map/search.ts, SR1 and SR2) reads and ranks them. A plain GET form, so it works without
+//   JavaScript; the header menu's search form is the pattern (site/Header.astro), at the band's size.
+// - Example questions under it, as link chips to /map?q=..., from content/search-terms.json (examples). Only those
+//   that list finds on the map are shown (src/lib/ask.ts).
+// - No chapter number (LR28): it opens on the chapter rule and bracket label without an index, so 001 to 015 keep
+//   their numbers and Spotlight stays 001.
+// - One landmark: the search form, named by the band's label. The section itself carries no name, so screen readers
+//   do not announce "Ask the map" twice.
+// Motion: only the chapter head's own first view (ChapterHead) and the shared press scale on the button and chips.
+// The box's focus ring shows at once (keyboard actions never animate).
+import ChapterHead from './ChapterHead.astro';
+import Chip from '../ui/Chip.astro';
+import Icon from '../ui/Icon.astro';
+import { askExamples } from '../../lib/ask';
+import { finds } from '../../lib/content';
+const examples = askExamples(finds);
+---
+<section class="ask">
+  <div class="container">
+    <ChapterHead label="Ask the map" id="ask-label" />
+    <form class="ask__form" action="/map" method="get" role="search" aria-labelledby="ask-label">
+      <Icon name="search" size={20} class="ask__icon" />
+      <input class="ask__input" type="search" name="q" placeholder="Search or ask" aria-label="Search finds and places, or ask a question" autocomplete="off" enterkeyhint="search" maxlength="120" />
+      <button class="ask__go" type="submit" aria-label="Search the map"><Icon name="arrow-right" size={20} /></button>
+    </form>
+    {examples.length > 0 && (
+      <div class="ask__try">
+        <p class="ask__try-label" id="ask-try">Try</p>
+        <ul class="ask__chips" role="list" aria-labelledby="ask-try">
+          {examples.map((e) => <li><Chip href={e.href} touch class="ask__chip">{e.q}</Chip></li>)}
+        </ul>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .ask__form {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 720px;
+    height: var(--btn-h-xl);
+    margin-top: var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+  }
+  /* A visible ring on the whole box while the field has keyboard focus (the field itself draws no outline). */
+  .ask__form:has(.ask__input:focus-visible) { border-color: var(--border-2); outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+  .ask__form :global(.ask__icon) { position: absolute; left: 20px; color: var(--text-2); pointer-events: none; }
+  .ask__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 12px 0 52px;
+    background: none;
+    border: 0;
+    color: var(--text-1);
+    font: inherit;
+    font-size: var(--text-body-l); /* 18, 20 on the phone: never under 16, so phones never zoom into it */
+    outline: none;
+  }
+  .ask__input::placeholder { color: var(--text-3); opacity: 1; }
+  .ask__input::-webkit-search-cancel-button { display: none; }
+  .ask__go {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--ctrl-size);
+    height: var(--ctrl-size);
+    margin-right: 5px;
+    border-radius: var(--radius-full);
+    background: var(--inverse-fill);
+    color: var(--inverse-text);
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .ask__go:active { transform: scale(0.97); }
+
+  .ask__try { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); margin-top: var(--space-4); }
+  .ask__try-label { font-family: var(--font-mono); font-size: var(--text-mono-caps); letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.4; color: var(--text-3); }
+  .ask__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); min-width: 0; }
+  .ask__chips > li { display: flex; min-width: 0; }
+  /* 44 high: a touch target on every screen (the touch chip is 40). */
+  .ask__chips :global(.ask__chip) { height: var(--ctrl-size); }
+
+  @media (max-width: 767px) {
+    .ask__try { align-items: flex-start; flex-direction: column; }
+  }
+</style>

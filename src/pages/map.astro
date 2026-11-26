@@ -6,16 +6,11 @@ import { join } from 'node:path';
 import Base from '../layouts/Base.astro';
 import MapApp from '../components/map/MapApp';
 import { finds, regionById, connections, categories as allCategories } from '../lib/content';
-import { findStill, mapClip, regionLabel, categoryIcon, categoryChipLabel, categorySingular } from '../lib/media';
+import { findStill, mapClip, categoryIcon, categoryChipLabel } from '../lib/media';
+import { searchFields } from '../lib/map-fields';
 import mapJson from '../../content/map.json';
 import collectiblesJson from '../../content/collectibles.json';
 import type { MapFind, MapCategory, MapRegion, MapMeta, MapLayer } from '../components/map/types';
-
-const ancestors = (id: string): string[] => {
-  const out: string[] = [];
-  for (let r = regionById(id); r; r = r.parent ? regionById(r.parent) : undefined) out.push(r.id);
-  return out;
-};
 
 // Finds that share a GTAverse connection with this one, for the selected pin's connection lines (at most 6).
 const relatedOf = (slug: string, ids: string[]) => {
@@ -24,31 +19,19 @@ const relatedOf = (slug: string, ids: string[]) => {
   return [...out].filter((s) => finds.some((f) => f.slug === s)).slice(0, 6);
 };
 
+// The fields search and the filter read come from map-fields.ts, shared with the home page's example questions and
+// their test (scripts/test/ask.test.ts), so those check exactly what this page lists.
 const data: MapFind[] = finds.map((f) => {
   const still = findStill(f);
   return {
-    slug: f.slug,
-    title: f.title,
-    category: f.category,
-    categoryLabel: categorySingular(f.category),
+    ...searchFields(f),
     icon: categoryIcon(f.category),
-    regionIds: [...new Set(f.region_ids.flatMap(ancestors))].filter((id) => id !== 'leonida'),
-    regionLabel: regionLabel(f),
-    verification: f.verification,
-    spoiler: f.spoiler,
-    mature: f.mature,
     pin: f.pin,
     pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null,
-    summary: f.summary,
-    where: f.location_description ?? null,
-    area: f.area ?? null,
     still: still ? still.thumb : null,
     clip: mapClip(f),
-    sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
-    finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
     updated: f.updated_at ?? null,
     added: (f as { added_at?: string | null }).added_at ?? null,
-    chapterGate: f.chapter_gate ?? null,
     connections: (f.related_connections ?? []).length,
     games: (f.crossover_games ?? []).length,
     related: relatedOf(f.slug, f.related_connections ?? []),
