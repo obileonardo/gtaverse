@@ -4,9 +4,9 @@
 // apply: a desktop mouse or trackpad without reduced motion. The cursor module loads only once it is switched on.
 // The select is the same pill as ChapterControl's.
 import { cursors } from '../icons/cursors';
-interface Props { class?: string }
-const { class: className } = Astro.props;
-const id = `cursor-${Math.random().toString(36).slice(2, 8)}`;
+// One copy per page (the header's menu), so a fixed id: the built HTML stays the same from build to build.
+interface Props { class?: string; id?: string }
+const { class: className, id = 'cursor-setting' } = Astro.props;
 ---
 <div class:list={['cursorctl', className]} data-cursor-control>
   <label class="cursorctl__label" for={id}>Cursor</label>

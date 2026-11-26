@@ -771,7 +771,7 @@ def emit_cursors(solid, names):
         "",
     ]
     text = "\n".join(lines)
-    assert "–" not in text and "—" not in text, "no em or en dashes"
+    assert "\u2013" not in text and "\u2014" not in text, "no em or en dashes"
     with open(os.path.join(os.path.dirname(OUT), "cursors.ts"), "w", encoding="utf-8") as fh:
         fh.write(text)
 

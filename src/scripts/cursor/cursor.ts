@@ -3,8 +3,8 @@
 //
 // The cursor is a real CSS cursor (a glyph of our icon family, src/icons/cursors.ts), so the system draws it with no
 // lag and no script per frame. It only replaces the default arrow: links and buttons keep the hand, reading text the
-// text cursor, and text fields, text areas, selects and editable text keep the native cursor (the rules sit in a
-// cascade layer, so every cursor the site sets itself still wins).
+// text cursor, form controls the browser's own cursor, and editable text and summaries the native cursor (the rules
+// sit in a cascade layer, so every cursor the site sets itself still wins).
 //
 // The trail: a few marks dropped along the pointer's path (bullet tracers behind the player arrow, smoke puffs from
 // the pistol's muzzle), each animated once on the compositor (transform and opacity, WAAPI) and gone within
@@ -24,7 +24,10 @@ const STYLE = `
 @layer vf-cursor {
   :root[data-cursor] { cursor: var(--vf-cursor, auto); }
   :root[data-cursor] :where(p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, figcaption, caption, td, th, pre, address):not(:where(a, button, label, summary, [role='button'], [role='link'], [role='tab'], [role='option'], [role='menuitem']) *) { cursor: auto; }
-  :root[data-cursor] :where(input, textarea, select, [contenteditable]:not([contenteditable='false'])) { cursor: auto; }
+  /* Form controls keep exactly the browser's own cursor (text in fields, default on checkboxes and ranges); editable
+     text and a disclosure's summary (the spoiler "Reveal") keep auto, as without the setting. */
+  :root[data-cursor] :where(input, textarea, select) { cursor: revert; }
+  :root[data-cursor] :where([contenteditable]:not([contenteditable='false']), summary) { cursor: auto; }
 }
 .vf-trail { position: fixed; inset: 0; z-index: calc(var(--z-overlay) + 2); pointer-events: none; overflow: hidden; contain: strict; }
 .vf-trail > i { position: absolute; left: 0; top: 0; opacity: 0; }
