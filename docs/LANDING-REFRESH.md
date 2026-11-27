@@ -13,7 +13,7 @@ From the design review on 25 Nov 2026 (Obi and Chime) and Chime's walkthrough. C
 | 4 | GTAverse dashed path that lights up each card | Built (#85, #88), LR18 to LR22 |
 | 5 | Map and regions behaviour | Built (#86, #87), LR23 to LR27; "Open the map" signed off by Obi on 26 Nov 2026 |
 | 6 | Smart search bar on the home page (after #76) | Built (#84), LR28 to LR32 |
-| 7 | Five redesigns from Mobbin references (Chime picks from a reference board) | To do |
+| 7 | Five redesigns from Mobbin references (Chime picks from a reference board) | Done: 7a Selected finds (#103), 7b New this week (#107), 7c Watch the clips (#104), 7d Regions (#105), 7e How it is made and Most credited (#106); deployed 27 Nov 2026 (Worker version c12ddfc7) and released to main in #108. LR53 to LR77, every design call accepted as built by Obi on 27 Nov 2026 (LR82) |
 | 8 | Jason and Lucia react to the cursor (needs a decision like L5) | Built (#92, #94), LR43 to LR47; the cursor exception is the owner's (LR43) |
 | 9 | Custom cursors with trails (only if Obi signs off) | Built, signed off by Obi on 26 Nov 2026 (LR48); LR49 to LR52 |
 
