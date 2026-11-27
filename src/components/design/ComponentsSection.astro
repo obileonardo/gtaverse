@@ -5,6 +5,7 @@
 // reload. Nothing here restyles a component; the frames around them are the page's own.
 import Button from '../ui/Button.astro';
 import Chip from '../ui/Chip.astro';
+import Check from '../ui/Check.astro';
 import Badge from '../ui/Badge.astro';
 import Card from '../ui/Card.astro';
 import Tabs from '../ui/Tabs.astro';
@@ -122,6 +123,22 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
     <div class="ds-row" data-case="worst">
       <Chip icon="finds" count={1}>{categoryChipLabel(longCategory.id)}</Chip>
       <Chip selected touch count={1284}>{categoryChipLabel(longCategory.id)}</Chip>
+    </div>
+  </Specimen>
+
+  <Specimen id="c-check" name="Check" file="src/components/ui/Check.astro" props={/interface Props \{/}>
+    <div class="ds-row" role="group" aria-label="View">
+      <Check type="radio" name="ds-check-view" value="grid" checked>Grid</Check>
+      <Check type="radio" name="ds-check-view" value="list">List</Check>
+      <Check type="radio" name="ds-check-view" value="date">By date</Check>
+    </div>
+    <div class="ds-row">
+      <Check checked count={7}>Easter eggs</Check>
+      <Check count={16}>Crossovers</Check>
+      <Check disabled>Disabled</Check>
+    </div>
+    <div class="ds-row" data-case="worst">
+      <Check checked count={1284}>{categoryChipLabel(longCategory.id)}</Check>
     </div>
   </Specimen>
 
