@@ -1,0 +1,66 @@
+---
+// The square check (Museum of the Human Web's view and filter boxes, home Selected finds). A real checkbox or radio
+// with a visible label: a 20px square with a 1px --border-2 edge and no tick; checked fills the square with
+// --accent-ink and sets the label in --accent-text at 600. Radios look the same (the reference draws its view modes
+// as boxes); use them where exactly one is on, so arrow keys move between them natively. The whole label is the
+// target, at least --ctrl-size (44) tall. Colour changes on --dur-colour; nothing moves.
+//   type     'checkbox' (default) or 'radio'
+//   name, value, checked, disabled: passed to the input
+//   count    an optional mono superscript after the label.
+// Extra attributes go on the input (data hooks, aria).
+interface Props { type?: 'checkbox' | 'radio'; name?: string; value?: string; checked?: boolean; disabled?: boolean; count?: number; class?: string; [key: string]: unknown }
+const { type = 'checkbox', name, value, checked = false, disabled = false, count, class: className, ...rest } = Astro.props;
+// The label is drawn twice in one grid cell: the visible one, and a hidden copy at 600 that holds the width, so
+// checking a box (600) never shifts the boxes beside it.
+const text = await Astro.slots.render('default');
+---
+<label class:list={['check', className]}>
+  <input class="check__input" type={type} name={name} value={value} checked={checked} disabled={disabled} {...rest} />
+  <span class="check__box" aria-hidden="true"></span>
+  <span class="check__label"><span class="check__text" set:html={text} /><span class="check__hold" aria-hidden="true" set:html={text} />{count !== undefined && <sup class="check__count tabular">{count}</sup>}</span>
+</label>
+
+<style>
+  .check {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--ctrl-size);
+    font-size: var(--text-body);
+    line-height: 1.25;
+    color: var(--text-2);
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  /* The input covers the whole label, invisible: it keeps native focus, keyboard and form behaviour. */
+  .check__input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
+  .check__box {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: var(--border-w) solid var(--border-2);
+    background: transparent;
+    transition: background-color var(--dur-colour) var(--ease-colour), border-color var(--dur-colour) var(--ease-colour);
+  }
+  .check__label { display: inline-grid; grid-auto-flow: column; align-items: baseline; transition: color var(--dur-colour) var(--ease-colour); }
+  .check__text, .check__hold { grid-row: 1; grid-column: 1; }
+  .check__hold { visibility: hidden; font-weight: 600; }
+  .check__count { grid-row: 1; grid-column: 2; align-self: start; margin-left: 2px; font-family: var(--font-mono); font-size: var(--text-mono-caps); font-weight: 400; line-height: 1; color: var(--text-3); }
+  .check__input:checked ~ .check__box { background: var(--accent-ink); border-color: var(--accent-ink); }
+  .check__input:checked ~ .check__label { color: var(--accent-text); font-weight: 600; }
+  .check__input:checked ~ .check__label .check__count { color: var(--accent-text); }
+  .check__input:focus-visible { outline: none; }
+  .check__input:focus-visible ~ .check__box { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+  .check__input:disabled ~ * { opacity: 0.5; }
+  @media (hover: hover) and (pointer: fine) {
+    .check:hover .check__input:not(:checked) ~ .check__box { border-color: var(--text-2); }
+    .check:hover .check__input:not(:checked) ~ .check__label { color: var(--text-1); }
+  }
+  @media (forced-colors: active) {
+    .check__box { border-color: CanvasText; }
+    .check__input:checked ~ .check__box { background: Highlight; border-color: Highlight; }
+  }
+</style>
