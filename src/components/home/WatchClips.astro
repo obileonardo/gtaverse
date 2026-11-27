@@ -1,11 +1,12 @@
 ---
-// Home chapter 004, Watch the clips (round 2: the owner's Dasha Kebirova C04 Love, one big trailer beside a short
-// stack on a vertical rail; Monije Dina C03's full-bleed rail of stills under it). The big card holds the chosen
-// creator's clip (click to load, the one glass play circle), its title, our summary and the credit; three more sit
-// on the rail at the right; every safe clip runs along the bottom, edge to edge. In place of Dasha's figure, the
-// chosen still bleeds in from the left, blurred and faint (the creator's own thumbnail under a CSS filter, nothing
-// derived). Behaviour and motion: watch-clips.ts.
+// Home chapter 004, Watch the clips (phase 7c, the owner's picks of 27 Nov 2026; direction in the board's
+// analysis/direction-home-watch-the-clips.md). One pattern: Hulu's phone player with its "Watching / Up next" list
+// (the base: the list beside the player on desktop, below it on phone, owner decision 3), with NBA's credit on the
+// clip (the title and the creator, bottom left) and its one clear button ("Open the find"). The bar under the player
+// is Hulu's title bar: our summary and the original post. The list shows five clips and a quiet "All N clips" pill
+// shows the rest in place, so every clip stays one click away. Behaviour and motion: watch-clips.ts.
 import ChapterHead from './ChapterHead.astro';
+import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import type { Find } from '../../lib/content';
 import { findStill } from '../../lib/media';
@@ -18,52 +19,51 @@ const clips = finds.map((f) => {
   return { slug: f.slug, title: f.title, summary: f.summary, creator: f.clip?.creator ?? 'an unknown creator', url: f.clip!.url, embed: ytEmbed(youtubeId(f.clip!.url)!), src: s.src, srcset: s.srcset, thumb: s.thumb };
 });
 const lead = clips[0];
-const stack = clips.slice(1, 4);
+const SHOWN = 5;
 const json = JSON.stringify(clips).replace(/</g, '\\u003c');
+const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
 ---
 {lead && (
-<section class="wc" aria-labelledby="wc-label" data-wc>
+<section id="watch-the-clips" class="wc" aria-labelledby="wc-label" data-wc>
   <div class="container"><ChapterHead index={index} label="Watch the clips" count={clips.length} id="wc-label" /></div>
-  <div class="wc__bg" aria-hidden="true"><img data-wc-bg src={lead.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" data-nofade /></div>
   <div class="container wc__stage">
-    <div class="wc__main">
-      <div class="wc__frame" data-wc-frame>
+    <div class="wc__unit">
+      <div class="wc__frame" data-wc-frame data-scheme="dark">
         <button type="button" class="wc__play" data-play data-wc-play aria-label={`Play clip: ${lead.title}`}>
-          <img data-wc-img src={lead.src} srcset={lead.srcset} sizes="(max-width: 767px) 100vw, 688px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <span class="wc__media"><img data-wc-img src={lead.src} srcset={lead.srcset} sizes="(max-width: 767px) 100vw, (max-width: 1023px) calc(100vw - 80px), 752px" alt="" width="1280" height="720" loading="lazy" decoding="async" /></span>
           <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
         </button>
+        <p class="wc__credit" data-wc-credit>
+          <span class="wc__ctitle"><span class="wc__clamp" data-wc-title>{lead.title}</span></span>
+          <span class="wc__cby" data-wc-creator>{lead.creator}</span>
+        </p>
       </div>
-      <div class="wc__info" data-wc-info>
-        <h3 class="wc__title"><a href={`/finds/${lead.slug}`} data-wc-link>{lead.title}</a></h3>
-        <p class="wc__summary"><span class="wc__clamp" data-wc-summary>{lead.summary}</span></p>
-        <p class="wc__credit">Clip by <span data-wc-creator>{lead.creator}</span> on YouTube. <a href={lead.url} rel="noopener" target="_blank" data-wc-post>Original post</a></p>
+      <div class="wc__bar">
+        <div class="wc__about" data-wc-about>
+          <p class="wc__summary"><span class="wc__clamp" data-wc-summary>{lead.summary}</span></p>
+          <a class="wc__post" href={lead.url} rel="noopener" target="_blank" data-wc-post>Original post on YouTube<Icon name="arrow-up-right" size={16} /></a>
+        </div>
+        <Button href={`/finds/${lead.slug}`} variant="inverse" size="l" class="wc__open" data-wc-link>Open the find</Button>
       </div>
     </div>
-    <div class="wc__rail">
-      <span class="wc__line" aria-hidden="true"></span>
-      <span class="wc__marker" data-wc-marker aria-hidden="true"></span>
-      <ul class="wc__stack" role="list" aria-label="More clips">
-        {stack.map((c, k) => (
-          <li>
-            <button type="button" class="wc__thumb" data-wc-pick={k + 1} aria-pressed="false">
-              <span class="wc__dot" data-wc-dot aria-hidden="true"></span>
-              <span class="wc__tmedia"><img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" /></span>
-              <span class="wc__tlabel"><span class="wc__clamp">{c.title}</span></span>
+    <div class="wc__side">
+      <ul class="wc__list" role="list" aria-label="Every clip">
+        {clips.map((c, k) => (
+          <li hidden={k >= SHOWN} data-wc-row>
+            <button type="button" class="wc__row" data-wc-pick={k} aria-pressed={k === 0 ? 'true' : 'false'}>
+              <span class="wc__thumb"><img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" /></span>
+              <span class="wc__text">
+                <span class="wc__kicker" data-wc-kicker data-k={k === 0 ? 'now' : k === 1 ? 'next' : undefined}>{kicker(k)}</span>
+                <span class="wc__rtitle"><span class="wc__clamp">{c.title}</span></span>
+                <span class="wc__meta">Clip by {c.creator}</span>
+              </span>
             </button>
           </li>
         ))}
       </ul>
+      {clips.length > SHOWN && <Button variant="quiet" size="m" class="wc__more" data-wc-more>All {clips.length} clips</Button>}
     </div>
   </div>
-  <ul class="wc__strip" role="list" aria-label="Every clip" data-wc-strip>
-    {clips.map((c, k) => (
-      <li>
-        <button type="button" class="wc__still" data-wc-pick={k} aria-pressed={k === 0 ? 'true' : 'false'} aria-label={`Show clip: ${c.title}`}>
-          <img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" />
-        </button>
-      </li>
-    ))}
-  </ul>
   <script is:inline type="application/json" data-wc-data set:html={json} />
 </section>
 )}
@@ -74,114 +74,137 @@ const json = JSON.stringify(clips).replace(/</g, '\\u003c');
 </script>
 
 <style>
-  .wc { position: relative; isolation: isolate; }
-  /* Dasha's figure, honestly: the chosen still, blurred and faint, bleeding off the left edge behind the card. */
-  .wc__bg {
-    position: absolute;
-    z-index: -1;
-    left: 0;
-    top: 0;
-    bottom: 160px;
-    width: 58vw;
-    overflow: hidden;
-    pointer-events: none;
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 20% 50%, #000 35%, transparent 100%);
-    mask-image: radial-gradient(ellipse 80% 60% at 20% 50%, #000 35%, transparent 100%);
-  }
-  .wc__bg img { position: absolute; inset: -48px; width: calc(100% + 96px); height: calc(100% + 96px); max-width: none; object-fit: cover; filter: blur(24px); opacity: 0.3; }
-
-  /* The card where Dasha's sits (between 45 and 80% of the width), the rail at the right of the content box. */
+  /* Desktop (owner decision 3, widened): the player unit and the list side by side, the list's top on the player's. */
   .wc__stage {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 688px) 64px 200px;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: var(--space-8);
+    align-items: start;
     margin-top: var(--space-10);
   }
-  .wc__main { grid-column: 2; display: grid; gap: var(--space-6); align-content: start; }
-  .wc__frame { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; background: var(--frame); outline: var(--border-w) solid var(--border-1); outline-offset: -1px; }
-  .wc__frame[data-playing] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
-  .wc__frame :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+  /* Hulu's player and title bar as one block: the frame on top, the bar a surface step below it. */
+  .wc__unit { border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); background: var(--surface-1); }
+  .wc__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: calc(var(--radius-m) - 1px) calc(var(--radius-m) - 1px) 0 0;
+    overflow: hidden;
+    background: var(--frame);
+    isolation: isolate;
+  }
+  .wc__frame :global(iframe) { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; border: 0; }
   .wc__play { position: absolute; inset: 0; display: block; width: 100%; }
-  .wc__play img, .wc__frame :global(.wc__layer) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .wc__play .clip__play { z-index: 1; }
-  .wc__info { display: grid; gap: var(--space-3); }
-  .wc__title {
-    font-family: var(--font-display);
-    font-variation-settings: var(--font-display-axes);
-    font-weight: 900;
-    font-size: var(--text-display-m);
-    line-height: 1;
-    letter-spacing: var(--tracking-display);
-    text-transform: uppercase;
-    text-wrap: balance;
-    max-width: 640px;
+  /* :global: a chosen still is a new image made by the script, without this component's scope attribute. */
+  .wc__media, .wc__media :global(img) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .wc__media :global(img) { object-fit: cover; }
+  /* The readout mask (LR12): one radial over the whole still, clear toward the top right, darkening toward the
+     bottom left where NBA's credit sits. */
+  .wc__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(ellipse 70% 90% at 80% 0%, rgb(var(--scrim-rgb) / 0) 0%, rgb(var(--scrim-rgb) / 0.2) 34%, rgb(var(--scrim-rgb) / 0.6) 60%, rgb(var(--scrim-rgb) / 0.86) 82%, rgb(var(--scrim-rgb) / 0.92) 100%);
   }
-  .wc__summary { max-width: var(--measure-short); font-size: var(--text-body); line-height: 23px; color: var(--text-2); }
-  .wc__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-  .wc__credit { font-size: var(--text-label); color: var(--text-2); }
-  .wc__credit a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  /* NBA's round controls sit at the bottom right, level with the credit: our one play circle goes there. */
+  .wc__play .clip__play { z-index: 1; left: auto; top: auto; right: var(--wc-pad); bottom: var(--wc-pad); margin: 0; }
+  .wc__frame { --wc-pad: var(--space-8); }
 
-  /* Dasha's rail: a 1px line with a dot per clip; the active marker (our one pink in the chapter) travels along it. */
-  .wc__rail { grid-column: 3 / 5; position: relative; display: grid; grid-template-columns: 64px 200px; align-content: start; }
-  .wc__line { position: absolute; left: 24px; top: 0; bottom: 0; width: 1px; background: var(--border-2); }
-  .wc__marker { position: absolute; left: 24px; top: 0; width: 16px; height: 16px; margin: -8px 0 0 -7.5px; border-radius: var(--radius-full); background: var(--accent); will-change: transform; }
-  .wc__stack { grid-column: 1 / 3; display: grid; gap: var(--space-6); }
-  .wc__thumb { position: relative; display: grid; grid-template-columns: 64px 200px; grid-template-rows: auto auto; text-align: left; width: 100%; }
-  .wc__dot { position: absolute; left: 24px; top: 56px; width: 8px; height: 8px; margin: -4px 0 0 -3.5px; border-radius: var(--radius-full); background: var(--text-3); }
-  .wc__tmedia { grid-column: 2; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: outline-color var(--dur-colour) var(--ease-colour); }
-  .wc__tmedia img { width: 100%; height: 100%; object-fit: cover; }
-  .wc__tlabel { grid-column: 2; margin-top: var(--space-2); font-size: var(--text-title); font-weight: 600; line-height: 1.3; }
-  .wc__tlabel .wc__clamp { -webkit-line-clamp: 2; }
-  .wc__thumb[aria-pressed='true'] .wc__tmedia { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
-
-  /* Monije's rail: every clip, edge to edge, scrolling sideways with snap. */
-  .wc__strip {
-    display: flex;
-    gap: var(--space-4);
-    margin-top: var(--space-12);
-    padding: 4px var(--page-pad);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--page-pad);
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
+  /* NBA's credit: the title (bold, two lines at most) over the creator, bottom left, clear of the play circle. */
+  .wc__credit {
+    position: absolute;
+    z-index: 1;
+    left: var(--wc-pad);
+    bottom: var(--wc-pad);
+    max-width: min(560px, calc(100% - 3 * var(--wc-pad) - var(--ctrl-size-xl)));
+    display: grid;
+    gap: var(--space-1);
+    pointer-events: none;
   }
-  .wc__strip::-webkit-scrollbar { display: none; }
-  .wc__strip li { flex: none; scroll-snap-align: start; }
-  .wc__still { display: block; width: 180px; aspect-ratio: 16 / 9; border-radius: var(--radius-m); overflow: hidden; outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: transform var(--dur-press) var(--ease-out), outline-color var(--dur-colour) var(--ease-colour); }
-  .wc__still img { width: 100%; height: 100%; object-fit: cover; }
-  .wc__still[aria-pressed='true'] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
-  .wc__still:active, .wc__thumb:active { transform: scale(0.97); }
-  .wc__thumb { transition: transform var(--dur-press) var(--ease-out); }
-  .wc__still:focus-visible, .wc__thumb:focus-visible { outline-offset: 2px; }
+  .wc__frame[data-playing] .wc__credit { display: none; }
+  .wc__ctitle { font-size: var(--text-h2); font-weight: 700; line-height: 1.25; color: var(--text-1); text-wrap: balance; }
+  .wc__cby { font-size: var(--text-title); font-weight: 600; line-height: 1.3; color: var(--text-2); }
+  .wc__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+  /* Hulu's title bar: our words at the left, NBA's one button where Hulu's menu sat. */
+  .wc__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-5) var(--space-6); }
+  .wc__about { display: grid; gap: var(--space-2); min-width: 0; }
+  .wc__summary { font-size: var(--text-body); line-height: 1.45; color: var(--text-2); max-width: var(--measure-short); }
+  .wc__post { display: inline-flex; align-items: center; gap: var(--space-1); justify-self: start; font-size: var(--text-label); font-weight: 500; line-height: 1.4; color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .wc__open { flex: none; }
+
+  /* Hulu's list: thumb left, words right, no rules between rows. A row is as tall as its tallest state (label, two
+     title lines, the creator), so it never changes height when "Watching" or "Up next" comes or goes. */
+  .wc__side { display: grid; justify-items: start; gap: var(--space-4); }
+  .wc__list { display: grid; gap: var(--space-4); width: 100%; }
+  .wc__row {
+    display: grid;
+    grid-template-columns: 144px minmax(0, 1fr);
+    column-gap: var(--space-3);
+    align-items: center;
+    width: 100%;
+    min-height: 84px;
+    text-align: left;
+    border-radius: var(--radius-xs);
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .wc__row:active { transform: scale(0.97); }
+  .wc__thumb { aspect-ratio: 16 / 9; border-radius: var(--radius-xs); overflow: hidden; background: var(--surface-2); outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: outline-color var(--dur-colour) var(--ease-colour); }
+  .wc__thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .wc__text { display: grid; gap: 2px; min-width: 0; }
+  .wc__kicker { font-size: var(--text-caption); font-weight: 700; line-height: 16px; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-1); }
+  .wc__kicker:empty { display: none; }
+  .wc__kicker[data-k='now'] { color: var(--accent-text); }
+  .wc__rtitle { font-size: var(--text-body); font-weight: 400; line-height: 21px; color: var(--text-1); }
+  .wc__meta {
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    color: var(--text-2);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: clip visible;
+    padding-inline-end: 0.05em;
+  }
+  .wc__row:focus-visible { outline-offset: 4px; }
 
   @media (hover: hover) and (pointer: fine) {
-    .wc__thumb:not([aria-pressed='true']):hover .wc__tmedia, .wc__still:not([aria-pressed='true']):hover { outline-color: var(--text-3); }
+    .wc__row:hover .wc__thumb { outline-color: var(--text-3); }
   }
 
   @media (max-width: 1279px) {
-    .wc__stage { grid-template-columns: minmax(0, 1fr) 48px 180px; }
-    .wc__main { grid-column: 1; }
-    .wc__rail { grid-column: 2 / 4; grid-template-columns: 48px 180px; }
-    .wc__thumb { grid-template-columns: 48px 180px; }
-    .wc__line, .wc__marker, .wc__dot { left: 20px; }
+    .wc__stage { grid-template-columns: minmax(0, 1fr) 340px; }
+    .wc__row { grid-template-columns: 128px minmax(0, 1fr); }
   }
 
-  /* Phone: the big clip full width, then the stack as three rows (thumb left, title right), then the strip. */
+  /* Tablet: Hulu's order, the list under the player unit. */
+  @media (max-width: 1023px) {
+    .wc__stage { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-6); }
+    .wc__frame { --wc-pad: var(--space-6); }
+    .wc__ctitle { font-size: var(--text-title-l); }
+  }
+
+  /* Phone: Hulu's layout as measured. The player and its bar run edge to edge with no radius; the button is NBA's,
+     full width under our words; the list follows 16 below. */
   @media (max-width: 767px) {
-    .wc__bg { display: none; }
-    .wc__stage { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-6); row-gap: var(--space-8); }
-    .wc__main { grid-column: 1; }
-    .wc__rail { grid-column: 1; grid-template-columns: 1fr; }
-    .wc__line, .wc__marker, .wc__dot { display: none; }
-    .wc__stack { grid-column: 1; gap: var(--space-3); }
-    .wc__thumb { grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: auto; column-gap: var(--space-3); align-items: center; }
-    .wc__tmedia { grid-column: 1; }
-    .wc__tlabel { grid-column: 2; margin-top: 0; }
-    .wc__strip { margin-top: var(--space-8); }
-    .wc__still { width: 160px; }
+    .wc__stage { margin-top: var(--space-6); row-gap: var(--space-4); }
+    .wc__unit { margin-inline: calc(var(--page-pad) * -1); border: 0; border-radius: 0; }
+    .wc__frame { --wc-pad: var(--space-4); border-radius: 0; }
+    .wc__ctitle { font-size: var(--text-title); line-height: 22px; }
+    .wc__cby { font-size: var(--text-body-s); line-height: 20px; }
+    .wc__bar { display: grid; gap: var(--space-4); padding: var(--space-5) var(--page-pad); }
+    .wc__summary { font-size: var(--text-body-s); }
+    .wc__open { width: 100%; }
+    .wc__list { gap: var(--space-3); }
+    .wc__row { grid-template-columns: 116px minmax(0, 1fr); min-height: 86px; }
+    .wc__rtitle { line-height: 22px; }
+    .wc__side { gap: var(--space-4); }
+    /* Touch targets reach 44 on the phone; the link's extra height sits in negative margins so the bar keeps its rhythm. */
+    .wc__post { min-height: var(--ctrl-size); margin-block: calc((var(--ctrl-size) - 20px) / -2); }
+    .wc__more { --h: var(--ctrl-size); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .wc__still, .wc__thumb, .wc__tmedia { transition: none; }
+    .wc__row, .wc__thumb { transition: none; }
   }
 </style>
