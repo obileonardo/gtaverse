@@ -72,15 +72,8 @@ export function findIndex(): FindIndex {
 
 // ---------- 003 New this week ----------
 
-/** The newest finds (as of this build) not already shown above. */
-export const newThisWeek = (shown: Find[], n = 12) => addedThisWeek().filter((f) => !shown.includes(f)).slice(0, n);
-
-/** "1 day ago" from a find's added_at, counted at build time (the site is static). */
-export function ageLabel(d: string | undefined, today = new Date()) {
-  if (!d) return '';
-  const days = Math.max(0, Math.floor((Date.parse(today.toISOString().slice(0, 10)) - Date.parse(d)) / 86_400_000));
-  return days === 0 ? 'Today' : days === 1 ? '1 day ago' : `${days} days ago`;
-}
+/** The newest finds (as of this build) not already shown above: the six chapter 003 shows (LR59). */
+export const newThisWeek = (shown: Find[], n = 6) => addedThisWeek().filter((f) => !shown.includes(f)).slice(0, n);
 
 // ---------- 004 Watch the clips ----------
 
