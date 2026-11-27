@@ -14,7 +14,7 @@ import Check from '../ui/Check.astro';
 import Button from '../ui/Button.astro';
 import ChapterHead from './ChapterHead.astro';
 import { finds, type Find } from '../../lib/content';
-import { findStill, categoryLabel } from '../../lib/media';
+import { findStill, categoryLabel, regionLabel } from '../../lib/media';
 import { formatDate } from '../../lib/finds';
 import { firstReported, pad3, type FindIndex } from '../../lib/home';
 import { blipSvg } from '../../icons/render';
@@ -32,6 +32,9 @@ for (const d of entries.dates) {
   dateOrder.set(`day:${d.date ?? 'none'}`, k++);
   for (const f of d.finds) dateOrder.set(f, k++);
 }
+// The credit and the place the old cards showed (same data, LR54): the clip's creator, else the first finder.
+const credit = (f: Find) => (f.clip?.creator ? `Clip by ${f.clip.creator}` : f.first_finder ? `Found by ${f.first_finder.handle}` : null);
+const meta = (f: Find) => [regionLabel(f), credit(f)].filter(Boolean).join(' · ');
 const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin', { size: 32 });
 ---
 <section class="sf" id="selected-finds" aria-labelledby="sf-title" data-view="grid" data-cap={CAP}>
@@ -65,7 +68,7 @@ const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof cate
     <ol class="sf__index" role="list" data-sf-index data-reveal aria-label="Every safe find">
       {entries.dates.map((d) => (
         <li class="sf__day" data-sf-day={d.date ?? 'none'} style={`--o-date:${dateOrder.get(`day:${d.date ?? 'none'}`)}`}>
-          <span>{d.date ? `First reported ${formatDate(d.date)}` : 'Date not given'}</span><sup class="sf__daycount"><span data-sf-daycount>{d.finds.length}</span><span class="sr-only"> finds</span></sup>
+          <h3 class="sf__dayname">{d.date ? `First reported ${formatDate(d.date)}` : 'Date not given'}</h3><sup class="sf__daycount"><span data-sf-daycount>{d.finds.length}</span><span class="sr-only"> finds</span></sup>
         </li>
       ))}
       {entries.finds.map((f, i) => {
@@ -80,6 +83,7 @@ const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof cate
               <span class="sf__num" aria-hidden="true">{pad3(i + 1)}</span>
               <span class="sf__kind">{categoryLabel(f)}</span>
               <span class="sf__name">{f.title}</span>
+              {meta(f) && <span class="sf__meta">{meta(f)}</span>}
             </a>
           </li>
         );
@@ -226,6 +230,7 @@ const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof cate
     color: var(--text-2);
   }
   .sf[data-view='date'] .sf__day:not(:first-child) { margin-top: var(--space-4); }
+  .sf__dayname { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
   .sf__daycount { align-self: flex-start; font-size: var(--text-mono-caps); line-height: 1; color: var(--text-3); }
 
   /* List: KOBU's typographic list, two columns of ruled rows (number, title, type), no pictures. */
@@ -243,6 +248,15 @@ const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof cate
   .sf[data-view='list'] .sf__num { display: block; grid-column: 1; grid-row: 1; font-family: var(--font-mono); font-size: var(--text-mono); font-variant-numeric: tabular-nums; color: var(--text-3); }
   .sf[data-view='list'] .sf__name { grid-column: 2; grid-row: 1; margin: 0; font-size: var(--text-body); -webkit-line-clamp: 1; line-clamp: 1; }
   .sf[data-view='list'] .sf__kind { grid-column: 3; grid-row: 1; margin: 0; max-width: 160px; text-align: right; }
+  /* The place and the credit: a second line in List; in Grid they stay in each tile's accessible name only (the
+     tiles' density is the owner's call, LR57). */
+  .sf__meta { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .sf[data-view='list'] .sf__meta {
+    position: static; width: auto; height: auto; clip-path: none;
+    grid-column: 2 / 4; grid-row: 2;
+    font-size: var(--text-caption); line-height: 1.3; color: var(--text-2);
+    overflow: hidden; text-overflow: ellipsis;
+  }
 
   .sf__more > [hidden] { display: none !important; }
   .sf__more { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-10); }

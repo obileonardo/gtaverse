@@ -49,9 +49,9 @@ export function initSelectedFinds(root: HTMLElement) {
 
   // A change counts as the pointer's only when a pointer pressed it just before; Space, Enter and arrows are the
   // keyboard's, and those never animate.
-  let pressedAt = -1;
+  let pressedAt = -Infinity;
   root.addEventListener('pointerdown', () => (pressedAt = performance.now()), true);
-  root.addEventListener('keydown', () => (pressedAt = -1), true);
+  root.addEventListener('keydown', () => (pressedAt = -Infinity), true);
   const byPointer = () => performance.now() - pressedAt < 1000;
 
   const chosen = () => new Set(types.filter((t) => t.checked).map((t) => t.value));
@@ -100,14 +100,25 @@ export function initSelectedFinds(root: HTMLElement) {
     el.style.removeProperty('pointer-events');
   };
 
-  /** Shows the current state at once (keyboard, reduced motion, or inside a view swap). */
-  function applyInstant() {
+  /** Puts the list's nodes in the current view's order, so focus and reading order follow what is drawn (By date
+   * interleaves each day's heading with its finds). Only ever run while the index is out of sight or at once. */
+  function reorder() {
+    const sorted = [...items].sort((a, b) => orderOf(a) - orderOf(b));
+    if (sorted.every((el, i) => list!.children[i] === el)) return;
+    sorted.forEach((el) => list!.appendChild(el));
+  }
+
+  /** Shows the current state at once (keyboard, reduced motion, or inside a view swap). Every item it shows is marked
+   * as already entered, so the page's first-view rise never plays on it later (a keyboard change never animates).
+   * At load (entered = false) only items the cap had hidden are marked, so the first view still rises. */
+  function applyInstant(entered = true) {
     leaving.forEach((el) => settle(el));
     leaving = [];
     items.forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
     const { set, matched } = target();
     items.forEach((el) => {
-      if (set.has(el) && el.hidden) el.dataset.rv = 'skip';
+      // A tile shown again after display: none would restart a finished first-view rise ('in'), so it is marked too.
+      if (set.has(el) && el.dataset.rv !== 'skip' && (entered || el.hidden)) el.dataset.rv = 'skip';
       el.hidden = !set.has(el);
     });
     report(matched);
@@ -143,7 +154,7 @@ export function initSelectedFinds(root: HTMLElement) {
       const was = !el.hidden;
       if (set.has(el)) {
         // A tile coming into view here skips the page's first-view rise: this change is its entrance.
-        if (!el.dataset.rv) el.dataset.rv = 'skip';
+        if (!was || !el.dataset.rv) el.dataset.rv = 'skip';
         (was ? stays : enters).push(el);
         el.hidden = false;
       } else if (was) exits.push(el);
@@ -198,8 +209,10 @@ export function initSelectedFinds(root: HTMLElement) {
     const commit = () => {
       view = pending;
       root.dataset.view = pending;
+      // Marked before the move: a node put back into the list would otherwise replay its first-view rise.
+      items.forEach((el) => (el.dataset.rv = 'skip'));
+      reorder();
       applyInstant();
-      items.forEach((el) => { if (!el.dataset.rv) el.dataset.rv = 'skip'; });
     };
     if (!animate) { cancelSwap(); commit(); return; }
     if (reduce()) {
@@ -229,6 +242,9 @@ export function initSelectedFinds(root: HTMLElement) {
   clear?.addEventListener('click', (e) => {
     types.forEach((t) => (t.checked = false));
     change((e as MouseEvent).detail !== 0);
+    // The button hides once nothing is checked: focus goes to the first type box (or "Show filters" when the boxes
+    // are hidden) rather than falling to the page.
+    if (document.activeElement === clear || document.activeElement === document.body) (showBox && !showBox.checked && !phone() ? showBox : types[0])?.focus();
   });
   all?.addEventListener('click', (e) => {
     const shown = new Set(tiles.filter((el) => !el.hidden));
@@ -248,8 +264,8 @@ export function initSelectedFinds(root: HTMLElement) {
 
   // A reload can restore the boxes' state: start from what they say.
   const restored = views.find((r) => r.checked)?.value as View | undefined;
-  if (restored && restored !== 'grid') { view = restored; root.dataset.view = restored; }
+  if (restored && restored !== 'grid') { view = restored; root.dataset.view = restored; reorder(); }
   if (showBox && !showBox.checked) { band?.classList.add('is-instant', 'is-off'); }
-  applyInstant();
+  applyInstant(false);
   root.dataset.ready = '';
 }
