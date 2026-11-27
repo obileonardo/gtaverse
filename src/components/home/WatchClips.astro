@@ -43,13 +43,13 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
           <p class="wc__summary"><span class="wc__clamp" data-wc-summary>{lead.summary}</span></p>
           <a class="wc__post" href={lead.url} rel="noopener" target="_blank" data-wc-post>Original post on YouTube<Icon name="arrow-up-right" size={16} /></a>
         </div>
-        <Button href={`/finds/${lead.slug}`} variant="inverse" size="l" class="wc__open" data-wc-link>Open the find</Button>
+        <Button href={`/finds/${lead.slug}`} variant="inverse" size="l" class="wc__open" data-wc-link>Open the find<span class="sr-only" data-wc-open-title>: {lead.title}</span></Button>
       </div>
     </div>
     <div class="wc__side">
       <ul class="wc__list" role="list" aria-label="Every clip">
         {clips.map((c, k) => (
-          <li hidden={k >= SHOWN} data-wc-row>
+          <li data-wc-row data-wc-extra={k >= SHOWN ? '' : undefined}>
             <button type="button" class="wc__row" data-wc-pick={k} aria-pressed={k === 0 ? 'true' : 'false'}>
               <span class="wc__thumb"><img src={c.thumb} alt="" width="320" height="180" loading="lazy" decoding="async" /></span>
               <span class="wc__text">
@@ -119,12 +119,13 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
     bottom: var(--wc-pad);
     max-width: min(560px, calc(100% - 3 * var(--wc-pad) - var(--ctrl-size-xl)));
     display: grid;
+    grid-template-columns: minmax(0, 1fr); /* a long creator name wraps inside the credit, never widens it */
     gap: var(--space-1);
     pointer-events: none;
   }
   .wc__frame[data-playing] .wc__credit { display: none; }
-  .wc__ctitle { font-size: var(--text-h2); font-weight: 700; line-height: 1.25; color: var(--text-1); text-wrap: balance; }
-  .wc__cby { font-size: var(--text-title); font-weight: 600; line-height: 1.3; color: var(--text-2); }
+  .wc__ctitle { font-size: var(--text-h2); font-weight: 700; line-height: 1.25; color: var(--text-1); text-wrap: balance; overflow-wrap: anywhere; }
+  .wc__cby { font-size: var(--text-title); font-weight: 600; line-height: 1.3; color: var(--text-2); overflow-wrap: anywhere; }
   .wc__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 
   /* Hulu's title bar: our words at the left, NBA's one button where Hulu's menu sat. */
@@ -152,11 +153,12 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
   .wc__row:active { transform: scale(0.97); }
   .wc__thumb { aspect-ratio: 16 / 9; border-radius: var(--radius-xs); overflow: hidden; background: var(--surface-2); outline: var(--border-w) solid var(--border-1); outline-offset: -1px; transition: outline-color var(--dur-colour) var(--ease-colour); }
   .wc__thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .wc__text { display: grid; gap: 2px; min-width: 0; }
+  /* One column no wider than the row: the creator line's nowrap must not widen the cell (its ellipsis shows instead). */
+  .wc__text { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; min-width: 0; }
   .wc__kicker { font-size: var(--text-caption); font-weight: 700; line-height: 16px; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-1); }
   .wc__kicker:empty { display: none; }
   .wc__kicker[data-k='now'] { color: var(--accent-text); }
-  .wc__rtitle { font-size: var(--text-body); font-weight: 400; line-height: 21px; color: var(--text-1); }
+  .wc__rtitle { font-size: var(--text-body); font-weight: 400; line-height: 21px; color: var(--text-1); overflow-wrap: anywhere; }
   .wc__meta {
     font-size: var(--text-body-s);
     line-height: 20px;
@@ -167,6 +169,10 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
     padding-inline-end: 0.05em;
   }
   .wc__row:focus-visible { outline-offset: 4px; }
+  /* Clips past the first five wait behind "All N clips" only when the script runs (hidden start states live under
+     html.js, Base.astro); without JavaScript every clip shows and the pill, which needs the script, does not. */
+  :global(html.js) .wc:not([data-wc-all]) [data-wc-extra] { display: none; }
+  :global(html:not(.js)) .wc__more { display: none; }
 
   @media (hover: hover) and (pointer: fine) {
     .wc__row:hover .wc__thumb { outline-color: var(--text-3); }
@@ -192,7 +198,8 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
     .wc__frame { --wc-pad: var(--space-4); border-radius: 0; }
     .wc__ctitle { font-size: var(--text-title); line-height: 22px; }
     .wc__cby { font-size: var(--text-body-s); line-height: 20px; }
-    .wc__bar { display: grid; gap: var(--space-4); padding: var(--space-5) var(--page-pad); }
+    /* One column as wide as the bar (the desktop's space-between would otherwise stop the track stretching). */
+    .wc__bar { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); padding: var(--space-5) var(--page-pad); }
     .wc__summary { font-size: var(--text-body-s); }
     .wc__open { width: 100%; }
     .wc__list { gap: var(--space-3); }

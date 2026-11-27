@@ -38,7 +38,8 @@ export function initWatchClips(root: HTMLElement) {
   const credit = root.querySelector<HTMLElement>('[data-wc-credit]');
   const about = root.querySelector<HTMLElement>('[data-wc-about]');
   const open = root.querySelector<HTMLAnchorElement>('[data-wc-link]');
-  if (!clips.length || !frame || !credit || !about) return;
+  const media = frame?.querySelector<HTMLElement>('.wc__media');
+  if (!clips.length || !frame || !credit || !about || !media) return;
   const rows = [...root.querySelectorAll<HTMLButtonElement>('[data-wc-pick]')];
   let current = 0;
 
@@ -49,8 +50,10 @@ export function initWatchClips(root: HTMLElement) {
     if (play) play.hidden = false;
   };
 
-  // A still fades in over the old one only once it has decoded, so the player never flashes empty.
-  const crossfade = (img: HTMLImageElement, c: Clip, instant: boolean) => {
+  // A still fades in over the one on top now, only once it has decoded, so the player never flashes empty. A still
+  // that decodes after another clip was chosen is dropped, so a still never sits beside another clip's credit.
+  const crossfade = (c: Clip, instant: boolean) => {
+    const sizes = media.querySelector<HTMLImageElement>('[data-wc-img]')?.sizes ?? '';
     const next = new Image();
     next.alt = '';
     next.decoding = 'async';
@@ -59,25 +62,30 @@ export function initWatchClips(root: HTMLElement) {
     next.setAttribute('data-instant', '');
     next.setAttribute('data-wc-img', '');
     next.srcset = c.srcset;
-    next.sizes = img.sizes;
+    next.sizes = sizes;
     next.src = c.src;
     const show = () => {
-      if (instant || reducedMotion()) { img.replaceWith(next); return; }
-      img.after(next);
+      if (clips[current] !== c) return;
+      const below = [...media.querySelectorAll<HTMLImageElement>('[data-wc-img]')];
+      media.append(next);
+      if (instant || reducedMotion()) { below.forEach((b) => b.remove()); return; }
       const a = next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-crossfade', 500), easing: v('--ease-colour', 'ease') });
-      a.finished.then(() => img.remove(), () => {});
+      a.finished.then(() => below.forEach((b) => b.remove()), () => {});
     };
     next.decode().then(show, show);
   };
 
-  // Hulu's labels: "Watching" on the chosen row, "Up next" on the row after it, none on the rest.
+  // Hulu's labels: "Watching" on the chosen row, "Up next" on the row after it when that row is on show, none on the
+  // rest.
+  const shown = (r: HTMLElement) => root.hasAttribute('data-wc-all') || !r.closest('[data-wc-extra]');
   const label = (i: number) => rows.forEach((r) => {
     const k = Number(r.dataset.wcPick);
+    const next = k === i + 1 && shown(r);
     const kicker = r.querySelector<HTMLElement>('[data-wc-kicker]');
     if (kicker) {
-      kicker.textContent = k === i ? 'Watching' : k === i + 1 ? 'Up next' : '';
+      kicker.textContent = k === i ? 'Watching' : next ? 'Up next' : '';
       if (k === i) kicker.dataset.k = 'now';
-      else if (k === i + 1) kicker.dataset.k = 'next';
+      else if (next) kicker.dataset.k = 'next';
       else delete kicker.dataset.k;
     }
     r.setAttribute('aria-pressed', String(k === i));
@@ -88,10 +96,13 @@ export function initWatchClips(root: HTMLElement) {
     const c = clips[i];
     current = i;
     stopPlayer();
-    const imgs = frame.querySelectorAll<HTMLImageElement>('[data-wc-img]');
-    crossfade(imgs[imgs.length - 1], c, instant);
+    crossfade(c, instant);
     frame.querySelector('[data-wc-play]')?.setAttribute('aria-label', `Play clip: ${c.title}`);
-    if (open) open.href = `/finds/${c.slug}`;
+    if (open) {
+      open.href = `/finds/${c.slug}`;
+      const named = open.querySelector('[data-wc-open-title]');
+      if (named) named.textContent = `: ${c.title}`;
+    }
     label(i);
     swap(credit, () => {
       credit.querySelector('[data-wc-title]')!.textContent = c.title;
@@ -109,9 +120,10 @@ export function initWatchClips(root: HTMLElement) {
   // focus moves to the first new row so a keyboard user carries on where the list now continues.
   root.querySelector<HTMLButtonElement>('[data-wc-more]')?.addEventListener('click', (e) => {
     const instant = (e as MouseEvent).detail === 0;
-    const hidden = [...root.querySelectorAll<HTMLElement>('[data-wc-row][hidden]')];
+    const hidden = [...root.querySelectorAll<HTMLElement>('[data-wc-extra]')];
+    root.setAttribute('data-wc-all', '');
+    label(current);
     hidden.forEach((li) => {
-      li.hidden = false;
       if (!instant) li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(reducedMotion() ? '--dur-fade-reduced' : '--dur-image-in', 240), easing: v('--ease-out', 'ease-out') });
     });
     (e.currentTarget as HTMLElement).remove();
@@ -128,5 +140,6 @@ export function initWatchClips(root: HTMLElement) {
     btn.hidden = true;
     frame.append(f);
     frame.setAttribute('data-playing', '');
+    f.focus(); // the Play button is gone: focus moves into the player, never to the page
   });
 }
