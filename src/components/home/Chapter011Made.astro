@@ -1,5 +1,5 @@
 ---
-// Home, "How it is made" (phase 7e, the owner's Places pick; it now follows "Most credited": people, then method).
+// Home 011, How it is made (phase 7e, the Places Love: "Curation team: avatar strip, then Mission, Perspective, Approach").
 // Places' "Our curators" block in the site's words: a quiet title, then three headed paragraphs (Places' Mission,
 // Perspective, Approach) that are the About page's "How it is made" principles, one inverse button, a hairline, then
 // a second group ("Our team / Editorial" in Places): what we cite, with the source totals counted from content, the
@@ -100,9 +100,6 @@ const method = [
 
   /* Phone: Places as drawn, one column; the hairline between the two groups. */
   @media (max-width: 767px) {
-    /* Places runs people and method as one column: the chapter rule stands in for its section break, so the gap
-       above it is a section gap here, not the chapter gap. */
-    .hm { padding-top: var(--space-12); }
     .hm__cols { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: var(--space-8); }
     .hm__stats { gap: var(--space-4) var(--space-8); }
     .hm__p { font-size: var(--text-body-s); line-height: 1.3; }
