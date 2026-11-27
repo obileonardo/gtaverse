@@ -134,6 +134,17 @@ Deliberate choices:
 
 `categoryGlyphs` in `family.ts` maps every id in `content/categories.json` to its glyph.
 
+## Cursors
+
+The optional game cursors (owner decision LR48) are two glyphs of this family, composed by `emit_cursors()` in `scripts/icons/build.py` into `src/icons/cursors.ts` (generated, never edit it by hand):
+
+| Cursor | Glyph | Drawing | Hotspot |
+|---|---|---|---|
+| Player arrow | `locate` | halo form (keyline, no plate), turned 22 degrees to the left | the arrow's tip |
+| Pistol | `weapon` | halo form, mirrored so the muzzle leads, turned 24 degrees up | the muzzle |
+
+Each is a standalone 32 px SVG (the largest cursor size every browser shows) at the halo scale 0.8 with a 0.95 unit keyline (about 1.5 px, a system cursor's edge). It becomes a data URL, which cannot read CSS, so the ink and keyline are `%INK%` and `%KEY%`: the page fills in the tokens in `cursorTone` (`--inverse-fill`, `--bg`) for the current theme. The build checks that each drawing fits its square; `pnpm test` (scripts/test/cursor.test.ts) checks the size, the hotspot and that no colour is hard coded. The trails (tracers and smoke) are plain shapes in tokens, drawn in `src/scripts/cursor/cursor.ts`, not icons.
+
 ## Rendering
 
 Drawings without knock-outs are plain paths. Drawings with knock-outs use Capsa's compositing: an SVG mask whose id is the token `%ID%` in `family.ts`. `render.ts` replaces it with an id that is unique per instance, because a mask id shared by two icons breaks when the first one sits in a hidden element.

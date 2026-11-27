@@ -1,0 +1,83 @@
+---
+// "Cursor": the optional game cursor (owner decision LR48), a native select beside the chapter setting in the menu.
+// Off ("Normal") by default and remembered on this device (src/scripts/cursor/setting.ts). Shown only where it can
+// apply: a desktop mouse or trackpad without reduced motion. The cursor module loads only once it is switched on.
+// The select is the same pill as ChapterControl's.
+import { cursors } from '../icons/cursors';
+// One copy per page (the header's menu), so a fixed id: the built HTML stays the same from build to build.
+interface Props { class?: string; id?: string }
+const { class: className, id = 'cursor-setting' } = Astro.props;
+---
+<div class:list={['cursorctl', className]} data-cursor-control>
+  <label class="cursorctl__label" for={id}>Cursor</label>
+  <span class="cursorctl__field">
+    <select class="cursorctl__select" id={id} data-cursor-select>
+      <option value="off">Normal</option>
+      <option value="arrow">{cursors.arrow.label}</option>
+      <option value="pistol">{cursors.pistol.label}</option>
+    </select>
+    <svg class="cursorctl__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6" /></svg>
+  </span>
+</div>
+
+<script>
+  import { token, tokenMs } from '../scripts/motion/tokens';
+  import { readCursor, writeCursor, parseCursor, CURSOR_EVENT, CURSOR_KEY, CURSOR_POINTER, CURSOR_REDUCED } from '../scripts/cursor/setting';
+  // The tiny check: with the setting off nothing below loads or listens beyond two media queries.
+  type CursorModule = typeof import('../scripts/cursor/cursor');
+  let mod: Promise<CursorModule> | null = null;
+  const pointer = matchMedia(CURSOR_POINTER);
+  const reduced = matchMedia(CURSOR_REDUCED);
+  const selects = () => [...document.querySelectorAll<HTMLSelectElement>('[data-cursor-select]')];
+
+  const apply = () => {
+    const c = readCursor();
+    selects().forEach((el) => { el.value = c; });
+    if (c !== 'off' && pointer.matches && !reduced.matches) {
+      mod ??= import('../scripts/cursor/cursor');
+      mod.then((m) => { if (readCursor() === c) m.startCursor(c, { duration: tokenMs('--dur-trail', 280), easing: token('--ease-out') }); }).catch(() => { mod = null; });
+    } else {
+      mod?.then((m) => m.stopCursor());
+    }
+  };
+
+  selects().forEach((el) => el.addEventListener('change', () => writeCursor(parseCursor(el.value))));
+  document.addEventListener(CURSOR_EVENT, apply);
+  pointer.addEventListener('change', apply);
+  reduced.addEventListener('change', apply);
+  // Another tab changed it: follow.
+  window.addEventListener('storage', (e) => { if (e.key === CURSOR_KEY) apply(); });
+  apply();
+</script>
+
+<style>
+  .cursorctl { display: inline-flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+  .cursorctl__label { color: var(--text-2); font-size: var(--text-body-s); }
+  .cursorctl__field { position: relative; display: inline-flex; align-items: center; }
+  .cursorctl__select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: var(--btn-h-m);
+    padding: 0 40px 0 var(--space-4);
+    border-radius: var(--radius-full);
+    border: var(--border-w) solid var(--border-1);
+    background: var(--surface-2);
+    color: var(--text-1);
+    font: inherit;
+    font-size: var(--text-label);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--dur-colour) var(--ease-colour);
+  }
+  .cursorctl__chevron { position: absolute; right: 14px; pointer-events: none; color: var(--text-2); }
+  @media (hover: hover) and (pointer: fine) {
+    .cursorctl__select:hover { background: var(--surface-3); }
+  }
+  /* Only where it can apply: touch screens and reduced motion never see the setting. */
+  @media not ((hover: hover) and (pointer: fine)) {
+    .cursorctl { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursorctl { display: none; }
+  }
+</style>

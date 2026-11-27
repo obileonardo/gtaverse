@@ -206,6 +206,7 @@
   --dur-ping: 700ms;         /* the map's one-off "here it is" ring */
   --dur-moment: 900ms;       /* rare moments only (404) */
   --dur-fade-reduced: 150ms; /* reduced motion: every movement becomes an opacity fade this long */
+  --dur-trail: 280ms;        /* one mark of the optional game cursor's trail, from drawn to gone (LR48: within 300ms) */
   /* Stagger */
   --stagger-group: 50ms;     /* cards and rows on first view; shrink each gap by 10% */
   --stagger-hero: 70ms;      /* hero lines; existing formula i*70 - i*i*6 */
