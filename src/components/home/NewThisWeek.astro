@@ -4,16 +4,17 @@
 // Each card is Apple's: the still on top (16:9) with the "New find" badge, then a strip with the type's blip, the
 // title, our summary and "View". A find without a still (or a spoiler or mature find, which never shows art) gets
 // Grok's designed panel instead of a picture: the sunrise on the diagonal with the type in a label box. The play circle
-// opens a YouTube clip; the Found toggle (top right) shares the map's found set (new-this-week.ts). Phone: one column,
-// four cards, the Loves as drawn. 768: two columns, four cards. 1024 and wider: three columns, six cards; the follow
-// card spans the row. The dates are each find's real added_at. The chapter is left out when nothing was added in the
-// seven days before the build.
+// opens a find's YouTube clip, over the still or the panel; the Found toggle (top right) shares the map's found set
+// (new-this-week.ts). Phone: one column, four cards, the Loves as drawn, a date heading over each day. 768: two
+// columns, four cards. 1024 and wider: three columns, six cards; the follow card spans the row. From 768, when the
+// cards come from more than one day, the headings step aside and each card carries its date as a badge. The dates are
+// each find's real added_at. The chapter is left out when nothing was added in the seven days before the build.
 import Badge from '../ui/Badge.astro';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import ChapterHead from './ChapterHead.astro';
 import type { Find } from '../../lib/content';
-import { cardImage } from '../../lib/finds';
+import { cardImage, formatDate } from '../../lib/finds';
 import { categoryLabel } from '../../lib/media';
 import { safeSummary } from '../../lib/feed';
 import { youtubeId } from '../../lib/clip';
@@ -28,14 +29,17 @@ const WIDE_FROM = 4;
 const shown = finds.slice(0, 6);
 const dayLabel = (d: string) =>
   new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-// Apple's date headings: consecutive finds added the same day share one.
-const groups: { day: string; items: { f: Find; i: number }[] }[] = [];
+// Apple's date headings: consecutive finds added the same day share one. A heading whose cards all show from 1024
+// only is hidden below 1024 with them.
+type Row = { kind: 'day'; day: string; wideOnly: boolean } | { kind: 'find'; f: Find; i: number };
+const rows: Row[] = [];
 shown.forEach((f, i) => {
   const day = f.added_at ?? '';
-  const last = groups[groups.length - 1];
-  if (last && last.day === day) last.items.push({ f, i });
-  else groups.push({ day, items: [{ f, i }] });
+  const prev = shown[i - 1];
+  if (day && (!prev || (prev.added_at ?? '') !== day)) rows.push({ kind: 'day', day, wideOnly: i >= WIDE_FROM });
+  rows.push({ kind: 'find', f, i });
 });
+const multi = new Set(shown.map((f) => f.added_at ?? '')).size > 1;
 const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin';
 ---
 {shown.length > 0 && (
@@ -56,46 +60,54 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
       </span>
     </a>
 
-    {groups.map((g) => (
-      <div class="nw__group" data-wide-only={g.items.every(({ i }) => i >= WIDE_FROM) ? '' : undefined}>
-        {g.day && <h3 class="nw__day">Added <time datetime={g.day}>{dayLabel(g.day)}</time></h3>}
-        <ul class="nw__grid" role="list" data-reveal>
-          {g.items.map(({ f, i }) => {
-            const img = cardImage(f);
-            const yt = img && f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
-            const type = categoryLabel(f);
-            return (
-              <li class="nw__item" data-wide={i >= WIDE_FROM ? '' : undefined}>
-                <article class="nw__card">
-                  <div class="nw__media">
-                    {img ? (
-                      <img src={img.src} srcset={img.srcset} sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, 384px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-                    ) : (
-                      <div class="nw__panel" data-tone={i % 4} aria-hidden="true"><span class="nw__tag">{type}</span></div>
-                    )}
-                    <Badge variant="new" class="nw__badge">New find</Badge>
-                    {yt && (
-                      <a class="nw__play" href={f.clip!.url} target="_blank" rel="noopener" data-play aria-label={`Watch on YouTube: ${f.title}`}>
-                        <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
-                      </a>
-                    )}
-                    <button type="button" class="nw__found" data-found={f.slug} aria-pressed="false" aria-label={`Found it: ${f.title}`} set:html={iconSvg('found', { size: 16 })} />
-                  </div>
-                  <div class="nw__strip">
-                    <span class="nw__icon" set:html={blipSvg(glyph(f), { size: 40, label: type })} />
-                    <div class="nw__text">
-                      <h4 class="nw__title"><a href={`/finds/${f.slug}`} class="nw__hit"><span class="nw__clamp">{f.title}</span></a></h4>
-                      <p class="nw__sub"><span class="nw__clamp">{safeSummary(f)}</span></p>
-                    </div>
-                    <span class="btn btn--quiet btn--s nw__view" aria-hidden="true"><span class="btn__label">View</span></span>
-                  </div>
-                </article>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    ))}
+    {/* One list for every width. Phone: Apple's date headings sit in it as full-width rows. From 768, with more than one
+        date, the headings step aside and each card carries its date as a badge (Sunlitt), so a row is never one card
+        and two empty columns (LR59). */}
+    <ul class="nw__grid" role="list" data-reveal data-days={multi ? 'many' : 'one'}>
+      {rows.map((r) => r.kind === 'day' ? (
+        <li class="nw__dayrow" data-wide-only={r.wideOnly ? '' : undefined}>
+          <h3 class="nw__day">Added <time datetime={r.day}>{dayLabel(r.day)}</time></h3>
+        </li>
+      ) : (() => {
+        const { f, i } = r;
+        const img = cardImage(f);
+        // Every safe YouTube clip keeps its link, still or not (Shorts never have a still).
+        const yt = f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
+        const type = categoryLabel(f);
+        return (
+          <li class="nw__item" data-wide={i >= WIDE_FROM ? '' : undefined}>
+            <article class="nw__card">
+              <div class="nw__media">
+                {img ? (
+                  <img src={img.src} srcset={img.srcset} sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, 384px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+                ) : (
+                  <div class:list={['nw__panel', { 'nw__panel--play': yt }]} data-tone={i % 4} aria-hidden="true"><span class="nw__tag">{type}</span></div>
+                )}
+                <div class="nw__badges">
+                  <Badge variant="new">New find</Badge>
+                  {multi && f.added_at && <Badge variant="meta" class="nw__date"><time datetime={f.added_at}>{formatDate(f.added_at)}</time></Badge>}
+                </div>
+                {yt && (
+                  <a class:list={['nw__play', { 'nw__play--panel': !img }]} href={f.clip!.url} target="_blank" rel="noopener" data-play aria-label={`Watch on YouTube: ${f.title}`}>
+                    <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
+                  </a>
+                )}
+              </div>
+              <div class="nw__strip">
+                <span class="nw__icon" set:html={blipSvg(glyph(f), { size: 40, label: type })} />
+                <div class="nw__text">
+                  <h4 class="nw__title"><a href={`/finds/${f.slug}`} class="nw__hit"><span class="nw__clamp">{f.title}</span></a></h4>
+                  <p class="nw__sub"><span class="nw__clamp">{safeSummary(f)}</span></p>
+                </div>
+                <span class="btn btn--quiet btn--s nw__view" aria-hidden="true"><span class="btn__label">View</span></span>
+              </div>
+              {/* After the title in reading and focus order; drawn in the still's top right corner. */}
+              <button type="button" class="nw__found" data-found={f.slug} aria-pressed="false" aria-label={`Found it: ${f.title}`} set:html={iconSvg('found', { size: 16 })} />
+            </article>
+          </li>
+        );
+      })())}
+    </ul>
     <div class="nw__all"><Button href="/finds" variant="quiet" iconEnd="chevron-right">All new finds</Button></div>
   </div>
 </section>
@@ -138,12 +150,15 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
   .nw__follow-art span { display: flex; }
   .nw__follow-copy { display: grid; align-content: center; gap: var(--space-3); padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3); }
   .nw__follow-line { font-size: var(--text-body-s); font-weight: 600; line-height: 22px; color: var(--text-1); }
-  .nw__follow-cta { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-s); font-weight: 600; line-height: 22px; color: var(--text-1); }
+  .nw__follow-cta { white-space: nowrap; display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-s); font-weight: 600; line-height: 22px; color: var(--text-1); }
   .nw__follow-chev { display: flex; color: var(--accent-text); transition: transform var(--dur-press) var(--ease-out); }
 
-  /* Apple's date heading: sentence case, 20 semibold, grey; 32 above, 12 to the cards. */
-  .nw__day { margin: var(--space-8) 0 var(--space-3); font-size: var(--text-title-l); font-weight: 600; line-height: 1.3; color: var(--text-3); }
-  .nw__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+  /* Apple's date heading: sentence case, 20 semibold, grey; a full-width row of the one list, 32 under the follow card
+     and above a later day, the grid's gap to its cards. */
+  .nw__grid { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin-top: var(--space-8); }
+  .nw__dayrow { grid-column: 1 / -1; }
+  .nw__dayrow:not(:first-child) { padding-top: calc(var(--space-8) - var(--space-5)); }
+  .nw__day { font-size: var(--text-title-l); font-weight: 600; line-height: 1.3; color: var(--text-3); }
   .nw__item { min-width: 0; }
 
   /* Apple's card: the still flush on top at 16:9, the strip under it. The site's framed card: --surface-1, a 1px edge,
@@ -153,7 +168,7 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
   .nw__card:has(.nw__hit:active) { transform: scale(0.98); }
   .nw__media { position: relative; aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; border-radius: calc(var(--radius-l) - 1px) calc(var(--radius-l) - 1px) 0 0; }
   .nw__media img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; transition: transform var(--dur-card-lift) var(--ease-out); }
-  .nw__media :global(.nw__badge) { position: absolute; top: calc(var(--space-3) + 5px); left: var(--space-3); }
+  .nw__badges { position: absolute; top: calc(var(--space-3) + 5px); left: var(--space-3); display: flex; gap: var(--space-2); }
 
   /* Grok's designed fallback: the sunrise at full strength on the diagonal, falling into the ground from the top left
      corner, the type in a square label box in the middle. */
@@ -163,6 +178,8 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
   .nw__panel[data-tone='1']::before { transform: scaleX(-1); }
   .nw__panel[data-tone='2']::before { transform: scaleY(-1); }
   .nw__panel[data-tone='3']::before { transform: scale(-1); }
+  /* With a clip, Apple's play circle takes the middle and the label steps down to the bottom on one line. */
+  .nw__panel--play { place-items: end center; padding-bottom: var(--space-3); }
   .nw__tag {
     position: relative;
     max-width: 100%;
@@ -180,10 +197,13 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
 
   /* Apple's play circle on a video still: only the circle is the link, so the rest of the card opens the find. */
   .nw__play { position: absolute; left: 50%; top: 50%; z-index: 2; width: var(--ctrl-size-xl); height: var(--ctrl-size-xl); translate: -50% -50%; border-radius: var(--radius-full); }
+  .nw__panel--play .nw__tag { font-size: var(--text-title-l); white-space: nowrap; }
   .nw__play:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 
   /* The Found toggle: a 44 button (the finger) whose glass circle (the site's glass button fill, edge and blur) is
      32 to the eye; pressed = the inverse fill. */
+  /* Without JavaScript the toggle could not work, so it is not drawn. */
+  :global(html:not(.js)) .nw__found { display: none; }
   .nw__found { position: absolute; top: calc(var(--space-3) - 6px); right: calc(var(--space-3) - 6px); z-index: 2; display: grid; place-items: center; width: var(--ctrl-size); height: var(--ctrl-size); border-radius: var(--radius-full); color: var(--text-1); cursor: pointer; transition: transform var(--dur-press) var(--ease-out); }
   .nw__found::before { content: ''; position: absolute; inset: 6px; border-radius: var(--radius-full); background: var(--glass-fill); border: var(--border-w) solid var(--glass-border); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: background-color var(--dur-colour) var(--ease-colour), border-color var(--dur-colour) var(--ease-colour); }
   .nw__found :global(svg) { position: relative; display: block; }
@@ -223,18 +243,25 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
     .nw__follow-line { font-size: var(--text-title-l); line-height: 28px; }
   }
 
+  /* From 768 with more than one date: the heading rows leave the grid (kept for screen readers, as .sr-only) and each
+     card's date badge says the day, so no row is one card and two empty columns (LR59). */
+  @media (min-width: 768px) {
+    .nw__grid[data-days='many'] .nw__dayrow { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .nw__grid[data-days='many'] .nw__badges :global(.nw__date) { display: inline-flex; }
+  }
+
   /* 768 to 1023: two columns, four cards. */
   @media (max-width: 1023px) {
     .nw__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .nw__item[data-wide], .nw__group[data-wide-only] { display: none; }
+    .nw__item[data-wide], .nw__dayrow[data-wide-only] { display: none; }
   }
 
   /* Phone: the Loves as drawn. One column, 12 between cards, the follow card 16 above the first heading. */
   @media (max-width: 767px) {
     .nw__follow { margin-top: var(--space-5); }
-    .nw__day { margin-top: var(--space-4); }
-    .nw__group + .nw__group .nw__day { margin-top: var(--space-8); }
-    .nw__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .nw__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin-top: var(--space-4); }
+    .nw__dayrow:not(:first-child) { padding-top: calc(var(--space-8) - var(--space-3)); }
+    .nw__badges :global(.nw__date) { display: none; }
     .nw__all { display: flex; margin-top: var(--space-6); }
     .nw__all :global(.btn) { --h: var(--ctrl-size); }
   }
