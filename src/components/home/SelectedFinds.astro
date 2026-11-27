@@ -1,55 +1,94 @@
 ---
-// Home chapter 002, Selected finds (round 2, the owner's Unseen Studio Love; phone: DAZN's chip row and Google TV's
-// rail). A centred title, a tray of counted filter pills (All, then every type with a safe find), and a two column
-// grid of big 1.95:1 stills with Unseen's two-line caption, arrow and rule. Six finds per filter, those with a still
-// first; a find without one shows the sunrise glow. "All 79 finds" closes it (Vucko's counted see-all link).
-// Without JavaScript the grid shows "All". Behaviour and motion: selected-finds.ts.
-import Card from '../ui/Card.astro';
-import Chip from '../ui/Chip.astro';
+// Home chapter 002, Selected finds (phase 7a, the owner's Museum of the Human Web Love, "Collection index with view
+// modes"; owner decision 27 Nov 2026: the full index). Every safe find (no spoiler or mature flag) as a small titled
+// tile in one dense grid inside the Love's two hairlines, under its row of square view boxes (Grid, List, By date),
+// its "Show filters" box a third of the way across, and its filter band (a hairline down the left) holding a square
+// box per type. KOBU gives the counted line and "Clear filters" at the right; Runway the small type label over each
+// title; KOBU's typographic list is the List view; By date is the Love's Timeline, the same tiles under day
+// headings. Phone (HYPE's strip): the type boxes in one sideways row, three tiles across, the first twelve shown,
+// then Air's outline "Load more" pill ("Show all 68 finds").
+// One list serves all three views: CSS lays it out by data-view and orders it by --o-grid or --o-date.
+// A find without a still, or whose still fails to load, shows its type's map blip on the tile's ground.
+// Without JavaScript: the grid of every find, no controls. Behaviour and motion: selected-finds.ts.
+import Check from '../ui/Check.astro';
 import Button from '../ui/Button.astro';
 import ChapterHead from './ChapterHead.astro';
 import { finds, type Find } from '../../lib/content';
-import { findStill, categoryLabel, regionLabel } from '../../lib/media';
-import { type Filter } from '../../lib/home';
+import { findStill, categoryLabel } from '../../lib/media';
+import { formatDate } from '../../lib/finds';
+import { firstReported, pad3, type FindIndex } from '../../lib/home';
 import { blipSvg } from '../../icons/render';
 import { categoryGlyphs } from '../../icons/family';
 
-interface Props { filters: Filter[]; index: number }
-const { filters, index } = Astro.props;
-// Every find any filter shows, once each. data-o-<filter> holds its place in that filter.
-const union: Find[] = [];
-for (const flt of filters) for (const f of flt.finds) if (!union.includes(f)) union.push(f);
-const meta = (f: Find) => [regionLabel(f), f.clip?.creator ? `Clip by ${f.clip.creator}` : categoryLabel(f)].join(' · ');
-const first = filters[0];
+interface Props { entries: FindIndex; index: number }
+const { entries, index } = Astro.props;
+const total = entries.finds.length;
+const CAP = 12; // tiles shown on the phone before "Show all"
+
+// Each find's place in the By date order, with each day's heading just before its finds.
+const dateOrder = new Map<Find | string, number>();
+let k = 0;
+for (const d of entries.dates) {
+  dateOrder.set(`day:${d.date ?? 'none'}`, k++);
+  for (const f of d.finds) dateOrder.set(f, k++);
+}
+const blip = (f: Find) => blipSvg(categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin', { size: 32 });
 ---
-<section class="sf" aria-labelledby="sf-title">
+<section class="sf" id="selected-finds" aria-labelledby="sf-title" data-view="grid" data-cap={CAP}>
   <div class="container">
     <ChapterHead index={index} label="Featured finds" heading={false} />
     <h2 class="sf__title" id="sf-title">Selected finds</h2>
-    <div class="sf__row">
-      <div class="sf__tray" role="group" aria-label="Show finds of one type" data-sf-filters>
-        {filters.map((flt, i) => (
-          <Chip check={false} selected={i === 0} class="sf__chip" data-sf-filter={flt.id} data-sf-label={flt.label}>
-            {flt.id !== 'all' && <span slot="lead" class="sf__blip" set:html={blipSvg(categoryGlyphs[flt.id as keyof typeof categoryGlyphs] ?? 'pin', { size: 20 })} />}
-            {flt.label}<sup class="sf__count">{flt.count}</sup>
-          </Chip>
-        ))}
-      </div>
+
+    <div class="sf__controls">
+    <div class="sf__bar">
+      <fieldset class="sf__views">
+        <legend class="sr-only">View</legend>
+        <Check type="radio" name="sf-view" value="grid" checked data-sf-view>Grid</Check>
+        <Check type="radio" name="sf-view" value="list" data-sf-view>List</Check>
+        <Check type="radio" name="sf-view" value="date" data-sf-view>By date</Check>
+      </fieldset>
+      <div class="sf__toggle"><Check checked data-sf-show aria-controls="sf-types">Show filters</Check></div>
+      <p class="sf__tally">
+        <span class="sf__count" data-sf-count>{total} finds</span>
+        <button type="button" class="sf__clear" data-sf-clear hidden>Clear filters</button>
+      </p>
     </div>
-    <ul class="sf__grid" role="list" data-sf-grid aria-label={`${first.label} finds`}>
-      {union.map((f) => {
-        const s = f.spoiler || f.mature ? null : findStill(f);
-        const at = Object.fromEntries(filters.map((flt) => [`data-o-${flt.id}`, flt.finds.indexOf(f)]).filter(([, v]) => (v as number) >= 0));
-        const order = first.finds.indexOf(f);
+
+    <div class="sf__band" data-sf-band>
+      <fieldset class="sf__types" id="sf-types">
+        <legend class="sr-only">Show finds of these types</legend>
+        {entries.types.map((t) => <Check value={t.id} count={t.count} data-sf-type>{t.label}</Check>)}
+      </fieldset>
+    </div>
+    </div>
+
+    <ol class="sf__index" role="list" data-sf-index data-reveal aria-label="Every safe find">
+      {entries.dates.map((d) => (
+        <li class="sf__day" data-sf-day={d.date ?? 'none'} style={`--o-date:${dateOrder.get(`day:${d.date ?? 'none'}`)}`}>
+          <span>{d.date ? `First reported ${formatDate(d.date)}` : 'Date not given'}</span><sup class="sf__daycount"><span data-sf-daycount>{d.finds.length}</span><span class="sr-only"> finds</span></sup>
+        </li>
+      ))}
+      {entries.finds.map((f, i) => {
+        const s = findStill(f);
         return (
-          <li data-sf-item {...at} hidden={order < 0} style={order >= 0 ? `order:${order}` : undefined}>
-            <Card line href={`/finds/${f.slug}`} image={s?.src} srcset={s?.srcset} sizes="(max-width: 767px) 72vw, 40vw" ratio="1.95 / 1" kicker={categoryLabel(f)} title={f.title} meta={meta(f)} />
+          <li class="sf__item" data-sf-item data-type={f.category} data-day={firstReported(f) ?? 'none'} data-capped={i >= CAP ? '' : undefined} style={`--o-grid:${i};--o-date:${dateOrder.get(f)}`}>
+            <a class="sf__tile" href={`/finds/${f.slug}`}>
+              <span class="sf__media">
+                <span class="sf__blip" aria-hidden="true" set:html={blip(f)} />
+                {s && <img src={s.thumb} alt="" loading="lazy" decoding="async" width="320" height="180" />}
+              </span>
+              <span class="sf__num" aria-hidden="true">{pad3(i + 1)}</span>
+              <span class="sf__kind">{categoryLabel(f)}</span>
+              <span class="sf__name">{f.title}</span>
+            </a>
           </li>
         );
       })}
-    </ul>
-    <p class="sf__live sr-only" aria-live="polite" data-sf-live></p>
+    </ol>
+    <p class="sr-only" aria-live="polite" data-sf-live></p>
+
     <div class="sf__more">
+      <Button variant="outline" class="sf__all" data-sf-all hidden>Show all {total} finds</Button>
       <Button href="/finds" variant="quiet" iconEnd="chevron-right">All {finds.length} finds</Button>
     </div>
   </div>
@@ -67,78 +106,179 @@ const first = filters[0];
     font-weight: 500;
     line-height: 1.05;
     letter-spacing: -0.03em;
-    text-align: center;
     color: var(--text-1);
   }
-  .sf__row { display: flex; justify-content: center; margin-top: var(--space-8); }
-  /* Unseen's pale tray: one rounded edge holding the pills, 4px inside. The row wraps to a second centred line
-     rather than scrolling inside a box (the box is what clipped before). */
-  .sf__tray {
+
+  /* The Love's control row: the view boxes on the left, "Show filters" a third of the way across, KOBU's count and
+     "Clear filters" at the right. */
+  .sf__bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    column-gap: var(--space-6);
+    margin-top: var(--space-10);
+  }
+  .sf__views, .sf__types { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
+  .sf__views { display: flex; flex-wrap: wrap; column-gap: var(--space-6); min-width: 0; }
+  .sf__tally { display: flex; justify-content: flex-end; align-items: baseline; gap: var(--space-4); }
+  .sf__count { font-family: var(--font-mono); font-size: var(--text-mono); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--text-1); }
+  .sf__clear {
+    min-height: var(--ctrl-size);
+    font-size: var(--text-body-s);
+    color: var(--text-2);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  @media (hover: hover) and (pointer: fine) { .sf__clear:hover { color: var(--text-1); } }
+
+  /* The Love's filter band: a hairline down its left edge, as tall as two lines of boxes; it keeps its height while
+     the filters are hidden (the Love shows it empty). */
+  .sf__band {
+    margin-top: var(--space-6);
+    min-height: 88px;
+    padding-left: var(--space-4);
+    border-left: var(--border-w) solid var(--rule-soft);
+    display: flex;
+    align-items: center;
+  }
+  .sf__types {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 0;
-    padding: 4px;
-    border-radius: 24px;
-    background: var(--glass-fill);
-    border: var(--border-w) solid var(--glass-border);
-    max-width: 100%;
+    column-gap: var(--space-6);
+    transition: opacity var(--dur-swap-out) var(--ease-standard), visibility 0s linear 0s;
   }
-  .sf__tray :global(.sf__chip) { padding-inline: 11px; border-color: transparent; background: transparent; }
-  .sf__tray :global(.sf__chip.is-selected) { background: var(--inverse-fill); border-color: var(--inverse-fill); }
-  .sf__blip { display: none; }
-  .sf__count { margin-left: 2px; font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: var(--text-2); vertical-align: top; position: relative; top: -0.35em; }
-  :global(.sf__chip.is-selected) .sf__count { color: inherit; opacity: 0.7; }
-  @media (hover: hover) and (pointer: fine) {
-    .sf__tray :global(.sf__chip:not(.is-selected):hover) { background: var(--glass-hover); }
-  }
+  .sf__band.is-off .sf__types { opacity: 0; visibility: hidden; transition: opacity var(--dur-swap-out) var(--ease-standard), visibility 0s linear var(--dur-swap-out); }
+  .sf__band.is-instant .sf__types { transition: none; }
+  :global(html:not(.js)) .sf__controls { display: none; }
 
-  /* Unseen's grid: two columns of 1.95:1 stills, 40 apart, rows 24 apart. A lone last card keeps half the width. */
-  .sf__grid {
+  /* The index: the Love's frame (a hairline down each side, none across) around one dense grid of titled tiles. */
+  .sf__index {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-8) var(--space-10);
-    margin-top: var(--space-12);
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: var(--space-5) var(--space-3);
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    border-inline: var(--border-w) solid var(--rule-soft);
   }
-  .sf__grid > li { min-width: 0; }
-  .sf__more { display: flex; justify-content: center; margin-top: var(--space-12); }
+  .sf__index > li { min-width: 0; order: var(--o-grid); }
+  .sf__index > [hidden] { display: none !important; }
+  .sf__day { display: none; }
 
-  /* Phone: the title on the left (Google TV), DAZN's chip row of blip and label running edge to edge, and the grid
-     as Google TV's rail of 16:9 cards, 72% wide, the next one peeking. */
+  .sf__tile { display: flex; flex-direction: column; min-width: 0; color: var(--text-1); }
+  .sf__media {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+  }
+  /* Like the Love's objects, a tile with no picture has no block behind it: its blip stands alone on the ground. A
+     still gets the surface behind it while it loads. */
+  .sf__media:has(> img:not([data-failed])) { background: var(--surface-2); }
+  .sf__blip { display: flex; }
+  /* The blip sits under the still: a still covers it; with no still, a still still loading, one that failed (hidden by
+     Base.astro) or an empty one, the tile shows its type's blip on its ground. */
+  .sf__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-card-lift) var(--ease-out); }
+  .sf__num { display: none; }
+  /* Runway's small grey label over the title, in sentence case. */
+  .sf__kind {
+    margin-top: var(--space-2);
+    font-size: var(--text-label-caps);
+    line-height: 1.3;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sf__name {
+    margin-top: 2px;
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    transition: color var(--dur-colour) var(--ease-colour);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sf__tile:hover .sf__media img { transform: scale(1.04); }
+    .sf__tile:hover .sf__name { color: var(--accent-text); }
+  }
+
+  /* By date: the same tiles, each day under a heading row across the grid. */
+  .sf[data-view='date'] .sf__index > li { order: var(--o-date); }
+  .sf[data-view='date'] .sf__day {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-caps);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .sf[data-view='date'] .sf__day:not(:first-child) { margin-top: var(--space-4); }
+  .sf__daycount { align-self: flex-start; font-size: var(--text-mono-caps); line-height: 1; color: var(--text-3); }
+
+  /* List: KOBU's typographic list, two columns of ruled rows (number, title, type), no pictures. */
+  .sf[data-view='list'] .sf__index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-12); }
+  .sf[data-view='list'] .sf__tile {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-3);
+    min-height: var(--ctrl-size);
+    padding-block: var(--space-2);
+    border-bottom: var(--border-w) solid var(--rule-soft);
+  }
+  .sf[data-view='list'] .sf__media { display: none; }
+  .sf[data-view='list'] .sf__num { display: block; grid-column: 1; grid-row: 1; font-family: var(--font-mono); font-size: var(--text-mono); font-variant-numeric: tabular-nums; color: var(--text-3); }
+  .sf[data-view='list'] .sf__name { grid-column: 2; grid-row: 1; margin: 0; font-size: var(--text-body); -webkit-line-clamp: 1; line-clamp: 1; }
+  .sf[data-view='list'] .sf__kind { grid-column: 3; grid-row: 1; margin: 0; max-width: 160px; text-align: right; }
+
+  .sf__more > [hidden] { display: none !important; }
+  .sf__more { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-10); }
+
+  /* Phone: the Love's view boxes across the top, HYPE's strip of type boxes running edge to edge, the count line
+     under it, three tiles across and a one-column list. "Show filters" is left out (the strip is always there). */
   @media (max-width: 767px) {
-    .sf__title { margin-top: var(--space-6); text-align: left; }
-    .sf__row {
-      justify-content: flex-start;
-      margin-top: var(--space-5);
+    .sf__title { margin-top: var(--space-6); }
+    .sf__controls { display: flex; flex-direction: column; margin-top: var(--space-5); }
+    .sf__bar { display: contents; }
+    .sf__views { order: 0; }
+    .sf__band { order: 1; }
+    .sf__tally { order: 2; }
+    .sf__views { flex-wrap: nowrap; column-gap: var(--space-5); }
+    .sf__toggle { display: none; }
+    .sf__tally { justify-content: space-between; margin-top: var(--space-2); }
+    .sf__count { font-size: var(--text-mono-caps); }
+    .sf__band {
+      margin-top: 0;
+      min-height: 0;
+      padding: 0 var(--page-pad);
       margin-inline: calc(-1 * var(--page-pad));
+      border-left: 0;
       overflow-x: auto;
-      scrollbar-width: none;
-      overscroll-behavior-x: contain;
-      padding: 6px var(--page-pad);
-    }
-    .sf__row::-webkit-scrollbar { display: none; }
-    .sf__tray { flex-wrap: nowrap; padding: 0; gap: var(--space-2); border: 0; background: none; border-radius: 0; max-width: none; }
-    .sf__tray :global(.sf__chip) { height: 44px; padding-inline: 12px 16px; gap: var(--space-2); border-color: var(--border-1); background: var(--surface-2); font-size: var(--text-label); font-weight: 600; }
-    .sf__tray :global(.sf__chip[data-sf-filter='all']) { padding-inline: 16px; }
-    .sf__blip { display: flex; }
-    .sf__grid {
-      display: flex;
-      gap: var(--space-3);
-      margin-top: var(--space-5);
-      margin-inline: calc(-1 * var(--page-pad));
-      padding-inline: var(--page-pad);
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-padding-inline: var(--page-pad);
       overscroll-behavior-x: contain;
       scrollbar-width: none;
     }
-    .sf__grid::-webkit-scrollbar { display: none; }
-    .sf__grid > li { flex: 0 0 72%; scroll-snap-align: start; }
-    .sf__grid :global(.card__media) { aspect-ratio: 16 / 9 !important; }
-    .sf__grid :global(.card--line .card__title), .sf__grid :global(.card--line .card__meta) { font-size: var(--text-title); }
-    .sf__more { justify-content: flex-start; margin-top: var(--space-6); }
+    .sf__band::-webkit-scrollbar { display: none; }
+    .sf__types { flex-wrap: nowrap; column-gap: var(--space-5); }
+    .sf__band.is-off .sf__types { opacity: 1; visibility: visible; }
+    .sf__index { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-2); margin-top: var(--space-3); padding: var(--space-3); }
+    .sf[data-view='list'] .sf__index { grid-template-columns: minmax(0, 1fr); }
+    .sf[data-view='list'] .sf__kind { max-width: 104px; }
+    /* Until the script has run, the phone already shows only the first twelve (no flash of the whole index). */
+    :global(html.js) .sf:not([data-ready]) [data-capped] { display: none; }
+    .sf__more { flex-direction: column; align-items: center; margin-top: var(--space-6); }
     .sf__more :global(.btn) { --h: var(--ctrl-size); }
   }
 </style>

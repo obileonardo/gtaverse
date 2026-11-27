@@ -281,3 +281,7 @@ The home hero's background is the exception: Rockstar's official trailer clips a
 ## Known decisions open to the owner
 
 See the "design foundation" rows in `docs/DECISIONS.md`.
+
+## Phase 7a: Selected finds and the Check
+
+Home chapter 002 (`SelectedFinds.astro`, `selected-finds.ts`) is now the full index of safe finds (Museum of the Human Web, LR53 to LR57): square view boxes (Grid, List, By date), "Show filters", a hairline band of type boxes, KOBU's count and "Clear filters", and one dense grid of titled 16:9 tiles framed by a hairline down each side; a missing or failed still shows the type's blip. This replaces the Unseen Studio pills and 1.95:1 grid named in the file table above. The boxes are `src/components/ui/Check.astro`: a real checkbox or radio with a visible label, a 20px square with a 1px `--border-2` edge, filled with `--accent-ink` when on, the label in `--accent-text` at 600, at least 44 tall.

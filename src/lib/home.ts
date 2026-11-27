@@ -40,22 +40,34 @@ export const spotlightFinds = (hero: Find[], n = 6) => finds.filter((f) => plays
 
 // ---------- 002 Selected finds ----------
 
-export type Filter = { id: string; label: string; count: number; finds: Find[] };
+export type IndexType = { id: string; label: string; count: number };
+export type IndexDate = { date: string | null; finds: Find[] };
+export type FindIndex = { finds: Find[]; types: IndexType[]; dates: IndexDate[] };
+
+/** The earliest date among a find's sources (when it was first reported), or null when no source is dated. */
+export const firstReported = (f: Find): string | null => f.sources.map((s) => s.published).filter((d): d is string => Boolean(d)).sort()[0] ?? null;
 
 /**
- * The filter row and what each filter shows: "All" then each category with a safe find. Each filter lists up to six
- * safe finds, those with a still first. "All" leads with the finds the hero and the Spotlight have not shown yet.
+ * The full index (owner decision, 27 Nov 2026): every safe find, those with a still first, then content order; the
+ * types that have a safe find, with their counts; and the same finds grouped by the day they were first reported,
+ * newest first, with the undated ones last.
  */
-export function selectedFilters(shown: Find[], n = 6): Filter[] {
+export function findIndex(): FindIndex {
   const safe = finds.filter(isSafe);
-  const order = (list: Find[]) => [...list.filter((f) => findStill(f)), ...list.filter((f) => !findStill(f))];
-  const all = order([...safe.filter((f) => !shown.includes(f)), ...safe.filter((f) => shown.includes(f))]).slice(0, n);
-  const out: Filter[] = [{ id: 'all', label: 'All', count: safe.length, finds: all }];
-  for (const c of categories.filter((c) => c.kind === 'find')) {
-    const inCat = safe.filter((f) => f.category === c.id);
-    if (inCat.length) out.push({ id: c.id, label: categoryChipLabel(c.id), count: inCat.length, finds: order(inCat).slice(0, n) });
+  const ordered = [...safe.filter((f) => findStill(f)), ...safe.filter((f) => !findStill(f))];
+  const types = categories
+    .filter((c) => c.kind === 'find')
+    .map((c) => ({ id: c.id, label: categoryChipLabel(c.id), count: safe.filter((f) => f.category === c.id).length }))
+    .filter((t) => t.count > 0);
+  const byDay = new Map<string | null, Find[]>();
+  for (const f of ordered) {
+    const d = firstReported(f);
+    byDay.set(d, [...(byDay.get(d) ?? []), f]);
   }
-  return out;
+  const dates = [...byDay.entries()]
+    .sort(([a], [b]) => (a === null ? 1 : b === null ? -1 : b.localeCompare(a)))
+    .map(([date, list]) => ({ date, finds: list }));
+  return { finds: ordered, types, dates };
 }
 
 // ---------- 003 New this week ----------
