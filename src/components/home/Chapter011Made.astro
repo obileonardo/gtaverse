@@ -1,181 +1,115 @@
 ---
-// Home 011, How it is made (board r2: FLORA, Love). An intro line with an italic phrase, then three tall numbered
-// cards ("01 Sources", "02 Credit", "03 Words"), each holding a real component as its preview (not a picture of
-// one), with a title and two lines under it. The three principles are the About page's "How it is made" (Q2).
+// Home, "How it is made" (phase 7e, the owner's Places pick; it now follows "Most credited": people, then method).
+// Places' "Our curators" block in the site's words: a quiet title, then three headed paragraphs (Places' Mission,
+// Perspective, Approach) that are the About page's "How it is made" principles, one inverse button, a hairline, then
+// a second group ("Our team / Editorial" in Places): what we cite, with the source totals counted from content, the
+// outlets we cite most as link chips and the date the newest change landed (Lightyear's sources and stamp), and the
+// editorial policy link. Phone: one column, as drawn. Desktop and tablet: the same blocks in komoot's two columns,
+// the method left and the sources right (LR77).
 import ChapterHead from './ChapterHead.astro';
 import Button from '../ui/Button.astro';
+import Chip from '../ui/Chip.astro';
 import Icon from '../ui/Icon.astro';
-import Verification from '../Verification.astro';
-import Clip from '../Clip.astro';
 import { finds } from '../../lib/content';
-import { showcaseable } from '../../lib/media';
-import { finders } from '../../lib/credits';
-import { platformName } from '../../lib/finds';
+import { outletCredits, creditTotals } from '../../lib/credits';
+import { formatDate } from '../../lib/finds';
 
 interface Props { index?: string }
-const { index = '011' } = Astro.props;
+const { index = '012' } = Astro.props;
 
-const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
-// 01: a safe, multi-source find with the most sources: its source rows, as the find page draws them.
-const sourced = finds.filter((f) => showcaseable(f) && f.verification === 'multi-source').sort((a, b) => b.sources.length - a.sources.length)[0];
-// 02: the most credited finder or creator, with two of their finds.
-const person = finders[0];
-const personFinds = person ? [...new Map(person.posts.map((p) => [p.find.slug, p.find])).values()].slice(0, 2) : [];
-// 03: a safe find with a playable clip, other than the one above: our summary, its clip credit and the clip frame.
-const worded = finds.find((f) => showcaseable(f) && f !== sourced && f.clip && f.summary.length < 220) ?? finds.find((f) => showcaseable(f) && f !== sourced);
-const initial = (n: string) => n.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
-const levels = ['multi-source', 'single-source', 'rumor', 'debunked'];
+const count = (t: string) => finds.reduce((n, f) => n + f.sources.filter((s) => s.type === t).length, 0);
+const fmt = (n: number) => n.toLocaleString('en-GB');
+const videos = count('youtube');
+const articles = count('article');
+const wikis = count('wiki');
+const totals = [{ n: videos, label: 'videos' }, { n: articles, label: 'articles' }, { n: wikis, label: 'wiki pages' }];
+const chips = outletCredits.filter((o) => o.url).slice(0, 4);
+const updated = finds.map((f) => f.updated_at ?? f.added_at ?? '').sort().at(-1);
+const method = [
+  { h: 'Sources first', p: 'No source link, no fact. Each find carries a verification level: multi-source, single source, rumour or debunked. Rumours stay off the site until a second independent source shows them.' },
+  { h: 'Credit the finder', p: "When a source names who found something first, they are credited by handle with a link to their post. Clips play from the creator's own post." },
+  { h: 'Our own words', p: "Summaries are written by us. We never copy another guide's text or another map's pins." },
+];
 ---
-<section class="ch11" aria-labelledby="ch11-title">
+<section class="hm" aria-labelledby="hm-title">
   <div class="container">
     <ChapterHead index={index} label="How it is made" heading={false} />
-    <div class="ch11__intro">
-      <h2 class="ch11__title" id="ch11-title">Sources first, <em>credit always.</em></h2>
-      <p class="ch11__sub">Every find carries its sources, its finder and our own words.</p>
-      <Button href="/editorial-policy" variant="outline" size="m" iconEnd="arrow-right">Editorial policy</Button>
-    </div>
+    <div class="hm__cols">
+      <div class="hm__method">
+        <h2 class="hm__title" id="hm-title">Sources first, credit always.</h2>
+        <ul class="hm__items" role="list" data-reveal>
+          {method.map((m) => (
+            <li>
+              <h3 class="hm__h">{m.h}</h3>
+              <p class="hm__p">{m.p}</p>
+            </li>
+          ))}
+        </ul>
+        <Button href="/finders" variant="inverse" size="m" class="hm__btn">All finders</Button>
+      </div>
 
-    <ol class="ch11__cards" role="list" data-reveal>
-      <li class="ch11__card">
-        <p class="ch11__head" aria-hidden="true"><span class="ch11__n">01</span>Sources</p>
-        <div class="ch11__preview ch11__preview--sources" aria-hidden="true">
-          <div class="ch11__badges">{levels.map((l, i) => <span class="ch11__part" style={`--i: ${i}`}><Verification level={l} /></span>)}</div>
-          {sourced && (
-            <ul class="ch11__sources" role="list">
-              {sourced.sources.slice(0, 3).map((s, i) => (
-                <li class="ch11__part ch11__source" style={`--i: ${i + 4}`}>
-                  <span class="ch11__source-thumb"><Icon name={s.type === 'youtube' ? 'clip' : s.type === 'wiki' ? 'link' : 'article'} size={20} /></span>
-                  <span class="ch11__source-text">
-                    <span class="ch11__source-kind">{platformName(s.type)}</span>
-                    <span class="ch11__source-title">{s.creator ?? host(s.url)}</span>
-                    <span class="ch11__source-url">{host(s.url)}</span>
-                  </span>
-                </li>
-              ))}
+      <div class="hm__sources">
+        <h3 class="hm__title">In the sources</h3>
+        <h4 class="hm__h hm__h--sub">What we cite</h4>
+        <p class="hm__p">Every find lists the posts, videos and articles it comes from. Across all finds we cite {fmt(creditTotals.outlets)} outlets and {fmt(creditTotals.people)} finders and creators, in these sources:</p>
+        <ul class="hm__stats" role="list">
+          {totals.map((t) => <li><span class="hm__num">{fmt(t.n)}</span><span class="hm__unit">{t.label}</span></li>)}
+        </ul>
+        {chips.length > 0 && (
+          <div class="hm__chips">
+            <p class="hm__label">Cited most</p>
+            <ul class="hm__chiplist" role="list">
+              {chips.map((o) => <li><Chip href={o.url!} rel="noopener" target="_blank">{o.name}</Chip></li>)}
             </ul>
-          )}
-        </div>
-        <div class="ch11__foot">
-          <h3 class="ch11__h">No source link, no fact.</h3>
-          <p class="ch11__p">Each find carries a verification level and the sources that back it{sourced && <>, like the {sourced.sources.length} behind <a href={`/finds/${sourced.slug}`}>{sourced.title}</a></>}.</p>
-        </div>
-      </li>
-
-      <li class="ch11__card">
-        <p class="ch11__head" aria-hidden="true"><span class="ch11__n">02</span>Credit</p>
-        {person && (
-          <div class="ch11__preview ch11__preview--credit" aria-hidden="true">
-            <div class="ch11__person ch11__part" style="--i: 0">
-              <div class="ch11__who">
-                <span class="ch11__avatar">{initial(person.name)}</span>
-                <span class="ch11__name"><span class="ch11__handle">{person.name}</span><span class="ch11__role">{person.platform}</span></span>
-              </div>
-              <div class="ch11__bar">
-                <span class="ch11__counts">{person.finds} {person.finds === 1 ? 'find' : 'finds'}{person.clips > 0 && <> · {person.clips} {person.clips === 1 ? 'clip' : 'clips'}</>}</span>
-                <span class="btn btn--outline btn--m">Profile <Icon name="arrow-up-right" size={20} /></span>
-              </div>
-              <ul class="ch11__pfinds" role="list">
-                {personFinds.map((f, i) => <li class="ch11__part" style={`--i: ${i + 1}`}>{f.title}</li>)}
-              </ul>
-            </div>
           </div>
         )}
-        <div class="ch11__foot">
-          <h3 class="ch11__h">Credit the finder.</h3>
-          <p class="ch11__p">Who showed it first, by handle, linked to their own post. <a href="/finders">All finders</a>.</p>
-        </div>
-      </li>
-
-      <li class="ch11__card">
-        <p class="ch11__head" aria-hidden="true"><span class="ch11__n">03</span>Words</p>
-        {worded && (
-          <div class="ch11__preview ch11__preview--words">
-            <div class="ch11__part" style="--i: 0">{worded.clip && <Clip clip={worded.clip} title={worded.title} caption={false} />}</div>
-            <p class="ch11__summary ch11__part" style="--i: 1">{worded.summary}</p>
-            <p class="ch11__clipby ch11__part" style="--i: 2">{worded.clip?.creator ? `Clip by ${worded.clip.creator}` : 'Clip from the creator'}</p>
-          </div>
-        )}
-        <div class="ch11__foot">
-          <h3 class="ch11__h">Our own words.</h3>
-          <p class="ch11__p">Summaries are ours. Clips play from the creator's own post.</p>
-        </div>
-      </li>
-    </ol>
+        {updated && <p class="hm__stamp">Last updated {formatDate(updated)}</p>}
+        <a class="hm__link" href="/editorial-policy">Editorial policy <Icon name="chevron-right" size={16} stroke={2} /></a>
+      </div>
+    </div>
   </div>
 </section>
 
 <style>
-  .ch11 { padding-top: var(--space-chapter); }
-  .ch11__intro { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-10); }
-  .ch11__title { font-size: 36px; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; color: var(--text-1); }
-  .ch11__title em { font-style: italic; }
-  @media (max-width: 767px), (pointer: coarse) { .ch11__intro :global(.btn) { --h: 44px; } }
-  .ch11__sub { font-size: var(--text-body-l); line-height: 1.45; color: var(--text-2); margin-bottom: var(--space-4); }
+  .hm { padding-top: var(--space-chapter); }
+  /* Desktop and tablet: komoot's two equal columns, 48 apart. */
+  .hm__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); margin-top: var(--space-12); }
+  .hm__method, .hm__sources { min-width: 0; }
+  /* Places' type, relative to its 15pt body: titles 1.27x, headings 1.13x, body at a 1.3 line. */
+  .hm__title { font-size: var(--text-title-l); font-weight: 500; line-height: 1.3; color: var(--text-1); }
+  .hm__items { display: flex; flex-direction: column; gap: var(--space-6); margin-top: var(--space-6); }
+  .hm__h { font-size: var(--text-title); font-weight: 500; line-height: 1.3; color: var(--text-1); }
+  .hm__h--sub { margin-top: var(--space-6); }
+  .hm__p { margin-top: var(--space-1); max-width: var(--measure); font-size: var(--text-body); line-height: 1.4; color: var(--text-1); }
+  .hm__method :global(.hm__btn) { margin-top: var(--space-6); }
 
-  .ch11__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin-top: var(--space-12); }
-  .ch11__card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 552px;
-    padding: var(--space-8);
-    border: var(--border-w) solid var(--rule-soft);
-    border-radius: var(--radius-xl);
-    background: var(--bg);
-    overflow: clip;
+  /* Dropbox (Like): the totals as numbers over small captions, formatted, no icons. */
+  .hm__stats { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-10); margin-top: var(--space-4); }
+  .hm__stats li { display: flex; flex-direction: column; gap: 2px; }
+  .hm__num { font-size: var(--text-h1); font-weight: 600; line-height: var(--leading-tight); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--text-1); }
+  .hm__unit { font-size: var(--text-caption); color: var(--text-2); }
+  .hm__chips { margin-top: var(--space-6); }
+  .hm__label { font-size: var(--text-caption); color: var(--text-2); }
+  .hm__chiplist { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+  .hm__stamp { margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--border-w) solid var(--border-1); font-size: var(--text-caption); color: var(--text-2); }
+  .hm__link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: var(--space-2); font-size: var(--text-body-s); font-weight: 600; color: var(--text-1); }
+  .hm__link :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .hm__link:hover :global(.icon) { transform: translateX(3px); }
   }
-  .ch11__head { display: flex; align-items: baseline; gap: 0.18em; font-size: clamp(44px, 4vw, 58px); font-weight: 500; line-height: 1; letter-spacing: -0.035em; color: var(--text-1); white-space: nowrap; padding-block: 0.1em; }
-  .ch11__n { color: var(--text-3); }
-  .ch11__preview { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); margin-block: var(--space-6); min-width: 0; }
-  .ch11__foot { display: flex; flex-direction: column; gap: var(--space-2); }
-  .ch11__h { font-size: var(--text-title-l); font-weight: 600; line-height: 1.3; color: var(--text-1); }
-  .ch11__p { font-size: var(--text-body-s); line-height: 1.45; color: var(--text-2); }
-  .ch11__p a { color: var(--text-1); text-decoration: underline; text-decoration-color: var(--border-2); text-underline-offset: 3px; }
 
-  /* 01: the four verification badges, then the find page's source rows. */
-  .ch11__badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .ch11__sources { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
-  .ch11__source { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2); border-radius: var(--radius-m); border: var(--border-w) solid var(--border-1); min-width: 0; }
-  .ch11__source-thumb { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-s); background: var(--surface-2); color: var(--text-3); }
-  .ch11__source-text { display: flex; flex-direction: column; min-width: 0; }
-  .ch11__source-kind { color: var(--text-2); font-size: var(--text-caption); }
-  .ch11__source-title, .ch11__source-url { overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
-  .ch11__source-title { font-weight: 600; font-size: var(--text-body-s); }
-  .ch11__source-url { color: var(--text-2); font-size: var(--text-caption); }
-
-  /* 02: the finders page's credit card. */
-  .ch11__preview--credit { justify-content: center; }
-  .ch11__person { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-xl); background: var(--surface-1); border: var(--border-w) solid var(--border-1); }
-  .ch11__who { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-  .ch11__avatar { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-size: 22px; font-weight: 500; }
-  .ch11__name { display: flex; flex-direction: column; min-width: 0; }
-  .ch11__handle { font-weight: 600; overflow-wrap: anywhere; }
-  .ch11__role { color: var(--text-2); font-size: var(--text-body-s); }
-  .ch11__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-  .ch11__counts { font-family: var(--font-mono); font-size: var(--text-mono); color: var(--text-2); }
-  .ch11__bar .btn { pointer-events: none; }
-  .ch11__pfinds { display: flex; flex-direction: column; padding-top: var(--space-2); border-top: var(--border-w) solid var(--border-1); }
-  .ch11__pfinds li { padding-block: var(--space-2); font-weight: 500; font-size: var(--text-body-s); line-height: 1.35; }
-
-  /* 03: a clip frame, our summary, the clip credit. */
-  .ch11__summary { font-size: var(--text-body-s); line-height: 1.5; color: var(--text-1); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-  .ch11__clipby { font-size: var(--text-label); font-weight: 500; color: var(--text-2); }
-
-  /* Orchestration: the card lands (site-motion.ts reveals the row), then its preview's parts fade in, 40ms apart. */
-  :global(html.js:not(.rv-off)) .ch11__card:not([data-rv]) .ch11__part { opacity: 0; }
-  .ch11__card[data-rv='in'] .ch11__part { animation: ch11-part 320ms var(--ease-out) calc(var(--rv-delay, 0ms) + 260ms + var(--i, 0) * 40ms) both; }
-  @keyframes ch11-part { from { opacity: 0; } }
-
-  @media (max-width: 1023px) {
-    .ch11__cards { grid-template-columns: minmax(0, 1fr); }
-    .ch11__card { min-height: 0; }
-  }
+  /* Phone: Places as drawn, one column; the hairline between the two groups. */
   @media (max-width: 767px) {
-    .ch11__card { padding: var(--space-6); }
-    .ch11__head { font-size: 48px; }
+    /* Places runs people and method as one column: the chapter rule stands in for its section break, so the gap
+       above it is a section gap here, not the chapter gap. */
+    .hm { padding-top: var(--space-12); }
+    .hm__cols { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: var(--space-8); }
+    .hm__stats { gap: var(--space-4) var(--space-8); }
+    .hm__p { font-size: var(--text-body-s); line-height: 1.3; }
+    .hm__method :global(.hm__btn) { --h: 44px; }
+    .hm__sources { margin-top: var(--space-6); padding-top: var(--space-8); border-top: var(--border-w) solid var(--border-1); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .ch11__card[data-rv='in'] .ch11__part { animation-duration: var(--dur-fade-reduced); animation-delay: 0ms; }
+    .hm__link :global(.icon) { transition: none; }
   }
 </style>
