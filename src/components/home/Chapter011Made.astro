@@ -15,7 +15,7 @@ import { outletCredits, creditTotals } from '../../lib/credits';
 import { formatDate } from '../../lib/finds';
 
 interface Props { index?: string }
-const { index = '012' } = Astro.props;
+const { index = '011' } = Astro.props;
 
 const count = (t: string) => finds.reduce((n, f) => n + f.sources.filter((s) => s.type === t).length, 0);
 const fmt = (n: number) => n.toLocaleString('en-GB');
