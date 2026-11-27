@@ -28,7 +28,7 @@ import Chapter015Gtaverse from '../components/home/Chapter015Gtaverse.astro';
 import { finds } from '../lib/content';
 import { findStill, findClipLabels } from '../lib/media';
 import { addedThisWeek } from '../lib/feed';
-import { spotlightFinds, selectedFilters, newThisWeek, clipFinds, typeEntries, topRegions, layerCards, collectibleTotal } from '../lib/home';
+import { spotlightFinds, findIndex, newThisWeek, clipFinds, typeEntries, topRegions, layerCards, collectibleTotal } from '../lib/home';
 import { website, organization } from '../lib/seo';
 
 // Finds with a still come first; finds without one still qualify and show the sunrise glow instead.
@@ -39,8 +39,8 @@ const leadStill = lead ? findStill(lead) : null;
 
 // What 001 to 008 show (src/lib/home.ts); 009 to 015 read their own data.
 const spot = spotlightFinds(featured);
-const filters = selectedFilters([...featured, ...spot]);
-const shownAbove = [...featured, ...spot, ...filters[0].finds];
+// Selected finds is the full index of safe finds (LR55), so New this week skips only what the hero and Spotlight show.
+const shownAbove = [...featured, ...spot];
 const fresh = newThisWeek(shownAbove);
 const freshTotal = addedThisWeek().length;
 const layers = layerCards();
@@ -57,7 +57,7 @@ const layers = layerCards();
     {/* The search band (LR28): unnumbered, so Spotlight stays 001. */}
     <AskBar />
     <Spotlight index={1} finds={spot} />
-    <SelectedFinds index={2} filters={filters} />
+    <SelectedFinds index={2} entries={findIndex()} />
     <NewThisWeek index={3} finds={fresh} total={freshTotal} />
     <WatchClips index={4} finds={clipFinds()} />
     <Manifesto index={5} />
