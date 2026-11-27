@@ -196,8 +196,10 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   /* PamPam's card: 60% of the content box. Its head is the chapter's main button ("Open the map", the primary pill)
      beside one line on what the map does; the framed product under it is the supporting picture (LR24). The whole
      card is the link; the pill is drawn, not a second control. */
-  .pv { display: block; width: min(100%, 710px); margin: var(--space-16) auto 0; border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); overflow: hidden; background: var(--surface-1); transition: transform var(--dur-press) var(--ease-out); }
-  .pv:active { transform: scale(0.99); }
+  .pv { display: block; width: min(100%, 710px); margin: var(--space-16) auto 0; border-radius: var(--radius-xl); border: var(--border-w) solid var(--border-1); overflow: hidden; background: var(--surface-1); }
+  /* One press, one movement: pressing anywhere on the card presses the pill (0.97, the shared .btn press); the card
+     itself stays still, so two scales never run at once (#87 review). */
+  .pv:active .pv__btn { transform: scale(0.97); }
   .pv__head { padding: var(--space-6) var(--space-6) var(--space-6) var(--space-8); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lede btn'; align-items: center; gap: var(--space-6); }
   .pv__btn { grid-area: btn; }
   .pv__btn :global(.icon) { transition: transform var(--dur-press) var(--ease-out); }
@@ -261,7 +263,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
   @media (prefers-reduced-motion: reduce) {
     :global(html.js:not(.rv-off)) .mp__art:not([data-in]) .mp__svg { clip-path: none; opacity: 0; }
     .mp__art[data-in='in'] .mp__svg { animation: mp-fade var(--dur-fade-reduced) linear both; }
-    .pv, .pv__btn :global(.icon) { transition: none; }
+    .pv__btn :global(.icon) { transition: none; }
     .mp__tags, .mp__tag, .mp__pin--lit, .mp[data-engaged] .mp__tags, .mp__tag[data-active], .mp__pins[data-active] .mp__pin--lit { transition: opacity var(--dur-fade-reduced) linear; }
     .pv:hover .pv__btn :global(.icon) { transform: none; }
   }

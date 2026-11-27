@@ -222,6 +222,10 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     .ch10[data-fv-in='in'] .ch10__grid li, .ch10 .ch10__grid.is-swap li { animation: ch10-in var(--dur-fade-reduced) var(--ease-colour) both; }
     .ch10__still img, .ch10__slide img { transition: none; }
   }
+  /* A grid shown by a keyboard choice is just there: unhiding it would replay the first-view rise (#80 review N14).
+     So is the area already on screen when it is chosen again at once (reduced motion). Last in the sheet so it also
+     wins over the reduced-motion fade (keyboard actions never animate). */
+  .ch10 .ch10__grid.is-still li { animation: none; }
 </style>
 
 <script>
@@ -330,6 +334,33 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
     document.fonts?.ready.then(fitWord, () => {});
     let fitting = false;
     new ResizeObserver(() => { if (!fitting) { fitting = true; requestAnimationFrame(() => { fitting = false; fitWord(); }); } }).observe(stage);
+    // Nothing rises while an area leaves (#80 review N13). When its leave starts, each tile of the shown grid is frozen
+    // where it is: its rise (first view) or fade-in (a swap) is replaced by its current opacity and offset, written
+    // inline with `animation: none`, so no later style change (reduced motion switched on mid-leave) can move it.
+    // Only the tiles (li): their images' load fade (img-in) is never touched. Going back to that area brings the tiles
+    // on to rest from where they stopped (thaw); any other way the grid is shown or hidden releases them (show).
+    const frozen = new Set<HTMLElement>();
+    const freeze = (g: HTMLElement | undefined) => g?.querySelectorAll<HTMLElement>(':scope > li').forEach((li) => {
+      const cs = getComputedStyle(li);
+      const o = cs.opacity, t = cs.translate;
+      li.getAnimations().forEach((a) => a.cancel());
+      li.style.animation = 'none';
+      li.style.opacity = o;
+      li.style.translate = t;
+      frozen.add(li);
+    });
+    const thaw = (g: HTMLElement | undefined, full: number, ease: string) => g?.querySelectorAll<HTMLElement>(':scope > li').forEach((li) => {
+      if (!frozen.has(li)) return;
+      const o = Math.min(1, Math.max(0, parseFloat(li.style.opacity) || 0)), t = li.style.translate || 'none';
+      li.style.opacity = li.style.translate = '';
+      if (o < 0.999 || (t !== 'none' && t !== '0px')) li.animate([{ opacity: o, translate: t }, { opacity: 1, translate: '0px 0px' }], { duration: Math.max(1, full * (1 - o)), easing: ease });
+    });
+    const release = (g: HTMLElement) => g.querySelectorAll<HTMLElement>(':scope > li').forEach((li) => {
+      if (!frozen.has(li)) return;
+      li.getAnimations().forEach((a) => a.cancel());
+      li.style.animation = li.style.opacity = li.style.translate = '';
+      frozen.delete(li);
+    });
     const shownEls = () => { const k = shownIndex(); return [grids[k], cars[k], wordText].filter((el): el is HTMLElement => !!el); };
     // Fades `el` from its current opacity to `to`, over the part of `full` that distance needs.
     const fadeTo = (el: HTMLElement, to: 0 | 1, full: number, ease: string) => {
@@ -337,12 +368,16 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       el.getAnimations().forEach((a) => a.cancel());
       return el.animate([{ opacity: from }, { opacity: to }], { duration: Math.max(1, full * Math.abs(to - from)), easing: ease, fill: 'forwards' });
     };
-    const show = (i: number, still: boolean) => {
+    const show = (i: number, still: boolean, key = false) => {
       turn++;
       grids.forEach((g, k) => {
+        const kept = k === i && !g.hidden; // the area on screen stays (chosen again at once)
         g.getAnimations().forEach((a) => a.cancel());
         g.hidden = k !== i;
         g.classList.remove('is-swap');
+        // A keyboard choice, or an instant choice of the area already on screen, shows its tiles at rest.
+        g.classList.toggle('is-still', k === i && (key || (still && kept)));
+        release(g);
         if (k === i && !still) { void g.offsetWidth; g.classList.add('is-swap'); }
       });
       cars.forEach((c, k) => {
@@ -361,14 +396,18 @@ const tile = (f: Find) => ({ f, still: findStill(f) });
       const dir = i > area ? 1 : -1;
       area = i;
       target = i;
-      if (byKey || reduceMotion()) show(i, true);
+      if (byKey || reduceMotion()) show(i, true, byKey);
       else if (i === shownIndex()) {
-        // Back to the area that is still on screen (leaving, or arriving): bring it back up from where it is.
+        // Back to the area that is still on screen (leaving, or arriving): bring it back up from where it is; tiles
+        // that were still arriving when it began to leave carry on from where they stopped.
         const t = ++turn;
+        thaw(grids[shownIndex()], ms('--dur-swap-in', 280), css('--ease-out'));
         const anims = shownEls().map((el) => fadeTo(el, 1, ms('--dur-swap-in', 280), css('--ease-out')));
         Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) anims.forEach((a) => a.cancel()); }, () => {});
       } else {
         const t = ++turn;
+        // Tiles still arriving stop where they are, so nothing rises while their grid leaves (#80 review N13).
+        freeze(grids[shownIndex()]);
         const anims = shownEls().map((el) => fadeTo(el, 0, ms('--dur-swap-out', 180), css('--ease-standard')));
         Promise.all(anims.map((a) => a.finished)).then(() => { if (t === turn) show(target, false); }, () => {});
       }

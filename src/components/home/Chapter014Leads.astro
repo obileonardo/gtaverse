@@ -4,6 +4,7 @@
 // at 40% of the height and the second at 60%. The figures are ours: two original line-art silhouettes drawn in code in
 // the hero's line-art language (leads-art.ts), not likenesses. They draw themselves on the first view, the second
 // starting when the first is half drawn. The words are the bios in our protagonists explainer, citations removed.
+// Once drawn, each figure turns a few degrees toward a mouse pointer over the chapter (leads-turn.ts, LR43 to LR45).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ChapterHead from './ChapterHead.astro';
@@ -114,10 +115,14 @@ const leads = [
 
 <script>
   import { createLeadArt } from './leads-art';
+  import { initLeadsTurn } from './leads-turn';
   import { onFirstView, reduceMotion } from './first-view';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-ch14]')) {
-    const arts = [...root.querySelectorAll<HTMLCanvasElement>('[data-ch14-art]')].map((c) => createLeadArt(c, c.dataset.ch14Art as 'jason' | 'lucia'));
+    const canvases = [...root.querySelectorAll<HTMLCanvasElement>('[data-ch14-art]')];
+    const arts = canvases.map((c) => createLeadArt(c, c.dataset.ch14Art as 'jason' | 'lucia'));
+    // Phase 8 (LR43 to LR45): once drawn, the figures turn a few degrees toward a mouse pointer over the chapter.
+    initLeadsTurn(root, canvases.map((c, i) => ({ el: c, art: arts[i] })));
     onFirstView([root], () => {
       root.dataset.in = 'in';
       if (reduceMotion()) { arts.forEach((a) => a.finish()); return; }

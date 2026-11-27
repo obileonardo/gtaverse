@@ -4,8 +4,9 @@
 //   Desktop (1280 and up): the menu is one surface that grows out of the island to fill the window. Left, a tall
 //   art panel with cut corners; hovering or focusing a link crossfades it to that link's picture (official cover
 //   art per game, the GTA VI wallpapers and our own coast drawing for the main links). Middle, the search, the
-//   numbered heavy caps links under bracket labels, the small utility links, the chapter setting and the theme.
-//   Right, the Games list (decisions GS1 to GS6): official logo plate, name, connection count, by group.
+//   numbered heavy caps links under bracket labels, the small utility links, the chapter setting and the theme (the
+//   optional cursor setting beside it, LR50). Right, the Games list (decisions GS1 to GS6): official logo plate, name,
+//   connection count, by group.
 //   Phone and tablet: the same surface as a full screen sheet; the art panel is a short banner that follows the
 //   item last focused or touched, the sections stack below and scroll.
 // The menu button turns into the close cross; Escape closes; focus stays inside the header while it is open and
@@ -15,6 +16,7 @@ import Icon from '../ui/Icon.astro';
 import Logo from '../ui/Logo.astro';
 import GamePlate from '../games/GamePlate.astro';
 import ChapterControl from '../ChapterControl.astro';
+import CursorControl from '../CursorControl.astro';
 import { nav, isCurrent } from '../../lib/nav';
 import { switcherGroups, connectionCount, games as allGames, TRADEMARK_LINE } from '../../lib/games';
 import { gameArt, linkArt, type MenuArt } from '../../lib/menu';
@@ -156,6 +158,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <span class="theme-icon theme-icon--sun"><Icon name="sun" size={20} /></span>
           <span class="theme-icon theme-icon--moon"><Icon name="moon" size={20} /></span>
         </button>
+        <CursorControl class="menu__cursor" />
       </div>
     </div>
   </div>
@@ -766,11 +769,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
     .games__all:hover { color: var(--text-1); }
   }
 
-  /* ---------- Foot: utility links, chapter setting, theme ---------- */
+  /* ---------- Foot: utility links, chapter setting; corner: theme and the cursor setting ---------- */
   .menu__foot { grid-area: foot; align-self: end; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
   .menu__util { display: flex; flex-wrap: wrap; gap: 4px 20px; }
   .menu__util-link { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; color: var(--text-2); font-size: var(--text-body-s); transition: color var(--dur-colour) var(--ease-colour); }
-  .menu__corner { grid-area: corner; align-self: end; display: flex; }
+  .menu__corner { grid-area: corner; align-self: end; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4) var(--space-6); }
   .menu__theme {
     display: grid;
     place-items: center;

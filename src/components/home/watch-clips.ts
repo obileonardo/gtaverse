@@ -90,10 +90,16 @@ export function initWatchClips(root: HTMLElement) {
       info.querySelector('[data-wc-creator]')!.textContent = c.creator;
       info.querySelector<HTMLAnchorElement>('[data-wc-post]')!.href = c.url;
     };
+    // A pick while the words are still fading leaves from where they are: their opacity and their place right now
+    // (#80 review N8). Cancelling first and fading out from 1 jumped them back to full.
+    const now = getComputedStyle(info);
+    const from = Math.min(1, Math.max(0, parseFloat(now.opacity) || 0));
+    const at = now.transform === 'none' ? 'none' : now.transform;
     info.getAnimations().forEach((a) => a.cancel());
     if (instant || reducedMotion()) { fill(); if (!instant) info.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur-fade-reduced', 150) }); }
     else {
-      const out = info.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms('--dur-morph-out', 180), easing: v('--ease-standard', 'ease'), fill: 'forwards' });
+      // The rise in has stopped where it was, so nothing moves while they leave.
+      const out = info.animate([{ opacity: from, transform: at }, { opacity: 0, transform: at }], { duration: Math.max(1, ms('--dur-morph-out', 180) * from), easing: v('--ease-standard', 'ease'), fill: 'forwards' });
       out.finished.then(() => {
         fill();
         out.cancel();
