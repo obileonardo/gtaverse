@@ -1,8 +1,8 @@
 // The new finds feed (RSS 2.0): every published find, newest first by added_at. Spoiler and mature finds carry a
-// gate line instead of their summary, as on the rest of the site.
+// gate line instead of their summary, as on the rest of the site; a mature find is titled "Mature find: <type>" (LR83).
 import type { APIRoute } from 'astro';
 import { byNewest, safeSummary } from '../lib/feed';
-import { categoryLabel, regionLabel } from '../lib/media';
+import { categoryLabel, regionLabel, publicTitle } from '../lib/media';
 import { creditLine } from '../lib/finds';
 import { site, absolute } from '../lib/site';
 
@@ -17,7 +17,7 @@ export const GET: APIRoute = () => {
     const desc = [safeSummary(f), [regionLabel(f), credit].filter(Boolean).join('. ')].filter(Boolean).join(' ');
     return [
       '    <item>',
-      `      <title>${esc(f.title)}</title>`,
+      `      <title>${esc(publicTitle(f))}</title>`,
       `      <link>${url}</link>`,
       `      <guid isPermaLink="true">${url}</guid>`,
       `      <pubDate>${rfc822(f.added_at)}</pubDate>`,

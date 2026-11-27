@@ -9,17 +9,16 @@
 // columns, four cards. 1024 and wider: three columns, six cards; the follow card spans the row. From 768, when the
 // cards come from more than one day, the headings step aside and each card carries its date as a badge. The dates are
 // each find's real added_at. The chapter is left out when nothing was added in the seven days before the build.
-// A mature find's card reads "Mature find" (homeTitle, LR78) in its title and every accessible name, over the gate
-// line, with the type on the panel; it still opens the find page, where the mature gate applies.
+// A mature find's card reads "Mature find: <type>" (publicTitle, LR78, LR83) in its title and every accessible name,
+// over the gate line, with the type on the panel; it still opens the find page, where the mature gate applies.
 import Badge from '../ui/Badge.astro';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import ChapterHead from './ChapterHead.astro';
 import type { Find } from '../../lib/content';
 import { cardImage, formatDate } from '../../lib/finds';
-import { categoryLabel } from '../../lib/media';
+import { categoryLabel, publicTitle } from '../../lib/media';
 import { safeSummary } from '../../lib/feed';
-import { homeTitle } from '../../lib/home';
 import { youtubeId } from '../../lib/clip';
 import { blipSvg, iconSvg } from '../../icons/render';
 import { categoryGlyphs } from '../../icons/family';
@@ -77,7 +76,7 @@ const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGly
         // Every safe YouTube clip keeps its link, still or not (Shorts never have a still).
         const yt = f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
         const type = categoryLabel(f);
-        const title = homeTitle(f);
+        const title = publicTitle(f);
         return (
           <li class="nw__item" data-wide={i >= WIDE_FROM ? '' : undefined}>
             <article class="nw__card">

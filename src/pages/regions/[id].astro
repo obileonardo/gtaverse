@@ -11,6 +11,7 @@ import type { Region } from '../../lib/content';
 import { regionHubs, findsInRegion, childHubs, connectionsFor, regionTrail, hasRegionHub, regionTypeLabel } from '../../lib/hubs';
 import { confidenceLabel } from '../../lib/lore';
 import { collectionPage } from '../../lib/seo';
+import { publicTitle } from '../../lib/media';
 import { regionRoutes } from '../../lib/routes';
 
 export function getStaticPaths() {
@@ -29,7 +30,7 @@ const type = regionTypeLabel[region.type] ?? 'Place';
 const parentName = parents.at(-1)?.name ?? 'Leonida';
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 ---
-<Base title={`${region.name}: finds`} description={route.description} jsonLd={collectionPage(route.path, `${region.name}: finds`, route.description, list.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
+<Base title={`${region.name}: finds`} description={route.description} jsonLd={collectionPage(route.path, `${region.name}: finds`, route.description, list.map((f) => ({ name: publicTitle(f), href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
   <PageHead title={region.name} count={list.length} trail={trail}>
     <p>{type} in {parentName}. {list.length === 1 ? 'One find' : `${list.length} finds`} {children.length > 0 && direct < list.length ? `here and in the places inside it` : 'here'}, each with its sources and how sure we are.{region.real_world_analogue && ` Fans and press compare it to ${region.real_world_analogue}.`}</p>
   </PageHead>

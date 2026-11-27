@@ -3,7 +3,7 @@
 import { finds, explainers, categoryById } from './content';
 import { moments } from './lore';
 import { regionHubs, categoryHubs, findsInRegion, findsInCategory, regionTypeLabel } from './hubs';
-import { categoryLabel, regionLabel } from './media';
+import { categoryLabel, regionLabel, pageDescription } from './media';
 import { verificationLabel } from './finds';
 import { games, connectionsForGame, findsForGame } from './games';
 
@@ -45,7 +45,7 @@ export const findRoutes: Route[] = finds.map((f) => ({
   kicker: categoryLabel(f),
   title: f.title,
   meta: `${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}`,
-  description: f.summary,
+  description: pageDescription(f),
   lastmod: f.updated_at,
 }));
 

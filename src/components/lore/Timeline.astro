@@ -22,7 +22,7 @@ import Icon from '../ui/Icon.astro';
 import Clip from '../Clip.astro';
 import type { IconName } from '../ui/icons';
 import { moments, years, trackLayout, confidenceLabel, typeLabel } from '../../lib/lore';
-import { categoryLabel, findClipLabels } from '../../lib/media';
+import { categoryLabel, findClipLabels, publicTitle } from '../../lib/media';
 import { cardImage } from '../../lib/finds';
 import { sourceName } from '../../lib/explainers';
 import GameChips from '../games/GameChips.astro';
@@ -117,11 +117,11 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
               <Badge variant="meta">{typeLabel[m.type] ?? m.type}</Badge>
             </div>
 
-            <figure class="polaroid" aria-label={cf ? `Clip: ${cf.title}` : undefined}>
+            <figure class="polaroid" aria-label={cf ? `Clip: ${publicTitle(cf)}` : undefined}>
               <span class="polaroid__back" aria-hidden="true"></span>
               <div class="polaroid__frame">
                 {cf?.clip ? (
-                  <Clip clip={cf.clip} title={cf.title} spoiler={cf.spoiler} mature={cf.mature} chapterGate={cf.chapter_gate} caption={false} ratio="16 / 10" />
+                  <Clip clip={cf.clip} title={publicTitle(cf)} spoiler={cf.spoiler} mature={cf.mature} chapterGate={cf.chapter_gate} caption={false} ratio="16 / 10" />
                 ) : (
                   <div class="polaroid__glow" aria-hidden="true"><span>{m.firstGame}</span></div>
                 )}
@@ -133,7 +133,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
                   <span class="watch__icon" aria-hidden="true"><Icon name={findClipLabels(cf).icon} size={12} /></span>
                   {cf.spoiler || cf.mature ? findClipLabels(cf).revealBar : findClipLabels(cf).bar}
                 </a>
-                <p class="watch__credit">Clip by {cf.clip.creator ?? 'an unknown creator'}, from <a href={`/finds/${cf.slug}`}>{cf.title}</a></p>
+                <p class="watch__credit">Clip by {cf.clip.creator ?? 'an unknown creator'}, from <a href={`/finds/${cf.slug}`}>{publicTitle(cf)}</a></p>
               </div>
             )}
 
@@ -145,7 +145,7 @@ const usedYears = [...new Set(moments.map((m) => m.year))];
                   <ul class="more__finds">
                     {m.finds.map((f) => {
                       const img = cardImage(f);
-                      return <li><Card href={`/finds/${f.slug}`} image={img?.thumb} kicker={categoryLabel(f)} title={f.title} meta={f.spoiler ? 'Spoiler' : undefined} /></li>;
+                      return <li><Card href={`/finds/${f.slug}`} image={img?.thumb} kicker={categoryLabel(f)} title={publicTitle(f)} meta={f.spoiler ? 'Spoiler' : undefined} /></li>;
                     })}
                   </ul>
                 </section>

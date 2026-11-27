@@ -5,6 +5,7 @@ import { explainers, findBySlug, connectionById, regionById } from './content';
 import { icons, type IconName } from '../components/ui/icons';
 import type { LevelRow } from '../components/ui/LevelTable.astro';
 import { spoilerParagraphs } from './spoiler';
+import { publicTitle } from './map-fields';
 
 export type Explainer = (typeof explainers)[number];
 type Mod = Explainer & { compiledContent: () => Promise<string> | string; getHeadings: () => { depth: number; slug: string; text: string }[] };
@@ -18,7 +19,7 @@ const cite = (n: string) => `<sup class="cite"><a href="#source-${n}" aria-label
 // [[find:id]], [[connection:id]], [[region:id]] cross references (validated at build).
 const crossRefs = (html: string) =>
   html.replace(/\[\[(find|connection|region):([\w-]+)\]\]/g, (_, kind: string, id: string) => {
-    if (kind === 'find') { const f = findBySlug(id); return f ? `<a href="/finds/${f.slug}">${f.title}</a>` : id; }
+    if (kind === 'find') { const f = findBySlug(id); return f ? `<a href="/finds/${f.slug}">${publicTitle(f)}</a>` : id; }
     if (kind === 'connection') { const c = connectionById(id); return c ? `<a href="/gtaverse/${c.slug}">${c.title}</a>` : id; }
     return regionById(id)?.name ?? id;
   });

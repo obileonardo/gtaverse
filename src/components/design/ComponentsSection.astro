@@ -19,7 +19,7 @@ import GameChips from '../games/GameChips.astro';
 import Specimen from './Specimen.astro';
 import { explainers, finds, categories as allCategories } from '../../lib/content';
 import { explainerParts } from '../../lib/explainers';
-import { categoryLabel, regionLabel, findStill, showcaseable, categoryChipLabel } from '../../lib/media';
+import { categoryLabel, regionLabel, findStill, showcaseable, categoryChipLabel, publicTitle } from '../../lib/media';
 import { verificationLabel } from '../../lib/finds';
 import { games, gameById } from '../../lib/games';
 import type { Find } from '../../lib/content';
@@ -34,7 +34,7 @@ const still = findStill(art)!;
 
 // Worst case: the longest values our content holds (break-ui: plausible or schema-backed, never random).
 const longest = <T,>(xs: T[], key: (x: T) => string) => [...xs].sort((a, b) => key(b).length - key(a).length)[0];
-const longFind = longest(finds, (f) => f.title);
+const longFind = longest(finds.filter((f) => !f.mature), (f) => f.title);
 const longRegion = longest(finds, (f) => regionLabel(f));
 const longCategory = longest(allCategories, (c) => categoryChipLabel(c.id));
 const longGame = longest(games, (g) => g.short_name);
@@ -189,7 +189,7 @@ const pinnedFind = finds.find((f) => f.pin && f.clip?.platform === 'youtube' && 
     <div class="ds-clips">
       <div class="ds-cell"><span class="ds-cap">Default</span><Clip clip={art.clip!} title={art.title} /></div>
       {spoilerFind && <div class="ds-cell"><span class="ds-cap">Spoiler gate</span><Clip clip={spoilerFind.clip!} title={spoilerFind.title} spoiler chapterGate={spoilerFind.chapter_gate ?? null} /></div>}
-      <div class="ds-cell"><span class="ds-cap">{matureFind ? 'Mature gate' : 'Mature gate (no mature find has a clip yet; shown on the default clip)'}</span><Clip clip={(matureFind ?? art).clip!} title={(matureFind ?? art).title} mature /></div>
+      <div class="ds-cell"><span class="ds-cap">{matureFind ? 'Mature gate' : 'Mature gate (no mature find has a clip yet; shown on the default clip)'}</span><Clip clip={(matureFind ?? art).clip!} title={publicTitle(matureFind ?? art)} mature /></div>
     </div>
   </Specimen>
 

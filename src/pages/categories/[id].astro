@@ -9,7 +9,7 @@ import Chip from '../../components/ui/Chip.astro';
 import Icon from '../../components/ui/Icon.astro';
 import type { Category } from '../../lib/content';
 import { categoryHubs, findsInCategory, connectionsFor } from '../../lib/hubs';
-import { categoryIcon } from '../../lib/media';
+import { categoryIcon, publicTitle } from '../../lib/media';
 import { confidenceLabel } from '../../lib/lore';
 import { collectionPage } from '../../lib/seo';
 
@@ -24,7 +24,7 @@ const path = `/categories/${category.id}`;
 const description = `${category.description} ${list.length === 1 ? 'One find' : `${list.length} finds`}, each with its sources.`;
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }, { name: category.label, href: path }];
 ---
-<Base title={category.label} description={description} jsonLd={collectionPage(path, category.label, description, list.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
+<Base title={category.label} description={description} jsonLd={collectionPage(path, category.label, description, list.map((f) => ({ name: publicTitle(f), href: `/finds/${f.slug}` })))} breadcrumbs={crumbs}>
   <PageHead title={category.label} count={list.length} trail={[{ name: 'Finds', href: '/finds' }]}>
     <p>{category.description}{spoilers > 0 && ` ${spoilers === 1 ? 'One is a spoiler' : `${spoilers} are spoilers`}: its art stays hidden until you open it.`}</p>
   </PageHead>

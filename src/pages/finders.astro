@@ -10,6 +10,7 @@ import { finders, outletCredits, creditTotals, type Post } from '../lib/credits'
 import { collectionPage } from '../lib/seo';
 import { staticRoutes } from '../lib/routes';
 import { site } from '../lib/site';
+import { publicTitle } from '../lib/media';
 
 const r = staticRoutes.find((x) => x.path === '/finders')!;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -58,10 +59,10 @@ const ld = collectionPage('/finders', r.title, r.description, finders.map((p) =>
             {perFind(p.posts).map(({ post, roles }) => (
               <li>
                 <a class="person__find" href={`/finds/${post.find.slug}`}>
-                  <span class="person__find-title">{post.find.title}</span>
+                  <span class="person__find-title">{publicTitle(post.find)}</span>
                   <span class="person__post">{roles.map((role) => roleLabel[role]).join(', ')}</span>
                 </a>
-                {post.url && <Button href={post.url} variant="ghost" size="m" icon="arrow-up-right" iconOnly label={`Original post by ${p.name}: ${post.find.title}`} target="_blank" rel="noopener" class="person__link" />}
+                {post.url && <Button href={post.url} variant="ghost" size="m" icon="arrow-up-right" iconOnly label={`Original post by ${p.name}: ${publicTitle(post.find)}`} target="_blank" rel="noopener" class="person__link" />}
               </li>
             ))}
           </ul>

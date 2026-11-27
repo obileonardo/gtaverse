@@ -1,6 +1,7 @@
 // New finds, newest first, from each find's added_at (the day it entered the guide). Feeds /rss.xml and the
 // "New this week" row. Finds added the same day keep content order.
 import { finds, type Find } from './content';
+import { MATURE_GATE } from './map-fields';
 
 export const byNewest: Find[] = finds
   .map((f, i) => ({ f, i }))
@@ -17,4 +18,4 @@ export const addedThisWeek = (today = new Date()) => {
 
 /** Story spoilers and mature finds keep their summary out of feeds and previews; the page holds it behind its gate. */
 export const safeSummary = (f: Find) =>
-  f.spoiler ? 'Story spoiler: open the find to read it.' : f.mature ? 'Mature content: open the find to read it.' : f.summary;
+  f.spoiler ? 'Story spoiler: open the find to read it.' : f.mature ? MATURE_GATE : f.summary;
