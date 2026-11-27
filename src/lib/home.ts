@@ -10,6 +10,12 @@ import { addedThisWeek } from './feed';
 /** Finds without a spoiler or mature flag: their summary and (if they have one) their still may show. */
 export const isSafe = (f: Find) => !f.spoiler && !f.mature;
 
+/**
+ * The title a find shows on the home page. A mature find keeps a neutral one until revealed on its own page, like its
+ * summary and picture (owner decision, 27 Nov 2026; LR78). Use it for visible text and accessible names alike.
+ */
+export const homeTitle = (f: Find) => (f.mature ? 'Mature find' : f.title);
+
 // ---------- 001 Spotlight ----------
 
 export type SpotSource = { type: 'video' | 'article' | 'wiki'; name: string };
