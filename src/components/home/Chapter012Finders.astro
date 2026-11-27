@@ -3,22 +3,25 @@
 // 27 Nov 2026):
 // Desktop and tablet, komoot "Regional experts": the areas as the site's tabs; per area a centred kicker and title
 // with one outline button at the right; left column the top finder's card (rank, avatar, name, a link, the count)
-// and the others credited there as ruled rows; right column our own drawing of Leonida (the coast line art the map
-// teaser uses, built at deploy, and the collectible positions as dots) and the area's latest finds as stills.
+// and the others credited there as ruled rows (with "and N more" when people are left out); right column a line
+// drawing of Leonida (the coast the hero and map teaser use, traced by code from the official map at deploy and
+// credited to Rockstar Games, HS6, plus the collectible positions as dots) and the area's latest finds as stills.
 // The map has no region outline, labels or scale because we hold none (LR75).
-// Phone, Places "Curation team": the condensed title, then a panel with the avatar strip: the site's mark in the
-// middle, the six most credited finders beside it, the first two nearest (LR76).
+// Phone, Places "Curation team": the condensed title, then a panel with the avatar strip (the site's mark in the
+// middle, the most credited finders beside it, the first two nearest; the outer pair drops when the panel is too
+// narrow to hold it whole), then the same six with their counts and a link to /finders (LR76).
 // The per-area rule is src/lib/leaderboard.ts (LR74): finds in the area credited to each person, safe finds only;
 // an area gets a tab only when one person leads it.
 import ChapterHead from './ChapterHead.astro';
 import Tabs from '../ui/Tabs.astro';
 import Button from '../ui/Button.astro';
 import Logo from '../ui/Logo.astro';
+import Icon from '../ui/Icon.astro';
 import mapInfo from '../../../content/map.json';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { finds, regions, type Find } from '../../lib/content';
-import { finders } from '../../lib/credits';
+import { finders, creditTotals } from '../../lib/credits';
 import { leaderboard } from '../../lib/leaderboard';
 import { findStill, categoryLabel } from '../../lib/media';
 import { collectiblePins, isSafe } from '../../lib/home';
@@ -73,16 +76,20 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
     <div class="mc__phone">
       <p class="mc__ptitle">Credited by name.</p>
       <div class="mc__panel">
-        <ul class="mc__strip" role="list" aria-label="The most credited finders" data-reveal>
-          <li class="mc__mark" aria-hidden="true"><Logo variant="mark" height={30} /></li>
-          {strip.map((p, i) => (
-            <li class={`mc__sp mc__sp--${i}`}>
-              <span class="mc__av" aria-hidden="true">{initial(p.name)}</span>
-              <span class="sr-only">{p.name}, {plural(p.finds, 'find', 'finds')}</span>
-            </li>
-          ))}
+        <ul class="mc__strip" role="list" aria-hidden="true">
+          <li class="mc__mark"><Logo variant="mark" height={30} /></li>
+          {strip.map((p, i) => <li class={`mc__sp mc__sp--${i}`}><span class="mc__av">{initial(p.name)}</span></li>)}
         </ul>
       </div>
+      <ol class="mc__names" role="list" aria-label="The most credited finders" data-reveal>
+        {strip.map((p) => (
+          <li class="mc__nrow">
+            <span class="mc__name">{p.name}</span>
+            <span class="mc__ncount">{plural(p.finds, 'find', 'finds')}</span>
+          </li>
+        ))}
+      </ol>
+      <a class="mc__all" href="/finders">All {creditTotals.people} finders and creators <Icon name="chevron-right" size={16} stroke={2} /></a>
     </div>
 
     <svg class="mc__defs" aria-hidden="true" focusable="false" width="0" height="0">
@@ -97,15 +104,16 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
         <Tabs id="mc-area" label="Areas" tabs={boards.map((b) => ({ id: b.id, label: b.name }))}>
           {boards.map((b) => {
             const others = b.rows.slice(1, 5);
+            const more = b.rows.length - 1 - others.length;
             return (
               <div slot={b.id} class="mc__board">
                 <div class="mc__head">
-                  <h3 class="mc__title"><span class="mc__kicker">Most credited in</span> {b.name}</h3>
+                  <p class="mc__title"><span class="mc__kicker">Most credited in</span> {b.name}</p>
                   <Button href={submitFindLink()} variant="outline" size="l" class="mc__cta">Submit a find</Button>
                 </div>
                 <div class="mc__cols">
                   <div class="mc__left">
-                    <h4 class="mc__h"><span class="mc__hi">Top finder</span> in {b.name}</h4>
+                    <h3 class="mc__h"><span class="mc__hi">Top finder</span> in {b.name}</h3>
                     <p class="mc__cap">Finds in {b.name} credited to each person, as first finder or by a post we cite.</p>
                     <ol class="mc__card" role="list">
                       <li class="mc__row">
@@ -120,7 +128,7 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
                     </ol>
                     {others.length > 0 && (
                       <>
-                        <h4 class="mc__h mc__h--next"><span class="mc__hi">Also credited</span> in {b.name}</h4>
+                        <h3 class="mc__h mc__h--next"><span class="mc__hi">Also credited</span> in {b.name}</h3>
                         <ol class="mc__card mc__list" role="list">
                           {others.map((p) => (
                             <li class="mc__row">
@@ -131,6 +139,7 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
                             </li>
                           ))}
                         </ol>
+                        {more > 0 && <a class="mc__more mc__more--list" href="/finders">And {more} more credited in {b.name}</a>}
                       </>
                     )}
                   </div>
@@ -140,9 +149,9 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
                         <use class="mc__coast" href="#mc-coast" />
                         <use class="mc__dots" href="#mc-dots" />
                       </svg>
-                      <figcaption class="mc__credit">Leonida, our own drawing. Collectible positions: Game Checklists.</figcaption>
+                      <figcaption class="mc__credit">{hasCoast && 'Coastline from the official map, Rockstar Games. '}Collectible positions: Game Checklists.</figcaption>
                     </figure>
-                    <h4 class="mc__h mc__h--latest">Latest finds in {b.name}</h4>
+                    <h3 class="mc__h mc__h--latest">Latest finds in {b.name}</h3>
                     <ul class="mc__stills" role="list">
                       {b.stills.map((f) => {
                         const still = findStill(f);
@@ -228,6 +237,7 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
   .mc__who { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .mc__name { font-size: var(--text-body); line-height: 1.35; color: var(--text-1); overflow-wrap: anywhere; }
   .mc__more { align-self: flex-start; font-size: var(--text-body-s); line-height: 1.35; color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; }
+  .mc__more--list { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-2); }
   .mc__n { flex: none; font-size: var(--text-body); color: var(--text-1); font-variant-numeric: tabular-nums; }
 
   .mc__map { position: relative; aspect-ratio: 3 / 2; background: var(--surface-1); border: var(--border-w) solid var(--border-1); overflow: hidden; }
@@ -248,6 +258,10 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
   }
 
   @media (max-width: 1023px) {
+    /* The five area tabs fit the row from 768 (they ran 834 wide in a 688 row and the last label sat cut at the
+       edge): the same tab, a step smaller and closer. Measured in the PR. */
+    .mc__web :global(.tabs__list) { gap: var(--space-4); }
+    .mc__web :global(.tabs__tab) { font-size: var(--text-caption); letter-spacing: 0.04em; }
     .mc__title { max-width: none; font-size: 40px; }
     .mc__head { flex-direction: column; gap: var(--space-6); }
     .mc__head :global(.mc__cta) { position: static; translate: none; }
@@ -259,16 +273,27 @@ const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'))
     .mc__web { display: none; }
     .mc__phone { display: block; margin-top: var(--space-8); }
     .mc__ptitle { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-m); line-height: 1; padding-block: 0.08em; text-transform: uppercase; letter-spacing: var(--tracking-display); color: var(--text-1); }
-    .mc__panel { display: flex; align-items: center; justify-content: center; height: 138px; margin-top: var(--space-6); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); overflow: hidden; }
+    .mc__panel { container: mc-panel / inline-size; display: flex; align-items: center; justify-content: center; height: 138px; margin-top: var(--space-6); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); overflow: hidden; }
     .mc__strip { display: flex; align-items: center; gap: var(--space-2); }
     .mc__strip > li { flex: none; display: grid; place-items: center; }
     .mc__mark { order: 4; width: 72px; height: 72px; border-radius: var(--radius-full); background: var(--logo-plate); box-shadow: 0 0 0 1px var(--logo-plate-edge); }
     .mc__sp .mc__av { border: var(--border-w) solid var(--border-1); }
     .mc__sp--0, .mc__sp--1 { --d: 50px; --f: 20px; }
     .mc__sp--2, .mc__sp--3 { --d: 36px; --f: 15px; }
-    .mc__sp--4, .mc__sp--5 { --d: 24px; --f: 11px; }
+    .mc__sp--4, .mc__sp--5 { --d: 24px; --f: 12px; }
     .mc__sp .mc__av { width: var(--d); height: var(--d); font-size: var(--f); }
     .mc__sp--4 { order: 1; } .mc__sp--2 { order: 2; } .mc__sp--0 { order: 3; }
     .mc__sp--1 { order: 5; } .mc__sp--3 { order: 6; } .mc__sp--5 { order: 7; }
+    /* The whole strip is 340 wide; a narrower panel (phones under about 390) drops the outer pair, so no circle or
+       initial is ever cut by the panel edge (their names stay in the list below). */
+    @container mc-panel (max-width: 351px) { .mc__strip > .mc__sp--4, .mc__strip > .mc__sp--5 { display: none; } }
+
+    /* The same six by name and count (the strip alone carries no names), then the way to everyone. */
+    .mc__names { margin-top: var(--space-6); border-top: var(--border-w) solid var(--border-1); }
+    .mc__nrow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); min-height: 44px; padding-block: var(--space-3); border-bottom: var(--border-w) solid var(--border-1); }
+    .mc__nrow .mc__name { min-width: 0; font-size: var(--text-body-s); }
+    .mc__ncount { flex: none; font-size: var(--text-body-s); color: var(--text-2); font-variant-numeric: tabular-nums; }
+    .mc__all { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: var(--space-2); font-size: var(--text-body-s); font-weight: 600; color: var(--text-1); }
+    .mc__all :global(.icon) { color: var(--text-2); }
   }
 </style>

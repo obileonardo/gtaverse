@@ -17,12 +17,15 @@ import { formatDate } from '../../lib/finds';
 interface Props { index?: string }
 const { index = '011' } = Astro.props;
 
-const count = (t: string) => finds.reduce((n, f) => n + f.sources.filter((s) => s.type === t).length, 0);
+// Distinct sources by kind: one video, post, article or wiki page counts once however many finds cite it.
+const distinct = (types: string[]) => new Set(finds.flatMap((f) => f.sources.filter((s) => types.includes(s.type)).map((s) => s.url))).size;
 const fmt = (n: number) => n.toLocaleString('en-GB');
-const videos = count('youtube');
-const articles = count('article');
-const wikis = count('wiki');
-const totals = [{ n: videos, label: 'videos' }, { n: articles, label: 'articles' }, { n: wikis, label: 'wiki pages' }];
+const totals = [
+  { n: distinct(['youtube']), label: 'videos' },
+  { n: distinct(['x', 'reddit', 'tiktok']), label: 'posts' },
+  { n: distinct(['article']), label: 'articles' },
+  { n: distinct(['wiki']), label: 'wiki pages' },
+].filter((t) => t.n > 0);
 const chips = outletCredits.filter((o) => o.url).slice(0, 4);
 const updated = finds.map((f) => f.updated_at ?? f.added_at ?? '').sort().at(-1);
 const method = [
@@ -50,8 +53,8 @@ const method = [
 
       <div class="hm__sources">
         <h3 class="hm__title">In the sources</h3>
-        <h4 class="hm__h hm__h--sub">What we cite</h4>
-        <p class="hm__p">Every find lists the posts, videos and articles it comes from. Across all finds we cite {fmt(creditTotals.outlets)} outlets and {fmt(creditTotals.people)} finders and creators, in these sources:</p>
+        <p class="hm__h hm__h--sub">What we cite</p>
+        <p class="hm__p">Every find lists the posts, videos and articles it comes from. Across all finds we cite {fmt(creditTotals.outlets)} outlets and {fmt(creditTotals.people)} finders and creators, in these distinct sources:</p>
         <ul class="hm__stats" role="list">
           {totals.map((t) => <li><span class="hm__num">{fmt(t.n)}</span><span class="hm__unit">{t.label}</span></li>)}
         </ul>
@@ -101,7 +104,8 @@ const method = [
   /* Phone: Places as drawn, one column; the hairline between the two groups. */
   @media (max-width: 767px) {
     .hm__cols { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: var(--space-8); }
-    .hm__stats { gap: var(--space-4) var(--space-8); }
+    .hm__stats { gap: var(--space-4) var(--space-6); }
+    .hm__chiplist :global(.chip) { height: var(--ctrl-size); }
     .hm__p { font-size: var(--text-body-s); line-height: 1.3; }
     .hm__method :global(.hm__btn) { --h: 44px; }
     .hm__sources { margin-top: var(--space-6); padding-top: var(--space-8); border-top: var(--border-w) solid var(--border-1); }

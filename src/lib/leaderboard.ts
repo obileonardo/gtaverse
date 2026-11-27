@@ -1,4 +1,4 @@
-// The per-area leaderboard on the home page (chapter 011, "Most credited"). Pure and content-free so the rule can be
+// The per-area leaderboard on the home page (chapter 012, "Most credited"). Pure and content-free so the rule can be
 // tested on its own (scripts/test/leaderboard.test.ts); Chapter012Finders.astro feeds it from lib/credits.ts.
 // The rule (docs/DECISIONS.md LR74):
 //   count   how many finds in the area credit the person (as first finder or by a post the find cites), once per find
