@@ -1,141 +1,299 @@
 ---
-// Home 012, Finders and sources (board r2: Dropbox, Love; HUXLEY 009, Love, for the press list under it).
-// Dropbox: "Most credited" (the six finders and creators with the most finds, avatar initial on the pink tint, as on
-// /finders) beside "In the sources" (three counted rows: icon, number, label). HUXLEY 009: a light mono label at the
-// gutter and a ruled list of the outlets we cite, each with the find it backs (we hold no article headlines, so the
-// second column is honestly the find) and the source type at the right. Everything is counted from content.
+// Home 012, Most credited (phase 7e, the komoot and Places Loves). Two Loves, one per device (owner decision 2,
+// 27 Nov 2026):
+// Desktop and tablet, komoot "Regional experts": the areas as the site's tabs; per area a centred kicker and title
+// with one outline button at the right; left column the top finder's card (rank, avatar, name, a link, the count)
+// and the others credited there as ruled rows (with "and N more" when people are left out); right column a line
+// drawing of Leonida (the coast the hero and map teaser use, traced by code from the official map at deploy and
+// credited to Rockstar Games, HS6, plus the collectible positions as dots) and the area's latest finds as stills.
+// The map has no region outline, labels or scale because we hold none (LR75).
+// Phone, Places "Curation team": the condensed title, then a panel with the avatar strip (the site's mark in the
+// middle, the most credited finders beside it, the first two nearest; the outer pair drops when the panel is too
+// narrow to hold it whole), then the same six with their counts and a link to /finders (LR76).
+// The per-area rule is src/lib/leaderboard.ts (LR74): finds in the area credited to each person, safe finds only;
+// an area gets a tab only when one person leads it.
 import ChapterHead from './ChapterHead.astro';
+import Tabs from '../ui/Tabs.astro';
+import Button from '../ui/Button.astro';
+import Logo from '../ui/Logo.astro';
 import Icon from '../ui/Icon.astro';
-import { finds } from '../../lib/content';
-import { finders, outletCredits, creditTotals } from '../../lib/credits';
+import mapInfo from '../../../content/map.json';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { finds, regions, type Find } from '../../lib/content';
+import { finders, creditTotals } from '../../lib/credits';
+import { leaderboard } from '../../lib/leaderboard';
+import { findStill, categoryLabel } from '../../lib/media';
+import { collectiblePins, isSafe } from '../../lib/home';
+import { submitFindLink } from '../../lib/issues';
 
 interface Props { index?: string }
 const { index = '012' } = Astro.props;
-const top = finders.slice(0, 6);
-const count = (t: string) => finds.reduce((n, f) => n + f.sources.filter((s) => s.type === t).length, 0);
-const stats = [
-  { icon: 'clip' as const, value: count('youtube'), label: 'video sources' },
-  { icon: 'article' as const, value: count('article'), label: 'articles' },
-  { icon: 'link' as const, value: count('wiki'), label: 'wiki pages' },
-];
-const press = outletCredits.slice(0, 10).map((o) => ({ outlet: o.name, find: o.posts[0].find, kind: o.kind === 'Wiki' ? 'Wiki' : o.kind === 'Official' ? 'Official' : 'Article' }));
+
+// Areas: Leonida's counties and regions, the set chapter 010 uses; a find is in an area when one of its regions is
+// the area or lies inside it.
+const byId = new Map(regions.map((r) => [r.id, r]));
+const state = regions.find((r) => r.parent === null);
+const ancestors = (id: string) => { const out: string[] = []; let r = byId.get(id); while (r) { out.push(r.id); r = r.parent ? byId.get(r.parent) : undefined; } return out; };
+const inArea = (f: Find, area: string) => f.region_ids.some((id) => ancestors(id).includes(area));
+const tops = regions.filter((r) => r.parent === state?.id && (r.type === 'county' || r.type === 'region'));
+const boards = tops
+  .map((r) => {
+    const own = finds.filter((f) => isSafe(f) && inArea(f, r.id));
+    const people = finders.map((p) => {
+      const posts = p.posts.filter((x) => own.includes(x.find));
+      const slugs = (role?: string) => new Set(posts.filter((x) => !role || x.role === role).map((x) => x.find.slug)).size;
+      return { key: p.key, name: p.name, finds: slugs(), firstFinds: slugs('first'), clips: slugs('clip') };
+    });
+    const latest = [...own].sort((a, b) => (b.added_at ?? '').localeCompare(a.added_at ?? ''));
+    const stills = [...latest.filter((f) => findStill(f)), ...latest.filter((f) => !findStill(f))].slice(0, 3);
+    return { id: r.id, name: r.name, size: own.length, stills, ...leaderboard(people) };
+  })
+  .filter((b) => b.leader)
+  .sort((a, b) => b.size - a.size || a.name.localeCompare(b.name));
+
+// Phone strip: the six most credited finders overall (the /finders order), the site's mark between them.
+const strip = finders.slice(0, 6);
 const initial = (n: string) => n.replace(/^[@u/]+/, '').charAt(0).toUpperCase();
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Our drawing of Leonida, in the units the map teaser uses (the official map's printed frame is 1 wide).
+const fr = mapInfo.grid.frame;
+const fw = fr.x1 - fr.x0;
+const VB = 1000;
+const VH = Math.round(VB * ((fr.y1 - fr.y0) / fw));
+const dots = collectiblePins
+  .map((p) => [((p.x - fr.x0) / fw) * VB, ((p.y - fr.y0) / fw) * VB])
+  .filter(([x, y]) => x >= 0 && y >= 0 && x <= VB && y <= VH)
+  .map(([x, y]) => `M${x.toFixed(1)} ${y.toFixed(1)}h0`)
+  .join('');
+const hasCoast = existsSync(join(process.cwd(), 'public/media/hero/coast.json'));
 ---
-<section class="ch12" aria-labelledby="ch12-title">
+<section class="mc" aria-labelledby="mc-title" data-mc data-coast={hasCoast ? '/media/hero/coast.json' : undefined}>
   <div class="container">
-    <ChapterHead index={index} label="Finders and sources" id="ch12-title" />
+    <ChapterHead index={index} label="Most credited" id="mc-title" />
 
-    <div class="ch12__top">
-      <div class="ch12__members">
-        <h3 class="ch12__h">Most credited</h3>
-        <ul class="ch12__people" role="list" data-reveal>
-          {top.map((p) => (
-            <li class="ch12__person">
-              <span class="ch12__avatar" aria-hidden="true">{initial(p.name)}</span>
-              <span class="ch12__who">
-                <span class="ch12__name">{p.name}</span>
-                <span class="ch12__role">{p.finds} {p.finds === 1 ? 'find' : 'finds'} · {p.platform}</span>
-              </span>
-            </li>
-          ))}
+    <div class="mc__phone">
+      <p class="mc__ptitle">Credited by name.</p>
+      <div class="mc__panel">
+        <ul class="mc__strip" role="list" aria-hidden="true">
+          <li class="mc__mark"><Logo variant="mark" height={30} /></li>
+          {strip.map((p, i) => <li class={`mc__sp mc__sp--${i}`}><span class="mc__av">{initial(p.name)}</span></li>)}
         </ul>
       </div>
-      <div class="ch12__stats">
-        <h3 class="ch12__h">In the sources</h3>
-        <ul class="ch12__statlist" role="list" data-reveal>
-          {stats.map((s) => (
-            <li class="ch12__stat">
-              <Icon name={s.icon} size={24} />
-              <span class="ch12__stat-text"><span class="ch12__num">{s.value}</span><span class="ch12__label">{s.label}</span></span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ol class="mc__names" role="list" aria-label="The most credited finders" data-reveal>
+        {strip.map((p) => (
+          <li class="mc__nrow">
+            <span class="mc__name">{p.name}</span>
+            <span class="mc__ncount">{plural(p.finds, 'find', 'finds')}</span>
+          </li>
+        ))}
+      </ol>
+      <a class="mc__all" href="/finders">All {creditTotals.people} finders and creators <Icon name="chevron-right" size={16} stroke={2} /></a>
     </div>
 
-    <div class="ch12__press">
-      <h3 class="ch12__plabel">Sources</h3>
-      <div class="ch12__pbody">
-        <ul class="ch12__rows" role="list" data-reveal>
-          {press.map((r) => (
-            <li>
-              <a class="ch12__row" href={`/finds/${r.find.slug}`}>
-                <span class="ch12__outlet">{r.outlet}</span>
-                <span class="ch12__find">{r.find.title}</span>
-                <span class="ch12__kind">{r.kind}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-        <a class="ch12__all" href="/finders">All {creditTotals.people} finders and {creditTotals.outlets} outlets <Icon name="chevron-right" size={16} stroke={2} /></a>
+    <svg class="mc__defs" aria-hidden="true" focusable="false" width="0" height="0">
+      <defs>
+        <g id="mc-coast" data-mc-coast></g>
+        <path id="mc-dots" d={dots} />
+      </defs>
+    </svg>
+
+    {boards.length > 0 && (
+      <div class="mc__web">
+        <Tabs id="mc-area" label="Areas" tabs={boards.map((b) => ({ id: b.id, label: b.name }))}>
+          {boards.map((b) => {
+            const others = b.rows.slice(1, 5);
+            const more = b.rows.length - 1 - others.length;
+            return (
+              <div slot={b.id} class="mc__board">
+                <div class="mc__head">
+                  <p class="mc__title"><span class="mc__kicker">Most credited in</span> {b.name}</p>
+                  <Button href={submitFindLink()} variant="outline" size="l" class="mc__cta">Submit a find</Button>
+                </div>
+                <div class="mc__cols">
+                  <div class="mc__left">
+                    <h3 class="mc__h"><span class="mc__hi">Top finder</span> in {b.name}</h3>
+                    <p class="mc__cap">Finds in {b.name} credited to each person, as first finder or by a post we cite.</p>
+                    <ol class="mc__card" role="list">
+                      <li class="mc__row">
+                        <span class="mc__rank"><span class="sr-only">Rank </span>{b.leader!.rank}</span>
+                        <span class="mc__av mc__av--lead" aria-hidden="true">{initial(b.leader!.name)}</span>
+                        <span class="mc__who">
+                          <span class="mc__name">{b.leader!.name}</span>
+                          <a class="mc__more" href="/finders">More about finders</a>
+                        </span>
+                        <span class="mc__n">{b.leader!.finds}<span class="sr-only"> {b.leader!.finds === 1 ? 'find' : 'finds'}</span></span>
+                      </li>
+                    </ol>
+                    {others.length > 0 && (
+                      <>
+                        <h3 class="mc__h mc__h--next"><span class="mc__hi">Also credited</span> in {b.name}</h3>
+                        <ol class="mc__card mc__list" role="list">
+                          {others.map((p) => (
+                            <li class="mc__row">
+                              <span class="mc__rank"><span class="sr-only">Rank </span>{p.rank}</span>
+                              <span class="mc__av" aria-hidden="true">{initial(p.name)}</span>
+                              <span class="mc__who"><span class="mc__name">{p.name}</span></span>
+                              <span class="mc__n">{p.finds}<span class="sr-only"> {p.finds === 1 ? 'find' : 'finds'}</span></span>
+                            </li>
+                          ))}
+                        </ol>
+                        {more > 0 && <a class="mc__more mc__more--list" href="/finders">And {more} more credited in {b.name}</a>}
+                      </>
+                    )}
+                  </div>
+                  <div class="mc__right">
+                    <figure class="mc__map">
+                      <svg class="mc__svg" viewBox={`0 0 ${VB} ${VH}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                        <use class="mc__coast" href="#mc-coast" />
+                        <use class="mc__dots" href="#mc-dots" />
+                      </svg>
+                      <figcaption class="mc__credit">{hasCoast && 'Coastline from the official map, Rockstar Games. '}Collectible positions: Game Checklists.</figcaption>
+                    </figure>
+                    <h3 class="mc__h mc__h--latest">Latest finds in {b.name}</h3>
+                    <ul class="mc__stills" role="list">
+                      {b.stills.map((f) => {
+                        const still = findStill(f);
+                        return (
+                          <li>
+                            <a class="mc__still" href={`/finds/${f.slug}`}>
+                              <span class="mc__img">
+                                {still ? <img src={still.thumb} srcset={`${still.thumb} 320w, ${still.src} 1280w`} sizes="(max-width: 1023px) 30vw, 190px" alt="" loading="lazy" decoding="async" /> : <span class="mc__glow"><span>{categoryLabel(f)}</span></span>}
+                              </span>
+                              <span class="mc__stitle">{f.title}</span>
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </Tabs>
       </div>
-    </div>
+    )}
   </div>
 </section>
 
-<style>
-  .ch12 { padding-top: var(--space-chapter); }
-  .ch12__top { display: grid; grid-template-columns: 7fr 5fr; gap: var(--space-10); margin-top: var(--space-12); }
-  .ch12__h { font-size: 36px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; color: var(--text-1); margin-bottom: var(--space-10); }
-  .ch12__people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-8); column-gap: var(--space-6); }
-  .ch12__person { display: flex; align-items: center; gap: var(--space-4); min-width: 0; min-height: 64px; }
-  .ch12__avatar { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-size: 20px; font-weight: 500; }
-  .ch12__who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .ch12__name { font-size: var(--text-title); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-  .ch12__role { font-size: var(--text-body-s); color: var(--text-2); line-height: 1.35; }
-  .ch12__statlist { display: flex; flex-direction: column; gap: var(--space-8); }
-  .ch12__stat { display: flex; align-items: flex-start; gap: var(--space-4); color: var(--text-2); }
-  .ch12__stat :global(.icon) { margin-top: 6px; flex: none; }
-  .ch12__stat-text { display: flex; flex-direction: column; gap: 2px; }
-  .ch12__num { font-size: var(--text-h1); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--text-1); }
-  .ch12__label { font-size: var(--text-body-s); color: var(--text-2); }
+<script>
+  // The coast drawing is built at deploy and git-ignored (like the map teaser's); fetched once, a screen early, and
+  // drawn into the shared <defs> group every area's map uses. Without it, the collectible dots still outline Leonida.
+  type Coast = { paths: number[][][] };
+  const root = document.querySelector<HTMLElement>('[data-mc]');
+  const url = root?.dataset.coast;
+  const g = root?.querySelector<SVGGElement>('[data-mc-coast]');
+  if (root && url && g) {
+    const load = async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const coast: Coast = await res.json();
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', coast.paths.map((p) => `M${p.map(([x, y]) => `${(x * 1000).toFixed(1)} ${(y * 1000).toFixed(1)}`).join('L')}Z`).join(''));
+        g.replaceChildren(path);
+      } catch { /* no drawing: the dots alone */ }
+    };
+    if ('IntersectionObserver' in window) {
+      const near = new IntersectionObserver(([e]) => { if (e.isIntersecting) { near.disconnect(); load(); } }, { rootMargin: '100% 0px' });
+      near.observe(root);
+    } else load();
+  }
+</script>
 
-  /* HUXLEY 009: label column 26%, list 74%, rows 50 high on hairlines. */
-  .ch12__press { display: grid; grid-template-columns: 26fr 74fr; margin-top: calc(var(--space-16) + var(--space-8)); }
-  .ch12__plabel { font-family: var(--font-mono); font-weight: 300; font-size: 32px; line-height: 1.1; text-transform: uppercase; color: var(--text-1); padding-top: 12px; }
-  .ch12__rows { border-top: var(--border-w) solid var(--rule-soft); }
-  .ch12__rows li { border-bottom: var(--border-w) solid var(--rule-soft); }
-  .ch12__row {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--space-6);
-    min-height: 50px;
-    padding-inline: 0 var(--space-2);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    transition: background-color var(--dur-colour) var(--ease-colour);
-  }
-  .ch12__outlet { color: var(--text-1); overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
-  .ch12__find { color: var(--text-2); overflow: clip visible; text-overflow: ellipsis; white-space: nowrap; }
-  .ch12__kind { font-size: var(--text-mono-caps); color: var(--text-3); }
+<style>
+  .mc { padding-top: var(--space-chapter); }
+  .mc__defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+  /* ---------- Desktop and tablet: komoot (1920 frame, scaled 0.75 to 1440) ---------- */
+  .mc__phone { display: none; }
+  .mc__web { margin-top: var(--space-12); }
+  /* Centred like komoot's tab row; auto margins (not justify-content) keep the first tab reachable when the row
+     scrolls sideways on a tablet. */
+  .mc__web :global(.tabs__tab:first-of-type) { margin-left: auto; }
+  .mc__web :global(.tabs__tab:last-of-type) { margin-right: auto; }
+  .mc__web :global(.tabs__panel) { padding-top: var(--space-16); }
+  .mc__head { position: relative; display: flex; justify-content: center; align-items: center; min-height: var(--btn-h-l); }
+  .mc__title { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); text-align: center; font-size: 44px; font-weight: 700; line-height: var(--leading-tight); letter-spacing: -0.02em; color: var(--text-1); max-width: calc(100% - 2 * 220px); }
+  .mc__kicker { font-size: var(--text-body-l); font-weight: 500; letter-spacing: 0; line-height: 1.3; }
+  .mc__head :global(.mc__cta) { position: absolute; right: 0; top: 50%; translate: 0 -50%; }
+
+  .mc__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); margin-top: var(--space-16); }
+  .mc__left, .mc__right { min-width: 0; }
+  .mc__h { font-size: var(--text-h2); font-weight: 600; line-height: 1.3; color: var(--text-1); }
+  .mc__hi { color: var(--accent-text); }
+  .mc__h--next { margin-top: var(--space-12); }
+  .mc__h--latest { margin-top: var(--space-16); }
+  .mc__cap { margin-top: var(--space-1); font-size: var(--text-body-s); line-height: var(--leading-body); color: var(--text-2); }
+  .mc__card { margin-top: var(--space-6); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); }
+  .mc__h + .mc__card { margin-top: var(--space-6); }
+  .mc__row { display: flex; align-items: center; gap: var(--space-3); min-height: 76px; padding: var(--space-3) var(--space-4); }
+  .mc__list .mc__row + .mc__row { border-top: var(--border-w) solid var(--border-1); }
+  .mc__rank { flex: none; min-width: 1.5em; font-size: var(--text-body); color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .mc__av { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-text); font-size: 20px; font-weight: 500; line-height: 1; }
+  .mc__av--lead { box-shadow: 0 0 0 2px var(--accent-ink); }
+  .mc__who { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .mc__name { font-size: var(--text-body); line-height: 1.35; color: var(--text-1); overflow-wrap: anywhere; }
+  .mc__more { align-self: flex-start; font-size: var(--text-body-s); line-height: 1.35; color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; }
+  .mc__more--list { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-2); }
+  .mc__n { flex: none; font-size: var(--text-body); color: var(--text-1); font-variant-numeric: tabular-nums; }
+
+  .mc__map { position: relative; aspect-ratio: 3 / 2; background: var(--surface-1); border: var(--border-w) solid var(--border-1); overflow: hidden; }
+  .mc__svg { display: block; width: 100%; height: 100%; padding: var(--space-4) 0 var(--space-8); }
+  .mc__coast { fill: var(--surface-3); stroke: var(--text-3); stroke-opacity: 0.55; stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .mc__dots { fill: none; stroke: var(--text-3); stroke-opacity: 0.5; stroke-width: 4px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .mc__credit { position: absolute; right: var(--space-2); bottom: var(--space-1); font-size: var(--text-caption); line-height: 1.4; color: var(--text-2); }
+  .mc__stills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-6); }
+  .mc__still { display: flex; flex-direction: column; gap: var(--space-2); }
+  .mc__img { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface-2); }
+  .mc__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .mc__glow { display: grid; place-items: center; width: 100%; height: 100%; padding: 6px; text-align: center; background: var(--glow-hero), var(--surface-2); container-type: inline-size; }
+  .mc__glow span { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: clamp(12px, 12cqi, 18px); line-height: 1; padding-block: 0.15em; text-transform: uppercase; color: var(--text-1); }
+  .mc__stitle { font-size: var(--text-body-s); font-weight: 500; line-height: 1.35; color: var(--text-1); }
   @media (hover: hover) and (pointer: fine) {
-    .ch12__row:hover { background: var(--glass-hover-soft); }
-    .ch12__all:hover :global(.icon) { transform: translateX(3px); }
+    .mc__stitle { transition: color var(--dur-colour) var(--ease-colour); }
+    .mc__still:hover .mc__stitle { color: var(--accent-text); }
   }
-  .ch12__all { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: var(--space-4); font-size: var(--text-body-s); font-weight: 600; color: var(--text-1); }
-  .ch12__all :global(.icon) { color: var(--text-2); transition: transform var(--dur-colour) var(--ease-out); }
 
   @media (max-width: 1023px) {
-    .ch12__top { grid-template-columns: minmax(0, 1fr); gap: var(--space-12); }
-    .ch12__press { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+    /* The five area tabs fit the row from 768 (they ran 834 wide in a 688 row and the last label sat cut at the
+       edge): the same tab, a step smaller and closer. Measured in the PR. */
+    .mc__web :global(.tabs__list) { gap: var(--space-4); }
+    .mc__web :global(.tabs__tab) { font-size: var(--text-caption); letter-spacing: 0.04em; }
+    .mc__title { max-width: none; font-size: 40px; }
+    .mc__head { flex-direction: column; gap: var(--space-6); }
+    .mc__head :global(.mc__cta) { position: static; translate: none; }
+    .mc__cols { grid-template-columns: minmax(0, 1fr); gap: var(--space-16); }
   }
+
+  /* ---------- Phone: Places (393pt frame) ---------- */
   @media (max-width: 767px) {
-    .ch12__h { font-size: var(--text-h1); margin-bottom: var(--space-6); }
-    .ch12__people { row-gap: var(--space-5); column-gap: var(--space-3); }
-    .ch12__person { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
-    .ch12__statlist { flex-direction: row; justify-content: space-between; gap: var(--space-3); }
-    .ch12__stat { flex-direction: column; gap: var(--space-2); }
-    .ch12__stat :global(.icon) { margin-top: 0; }
-    .ch12__plabel { font-size: 24px; }
-    .ch12__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; row-gap: 2px; column-gap: var(--space-3); padding-block: var(--space-3); }
-    .ch12__outlet { grid-column: 1; }
-    .ch12__kind { grid-column: 2; grid-row: 1; }
-    .ch12__find { grid-column: 1 / -1; grid-row: 2; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ch12__row, .ch12__all :global(.icon) { transition: none; }
+    .mc__web { display: none; }
+    .mc__phone { display: block; margin-top: var(--space-8); }
+    .mc__ptitle { font-family: var(--font-display); font-variation-settings: var(--font-display-axes); font-weight: 900; font-size: var(--text-display-m); line-height: 1; padding-block: 0.08em; text-transform: uppercase; letter-spacing: var(--tracking-display); color: var(--text-1); }
+    .mc__panel { container: mc-panel / inline-size; display: flex; align-items: center; justify-content: center; height: 138px; margin-top: var(--space-6); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); background: var(--surface-1); overflow: hidden; }
+    .mc__strip { display: flex; align-items: center; gap: var(--space-2); }
+    .mc__strip > li { flex: none; display: grid; place-items: center; }
+    .mc__mark { order: 4; width: 72px; height: 72px; border-radius: var(--radius-full); background: var(--logo-plate); box-shadow: 0 0 0 1px var(--logo-plate-edge); }
+    .mc__sp .mc__av { border: var(--border-w) solid var(--border-1); }
+    .mc__sp--0, .mc__sp--1 { --d: 50px; --f: 20px; }
+    .mc__sp--2, .mc__sp--3 { --d: 36px; --f: 15px; }
+    .mc__sp--4, .mc__sp--5 { --d: 24px; --f: 12px; }
+    .mc__sp .mc__av { width: var(--d); height: var(--d); font-size: var(--f); }
+    .mc__sp--4 { order: 1; } .mc__sp--2 { order: 2; } .mc__sp--0 { order: 3; }
+    .mc__sp--1 { order: 5; } .mc__sp--3 { order: 6; } .mc__sp--5 { order: 7; }
+    /* The whole strip is 340 wide; a narrower panel (phones under about 390) drops the outer pair, so no circle or
+       initial is ever cut by the panel edge (their names stay in the list below). */
+    @container mc-panel (max-width: 351px) { .mc__strip > .mc__sp--4, .mc__strip > .mc__sp--5 { display: none; } }
+
+    /* The same six by name and count (the strip alone carries no names), then the way to everyone. */
+    .mc__names { margin-top: var(--space-6); border-top: var(--border-w) solid var(--border-1); }
+    .mc__nrow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); min-height: 44px; padding-block: var(--space-3); border-bottom: var(--border-w) solid var(--border-1); }
+    .mc__nrow .mc__name { min-width: 0; font-size: var(--text-body-s); }
+    .mc__ncount { flex: none; font-size: var(--text-body-s); color: var(--text-2); font-variant-numeric: tabular-nums; }
+    .mc__all { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: var(--space-2); font-size: var(--text-body-s); font-weight: 600; color: var(--text-1); }
+    .mc__all :global(.icon) { color: var(--text-2); }
   }
 </style>

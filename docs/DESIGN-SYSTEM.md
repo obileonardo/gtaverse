@@ -61,6 +61,7 @@ Sources: the owner's taste board picks and answers of 23 Nov 2026 (board analysi
 | `src/components/Spoiler.astro`, `src/lib/spoiler.ts` | The inline spoiler block (native `<details>`), also made from explainer "Spoiler:" paragraphs |
 | `src/lib/games.ts` | Games, aliases, counts, `logoOf()`, the switcher groups (`content/games.json`) |
 | `src/components/map/` | The map screen and find drawer (React island on `/map`): `MapApp.tsx`, `MapCanvas.tsx` (Leaflet), `Sheet.tsx` (phone sheets), `FindDetail.tsx`, `Menus.tsx`, `ClipPlayer.tsx`, `ui.tsx` (the shared components for React), `map.css` |
+| `src/components/home/Chapter011Made.astro`, `Chapter012Finders.astro` (phase 7e) | Since phase 7e, chapter 011 How it is made is Places' method blocks in the About page's words, then the source totals; chapter 012 Most credited is komoot's per-area leaderboard beside a line drawing of Leonida (coast credited to Rockstar Games) on desktop and Places' avatar strip with the names under it on the phone (rule in `src/lib/leaderboard.ts`, LR74). LR73 to LR77 |
 
 ## Theme
 
