@@ -55,6 +55,15 @@ const words = quote.split(' ');
     const request = () => { if (near && !ticking) { ticking = true; requestAnimationFrame(update); } };
     const reset = () => { words.forEach((w, i) => { w.style.removeProperty('--hl'); last[i] = -1; }); if (!reduce.matches) update(); };
     reduce.addEventListener('change', reset);
+    // Selecting text in the quote (#80 review N2): the pink copies sit over the real words and would hide the
+    // selection, so while a selection touches the quote they step aside and the quote reads as plain text, with the
+    // site's selection colour on what is selected. They come back as soon as the selection is gone.
+    const line = quote.querySelector('p')!;
+    document.addEventListener('selectionchange', () => {
+      const s = getSelection();
+      const on = !!s && !s.isCollapsed && s.rangeCount > 0 && s.getRangeAt(0).intersectsNode(line);
+      if (on !== fig.hasAttribute('data-selecting')) fig.toggleAttribute('data-selecting', on);
+    });
     addEventListener('scroll', request, { passive: true });
     addEventListener('resize', request);
     if ('IntersectionObserver' in window) {
@@ -130,6 +139,16 @@ const words = quote.split(' ');
   }
   @media (prefers-reduced-motion: no-preference) {
     :global(html.js) .mf__w { --hl: 0; }
+  }
+  .mf__body[data-selecting] .mf__w::after { visibility: hidden; }
+  /* Forced colours (#80 review N3) painted the band Canvas and its copy CanvasText, so the highlight vanished. There
+     the band takes the system's own highlighter colours, Mark and MarkText. The words keep CanvasText but lose the
+     backplate the browser draws behind forced text, which the next line's words painted over the band's edge, so
+     their selection is set back to the system's Highlight by hand. */
+  @media (forced-colors: active) {
+    .mf__w { forced-color-adjust: none; color: CanvasText; }
+    .mf__w::selection { background: Highlight; color: HighlightText; }
+    .mf__w::after { forced-color-adjust: none; background: Mark; color: MarkText; }
   }
   .mf__small { margin-top: var(--space-12); max-width: var(--measure-short); font-size: var(--text-body); line-height: 25px; color: var(--text-2); text-wrap: balance; }
   .mf__small a { color: var(--text-1); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; white-space: nowrap; }

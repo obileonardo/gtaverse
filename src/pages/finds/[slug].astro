@@ -300,13 +300,36 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
   // Unknown ids are ignored and the page keeps its first tab.
   const wanted = new URLSearchParams(location.search).get('tab');
   if (wanted) document.getElementById(`find-tab-${wanted}`)?.click();
-  // Links and pills that open a tab: select the tab, then bring the tab row into view.
+  // The address follows the tab (#82 review N3): whichever way a tab is chosen (a link below, a click or the arrow
+  // keys on the tab row), ?tab=<id> is written with replaceState, so a reload or a copied address opens the same tab
+  // and Back is not filled with tab changes. The first tab is the page's default, so it clears the parameter.
+  const tabEls = [...document.querySelectorAll<HTMLElement>('[role="tab"][id^="find-tab-"]')];
+  // Every link names its own tab whatever the address says now: the first tab is the page's path with no query
+  // (a bare #tabs would keep a ?tab= the page has written), the others ?tab=<id>, which replaces any query.
+  const tabHref = (id: string) => (tabEls[0]?.id === `find-tab-${id}` ? `${location.pathname}#tabs` : `?tab=${encodeURIComponent(id)}#tabs`);
+  const keepTab = (hash?: string) => {
+    const on = tabEls.find((t) => t.getAttribute('aria-selected') === 'true');
+    if (!on) return;
+    const url = new URL(location.href);
+    if (on === tabEls[0]) url.searchParams.delete('tab');
+    else url.searchParams.set('tab', on.id.slice('find-tab-'.length));
+    if (hash !== undefined) url.hash = hash;
+    if (url.href !== location.href) history.replaceState(history.state, '', url);
+  };
+  const watch = new MutationObserver(() => keepTab());
+  tabEls.forEach((t) => watch.observe(t, { attributes: true, attributeFilter: ['aria-selected'] }));
+  // Links and pills that open a tab: select the tab, then bring the tab row into view. Each link's address names its
+  // tab, so a Cmd, Ctrl, Shift or middle click (left to the browser: a new tab or window) opens the find on that tab;
+  // only a plain left click switches in place (#82 review N2).
   document.querySelectorAll<HTMLElement>('[data-open-tab]').forEach((el) => {
+    if (el instanceof HTMLAnchorElement && el.dataset.openTab && document.getElementById(`find-tab-${el.dataset.openTab}`)) el.setAttribute('href', tabHref(el.dataset.openTab));
     el.addEventListener('click', (e) => {
       const tab = document.getElementById(`find-tab-${el.dataset.openTab}`);
       if (!tab) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       tab.click();
+      keepTab('#tabs');
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       document.getElementById('tabs')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
       tab.focus({ preventScroll: true });

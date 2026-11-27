@@ -91,7 +91,7 @@ const reduced = baseDecls.find((d) => d.name === '--dur-fade-reduced')?.value ??
   <p class="ds-note">Arriving and leaving use different curves, and leaving takes 60 to 75% of the entrance (decision M1). The pairs below are found by name in tokens.css and their ratio is computed. Pick a pair, open and close the panel; open it again while it leaves and it turns back from where it is (a transition, not a keyframe).</p>
   <LevelTable head={['Pair', 'Entrance', 'Exit', 'Exit is']} rows={pairRows} caption="Entrance and exit duration pairs" />
   <div class="ds-stage">
-    <div class="ds-row" role="group" aria-label="Duration pair">
+    <div class="ds-row ds-pairs" role="group" aria-label="Duration pair">
       {pairs.map((p, i) => <Chip selected={i === 0} data-pair={p.id} data-in={p.in.name} data-out={p.out.name}>{p.id}</Chip>)}
     </div>
     <div class="ds-row">
@@ -315,6 +315,27 @@ const reduced = baseDecls.find((d) => d.name === '--dur-fade-reduced')?.value ??
   .ds-dur__bar { grid-area: bar; display: block; height: 10px; min-width: 2px; border-radius: var(--radius-xs); background: var(--accent); }
   .ds-dur > .ds-mono { grid-area: val; }
   .ds-dur__note { grid-area: note; color: var(--text-2); font-size: var(--text-caption); line-height: 1.4; }
+
+  /* The pair chips stay 34 to the eye but their hit areas reach 44 (#80 review N6). Each chip's box is --ctrl-size
+     tall: 5px transparent borders top and bottom hold the fill to the 34px pill (background-clip), an inset hairline
+     draws its edge where the border was, and the negative margin keeps the row's spacing. The focus ring goes on a
+     ::before the size of the pill, so it still hugs the pill. */
+  .ds-pairs :global(.chip.chip) {
+    position: relative;
+    height: var(--ctrl-size);
+    margin-block: calc((var(--chip-h) - var(--ctrl-size)) / 2);
+    padding-inline: calc(14px + var(--border-w));
+    border-width: calc((var(--ctrl-size) - var(--chip-h)) / 2) 0;
+    border-color: transparent;
+    border-radius: calc(var(--chip-h) / 2) / calc(var(--ctrl-size) / 2); /* the pill's own ends stay round: 17 by 17 inside the borders */
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 var(--border-w) var(--border-1);
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour), box-shadow var(--dur-colour) var(--ease-colour);
+  }
+  .ds-pairs :global(.chip.chip.is-selected) { border-color: transparent; box-shadow: inset 0 0 0 var(--border-w) var(--inverse-fill); }
+  .ds-pairs :global(.chip.chip::before) { content: ''; position: absolute; inset: 0; border-radius: var(--radius-full); pointer-events: none; }
+  .ds-pairs :global(.chip.chip:focus-visible) { outline: none; }
+  .ds-pairs :global(.chip.chip:focus-visible::before) { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 
   .ds-panel-stage { position: relative; min-height: 140px; }
   .ds-panel[hidden] { display: none; }
