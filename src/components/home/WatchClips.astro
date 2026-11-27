@@ -43,7 +43,7 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
           <p class="wc__summary"><span class="wc__clamp" data-wc-summary>{lead.summary}</span></p>
           <a class="wc__post" href={lead.url} rel="noopener" target="_blank" data-wc-post>Original post on YouTube<Icon name="arrow-up-right" size={16} /></a>
         </div>
-        <Button href={`/finds/${lead.slug}`} variant="inverse" size="l" class="wc__open" data-wc-link>Open the find<span class="sr-only" data-wc-open-title>: {lead.title}</span></Button>
+        <Button href={`/finds/${lead.slug}`} variant="inverse" size="l" class="wc__open" data-wc-link aria-label={`Open the find: ${lead.title}`}>Open the find</Button>
       </div>
     </div>
     <div class="wc__side">
@@ -95,6 +95,7 @@ const kicker = (k: number) => (k === 0 ? 'Watching' : k === 1 ? 'Up next' : '');
   }
   .wc__frame :global(iframe) { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; border: 0; }
   .wc__play { position: absolute; inset: 0; display: block; width: 100%; }
+  .wc__play[hidden] { display: none; } /* gone while the player is loaded: never focusable under the iframe */
   /* :global: a chosen still is a new image made by the script, without this component's scope attribute. */
   .wc__media, .wc__media :global(img) { position: absolute; inset: 0; width: 100%; height: 100%; }
   .wc__media :global(img) { object-fit: cover; }

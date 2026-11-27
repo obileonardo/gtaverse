@@ -100,8 +100,7 @@ export function initWatchClips(root: HTMLElement) {
     frame.querySelector('[data-wc-play]')?.setAttribute('aria-label', `Play clip: ${c.title}`);
     if (open) {
       open.href = `/finds/${c.slug}`;
-      const named = open.querySelector('[data-wc-open-title]');
-      if (named) named.textContent = `: ${c.title}`;
+      open.setAttribute('aria-label', `Open the find: ${c.title}`);
     }
     label(i);
     swap(credit, () => {
@@ -132,9 +131,10 @@ export function initWatchClips(root: HTMLElement) {
 
   frame.querySelector<HTMLElement>('[data-wc-play]')?.addEventListener('click', (e) => {
     const btn = e.currentTarget as HTMLElement;
+    if (frame.querySelector('iframe')) return; // one player at a time
     const f = document.createElement('iframe');
     f.src = clips[current].embed;
-    f.title = btn.getAttribute('aria-label') ?? 'Clip';
+    f.title = `YouTube player: ${clips[current].title}`;
     f.allow = 'autoplay; encrypted-media; picture-in-picture';
     f.allowFullscreen = true;
     btn.hidden = true;
