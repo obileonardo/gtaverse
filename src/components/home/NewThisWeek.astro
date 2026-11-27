@@ -1,71 +1,113 @@
 ---
-// Home chapter 003, New this week (round 2: the owner's Linear Love, opened by A24's hairline rule and label; Runway
-// at tablet width; PlayStation App's news feed on the phone). Dated update cards: a small dark still (or the sunrise
-// glow with the type's blip), the day it was added, the title and our summary. Four show at once; A24's thin
-// chevrons page through the newest twelve. The dates are each find's real added_at, so when finds were added the
-// same day every card says so. Spoiler and mature finds keep their summary and art out (safeSummary, cardImage).
-// The chapter is left out when nothing was added in the seven days before the build.
-import Icon from '../ui/Icon.astro';
+// Home chapter 003, New this week (phase 7b, the owner's picks of 27 Nov 2026, LR58 to LR62). Apple Games' dark feed
+// grouped under date headings is the base; Riot Mobile's follow card comes first, as "Follow by RSS" (owner decision 3).
+// Each card is Apple's: the still on top (16:9) with the "New find" badge, then a strip with the type's blip, the
+// title, our summary and "View". A find without a still (or a spoiler or mature find, which never shows art) gets
+// Grok's designed panel instead of a picture: the sunrise on the diagonal with the type in a label box. The play circle
+// opens a find's YouTube clip, over the still or the panel; the Found toggle (top right) shares the map's found set
+// (new-this-week.ts). Phone: one column, four cards, the Loves as drawn, a date heading over each day. 768: two
+// columns, four cards. 1024 and wider: three columns, six cards; the follow card spans the row. From 768, when the
+// cards come from more than one day, the headings step aside and each card carries its date as a badge. The dates are
+// each find's real added_at. The chapter is left out when nothing was added in the seven days before the build.
+import Badge from '../ui/Badge.astro';
 import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
 import ChapterHead from './ChapterHead.astro';
 import type { Find } from '../../lib/content';
 import { cardImage, formatDate } from '../../lib/finds';
 import { categoryLabel } from '../../lib/media';
 import { safeSummary } from '../../lib/feed';
-import { ageLabel } from '../../lib/home';
 import { youtubeId } from '../../lib/clip';
 import { blipSvg, iconSvg } from '../../icons/render';
 import { categoryGlyphs } from '../../icons/family';
 
 interface Props { finds: Find[]; total: number; index: number }
 const { finds, total, index } = Astro.props;
-const blip = (f: Find, size: number) => blipSvg(categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin', { size });
+
+// Six at most (two rows of three on desktop); the fifth and sixth show from 1024 only.
+const WIDE_FROM = 4;
+const shown = finds.slice(0, 6);
+const dayLabel = (d: string) =>
+  new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+// Apple's date headings: consecutive finds added the same day share one. A heading whose cards all show from 1024
+// only is hidden below 1024 with them.
+type Row = { kind: 'day'; day: string; wideOnly: boolean } | { kind: 'find'; f: Find; i: number };
+const rows: Row[] = [];
+shown.forEach((f, i) => {
+  const day = f.added_at ?? '';
+  const prev = shown[i - 1];
+  if (day && (!prev || (prev.added_at ?? '') !== day)) rows.push({ kind: 'day', day, wideOnly: i >= WIDE_FROM });
+  rows.push({ kind: 'find', f, i });
+});
+const multi = new Set(shown.map((f) => f.added_at ?? '')).size > 1;
+const glyph = (f: Find) => categoryGlyphs[f.category as keyof typeof categoryGlyphs] ?? 'pin';
 ---
-{finds.length > 0 && (
+{shown.length > 0 && (
 <section class="nw" aria-labelledby="nw-label">
   <div class="container">
     <ChapterHead index={index} label="New this week" count={total} id="nw-label">
       <Fragment slot="end">
-        <a class="nw__link" href="/rss.xml"><span set:html={iconSvg('rss', { size: 16 })} />Follow by RSS</a>
         <a class="nw__link" href="/finds">All {total} new finds<Icon name="chevron-right" size={16} stroke={2} /></a>
       </Fragment>
     </ChapterHead>
-    <div class="nw__frame">
-      <button type="button" class="nw__chev nw__chev--prev" data-nw-prev aria-label="Newer finds" hidden><span></span></button>
-      <ul class="nw__track" role="list" data-nw-track data-reveal>
-        {finds.map((f) => {
-          const img = cardImage(f);
-          const yt = f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
-          return (
-            <li class="nw__item">
-              <article class="nw__card">
-                <header class="nw__head">
-                  <span class="nw__avatar" set:html={blip(f, 28)} />
-                  <span class="nw__who"><span class="nw__cat">{categoryLabel(f)}</span><span class="nw__age">{ageLabel(f.added_at)}</span></span>
-                </header>
-                <div class="nw__media">
-                  {img ? (
-                    <img src={img.src} srcset={img.srcset} sizes="(max-width: 767px) 92vw, (max-width: 1023px) 31vw, 290px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-                  ) : (
-                    <div class="nw__glow" aria-hidden="true"><span set:html={blip(f, 40)} /></div>
-                  )}
+
+    {/* Riot's follow card, first: the art panel (our RSS glyph on the glow) with its diagonal edge, then the copy. */}
+    <a class="nw__follow" href="/rss.xml">
+      <span class="nw__follow-art" aria-hidden="true"><span set:html={iconSvg('rss', { size: 40 })} /></span>
+      <span class="nw__follow-copy">
+        <span class="nw__follow-line">Get every new find in your feed reader</span>
+        <span class="nw__follow-cta">Follow by RSS<span class="nw__follow-chev"><Icon name="chevron-right" size={16} stroke={2.5} /></span></span>
+      </span>
+    </a>
+
+    {/* One list for every width. Phone: Apple's date headings sit in it as full-width rows. From 768, with more than one
+        date, the headings step aside and each card carries its date as a badge (Sunlitt), so a row is never one card
+        and two empty columns (LR59). */}
+    <ul class="nw__grid" role="list" data-reveal data-days={multi ? 'many' : 'one'}>
+      {rows.map((r) => r.kind === 'day' ? (
+        <li class="nw__dayrow" data-wide-only={r.wideOnly ? '' : undefined}>
+          <h3 class="nw__day">Added <time datetime={r.day}>{dayLabel(r.day)}</time></h3>
+        </li>
+      ) : (() => {
+        const { f, i } = r;
+        const img = cardImage(f);
+        // Every safe YouTube clip keeps its link, still or not (Shorts never have a still).
+        const yt = f.clip?.platform === 'youtube' && !f.spoiler && !f.mature ? youtubeId(f.clip.url) : null;
+        const type = categoryLabel(f);
+        return (
+          <li class="nw__item" data-wide={i >= WIDE_FROM ? '' : undefined}>
+            <article class="nw__card">
+              <div class="nw__media">
+                {img ? (
+                  <img src={img.src} srcset={img.srcset} sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, 384px" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+                ) : (
+                  <div class:list={['nw__panel', { 'nw__panel--play': yt }]} data-tone={i % 4} aria-hidden="true"><span class="nw__tag">{type}</span></div>
+                )}
+                <div class="nw__badges">
+                  <Badge variant="new">New find</Badge>
+                  {multi && f.added_at && <Badge variant="meta" class="nw__date"><time datetime={f.added_at}>{formatDate(f.added_at)}</time></Badge>}
                 </div>
-                <div class="nw__body">
-                  <p class="nw__date"><time datetime={f.added_at}>{formatDate(f.added_at)}</time></p>
-                  <h3 class="nw__title"><a href={`/finds/${f.slug}`} class="nw__hit"><span class="nw__clamp">{f.title}</span></a></h3>
-                  <p class="nw__summary"><span class="nw__clamp nw__clamp--3">{safeSummary(f)}</span></p>
+                {yt && (
+                  <a class:list={['nw__play', { 'nw__play--panel': !img }]} href={f.clip!.url} target="_blank" rel="noopener" data-play aria-label={`Watch on YouTube: ${f.title}`}>
+                    <span class="clip__play" aria-hidden="true"><Icon name="play" size={24} /></span>
+                  </a>
+                )}
+              </div>
+              <div class="nw__strip">
+                <span class="nw__icon" set:html={blipSvg(glyph(f), { size: 40, label: type })} />
+                <div class="nw__text">
+                  <h4 class="nw__title"><a href={`/finds/${f.slug}`} class="nw__hit"><span class="nw__clamp">{f.title}</span></a></h4>
+                  <p class="nw__sub"><span class="nw__clamp">{safeSummary(f)}</span></p>
                 </div>
-                <div class="nw__actions">
-                  {yt && <Button href={f.clip!.url} variant="secondary" size="s" icon="arrow-up-right" target="_blank" rel="noopener" class="nw__yt">Watch on YouTube</Button>}
-                  <button type="button" class="nw__found" data-found={f.slug} aria-pressed="false" aria-label={`Found it: ${f.title}`} set:html={iconSvg('found', { size: 20 })} />
-                </div>
-              </article>
-            </li>
-          );
-        })}
-      </ul>
-      <button type="button" class="nw__chev nw__chev--next" data-nw-next aria-label="Older finds" hidden><span></span></button>
-    </div>
+                <span class="btn btn--quiet btn--s nw__view" aria-hidden="true"><span class="btn__label">View</span></span>
+              </div>
+              {/* After the title in reading and focus order; drawn in the still's top right corner. */}
+              <button type="button" class="nw__found" data-found={f.slug} aria-pressed="false" aria-label={`Found it: ${f.title}`} set:html={iconSvg('found', { size: 16 })} />
+            </article>
+          </li>
+        );
+      })())}
+    </ul>
     <div class="nw__all"><Button href="/finds" variant="quiet" iconEnd="chevron-right">All new finds</Button></div>
   </div>
 </section>
@@ -78,114 +120,153 @@ const blip = (f: Find, size: number) => blipSvg(categoryGlyphs[f.category as key
 
 <style>
   .nw__link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-body-s); font-weight: 600; color: var(--text-2); transition: color var(--dur-colour) var(--ease-colour); }
-  .nw__link > span { display: flex; }
   @media (hover: hover) and (pointer: fine) { .nw__link:hover { color: var(--text-1); } }
 
-  .nw__frame { position: relative; margin-top: var(--space-10); }
-  /* Four cards across the content box, 20 apart; the track scrolls natively and A24's chevrons page it by four. */
-  .nw__track {
-    --cols: 4;
+  /* Riot's follow card: a step above the ground, the art flush on the left with a diagonal right edge (47% of the
+     card at the top, 40% at the bottom), the copy from half way. One link. */
+  .nw__follow {
+    --art: 47%;
+    position: relative;
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: calc((100% - (var(--cols) - 1) * var(--space-5)) / var(--cols));
-    gap: var(--space-5);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    padding-block: 4px;
-    margin-block: -4px;
+    grid-template-columns: var(--art) 1fr;
+    min-height: 117px;
+    margin-top: var(--space-10);
+    background: var(--surface-1);
+    border: var(--border-w) solid var(--border-1);
+    border-radius: var(--radius-l);
+    transition: transform var(--dur-press) var(--ease-out);
   }
-  .nw__track::-webkit-scrollbar { display: none; }
-  .nw__item { scroll-snap-align: start; min-width: 0; }
+  .nw__follow:active { transform: scale(0.99); }
+  .nw__follow:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+  .nw__follow-art {
+    display: grid;
+    place-items: center;
+    padding-right: 15%;
+    color: var(--text-1);
+    background: var(--glow-hero), var(--surface-2);
+    border-radius: calc(var(--radius-l) - 1px) 0 0 calc(var(--radius-l) - 1px);
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+  }
+  .nw__follow-art span { display: flex; }
+  .nw__follow-copy { display: grid; align-content: center; gap: var(--space-3); padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3); }
+  .nw__follow-line { font-size: var(--text-body-s); font-weight: 600; line-height: 22px; color: var(--text-1); }
+  .nw__follow-cta { white-space: nowrap; display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-s); font-weight: 600; line-height: 22px; color: var(--text-1); }
+  .nw__follow-chev { display: flex; color: var(--accent-text); transition: transform var(--dur-press) var(--ease-out); }
 
-  /* Linear's card: a step above the ground, a 1px edge, radius 12, the art flush on top at 1.6:1. */
-  .nw__card { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--surface-1); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-m); }
-  .nw__head, .nw__actions { display: none; }
-  .nw__media { position: relative; aspect-ratio: 1.6; background: var(--surface-2); overflow: hidden; border-radius: calc(var(--radius-m) - 1px) calc(var(--radius-m) - 1px) 0 0; }
+  /* Apple's date heading: sentence case, 20 semibold, grey; a full-width row of the one list, 32 under the follow card
+     and above a later day, the grid's gap to its cards. */
+  .nw__grid { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin-top: var(--space-8); }
+  .nw__dayrow { grid-column: 1 / -1; }
+  .nw__dayrow:not(:first-child) { padding-top: calc(var(--space-8) - var(--space-5)); }
+  .nw__day { font-size: var(--text-title-l); font-weight: 600; line-height: 1.3; color: var(--text-3); }
+  .nw__item { min-width: 0; }
+
+  /* Apple's card: the still flush on top at 16:9, the strip under it. The site's framed card: --surface-1, a 1px edge,
+     radius 16. */
+  .nw__card { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--surface-1); border: var(--border-w) solid var(--border-1); border-radius: var(--radius-l); transition: transform var(--dur-press) var(--ease-out); }
+  /* Press feedback only when the card's own link is pressed: the play circle and Found toggle have their own. */
+  .nw__card:has(.nw__hit:active) { transform: scale(0.98); }
+  .nw__media { position: relative; aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; border-radius: calc(var(--radius-l) - 1px) calc(var(--radius-l) - 1px) 0 0; }
   .nw__media img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; transition: transform var(--dur-card-lift) var(--ease-out); }
-  .nw__glow { position: absolute; inset: 0; display: grid; place-items: center; background: var(--glow-hero), var(--surface-1); }
-  .nw__glow span { display: flex; }
-  .nw__body { display: grid; gap: var(--space-2); padding: var(--space-6); }
-  .nw__date { font-family: var(--font-mono); font-size: var(--text-mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
-  .nw__title { font-size: var(--text-title); font-weight: 600; line-height: 1.35; }
-  .nw__summary { font-size: var(--text-body-s); line-height: 20px; color: var(--text-2); }
-  /* Clamped lines keep their full glyphs: the clip lives on a wrapper with room above and below each line. */
+  .nw__badges { position: absolute; top: calc(var(--space-3) + 5px); left: var(--space-3); display: flex; gap: var(--space-2); }
+
+  /* Grok's designed fallback: the sunrise at full strength on the diagonal, falling into the ground from the top left
+     corner, the type in a square label box in the middle. */
+  .nw__panel { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-4); }
+  .nw__panel::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg) 8%, transparent 62%), var(--frame-card); }
+  /* Grok's tiles each fall into black from a different side: one accent, four turns of the same sunrise. */
+  .nw__panel[data-tone='1']::before { transform: scaleX(-1); }
+  .nw__panel[data-tone='2']::before { transform: scaleY(-1); }
+  .nw__panel[data-tone='3']::before { transform: scale(-1); }
+  /* With a clip, Apple's play circle takes the middle and the label steps down to the bottom on one line. */
+  .nw__panel--play { place-items: end center; padding-bottom: var(--space-3); }
+  .nw__tag {
+    position: relative;
+    max-width: 100%;
+    padding: 6px 12px 5px;
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: var(--font-display);
+    font-variation-settings: var(--font-display-axes);
+    font-weight: 800;
+    font-size: var(--text-display-s);
+    line-height: 1.1;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* Apple's play circle on a video still: only the circle is the link, so the rest of the card opens the find. */
+  .nw__play { position: absolute; left: 50%; top: 50%; z-index: 2; width: var(--ctrl-size-xl); height: var(--ctrl-size-xl); translate: -50% -50%; border-radius: var(--radius-full); }
+  .nw__panel--play .nw__tag { font-size: var(--text-title-l); white-space: nowrap; }
+  .nw__play:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+  /* The Found toggle: a 44 button (the finger) whose glass circle (the site's glass button fill, edge and blur) is
+     32 to the eye; pressed = the inverse fill. */
+  /* Without JavaScript the toggle could not work, so it is not drawn. */
+  :global(html:not(.js)) .nw__found { display: none; }
+  .nw__found { position: absolute; top: calc(var(--space-3) - 6px); right: calc(var(--space-3) - 6px); z-index: 2; display: grid; place-items: center; width: var(--ctrl-size); height: var(--ctrl-size); border-radius: var(--radius-full); color: var(--text-1); cursor: pointer; transition: transform var(--dur-press) var(--ease-out); }
+  .nw__found::before { content: ''; position: absolute; inset: 6px; border-radius: var(--radius-full); background: var(--glass-fill); border: var(--border-w) solid var(--glass-border); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: background-color var(--dur-colour) var(--ease-colour), border-color var(--dur-colour) var(--ease-colour); }
+  .nw__found :global(svg) { position: relative; display: block; }
+  .nw__found:active:not(:focus-visible) { transform: scale(0.97); }
+  .nw__found:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -4px; }
+  .nw__found[aria-pressed='true'] { color: var(--inverse-text); }
+  .nw__found[aria-pressed='true']::before { background: var(--inverse-fill); border-color: transparent; }
+  @media (prefers-reduced-transparency: reduce) { .nw__found::before { background: var(--surface-1); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+  /* Apple's strip: 16 at the sides, the 40 icon, the title (17/600) over the subtitle (our summary), View at the right. */
+  .nw__strip { flex: 1; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .nw__icon { display: flex; }
+  .nw__text { display: grid; gap: 2px; min-width: 0; }
+  .nw__title { font-size: var(--text-title); font-weight: 600; line-height: 1.3; color: var(--text-1); }
+  .nw__sub { font-size: var(--text-body-s); line-height: 1.35; color: var(--text-2); }
+  /* Clamped lines keep their full glyphs: the line height leaves room above and below each line. */
   .nw__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
-  .nw__clamp--3 { -webkit-line-clamp: 3; }
+  .nw__view { pointer-events: none; }
   .nw__hit::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
   .nw__card:has(.nw__hit:focus-visible) { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
   .nw__hit:focus-visible { outline: none; }
-  .nw__card { transition: transform var(--dur-press) var(--ease-out); }
-  .nw__card:active { transform: scale(0.98); }
-
-  /* A24's thin chevron: a 1px line 50 tall in the gutter, a 44 wide hit area. */
-  .nw__chev { position: absolute; top: 0; bottom: 0; width: 44px; display: grid; place-items: center; color: var(--text-2); transition: color var(--dur-colour) var(--ease-colour); }
-  .nw__chev[hidden] { display: none; }
-  .nw__chev--next { right: calc(-1 * var(--page-pad) / 2 - 22px); }
-  .nw__chev--prev { left: calc(-1 * var(--page-pad) / 2 - 22px); }
-  .nw__chev span { width: 18px; height: 50px; background: currentColor; clip-path: polygon(0 0, 1.5px 0, 100% 50%, 1.5px 100%, 0 100%, calc(100% - 1.5px) 50%); }
-  .nw__chev--prev span { transform: scaleX(-1); }
   .nw__all { display: none; }
 
   @media (hover: hover) and (pointer: fine) {
     .nw__card:hover .nw__media img { transform: scale(1.03); }
-    .nw__chev:hover { color: var(--text-1); }
+    .nw__card:hover .nw__view { background: var(--surface-3); }
+    .nw__found:hover::before { background: var(--glass-fill-strong); }
+    .nw__found[aria-pressed='true']:hover::before { background: var(--inverse-fill); }
+    .nw__follow:hover .nw__follow-chev { transform: translateX(2px); }
   }
 
-  /* Tablet (Runway): three across, the summary folds away, the headline steps up. */
+  /* 1024 and wider: the follow card spans the row; its art is one column wide and the copy sits on one line. */
+  @media (min-width: 1024px) {
+    .nw__follow { --art: calc((100% - 2 * var(--space-5)) / 3); min-height: 136px; }
+    .nw__follow-art { padding-right: 8%; clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%); }
+    .nw__follow-copy { padding: var(--space-6) var(--space-8); gap: var(--space-2); }
+    .nw__follow-line { font-size: var(--text-title-l); line-height: 28px; }
+  }
+
+  /* From 768 with more than one date: the heading rows leave the grid (kept for screen readers, as .sr-only) and each
+     card's date badge says the day, so no row is one card and two empty columns (LR59). */
+  @media (min-width: 768px) {
+    .nw__grid[data-days='many'] .nw__dayrow { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .nw__grid[data-days='many'] .nw__badges :global(.nw__date) { display: inline-flex; }
+  }
+
+  /* 768 to 1023: two columns, four cards. */
   @media (max-width: 1023px) {
-    .nw__track { --cols: 3; }
-    .nw__summary { display: none; }
-    .nw__title { font-size: var(--text-h2); line-height: 1.25; }
-    .nw__chev--next { right: calc(-1 * var(--page-pad)); }
-    .nw__chev--prev { left: calc(-1 * var(--page-pad)); }
+    .nw__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nw__item[data-wide], .nw__dayrow[data-wide-only] { display: none; }
   }
 
-  /* Phone (PlayStation App): a feed of full-width cards separated by an 8px band; a head row with the type's blip,
-     its name and the age; the still; the title and three lines; then "Watch on YouTube" and the Found toggle. */
+  /* Phone: the Loves as drawn. One column, 12 between cards, the follow card 16 above the first heading. */
   @media (max-width: 767px) {
-    .nw__frame { margin-top: var(--space-5); margin-inline: calc(-1 * var(--page-pad)); }
-    .nw__track { display: flex; flex-direction: column; gap: 8px; overflow: visible; scroll-snap-type: none; background: var(--surface-1); padding: 0; margin: 0; }
-    .nw__item:nth-child(n + 5) { display: none; }
-    .nw__card { background: var(--bg); border: 0; border-radius: 0; padding: var(--space-5) var(--page-pad); gap: var(--space-3); }
-    .nw__card:active { transform: none; }
-    .nw__head { display: flex; align-items: center; gap: var(--space-3); }
-    .nw__avatar { display: flex; }
-    .nw__who { display: grid; line-height: 1.25; }
-    .nw__cat { font-size: var(--text-label); color: var(--text-1); }
-    .nw__age { font-size: 13px; color: var(--text-3); }
-    .nw__media { aspect-ratio: 16 / 9; border-radius: var(--radius-m); }
-    .nw__body { padding: 0; gap: var(--space-1); }
-    .nw__date { display: none; }
-    .nw__summary { display: block; font-size: var(--text-body-s); line-height: 21px; }
-    .nw__title { font-size: var(--text-title); }
-    .nw__actions { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); }
-    .nw__actions :global(.nw__yt) { margin-right: auto; }
-    .nw__found {
-      position: relative;
-      width: 44px;
-      height: 44px;
-      margin: -6px -6px -6px auto;
-      display: grid;
-      place-items: center;
-      border-radius: var(--radius-full);
-      background: radial-gradient(closest-side, var(--surface-2) 15.5px, transparent 16px);
-      color: var(--text-2);
-      transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-colour) var(--ease-colour), color var(--dur-colour) var(--ease-colour);
-    }
-    .nw__found:active { transform: scale(0.94); }
-    .nw__found[aria-pressed='true'] { background: radial-gradient(closest-side, var(--inverse-fill) 15.5px, transparent 16px); color: var(--inverse-text); }
-    .nw__chev { display: none !important; }
+    .nw__follow { margin-top: var(--space-5); }
+    .nw__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin-top: var(--space-4); }
+    .nw__dayrow:not(:first-child) { padding-top: calc(var(--space-8) - var(--space-3)); }
+    .nw__badges :global(.nw__date) { display: none; }
     .nw__all { display: flex; margin-top: var(--space-6); }
     .nw__all :global(.btn) { --h: var(--ctrl-size); }
-    /* PlayStation's pill and like button stay 32 to the eye; their hit areas reach 44. */
-    .nw__actions :global(.nw__yt) { --h: var(--ctrl-size); position: relative; background: none; padding-inline: 14px; }
-    .nw__actions :global(.nw__yt .btn__label), .nw__actions :global(.nw__yt .icon) { position: relative; }
-    .nw__actions :global(.nw__yt)::before { content: ''; position: absolute; inset: 6px 0; border-radius: var(--radius-full); background: var(--accent-tint); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nw__media img, .nw__card, .nw__found { transition: none; }
+    .nw__media img, .nw__card, .nw__follow, .nw__follow-chev, .nw__found, .nw__found::before { transition: none; }
   }
 </style>

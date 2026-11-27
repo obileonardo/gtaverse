@@ -32,7 +32,10 @@ function initReveal() {
   const cap = cssNumber('--stagger-cap', 6);
   let firstBatch = true;
   const io = new IntersectionObserver((entries) => {
-    const entering = entries.filter((e) => e.isIntersecting).map((e) => e.target as HTMLElement);
+    // An item a script has already shown (data-rv="skip", e.g. a filter brought it in) keeps that: rising it now would
+    // drop it to 0 and replay its entrance (LR56).
+    entries.forEach((e) => { const el = e.target as HTMLElement; if (el.dataset.rv) io.unobserve(el); });
+    const entering = entries.filter((e) => e.isIntersecting && !(e.target as HTMLElement).dataset.rv).map((e) => e.target as HTMLElement);
     // Reading order: top to bottom, then left to right.
     entering.sort((a, b) => {
       const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
