@@ -1,6 +1,6 @@
 # Now
 
-Status as of 2026-11-27. Update this file whenever something moves between states.
+Status as of 2026-11-28. Update this file whenever something moves between states.
 
 ## Waiting on owner
 - **Review stop: landing refresh phases 0 to 3** (Chime's plan, before phases 4 and 5). Live on thevicefiles.com since 26 Nov 2026. The sections with Rockstar pictures (hero art and trailer, Spotlight stills, By type stills, Regions stills, Watch the clips) can only be checked by the owner; grey-block before and after screenshots of the rest are on the owner's private review board (images stay out of the repository: the CI asset guard blocks them).
@@ -61,7 +61,8 @@ Chime owns content and pins. Each item needs a first-hand check in game or a bet
 - Nothing.
 
 ## Pushed, not live
-- Issue #113: mature finds show "Mature find: <type>" and the gate line everywhere but their own page, whose meta and social descriptions drop the summary (LR83); the build checks it. Pull request into `staging`, in review.
+- Issue #113: mature finds show "Mature find: <type>" and the gate line everywhere but their own page, whose meta and social descriptions drop the summary (LR83); the build checks it. Merged into `staging` (#114).
+- Issue #115: a mature find's sources stay on its own page (empty in the map data and `/data/finds.json`), the map shows no "Show mature clip" gate when there is no clip, and the build's mature check no longer false-alarms on shared phrases or the own page's clip label, and reads titles split by inline markup (LR84). Pull request into `staging`, in review.
 - #64: fact-check of the 14 bookmark candidates and the 5 draft explainers (issue #63): 4 new draft finds, explainer corrections and 12 conflicts. Waiting on Chime (4 clips to watch, 2 images to view).
 - #69: clips for 35 published finds (issue #68). Waiting on Chime's check.
 - #73: 4 draft finds from the X bookmarks, round 2 (issue #72). Waiting on Chime's check.

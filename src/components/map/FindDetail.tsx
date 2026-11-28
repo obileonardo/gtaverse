@@ -74,9 +74,19 @@ function Credits({ find }: { find: MapFind }) {
   );
 }
 
+// A mature find's sources stay on its own page (LR84): one chip says how many and opens the page.
 function Sources({ find, scroll }: { find: MapFind; scroll?: boolean }) {
   return (
     <ul className={`sources${scroll ? ' sources--scroll' : ''}`} role="list">
+      {find.mature && !find.sources.length && find.sourceCount > 0 && (
+        <li>
+          <a className="source" href={findUrl(find.slug)}>
+            <span className="source__icon"><Icon name={sourceIcon('article')} size={16} /></span>
+            <span className="source__label">{find.sourceCount} on the find page</span>
+            <Icon name="arrow-right" size={16} className="source__go" />
+          </a>
+        </li>
+      )}
       {find.sources.map((s) => (
         <li key={s.url}>
           <a className="source" href={s.url} target="_blank" rel="noopener">
@@ -113,7 +123,7 @@ export function FindNumbers({ find, meta }: { find: MapFind; meta: MapMeta }) {
   const pinned = find.pin ? `Pinned: ${acc}${cell ? `, ${cell}` : ''}` : 'Not pinned yet';
   return (
     <div className="dnums">
-      <p className="dnum"><span className="dnum__box tabular">{find.sources.length}</span><span className="dnum__label">{find.sources.length === 1 ? 'Source' : 'Sources'}</span></p>
+      <p className="dnum"><span className="dnum__box tabular">{find.sourceCount}</span><span className="dnum__label">{find.sourceCount === 1 ? 'Source' : 'Sources'}</span></p>
       <ul className="dstatus" role="list">
         <li className={find.verification === 'multi-source' ? 'is-accent' : undefined}>{verificationLabels[find.verification] ?? find.verification}</li>
         <li className="is-quiet">{pinned}</li>
@@ -160,7 +170,7 @@ export function DrawerContent({ find, meta, onClose, onCopy, onShare, titleId, f
           <Button variant="ghost" size="m" icon="arrow-right" iconOnly label="Open the find page" href={findUrl(find.slug)} />
         </div>
         <div className="drawer__tabs">
-          <Tabs id="drawer" label="Find" selected={tab} onSelect={(t) => setTab(t as 'details' | 'sources')} tabs={[{ id: 'details', label: 'Details' }, { id: 'sources', label: `Sources (${find.sources.length})` }]}>
+          <Tabs id="drawer" label="Find" selected={tab} onSelect={(t) => setTab(t as 'details' | 'sources')} tabs={[{ id: 'details', label: 'Details' }, { id: 'sources', label: `Sources (${find.sourceCount})` }]}>
             {(t) => t === 'details' ? (
               <>
                 <dl className="fields">

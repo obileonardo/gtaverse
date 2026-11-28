@@ -40,6 +40,12 @@ export const publicSummary = (f: Pick<Find, 'summary' | 'mature'>) => (f.mature 
 export const pageDescription = (f: Pick<Find, 'summary' | 'mature' | 'category' | 'region_ids'>) =>
   f.mature ? `${categorySingular(f.category)} in ${regionLabel(f)}. ${MATURE_GATE}` : f.summary;
 
+/**
+ * The sources a find lists anywhere but its own page: none for a mature find, whose source URLs can name the topic
+ * (owner decision, 27 Nov 2026; LR84). The field keeps its type (an empty list); the own page lists and credits them.
+ */
+export const publicSources = <S>(f: { mature: boolean; sources: S[] }): S[] => (f.mature ? [] : f.sources);
+
 /** A region and every region it sits in, innermost first. */
 export const regionAncestors = (id: string): string[] => {
   const out: string[] = [];
@@ -65,7 +71,8 @@ export const searchFields = (f: Find) => ({
   where: f.location_description ?? null,
   area: f.area ?? null,
   clip: f.clip ? { creator: f.clip.creator ?? null } : null,
-  sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
+  sources: publicSources(f).map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
+  sourceCount: f.sources.length, // the number the map shows, true even when a mature find's sources stay on its page
   finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
   chapterGate: f.chapter_gate ?? null,
 });

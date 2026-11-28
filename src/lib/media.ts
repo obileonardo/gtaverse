@@ -54,7 +54,7 @@ export const showcaseable = (f: Find) => !f.spoiler && !f.mature && findStill(f)
 
 // The singular category label and the region label live with the map's search fields (map-fields.ts), so the map,
 // the home page's example questions and their test read one implementation.
-export { categorySingular, regionLabel, publicTitle, publicSummary, pageDescription, MATURE_GATE } from './map-fields';
+export { categorySingular, regionLabel, publicTitle, publicSummary, publicSources, pageDescription, MATURE_GATE } from './map-fields';
 export const categoryLabel = (f: Find) => categorySingular(f.category);
 
 // Category glyphs (src/components/ui/icons.ts) and short plural chip labels for the map's chip row.
