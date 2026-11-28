@@ -62,7 +62,9 @@ for (const f of finds) {
     const p = touch(s.source_id, fromRegistry(s.source_id, s.creator ?? s.source_id, s.type));
     const isClip = f.clip?.url === s.url;
     if (isClip) p.clips++;
-    add(p, { find: f, url: s.url, role: isClip ? 'clip' : 'source' });
+    // A mature find's sources stay on its own page (LR84): the person is credited, the post link is not shown. Its clip
+    // keeps its link, as the clip itself does on the map and in the open data.
+    add(p, { find: f, url: f.mature && !isClip ? null : s.url, role: isClip ? 'clip' : 'source' });
   }
 }
 
@@ -84,7 +86,7 @@ for (const f of finds) {
       o = { key: s.source_id, name: reg?.name ?? s.creator ?? s.source_id, kind: s.type === 'wiki' ? 'Wiki' : s.type === 'official' || reg?.role === 'official' ? 'Official' : 'Press', url: reg?.url ?? null, finds: 0, posts: [] };
       outlets.set(s.source_id, o);
     }
-    o.posts.push({ find: f, url: s.url, role: 'source' });
+    o.posts.push({ find: f, url: f.mature ? null : s.url, role: 'source' });
     if (!seen.has(o.key)) { seen.add(o.key); o.finds++; }
   }
 }

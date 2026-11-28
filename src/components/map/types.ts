@@ -26,7 +26,8 @@ export type MapFind = {
   // thumb: the drawer's picture; embed: the player to load on tap (null: link to the post); verb: play, view (an X or
   // Reddit photo post, shown and linked) or read (a text post) for its labels (src/lib/media.ts mapClip).
   clip: { platform: string; url: string; creator: string | null; yt: string | null; thumb: string | null; embed: string | null; verb: ClipVerb } | null;
-  sources: { type: string; url: string; creator: string | null }[];
+  sources: { type: string; url: string; creator: string | null }[]; // empty for a mature find (LR84): its page lists them
+  sourceCount: number; // how many sources the find page lists
   finder: { handle: string; platform: string; url: string | null } | null;
   updated: string | null;
   added: string | null; // for the Newest sort
