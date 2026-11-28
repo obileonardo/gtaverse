@@ -3,6 +3,7 @@
 // BreadcrumbList from its `breadcrumbs`.
 import { site, absolute } from './site';
 import { ogPath } from './routes';
+import { pageDescription } from './map-fields';
 
 type Json = Record<string, unknown>;
 export type Crumb = { name: string; href: string };
@@ -70,11 +71,11 @@ const page = (type: string, path: string, name: string, description: string, ext
 });
 
 /** A find: the page about one thing in the game, with the posts it is sourced from. */
-export const findPage = (f: { slug: string; title: string; summary: string; added_at?: string; updated_at?: string; sources: { url: string }[] }, credit: { name: string; url: string | null } | null): Json =>
-  page('ItemPage', `/finds/${f.slug}`, f.title, f.summary, {
+export const findPage = (f: { slug: string; title: string; summary: string; mature: boolean; category: string; region_ids: string[]; added_at?: string; updated_at?: string; sources: { url: string }[] }, credit: { name: string; url: string | null } | null): Json =>
+  page('ItemPage', `/finds/${f.slug}`, f.title, pageDescription(f), {
     datePublished: f.added_at,
     dateModified: f.updated_at,
-    about: { '@type': 'Thing', name: f.title, description: f.summary },
+    about: { '@type': 'Thing', name: f.title, description: pageDescription(f) },
     citation: f.sources.map((s) => s.url),
     ...(credit ? { contributor: { '@type': 'Person', name: credit.name, ...(credit.url ? { url: credit.url } : {}) } } : {}),
   });

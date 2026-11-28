@@ -11,7 +11,7 @@
   "packageManager": "pnpm@10.32.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/validate.mjs && astro build",
+    "build": "node scripts/validate.mjs && astro build && node scripts/check-mature.mjs",
     "preview": "astro preview",
     "validate": "node scripts/validate.mjs",
     "test": "node --test scripts/test/*.test.ts",

@@ -5,7 +5,9 @@
 // Google TV Trailer chip, centred caps title and badges, Google TV stacked pills, Disney icon actions, caps tabs.
 // Tabs in order Details, Clips, Related, Nearby. Clips tab: the clip, then the other videos as the Xbox shot grid. Details tab: Disney label and value pairs,
 // Mindtrip tips ("How to find it") and the Mindtrip author card, retitled for the finder or the clip's creator.
-// Spoiler and mature finds never show art outside their reveal.
+// Spoiler and mature finds never show art outside their reveal. A mature find keeps its title in the heading, the tab
+// and the share title; its meta, social and structured-data descriptions never carry its summary (pageDescription,
+// LR83), and other finds' cards name it "Mature find: <type>" (publicTitle).
 import Base from '../../layouts/Base.astro';
 import Clip from '../../components/Clip.astro';
 import Verification from '../../components/Verification.astro';
@@ -19,7 +21,7 @@ import GameChips from '../../components/games/GameChips.astro';
 import { gamesOfFind } from '../../lib/games';
 import { splitSpoiler } from '../../lib/spoiler';
 import { finds, type Find } from '../../lib/content';
-import { findStill, findClipLabels, showcaseable, categoryLabel, regionLabel } from '../../lib/media';
+import { findStill, findClipLabels, showcaseable, categoryLabel, regionLabel, publicTitle, pageDescription } from '../../lib/media';
 import { ytThumb } from '../../lib/clip';
 import { credit, creditLine, moreClips, relatedFinds, relatedLore, regionNames, tips, cardImage, formatDate, platformName, verificationLabel, verificationNote } from '../../lib/finds';
 import { nearbyFinds, hasRegionHub, hasCategoryHub } from '../../lib/hubs';
@@ -73,7 +75,7 @@ const crumbs = [
 ];
 const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${regionLabel(h.find)} · On the map nearby` : `Also in ${regionById(h.region ?? '')?.name ?? regionLabel(h.find)}`;
 ---
-<Base title={find.title} description={find.summary} layout="bare" sub={sub} ogType="article" jsonLd={findPage(find, who)} breadcrumbs={crumbs}>
+<Base title={find.title} description={pageDescription(find)} layout="bare" sub={sub} ogType="article" jsonLd={findPage(find, who)} breadcrumbs={crumbs}>
   <article class="find" data-find>
     <div class:list={['find__art', { 'find__art--glow': !still }]} aria-hidden="true">
       {still && <img src={still.src} srcset={still.srcset} sizes="100vw" alt="" width="1280" height="720" fetchpriority="high" decoding="async" data-nofade />}
@@ -176,7 +178,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
               {related.map((f) => {
                 const img = cardImage(f);
                 return (
-                  <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={f.title} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}`} /></li>
+                  <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={publicTitle(f)} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}`} /></li>
                 );
               })}
             </ul>
@@ -189,7 +191,7 @@ const nearLabel = (h: (typeof near)[number]) => h.reason === 'distance' ? `${reg
                 {near.map((h) => {
                   const img = cardImage(h.find);
                   return (
-                    <li><Card href={`/finds/${h.find.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(h.find)} title={h.find.title} meta={`${nearLabel(h)}${h.find.spoiler ? ' · Spoiler' : ''}`} /></li>
+                    <li><Card href={`/finds/${h.find.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(h.find)} title={publicTitle(h.find)} meta={`${nearLabel(h)}${h.find.spoiler ? ' · Spoiler' : ''}`} /></li>
                   );
                 })}
               </ul>

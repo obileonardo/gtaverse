@@ -5,7 +5,7 @@
 import Frame from '../../components/design/Frame.astro';
 import MapSpecimens from '../../components/design/MapSpecimens';
 import { finds, regionById, categories as allCategories } from '../../lib/content';
-import { regionLabel, findStill, mapClip, showcaseable, categoryChipLabel, categorySingular, categoryIcon } from '../../lib/media';
+import { regionLabel, findStill, mapClip, showcaseable, categoryChipLabel, categorySingular, categoryIcon, publicTitle, publicSummary } from '../../lib/media';
 import mapJson from '../../../content/map.json';
 import type { MapFind, MapMeta } from '../../components/map/types';
 import type { Find } from '../../lib/content';
@@ -19,10 +19,10 @@ const ancestors = (id: string): string[] => {
 const toMapFind = (f: Find): MapFind => {
   const s = findStill(f);
   return {
-    slug: f.slug, title: f.title, category: f.category, categoryLabel: categorySingular(f.category), icon: categoryIcon(f.category),
+    slug: f.slug, title: publicTitle(f), category: f.category, categoryLabel: categorySingular(f.category), icon: categoryIcon(f.category),
     regionIds: [...new Set(f.region_ids.flatMap(ancestors))].filter((id) => id !== 'leonida'), regionLabel: regionLabel(f),
     verification: f.verification, spoiler: f.spoiler, mature: f.mature, pin: f.pin,
-    pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null, summary: f.summary, where: f.location_description ?? null,
+    pinAccuracy: (f as { pin_accuracy?: string | null }).pin_accuracy ?? null, summary: publicSummary(f), where: f.location_description ?? null,
     area: f.area ?? null, still: s ? s.thumb : null,
     clip: mapClip(f),
     sources: f.sources.map((x) => ({ type: x.type, url: x.url, creator: x.creator ?? null })),
@@ -38,7 +38,7 @@ const meta: MapMeta = {
 };
 const longest = <T,>(xs: T[], key: (x: T) => string) => [...xs].sort((a, b) => key(b).length - key(a).length)[0];
 const art = finds.find((f) => showcaseable(f) && f.clip?.platform === 'youtube')!;
-const longFind = longest(finds, (f) => f.title);
+const longFind = longest(finds.filter((f) => !f.mature), (f) => f.title);
 const longRegion = longest(finds, (f) => regionLabel(f));
 const longCategory = longest(allCategories, (c) => categoryChipLabel(c.id));
 const demo = toMapFind(art);

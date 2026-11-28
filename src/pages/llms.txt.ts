@@ -1,9 +1,11 @@
 // llms.txt (llmstxt.org): a plain map of the site for language models, built from src/lib/routes.ts.
-// Spoiler and mature finds are listed by title only, as on the rest of the site.
+// Spoiler and mature finds carry a gate line instead of their summary, and a mature find is listed as
+// "Mature find: <type>" (LR83), as on the rest of the site.
 import type { APIRoute } from 'astro';
 import { site, absolute } from '../lib/site';
 import { staticRoutes, explainerRoutes, regionRoutes, categoryRoutes } from '../lib/routes';
 import { byNewest, safeSummary } from '../lib/feed';
+import { publicTitle } from '../lib/media';
 
 const line = (title: string, path: string, note?: string) => `- [${title}](${absolute(path)})${note ? `: ${note}` : ''}`;
 
@@ -26,7 +28,7 @@ export const GET: APIRoute = () => {
     '',
     '## Finds, newest first',
     '',
-    ...byNewest.map((f) => line(f.title, `/finds/${f.slug}`, safeSummary(f))),
+    ...byNewest.map((f) => line(publicTitle(f), `/finds/${f.slug}`, safeSummary(f))),
     '',
     '## Optional',
     '',
