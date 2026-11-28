@@ -9,7 +9,7 @@ import ConnectionList from '../../../components/lore/ConnectionList.astro';
 import GamePlate from '../../../components/games/GamePlate.astro';
 import { games, connectionsForGame, findsForGame, TRADEMARK_LINE, type Game } from '../../../lib/games';
 import { moments } from '../../../lib/lore';
-import { categoryLabel, regionLabel } from '../../../lib/media';
+import { categoryLabel, regionLabel, publicTitle } from '../../../lib/media';
 import { cardImage, verificationLabel } from '../../../lib/finds';
 
 export function getStaticPaths() {
@@ -70,7 +70,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
         {related.map((f) => {
           const img = cardImage(f);
           return (
-            <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={f.title} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`} /></li>
+            <li><Card href={`/finds/${f.slug}`} image={img?.src} srcset={img?.srcset} sizes="(max-width: 767px) 50vw, 20vw" kicker={categoryLabel(f)} title={publicTitle(f)} meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`} /></li>
           );
         })}
       </ul>

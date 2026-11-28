@@ -7,7 +7,7 @@ import Base from '../../layouts/Base.astro';
 import Card from '../../components/ui/Card.astro';
 import Chip from '../../components/ui/Chip.astro';
 import { finds, categories } from '../../lib/content';
-import { categoryLabel, regionLabel } from '../../lib/media';
+import { categoryLabel, regionLabel, publicTitle } from '../../lib/media';
 import { cardImage, verificationLabel } from '../../lib/finds';
 import { findStill } from '../../lib/media';
 import { gameIdsOfFind } from '../../lib/games';
@@ -25,7 +25,7 @@ const places = regionHubs
   .map((r) => ({ r, n: findsInRegion(r.id).length, top: r.type === 'county' || r.type === 'region' }))
   .sort((a, b) => Number(b.top) - Number(a.top) || b.n - a.n || a.r.name.localeCompare(b.r.name));
 ---
-<Base title="All finds" description={description} jsonLd={collectionPage('/finds', 'All finds', description, finds.map((f) => ({ name: f.title, href: `/finds/${f.slug}` })))} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }]}>
+<Base title="All finds" description={description} jsonLd={collectionPage('/finds', 'All finds', description, finds.map((f) => ({ name: publicTitle(f), href: `/finds/${f.slug}` })))} breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Finds', href: '/finds' }]}>
   <header class="head">
     <h1 class="head__title">Finds<sup class="head__count mono">{finds.length}</sup></h1>
     <p class="head__lede">Every secret in Leonida we can show you, each with the clip of the creator who found it. {spoilers} are spoilers: their art stays hidden until you open them, or until your chapter reaches them.</p>
@@ -52,7 +52,7 @@ const places = regionHubs
             sizes="(max-width: 767px) 50vw, 20vw"
             loading={i < 10 ? 'eager' : 'lazy'}
             kicker={categoryLabel(f)}
-            title={f.title}
+            title={publicTitle(f)}
             meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`}
           >
             {late && <img slot="media" class="card-late" data-chapter-src={late.thumb} data-chapter-gate={f.chapter_gate} alt="" width="320" height="180" loading="lazy" decoding="async" hidden />}

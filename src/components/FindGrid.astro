@@ -1,10 +1,11 @@
 ---
 // A grid of find cards, exactly as the finds index draws them: 16:9 Card, five columns on desktop, three on
-// tablets, two on the phone. Spoiler and mature finds show the sunrise glow instead of art (cardImage).
+// tablets, two on the phone. Spoiler and mature finds show the sunrise glow instead of art (cardImage); a mature
+// find reads "Mature find: <type>" (publicTitle, LR83).
 // Used by the region and category hubs.
 import Card from './ui/Card.astro';
 import type { Find } from '../lib/content';
-import { categoryLabel, regionLabel } from '../lib/media';
+import { categoryLabel, regionLabel, publicTitle } from '../lib/media';
 import { cardImage, verificationLabel } from '../lib/finds';
 interface Props { finds: Find[]; eager?: number; label?: string }
 const { finds, eager = 0, label } = Astro.props;
@@ -21,7 +22,7 @@ const { finds, eager = 0, label } = Astro.props;
           sizes="(max-width: 767px) 50vw, 20vw"
           loading={i < eager ? 'eager' : 'lazy'}
           kicker={categoryLabel(f)}
-          title={f.title}
+          title={publicTitle(f)}
           meta={`${regionLabel(f)} · ${verificationLabel[f.verification] ?? f.verification}${f.spoiler ? ' · Spoiler' : ''}${f.mature ? ' · Mature' : ''}`}
         />
       </li>

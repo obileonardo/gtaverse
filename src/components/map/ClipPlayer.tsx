@@ -9,8 +9,9 @@ import { platformLabel, type MapFind } from './types';
 import { isUnlocked, type ChapterSetting } from '../../lib/chapter';
 
 export function ClipPlayer({ find, variant, chapter = 'none' }: { find: MapFind; variant: 'drawer' | 'sheet'; chapter?: ChapterSetting }) {
-  // A spoiler clip opens by itself once the visitor's chapter setting reaches its chapter (src/lib/chapter.ts).
-  const hidden = find.mature || (find.spoiler && !isUnlocked(find.chapterGate, chapter));
+  // A spoiler clip opens by itself once the visitor's chapter setting reaches its chapter (src/lib/chapter.ts). A mature
+  // find with no clip has nothing to hide, so it shows no gate (LR84).
+  const hidden = (find.mature && !!find.clip) || (find.spoiler && !isUnlocked(find.chapterGate, chapter));
   const [revealed, setRevealed] = useState(!hidden);
   const [playing, setPlaying] = useState(false);
   const [postH, setPostH] = useState<number | null>(null);

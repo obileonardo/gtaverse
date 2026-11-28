@@ -7,8 +7,9 @@ import { read, usage } from './source';
 import { baseDecls, overrides, mediaLabel } from './tokens';
 import { finds } from '../../lib/content';
 
-// The longest find title we publish, so the title line shows how real data wraps.
-const longestTitle = [...finds].sort((a, b) => b.title.length - a.title.length)[0]?.title ?? '';
+// The longest find title we publish, so the title line shows how real data wraps. Mature titles stay on their own
+// page (LR83), so they are left out.
+const longestTitle = finds.filter((f) => !f.mature).sort((a, b) => b.title.length - a.title.length)[0]?.title ?? '';
 
 const config = read('astro.config.mjs');
 const fontOf = (cssVariable: string) => {

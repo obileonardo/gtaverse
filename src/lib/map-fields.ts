@@ -21,6 +21,31 @@ export const categorySingular = (id: string) => singular[id] ?? categories.find(
 
 export const regionLabel = (f: Pick<Find, 'region_ids'>) => (f.region_ids[0] ? regionById(f.region_ids[0])?.name ?? f.region_ids[0] : 'Leonida');
 
+// Mature finds outside their own page (owner decision, 27 Nov 2026; LR83). Every list, card, feed, data file and the
+// map read the title and summary from here, so no surface prints a mature find's own words. The find's own page keeps
+// its title in the heading, the tab and the share title, and its summary in the body only (pageDescription).
+/** The gate line that stands in for a mature find's summary (feeds, cards, the map, open data). */
+export const MATURE_GATE = 'Mature content: open the find to read it.';
+
+/**
+ * The title a find shows anywhere but its own page: "Mature find: <type>" for a mature find, the type being its
+ * category's singular label. Use it for visible text and accessible names alike.
+ */
+export const publicTitle = (f: Pick<Find, 'title' | 'mature' | 'category'>) => (f.mature ? `Mature find: ${categorySingular(f.category)}` : f.title);
+
+/** The summary a find shows anywhere but its own page: the gate line for a mature find. Spoilers are gated separately. */
+export const publicSummary = (f: Pick<Find, 'summary' | 'mature'>) => (f.mature ? MATURE_GATE : f.summary);
+
+/** The meta, social and structured-data description of a find's own page: never a mature find's summary. */
+export const pageDescription = (f: Pick<Find, 'summary' | 'mature' | 'category' | 'region_ids'>) =>
+  f.mature ? `${categorySingular(f.category)} in ${regionLabel(f)}. ${MATURE_GATE}` : f.summary;
+
+/**
+ * The sources a find lists anywhere but its own page: none for a mature find, whose source URLs can name the topic
+ * (owner decision, 27 Nov 2026; LR84). The field keeps its type (an empty list); the own page lists and credits them.
+ */
+export const publicSources = <S>(f: { mature: boolean; sources: S[] }): S[] => (f.mature ? [] : f.sources);
+
 /** A region and every region it sits in, innermost first. */
 export const regionAncestors = (id: string): string[] => {
   const out: string[] = [];
@@ -34,7 +59,7 @@ export const regionAncestors = (id: string): string[] => {
  */
 export const searchFields = (f: Find) => ({
   slug: f.slug,
-  title: f.title,
+  title: publicTitle(f),
   category: f.category,
   categoryLabel: categorySingular(f.category),
   regionIds: [...new Set(f.region_ids.flatMap(regionAncestors))].filter((id) => id !== 'leonida'),
@@ -42,11 +67,12 @@ export const searchFields = (f: Find) => ({
   verification: f.verification,
   spoiler: f.spoiler,
   mature: f.mature,
-  summary: f.summary,
+  summary: publicSummary(f),
   where: f.location_description ?? null,
   area: f.area ?? null,
   clip: f.clip ? { creator: f.clip.creator ?? null } : null,
-  sources: f.sources.map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
+  sources: publicSources(f).map((s) => ({ type: s.type, url: s.url, creator: s.creator ?? null })),
+  sourceCount: f.sources.length, // the number the map shows, true even when a mature find's sources stay on its page
   finder: f.first_finder ? { handle: f.first_finder.handle, platform: f.first_finder.platform, url: f.first_finder.url ?? null } : null,
   chapterGate: f.chapter_gate ?? null,
 });

@@ -1,12 +1,15 @@
 // Open data downloads (/data): finds, connections and collectibles as static JSON built from content at build time.
 // Published records only. Every file opens with a header object: licence, attribution, how to cite, what is not
 // licensed, and the content date it was built from. Every record keeps its credits (sources, finders, creators,
-// Game Checklists for collectibles). Decision GS10.
+// Game Checklists for collectibles). Decision GS10. A mature find keeps every field and its type, but its title reads
+// "Mature find: <type>", its summary is the gate line (LR83) and its sources are an empty list (LR84): its own words and
+// its sources stay on its own page.
 import findsRaw from '../../content/finds.json';
 import connectionsRaw from '../../content/connections.json';
 import collectiblesRaw from '../../content/collectibles.json';
 import { finds, connections, type Find } from './content';
 import { gamesOf } from './games';
+import { publicTitle, publicSummary, publicSources } from './map-fields';
 
 const SITE = 'https://thevicefiles.com';
 const published = new Set(finds.map((f) => f.id));
@@ -27,7 +30,7 @@ const findRecord = (f: Find) => {
   return {
     id: f.id,
     url: `${SITE}/finds/${f.slug}`,
-    title: f.title,
+    title: publicTitle(f),
     category: f.category,
     verification: f.verification,
     spoiler: f.spoiler,
@@ -38,13 +41,13 @@ const findRecord = (f: Find) => {
     location_description: f.location_description ?? null,
     pin: f.pin,
     pin_accuracy: raw.pin_accuracy ?? null,
-    summary: f.summary,
+    summary: publicSummary(f),
     crossover_games: f.crossover_games ?? [],
     game_ids: gamesOf(f.crossover_games ?? []).map((g) => g.id),
     related_connections: f.related_connections ?? [],
     first_finder: f.first_finder,
     clip: f.clip,
-    sources: f.sources,
+    sources: publicSources(f),
     updated_at: f.updated_at ?? null,
   };
 };
@@ -55,7 +58,7 @@ if (finds.some((f) => f.status !== 'published' || f.verification === 'rumor')) t
 export const findsFile = () => ({
   ...LICENCE,
   title: 'The Vice Files: GTA VI finds',
-  description: 'Published finds: secrets, easter eggs and references in GTA VI, each with its sources and the creator who found or filmed it. Drafts and rumours are not included.',
+  description: 'Published finds: secrets, easter eggs and references in GTA VI, each with its sources and the creator who found or filmed it. A mature find lists its sources on its own page only. Drafts and rumours are not included.',
   content_date: latest(...finds.map((f) => f.updated_at)),
   count: finds.length,
   items: finds.map(findRecord),
